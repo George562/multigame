@@ -63,5 +63,5 @@ client: client.o tools.h.gch
 client.o: client.cpp
 	$(CC) client.cpp -c -O3
 
-clean:
+clear:
 	del -rf *.o *.gch
