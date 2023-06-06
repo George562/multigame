@@ -26,7 +26,7 @@ Client MySocket; // this computer socket
 int packetState, ComputerID;
 sf::Mutex mutex;
 
-//////////////////////////////////////////////////////////// Buttons and Pannels
+//////////////////////////////////////////////////////////// Buttons
 Button SoloButton       ("sources/RedPanel",    "Play"      );
 Button NewGameButton    ("sources/GreenPanel",  "New Game"  );
 Button ContinueButton   ("sources/BluePanel",   "Continue"  );
@@ -34,6 +34,8 @@ Button CoopButton       ("sources/RedPanel",    "Online"    );
 Button HostButton       ("sources/GreenPanel",  "Host"      );
 Button ConnectButton    ("sources/BluePanel",   "Connect"   );
 Button MainMenuButton   ("sources/RedPanel",    "Exit"      );
+
+//////////////////////////////////////////////////////////// Pannels
 Panel  IPPanel          ("sources/YellowPanel", "IP:"       );
 Panel  ListOfPlayers    ("sources/SteelFrame"               );
 
