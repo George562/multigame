@@ -39,6 +39,10 @@ Button MainMenuButton   ("sources/RedPanel",    "Exit"      );
 Panel  IPPanel          ("sources/YellowPanel", "IP:"       );
 Panel  ListOfPlayers    ("sources/SteelFrame"               );
 
+//////////////////////////////////////////////////////////// Locations
+location LabirintWalls(0);
+location WaitingRoomWalls(0); bool isWaitingRoom = false;
+
 //////////////////////////////////////////////////////////// System stuff
 bool ClientFuncRun, HostFuncRun;
 int size = 540, miniSize = 50, n = 15, m = 15; // map is matrix m*m cells with size of one; minisize for minimap
@@ -47,8 +51,6 @@ int size = 540, miniSize = 50, n = 15, m = 15; // map is matrix m*m cells with s
 bool MiniMapActivated;
 sf::Vector2f CameraPos(0, 0), miniCameraPos((scw - m * miniSize) / 2, (sch - n * miniSize) / 2);
 float WallMinSize = size / 8, WallMaxSize = size;
-location LabirintWalls(0);
-location WaitingRoomWalls(0); bool isWaitingRoom = false;
 vvr wallsRect(0);
 std::vector<sf::Sprite> Sprites(0);
 sf::Sprite tempSprite;
