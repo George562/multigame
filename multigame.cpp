@@ -40,6 +40,7 @@ Panel  IPPanel          ("sources/YellowPanel", "IP:"       );
 Panel  ListOfPlayers    ("sources/SteelFrame"               );
 
 //////////////////////////////////////////////////////////// Locations
+location* CurLocation = nullptr;
 location LabirintWalls(0);
 location WaitingRoomWalls(0); bool isWaitingRoom = false;
 
@@ -102,6 +103,8 @@ int main() {
     // flame.openFromFile("soirces/glame.mp4");
     // flame.fit(0, 0, 250, 250);
     // flame.play();
+
+    CurLocation = &LabirintWalls;
 
     TextFPS.text.setPosition(20, 20);
     TextFPS.text.setFillColor(sf::Color(255, 255, 255));
@@ -455,7 +458,7 @@ int main() {
                             n = LabirintWalls.size() / 2;
                             m = LabirintWalls[0].size() / 2;
                             player.setPosition(size, size);
-                            isWaitingRoom = true;
+                            CurLocation = &WaitingRoomWalls;
                             std::cout << "bruh!\n";
                         }
                         else if (event.key.code == sf::Keyboard::Tab) MiniMapActivated = !MiniMapActivated;
@@ -848,9 +851,6 @@ void LevelGenerate() {
 }
 
 void drawWalls() {
-    location* CurLocation = nullptr;
-    if (isWaitingRoom) CurLocation = &WaitingRoomWalls;
-    else CurLocation = &LabirintWalls;
     if (!MiniMapActivated) {
         for (int i = std::max(0, 2 * int(CameraPos.y) / size - 1);
                 i <= std::min(2 * n, 2 * int(CameraPos.y + sch + WallMinSize) / size + 1); i++)
