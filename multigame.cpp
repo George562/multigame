@@ -41,8 +41,7 @@ Panel  ListOfPlayers    ("sources/SteelFrame"               );
 
 //////////////////////////////////////////////////////////// Locations
 location* CurLocation = nullptr;
-location LabirintWalls(0);
-location WaitingRoomWalls(0); bool isWaitingRoom = false;
+location LabirintWalls(0), WaitingRoomWalls(0);
 
 //////////////////////////////////////////////////////////// System stuff
 bool ClientFuncRun, HostFuncRun;
@@ -104,6 +103,10 @@ int main() {
     // flame.fit(0, 0, 250, 250);
     // flame.play();
 
+    // Load locations
+    LoadLocationFromFile(WaitingRoomWalls, "sources/locations/WaitingRoom.txt");
+    CreateWallRectByLocation(WaitingRoomWalls, wallsRect, Sprites, size, WallMinSize);
+
     CurLocation = &LabirintWalls;
 
     TextFPS.text.setPosition(20, 20);
@@ -140,8 +143,10 @@ int main() {
     sf::Thread HostTread(funcOfHost);
     sf::Thread ClientTread(funcOfClient);
 
-    LabirintWalls.assign(BigN, vu(BigM, 0));
-    wallsRect.assign(BigN, vr(BigM, {-1, -1, -1, -1}));
+    if (!LoadLocationFromFile(LabirintWalls, "save/LabirintWalls.dat"))
+        LevelGenerate();
+    else
+        CreateWallRectByLocation(LabirintWalls, wallsRect, Sprites, size, WallMinSize);
 
     Pistol pistol;
     Shotgun shotgun;
@@ -169,8 +174,7 @@ int main() {
             for (int i = 0; i < Bullets.size();) {
                 int y = (int(Bullets[i].PosY) / size) * 2, x = (int(Bullets[i].PosX) / size) * 2;
                 if (!(0 <= x && x < BigM && 0 <= y && y < BigN) || Bullets[i].penetration < 0 || Bullets[i].todel) {
-                    Bullets.erase(Bullets.begin() + i); continue;
-                    std::cout << "bruh\n";
+                    Bullets.erase(Bullets.begin() + i--); continue;
                 }
                 Bullets[i++].move(wallsRect, size, clock);
             }
@@ -454,12 +458,10 @@ int main() {
                         else if (event.key.code == sf::Keyboard::Enter)
                             chat.Enterred();
                         else if (event.key.code == sf::Keyboard::H) {
-                            LoadLocation(LabirintWalls, wallsRect, Sprites, size, WallMinSize, "sources/locations/WaitingRoom.txt");
-                            n = LabirintWalls.size() / 2;
-                            m = LabirintWalls[0].size() / 2;
+                            n = WaitingRoomWalls.size() / 2;
+                            m = WaitingRoomWalls[0].size() / 2;
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomWalls;
-                            std::cout << "bruh!\n";
                         }
                         else if (event.key.code == sf::Keyboard::Tab) MiniMapActivated = !MiniMapActivated;
                         else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
@@ -495,8 +497,6 @@ void draw() {
     case screens::Main:
         SoloButton.draw(window);
         CoopButton.draw(window);
-        // flame.update();
-        // window.draw(flame);
         break;
     case screens::Solo:
         window.clear(sf::Color::Black);
@@ -709,36 +709,36 @@ void funcOfHost() {
                         while (!ReceivePacket.endOfPacket()) {
                             ReceivePacket >> packetState;
                             switch (packetState) {
-                            case pacetStates::disconnect:
-                                ClientDisconnect(i--);
-                                break;
-                            case pacetStates::PlayerPos:
-                                ReceivePacket >> ConnectedPlayers[i + 1];
-                                break;
-                            case pacetStates::ChatEvent:
-                                ReceivePacket >> PacetData;
-                                chat.addLine(PacetData);
-                                mutex.lock();
-                                SendPacket << pacetStates::ChatEvent << PacetData;
-                                SendToOtherClients(SendPacket, i);
-                                SendPacket.clear();
-                                mutex.unlock();
-                                break;
-                            case pacetStates::Shooting: {
-                                mutex.lock();
-                                int i; ReceivePacket >> i;
-                                SendPacket << pacetStates::Shooting << i;
-                                for (; i > 0; i--) {
-                                    ReceivePacket >> tempBullet;
-                                    tempBullet.Setting();
-                                    Bullets.push_back(tempBullet);
-                                    SendPacket << tempBullet;
-                                }
-                                SendToOtherClients(SendPacket, i);
-                                SendPacket.clear();
-                                mutex.unlock();
-                                }
-                                break;
+                                case pacetStates::disconnect:
+                                    ClientDisconnect(i--);
+                                    break;
+                                case pacetStates::PlayerPos:
+                                    ReceivePacket >> ConnectedPlayers[i + 1];
+                                    break;
+                                case pacetStates::ChatEvent:
+                                    ReceivePacket >> PacetData;
+                                    chat.addLine(PacetData);
+                                    mutex.lock();
+                                    SendPacket << pacetStates::ChatEvent << PacetData;
+                                    SendToOtherClients(SendPacket, i);
+                                    SendPacket.clear();
+                                    mutex.unlock();
+                                    break;
+                                case pacetStates::Shooting: {
+                                    mutex.lock();
+                                    int i; ReceivePacket >> i;
+                                    SendPacket << pacetStates::Shooting << i;
+                                    for (; i > 0; i--) {
+                                        ReceivePacket >> tempBullet;
+                                        tempBullet.Setting();
+                                        Bullets.push_back(tempBullet);
+                                        SendPacket << tempBullet;
+                                    }
+                                    SendToOtherClients(SendPacket, i);
+                                    SendPacket.clear();
+                                    mutex.unlock();
+                                    }
+                                    break;
                             }
                         }
         }

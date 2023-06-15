@@ -211,21 +211,24 @@ sf::Vector2f RotateAround(float phi, sf::Vector2f& a, float& X, float& Y) {
     return newA;
 }
 
-void LoadLocation(location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites, int& size, float& minisize, str FileName) {
+bool LoadLocationFromFile(location& arr, str FileName) {
     std::ifstream file(FileName);
+    if (!file.is_open()) return false;
     int n, m; file >> n >> m;
     arr.assign(n, vu(m, 0));
-    bool temp;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
             file >> arr[i][j];
-        }
-    }
     file.close();
+    return true;
+}
+
+void CreateWallRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites, int& size, float& minisize) {
+    int n = arr.size(), m = arr[0].size();
     Sprites.clear();
     wallsRect.assign(n, vr(m));
-    for (int i = 0; i <= n * 2; i++)
-        for (int j = 0; j <= m * 2; j++) {
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++) {
             if (arr[i][j] == LocationIndex::wall) {
                 if (i % 2 == 1) // |
                     wallsRect[i][j] = {(size * j - minisize) / 2, size * (i - 1) / 2.f, minisize, float(size)};
