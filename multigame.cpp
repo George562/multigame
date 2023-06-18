@@ -1,10 +1,9 @@
-#include "button.h"
-#include "player.h"
-#include "client.h"
-#include "chat.h"
-// #include "sfeMovie\Movie.hpp"
+#include "Headers/button.h"
+#include "Headers/player.h"
+#include "Headers/client.h"
+#include "Headers/chat.h"
 
-//////////////////////////////////////////////////////////// Stuff for work with computer
+//////////////////////////////////////////////////////////// Stuff for work with sistem and screen
 sf::ContextSettings settings;
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "main", sf::Style::Fullscreen, settings);
@@ -45,9 +44,6 @@ location LabirintWalls(0), WaitingRoomWalls(0);
 
 //////////////////////////////////////////////////////////// System stuff
 bool ClientFuncRun, HostFuncRun;
-int size = 540, miniSize = 50, n = 15, m = 15; // map is matrix m*m cells with size of one; minisize for minimap
-#define BigN n * 2 + 1
-#define BigM m * 2 + 1
 bool MiniMapActivated;
 sf::Vector2f CameraPos(0, 0), miniCameraPos((scw - m * miniSize) / 2, (sch - n * miniSize) / 2);
 float WallMinSize = size / 8, WallMaxSize = size;
@@ -73,8 +69,6 @@ sf::CircleShape BulletShape;
 vB Bullets(0);
 Bullet tempBullet;
 
-// sfe::Movie flame;
-
 //////////////////////////////////////////////////////////// functions
 void draw();
 void ClientConnect();
@@ -91,7 +85,7 @@ void drawWalls();
 int main() {
     setlocale(LC_ALL, "rus");
 
-    LoadAllTextures();
+    init();
 
     window.setFramerateLimit(60);
     window.setVerticalSyncEnabled(true);
