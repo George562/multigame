@@ -66,7 +66,6 @@ PlaccedText TextFPS;
 Point tempPoint;
 sf::Vector2i MouseBuffer;
 sf::CircleShape BulletShape;
-vB Bullets(0);
 Bullet tempBullet;
 
 //////////////////////////////////////////////////////////// functions

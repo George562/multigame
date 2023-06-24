@@ -83,6 +83,7 @@ struct Bullet {
 };
 
 using vB = std::vector<Bullet>;
+vB Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& a) {
     return packet << a.PosX << a.PosY << a.dx << a.dy << a.color << a.dmg << a.radius;
