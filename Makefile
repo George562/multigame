@@ -12,7 +12,7 @@ multigame: multigame.o
 hide: multigame.o
 	$(CC) multigame.o -o multigame $(CFLAGS) -mwindows
 
-multigame.o: multigame.cpp
+multigame.o: multigame.cpp $(dir)/*
 	$(CC) multigame.cpp -c -O3
 
 # button: $(dir)\button.h panel

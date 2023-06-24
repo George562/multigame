@@ -76,13 +76,6 @@ sf::Texture YellowPanel;
 sf::Texture SteelFrame;
 sf::Texture PlayerTexture;
 
-std::map<char, bool> PressedKeys = {
-    {'w', sf::Keyboard::isKeyPressed(sf::Keyboard::W)},
-    {'a', sf::Keyboard::isKeyPressed(sf::Keyboard::A)},
-    {'s', sf::Keyboard::isKeyPressed(sf::Keyboard::S)},
-    {'d', sf::Keyboard::isKeyPressed(sf::Keyboard::D)}
-};
-
 void LoadAllTextures() {
     Box.            loadFromFile("sources/Box.png"              );
     RedPanel.       loadFromFile("sources/RedPanel.png"         );

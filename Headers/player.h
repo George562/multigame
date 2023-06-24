@@ -83,6 +83,13 @@ void Player::move(const vvr& walls, int& size) {
 
     if (!(0 <= y && y < N && 0 <= x && x < M)) return;
 
+    std::map<char, bool> PressedKeys = {
+        {'w', sf::Keyboard::isKeyPressed(sf::Keyboard::W)},
+        {'a', sf::Keyboard::isKeyPressed(sf::Keyboard::A)},
+        {'s', sf::Keyboard::isKeyPressed(sf::Keyboard::S)},
+        {'d', sf::Keyboard::isKeyPressed(sf::Keyboard::D)}
+    };
+
     if (PressedKeys['w'] || PressedKeys['s']) {
         Velocity.cur.y += Acceleration * ((PressedKeys['s']) ? 1 : -1);
         if (Velocity.fromTop().y < 0 || Velocity.toBottom().y < 0)
