@@ -724,7 +724,7 @@ void funcOfHost() {
                                     SendPacket << pacetStates::Shooting << i;
                                     for (; i > 0; i--) {
                                         ReceivePacket >> tempBullet;
-                                        tempBullet.Setting();
+                                        tempBullet.UpdateCircleShape();
                                         Bullets.push_back(tempBullet);
                                         SendPacket << tempBullet;
                                     }
@@ -806,7 +806,7 @@ void funcOfClient() {
                             int i; ReceivePacket >> i;
                             for (; i > 0; i--) {
                                 ReceivePacket >> tempBullet;
-                                tempBullet.Setting();
+                                tempBullet.UpdateCircleShape();
                                 Bullets.push_back(tempBullet);
                             }
                             break;

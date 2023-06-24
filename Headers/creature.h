@@ -11,7 +11,7 @@ public:
     float ManaRecovery;
     Scale<float> Armor; // blocking damage = min(1, damage - armor)
     float Money; // you can buy something with this
-    Scale<sf::Vector2f> Velocity;
+    Scale<sf::Vector2f> Velocity; // [bottom{x,y}, top{x,y}, cur{x,y}]
     float Acceleration;
     Point direction;
     sf::Clock* Clock;

@@ -31,10 +31,10 @@ struct Bullet {
         circle = new sf::CircleShape();
         timer = sf::seconds(time);
         type = t;
-        Setting();
+        UpdateCircleShape();
     }
 
-    virtual void Setting() {
+    virtual void UpdateCircleShape() {
         circle->setRadius(radius);
         circle->setFillColor(color);
     }

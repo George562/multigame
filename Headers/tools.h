@@ -1,51 +1,6 @@
 #pragma once
-#include "scale.h"
 #include "init.h"
 
-namespace LocationIndex {
-    unsigned short int nothing = 0;
-    unsigned short int wall = 1;
-    unsigned short int box = 2;
-}
-
-using Point = sf::Vector2i;
-using vp = std::vector<Point>;
-using vvp = std::vector<vp>;
-struct Rect {
-    float PosX, PosY, Width, Height;
-    sf::Vector2f getPosition() { return {PosX, PosY}; }
-    void setPosition(sf::Vector2f v) { PosX = v.x; PosY = v.y; }
-    void setPosition(float x, float y) { PosX = x; PosY = y; }
-    sf::Vector2f getSize() { return {Width, Height}; }
-    void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
-    void setSize(float w, float h) { Width = w; Height = h; }
-};
-using vr = std::vector<Rect>;
-using vvr = std::vector<vr>;
-struct Circle { float PosX, PosY, Radius; };
-
-using str = std::string;
-using vb = std::vector<bool>;
-using vvb = std::vector<vb>;
-
-using vu = std::vector<unsigned short int>;
-using location = std::vector<vu>;
-
-Point dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
-
-namespace screens {
-    enum screens { // the types of screen
-        Main,       // main menu                -> Solo, Coop
-        Coop,       // coop                     -> Host, Connect
-        Host,       // choose be a host         -> .
-        SetIP,      // input IP to connect      -> Connect
-        Connect,    // Wellcome to the room     -> .
-        Solo,       // start the game alone     -> New Game, Continue
-        New_Game,   // Start new game           ->
-        Continue,   // Continue old game        ->
-        EscOfCoop   // if turn esc in game      -> Main
-    };
-};
 // check existing element in vector
 template <typename T>
 bool in(const std::vector<T>& arr, const T& x) {

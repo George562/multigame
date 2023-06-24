@@ -15,7 +15,6 @@ public:
     bool lock;
     int mode;
     
-    sf::RectangleShape AmmoRect[3];
     Bar<int> AmmoBar;
     PlaccedText NameText, AmmoText;
 
@@ -28,16 +27,6 @@ public:
         lastShoot = sf::seconds(0);
         lock = true;
         mode = 1;
-
-        AmmoRect[0].setSize({160, 40});
-        AmmoRect[1].setSize({150, 30});
-        AmmoRect[0].setPosition(scw - AmmoRect[0].getSize().x - 10, 120);
-        AmmoRect[1].setPosition(AmmoRect[0].getPosition().x + 5, AmmoRect[0].getPosition().y + 5);
-        AmmoRect[0].setFillColor(sf::Color(255, 255, 255, 160));
-        AmmoRect[1].setFillColor(sf::Color(128, 128, 128, 160));
-
-        AmmoRect[2] = AmmoRect[1];
-        AmmoRect[2].setFillColor(sf::Color(32, 32, 32, 160));
 
         AmmoBar.setSize(160, 40);
         AmmoBar.setPosition(scw - AmmoBar.getSize().x - 10, 120);
