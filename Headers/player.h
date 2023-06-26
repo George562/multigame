@@ -1,5 +1,9 @@
 #include "creature.h"
 
+#define MAX_MANA 75
+#define MAX_HEALTH 10
+#define MAX_VELOCITY 6
+
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
@@ -25,13 +29,13 @@ public:
 ////////////////////////////////////////////////////////////
 
 Player::Player() : Creature() {
-    Health = {0, 10, 5};
-    Mana = {0, 75, 75}; ManaRecovery = 10.5;
+    Health = {0, MAX_HEALTH, MAX_HEALTH};
+    Mana = {0, MAX_MANA, MAX_MANA}; ManaRecovery = 10.5;
     Armor = {0, 0, 0};
     Money = 0;
     radius = 60;
     Width = Height = radius * 2;
-    PosX = 0; PosY = 0; Velocity = {{-6, -6}, {6, 6}, {0, 0}}, Acceleration = 0.6 * 2;
+    PosX = 0; PosY = 0; Velocity = {{-MAX_VELOCITY, -MAX_VELOCITY}, {MAX_VELOCITY, MAX_VELOCITY}, {0, 0}}, Acceleration = 0.6 * 2;
     ShiftPressed = false;
     LastCheck = sf::Clock().getElapsedTime();
     circle.setRadius(radius);
@@ -43,12 +47,12 @@ Player::Player() : Creature() {
 
     HpBar.setSize(360, 60);
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
-    HpBar.scale = &Health;
+    HpBar.value = &Health;
     HpBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
     
     ManaBar.setSize(240, 50);
     ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y - 5);
-    ManaBar.scale = &Mana;
+    ManaBar.value = &Mana;
     ManaBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
 }
 

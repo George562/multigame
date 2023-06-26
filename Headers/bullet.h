@@ -1,5 +1,7 @@
 #include "text.h"
 
+#define COMMON_BULLET_RADIUS 7
+
 namespace BulletType {
     enum Type {
         Common,
@@ -12,8 +14,8 @@ struct Bullet {
     float PosX, PosY, dx, dy;
     sf::Color color;
     int penetration;
-    float dmg;
-    float radius;
+    float damage;
+    float radius = COMMON_BULLET_RADIUS;
     sf::CircleShape* circle;
     bool exlpode = false;
     sf::Time timer;
@@ -22,12 +24,11 @@ struct Bullet {
     bool todel = false;
 
     Bullet() {}
-    Bullet(float x, float y, float vx, float vy, sf::Color c, int pen, float d, float r, float time, BulletType::Type t = BulletType::Common) {
+    Bullet(float x, float y, float vx, float vy, sf::Color c, int pen, float d, float time, BulletType::Type t = BulletType::Common) {
         PosX = x; PosY = y; dx = vx; dy = vy;
         color = c;
         penetration = pen;
-        dmg = d;
-        radius = r;
+        damage = d;
         circle = new sf::CircleShape();
         timer = sf::seconds(time);
         type = t;
@@ -85,9 +86,9 @@ struct Bullet {
 using vB = std::vector<Bullet>;
 vB Bullets(0);
 
-sf::Packet& operator<<(sf::Packet& packet, Bullet& a) {
-    return packet << a.PosX << a.PosY << a.dx << a.dy << a.color << a.dmg << a.radius;
+sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
+    return packet << b.PosX << b.PosY << b.dx << b.dy << b.color << b.damage << b.radius;
 }
-sf::Packet& operator>>(sf::Packet& packet, Bullet& a) {
-    return packet >> a.PosX >> a.PosY >> a.dx >> a.dy >> a.color >> a.dmg >> a.radius;
+sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
+    return packet >> b.PosX >> b.PosY >> b.dx >> b.dy >> b.color >> b.damage >> b.radius;
 }

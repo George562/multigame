@@ -8,7 +8,7 @@ template <typename T>
 class Bar {
 public:
     sf::RectangleShape background, foreground, wall;
-    Scale<T>* scale = nullptr;
+    Scale<T>* value = nullptr;
     sf::Vector2f Position;
     sf::Vector2f Size;
     bool ShowWall = true, ShowBackground = true, ShowForeground = true;
@@ -32,7 +32,7 @@ public:
         foreground.setFillColor(foregroundColor);
     }
     void draw(sf::RenderWindow &window) {
-        foreground.setScale(((scale) ?scale->filling() : 1), 1);
+        foreground.setScale(((value) ?value->filling() : 1), 1);
         
         if (ShowWall) window.draw(wall);
         if (ShowBackground) window.draw(background);

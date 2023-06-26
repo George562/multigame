@@ -31,7 +31,7 @@ public:
 
         AmmoBar.setSize(160, 40);
         AmmoBar.setPosition(scw - AmmoBar.getSize().x - 10, 120);
-        AmmoBar.scale = &ammunition;
+        AmmoBar.value = &ammunition;
         AmmoBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(128, 128, 128, 160), sf::Color(32, 32, 32, 160));
 
         NameText.setPosition(scw - AmmoBar.getSize().x - 10, AmmoBar.getPosition().y + AmmoBar.getSize().y);
@@ -54,8 +54,9 @@ public:
         if (len == 0) return;
         RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, dx, dy);
         dx *= velocity / len; dy *= velocity / len;
-        newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
-                                       sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 0);
+        sf::Vector2f CenterOfPlayer(player.PosX + player.Width / 2, player.PosY + player.Height / 2);
+        newBullet = new Bullet(CenterOfPlayer.x, CenterOfPlayer.y, dx, dy,
+                                sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 0);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         lastShoot = clock->getElapsedTime();
@@ -128,8 +129,9 @@ public:
         dx *= velocity / len; dy *= velocity / len;
         RotateOn(-M_PI * scatter / float(180 * 2), dx, dy);
         for (int i = 0; i < count; i++, RotateOn(M_PI * scatter / float(180 * count), dx, dy)) {
-            newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
-                                           sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 0);
+            sf::Vector2f CenterOfPlayer(player.PosX + player.Width / 2, player.PosY + player.Height / 2);
+            newBullet = new Bullet(CenterOfPlayer.x, CenterOfPlayer.y, dx, dy,
+                                    sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 0);
             Bullets.push_back(*newBullet);
         }
         ammunition -= 1;
@@ -182,8 +184,9 @@ public:
         if (len == 0) return;
         RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, dx, dy);
         dx *= velocity / len; dy *= velocity / len;
-        newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
-sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 3 + clock->getElapsedTime().asSeconds(), BulletType::Bubble);
+        sf::Vector2f CenterOfPlayer(player.PosX + player.Width / 2, player.PosY + player.Height / 2);
+        newBullet = new Bullet(CenterOfPlayer.x, CenterOfPlayer.y, dx, dy,
+sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 3 + clock->getElapsedTime().asSeconds(), BulletType::Bubble);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         lastShoot = clock->getElapsedTime();
@@ -210,8 +213,9 @@ public:
     void Shoot(vB& Bullets, Rect& player, sf::Clock* clock, sf::Vector2f* camera) {
         float dx = 0, dy = velocity;
         RotateOn(float(-M_PI * count) / 12, dx, dy);
-        newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
-                                       sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 0);
+        sf::Vector2f CenterOfPlayer(player.PosX + player.Width / 2, player.PosY + player.Height / 2);
+        newBullet = new Bullet(CenterOfPlayer.x, CenterOfPlayer.y, dx, dy,
+                                sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 0);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         count++;
@@ -232,8 +236,9 @@ public:
     void Shoot(vB& Bullets, Rect& player, sf::Clock* clock, sf::Vector2f* camera) {
         float dx = 0, dy = velocity;
         RotateOn(float(rand()), dx, dy);
-        newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
-                                       sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 0);
+        sf::Vector2f CenterOfPlayer(player.PosX + player.Width / 2, player.PosY + player.Height / 2);
+        newBullet = new Bullet(CenterOfPlayer.x, CenterOfPlayer.y, dx, dy,
+                                sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 0);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         lastShoot = clock->getElapsedTime();
