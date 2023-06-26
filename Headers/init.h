@@ -33,6 +33,7 @@ struct Rect {
     sf::Vector2f getSize() { return {Width, Height}; }
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
     void setSize(float w, float h) { Width = w; Height = h; }
+    void setRect(float x, float y, float w, float h) { PosX = x; PosY = y; Width = w; Height = h; }
 };
 using vr = std::vector<Rect>;
 using vvr = std::vector<vr>;

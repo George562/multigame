@@ -6,14 +6,14 @@ dir = Headers
 
 all: multigame
 
-multigame: multigame.o
-	$(CC) multigame.o -o multigame $(CFLAGS)
+multigame: multigame.cpp $(dir)/*
+	$(CC) multigame.cpp -o multigame $(CFLAGS) -I./$(dir) -L./bin
 
-hide: multigame.o
-	$(CC) multigame.o -o multigame $(CFLAGS) -mwindows
+hide: multigame.cpp $(dir)/*
+	$(CC) multigame.cpp -o multigame $(CFLAGS) -mwindows -I./$(dir) -L./bin
 
-multigame.o: multigame.cpp $(dir)/*
-	$(CC) multigame.cpp -c -O3
+# multigame.o: multigame.cpp $(dir)/*
+# 	$(CC) multigame.cpp -c -O3 -I ./$(dir) -L ./bin
 
 # button: $(dir)\button.h panel
 # 	$(CC) $(dir)\button.h -O3

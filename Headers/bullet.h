@@ -4,7 +4,7 @@ namespace BulletType {
     enum Type {
         Common,
         Bubble,
-        Explosion
+        // Explosion
     };
 }
 

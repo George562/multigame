@@ -23,7 +23,7 @@ public:
     Weapon *FirstWeapon, *SecondWeapon, *CurWeapon;
     sf::Time LastCheck;
 
-    Creature() {};
+    Creature() : Rect() {};
     virtual void draw(sf::RenderWindow&, sf::Vector2f*) {};
     virtual void getDamage(float dmg) { Health -= dmg; }
     virtual void move(const vvr&, const int&, const int&) {}; // walls, size of walls, miniSize of walls

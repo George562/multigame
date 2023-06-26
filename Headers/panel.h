@@ -49,7 +49,7 @@ void Panel::setTexture(str name) {
 void Panel::addWord(str word) { lines.push_back(word); }
 
 void Panel::removeWord(str word) {
-    for (int i = 0; i < lines.size(); i++)
+    for (size_t i = 0; i < lines.size(); i++)
         if (lines[i] == word)
             lines.erase(lines.begin() + i);
 }
@@ -63,7 +63,7 @@ void Panel::setWord(str word) {
 str Panel::getWord() {
     str res;
     if (lines.size() != 0) res += lines[0];
-    for (int i = 1; i < lines.size(); i++) res +=  "\n" + lines[i];
+    for (size_t i = 1; i < lines.size(); i++) res +=  "\n" + lines[i];
     return res;
 }
 
@@ -80,7 +80,7 @@ void Panel::draw(sf::RenderWindow& window) {
         window.draw(text);
     }
     else
-        for (int i = 0; i < lines.size(); i++) {
+        for (size_t i = 0; i < lines.size(); i++) {
             text.setString(lines[i]);
             text.setPosition(PosX + 50, PosY + 50 + i * (text.getCharacterSize() + 10));
             window.draw(text);

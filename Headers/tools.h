@@ -167,11 +167,11 @@ void CreateWallRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Spr
         for (int j = 0; j < m; j++) {
             if (arr[i][j] == LocationIndex::wall) {
                 if (i % 2 == 1) // |
-                    wallsRect[i][j] = {(size * j - minisize) / 2, size * (i - 1) / 2.f, minisize, float(size)};
+                    wallsRect[i][j].setRect((size * j - minisize) / 2, size * (i - 1) / 2.f, minisize, float(size));
                 else // -
-                    wallsRect[i][j] = {size * (j - 1) / 2.f, (size * i - minisize) / 2, float(size), minisize};
+                    wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - minisize) / 2, float(size), minisize);
             } else  {
-                wallsRect[i][j] = {-1, -1, -1, -1};
+                wallsRect[i][j].setRect(-1, -1, -1, -1);
                 if (arr[i][j] == LocationIndex::box) {
                     sf::Texture* tempTexture = new sf::Texture;
                     tempTexture->loadFromFile("sources/Box.png");

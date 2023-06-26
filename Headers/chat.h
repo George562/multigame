@@ -9,7 +9,8 @@ public:
     str buffer;
     bool inputted;
     sf::Time times[11];
-    int start, len, CharacterSize, cursorPos;
+    int start, len, CharacterSize;
+    size_t cursorPos;
     sf::RectangleShape rect, cursor;
     float dy;
 

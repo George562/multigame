@@ -181,7 +181,7 @@ int main() {
                 }
                 int wasBulletsCount = Bullets.size();
                 player.update(Bullets);
-                if (wasBulletsCount < Bullets.size()) {
+                if (wasBulletsCount < Bullets.size() && (screen == screens::Host || screen == screens::Connect)) {
                     mutex.lock();
                     SendPacket << pacetStates::Shooting << (int)Bullets.size() - wasBulletsCount;
                     for (; wasBulletsCount < Bullets.size(); wasBulletsCount++) SendPacket << Bullets[wasBulletsCount];
@@ -190,14 +190,16 @@ int main() {
                     SendPacket.clear();
                     mutex.unlock();
                 }
-                for (int i = 0; i < Bullets.size(); i++) {
-                    float radius = Bullets[i].circle->getRadius();
-                    int y = (int(Bullets[i].PosY) / size) * 2, x = (int(Bullets[i].PosX) / size) * 2;
-                    if (!(0 <= x && x < BigM && 0 <= y && y < BigN) || Bullets[i].penetration < 0 || Bullets[i].todel) {
-                        Bullets.erase(Bullets.begin() + i--); continue;
-                    }
-                    Bullets[i].move(wallsRect, size, clock);
+                size_t CountOfBulletsOtOfScreen = 0;
+                for (size_t i = 0; i < Bullets.size() - CountOfBulletsOtOfScreen;) {
+                    if (Bullets[i].penetration < 0 || Bullets[i].todel) {
+                        std::swap(Bullets[i], Bullets[Bullets.size() - 1 - CountOfBulletsOtOfScreen]);
+                        CountOfBulletsOtOfScreen++;
+                        continue;
+                    } else
+                        Bullets[i++].move(wallsRect, size, clock);
                 }
+                Bullets.resize(Bullets.size() - CountOfBulletsOtOfScreen);
             }
             if (HostFuncRun || ClientFuncRun) {
                 ConnectedPlayers[ComputerID].setPosition(player.getPosition());
@@ -236,6 +238,7 @@ int main() {
                     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
                 } else if (SoloButton.isActivated(event)) {
                     screen = screens::Solo;
+                    Bullets.clear();
                     LevelGenerate();
                     multiplayer = false;
                     MiniMapActivated = false;
@@ -252,6 +255,7 @@ int main() {
                     listener.listen(53000);
                     selector.add(listener);
                     ListOfPlayers.setWord(MyIP);
+                    Bullets.clear();
                     LevelGenerate();
                     ComputerID = 0;
                     { Player* NewPlayer = new Player();
@@ -309,6 +313,7 @@ int main() {
                                 m += event.mouseWheel.delta;
                             }
                             miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+                            Bullets.clear();
                             LevelGenerate();
                             mutex.lock();
                             SendToClients(LabirintData);
@@ -484,11 +489,10 @@ int main() {
                             if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
                             else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
                         } else {
-                            if (n > 2 || event.mouseWheel.delta > 0) {
-                                n += event.mouseWheel.delta;
-                                m += event.mouseWheel.delta;
-                            }
+                            n = std::max(event.mouseWheel.delta + n, 2);
+                            m = std::max(event.mouseWheel.delta + m, 2);
                             miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+                            Bullets.clear();
                             LevelGenerate();
                         }
                     }
@@ -510,7 +514,7 @@ void draw() {
         window.clear(sf::Color::Black);
         for (sf::Sprite& s: Sprites) {
             sf::FloatRect fr = s.getGlobalBounds();
-            if (fr.intersects({CameraPos.x, CameraPos.x, scw, sch})) {
+            if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
                 s.setPosition(s.getPosition() - CameraPos);
                 window.draw(s);
                 s.setPosition(s.getPosition() + CameraPos);
@@ -538,7 +542,7 @@ void draw() {
         for (Player& p: ConnectedPlayers) {
             for (sf::Sprite& s: Sprites) {
                 sf::FloatRect fr = s.getGlobalBounds();
-                if (fr.intersects({CameraPos.x, CameraPos.x, scw, sch})) {
+                if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
                     s.setPosition(s.getPosition() - CameraPos);
                     window.draw(s);
                     s.setPosition(s.getPosition() + CameraPos);
@@ -562,7 +566,7 @@ void draw() {
         for (Player& p: ConnectedPlayers) {
             for (sf::Sprite& s: Sprites) {
                 sf::FloatRect fr = s.getGlobalBounds();
-                if (fr.intersects({CameraPos.x, CameraPos.x, scw, sch})) {
+                if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
                     s.setPosition(s.getPosition() - CameraPos);
                     window.draw(s);
                     s.setPosition(s.getPosition() + CameraPos);
@@ -587,7 +591,7 @@ void draw() {
             p.draw(window);
         for (sf::Sprite& s: Sprites) {
             sf::FloatRect fr = s.getGlobalBounds();
-            if (fr.intersects({CameraPos.x, CameraPos.x, scw, sch})) {
+            if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
                 s.setPosition(s.getPosition() - CameraPos);
                 window.draw(s);
                 s.setPosition(s.getPosition() + CameraPos);
@@ -778,16 +782,16 @@ void funcOfClient() {
                             ReceivePacket >> n >> m;
                             std::cout << "n = " << n << " m = " << m << '\n';
                             LabirintWalls.assign(BigN, vu(BigM, 0));
-                            wallsRect.assign(BigN, vr(BigM, {-1, -1, -1, -1}));
+                            wallsRect.assign(BigN, vr(BigM, Rect{-1, -1, -1, -1}));
                             bool tempBool;
                             for (int i = 0; i <= n * 2; i++)
                                 for (int j = 0; j <= m * 2; j++) {
                                     ReceivePacket >> tempBool; LabirintWalls[i][j] = tempBool;
                                     if (LabirintWalls[i][j]) {
                                         if (i % 2 == 1) // |
-                                            wallsRect[i][j] = {(size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size)};
+                                            wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
                                         else // -
-                                            wallsRect[i][j] = {size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize};
+                                            wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize);
                                     }
                             }
                             std::cout << "Labirint receive\n";
@@ -826,20 +830,23 @@ void LevelGenerate() {
     LabirintData.clear();
     LabirintData << pacetStates::Labirint << n << m;
     player.setPosition({float(m - m % 2 + 1) * size / 2, float(n - n % 2 + 1) * size / 2});
+    size_t CounterOfGenerations = 0;
     do {
         generation(LabirintWalls, n, m, 0.48);
         find_ways(ways, LabirintWalls, m - m % 2 + 1, n - n % 2 + 1, n, m);
+        CounterOfGenerations++;
     } while (ways.size() < float(n * m) / 3 || ways.size() > float(n * m) / 1.5);
+    std::cout << "total count of generations = " << CounterOfGenerations <<'\n';
     wallsRect.assign(BigN, vr(BigM));
     for (int i = 0; i <= n * 2; i++)
         for (int j = 0; j <= m * 2; j++) {
             if (LabirintWalls[i][j] == LocationIndex::wall) {
                 if (i % 2 == 1) // |
-                    wallsRect[i][j] = {(size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size)};
+                    wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
                 else // -
-                    wallsRect[i][j] = {size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize};
+                    wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize);
             } else  {
-                wallsRect[i][j] = {-1, -1, -1, -1};
+                wallsRect[i][j].setRect(-1, -1, -1, -1);
                 if (LabirintWalls[i][j] == LocationIndex::box) {
                     tempSprite.setTexture(Box);
                     tempSprite.setPosition(size * j / 2, size * i / 2);

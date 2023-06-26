@@ -17,6 +17,7 @@ public:
     
     Bar<int> AmmoBar;
     PlaccedText NameText, AmmoText;
+    Bullet* newBullet;
 
     Weapon() {};
     Weapon(int MaxAmmo, float cost, float time, int dmg) {
@@ -53,10 +54,9 @@ public:
         if (len == 0) return;
         RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, dx, dy);
         dx *= velocity / len; dy *= velocity / len;
-        Bullet* newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
+        newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
                                        sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 0);
         Bullets.push_back(*newBullet);
-        delete newBullet;
         ammunition -= 1;
         lastShoot = clock->getElapsedTime();
     }
@@ -128,10 +128,9 @@ public:
         dx *= velocity / len; dy *= velocity / len;
         RotateOn(-M_PI * scatter / float(180 * 2), dx, dy);
         for (int i = 0; i < count; i++, RotateOn(M_PI * scatter / float(180 * count), dx, dy)) {
-            Bullet* newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
+            newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
                                            sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 0);
             Bullets.push_back(*newBullet);
-            delete newBullet;
         }
         ammunition -= 1;
         lastShoot = clock->getElapsedTime();
@@ -183,10 +182,9 @@ public:
         if (len == 0) return;
         RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, dx, dy);
         dx *= velocity / len; dy *= velocity / len;
-        Bullet* newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
+        newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
 sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 3 + clock->getElapsedTime().asSeconds(), BulletType::Bubble);
         Bullets.push_back(*newBullet);
-        delete newBullet;
         ammunition -= 1;
         lastShoot = clock->getElapsedTime();
     }
@@ -212,10 +210,9 @@ public:
     void Shoot(vB& Bullets, Rect& player, sf::Clock* clock, sf::Vector2f* camera) {
         float dx = 0, dy = velocity;
         RotateOn(float(-M_PI * count) / 12, dx, dy);
-        Bullet* newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
+        newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
                                        sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 0);
         Bullets.push_back(*newBullet);
-        delete newBullet;
         ammunition -= 1;
         count++;
         lastShoot = clock->getElapsedTime();
@@ -235,10 +232,9 @@ public:
     void Shoot(vB& Bullets, Rect& player, sf::Clock* clock, sf::Vector2f* camera) {
         float dx = 0, dy = velocity;
         RotateOn(float(rand()), dx, dy);
-        Bullet* newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
+        newBullet = new Bullet(player.PosX + player.Width / 2, player.PosY + player.Height / 2, dx, dy,
                                        sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 7, 0);
         Bullets.push_back(*newBullet);
-        delete newBullet;
         ammunition -= 1;
         lastShoot = clock->getElapsedTime();
     }
