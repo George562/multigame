@@ -23,7 +23,7 @@ bool in(const Rect& a, const Rect& b) {
     return a.PosX <= b.PosX + b.Width && b.PosX <= a.PosX + a.Width && a.PosY <= b.PosY + b.Height && b.PosY <= a.PosY + a.Height;
 }
 // Point in Rect
-bool in(const sf::Vector2i& a, const float& x, const float& y, const float& w = 0, const float& h = 0) {
+bool in(const sf::Vector2f& a, const float& x, const float& y, const float& w = 0, const float& h = 0) {
     return a.x <= x + w && x <= a.x && a.y <= y + h && y <= a.y;
 }
 bool in(const float ax, const float ay, const float& x, const float& y, const float& w = 0, const float& h = 0) {

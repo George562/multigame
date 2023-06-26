@@ -11,6 +11,7 @@ sf::View GameView = window.getDefaultView();
 sf::View InterfaceView = window.getDefaultView();
 sf::View MiniMapView = window.getDefaultView();
 float MiniMapZoom = 1.f;
+bool MiniMapActivated;
 sf::Event event;
 sf::Mouse Mouse;
 screens::screens screen = screens::Main;
@@ -44,7 +45,6 @@ location LabirintWalls(0), WaitingRoomWalls(0);
 
 //////////////////////////////////////////////////////////// System stuff
 bool ClientFuncRun, HostFuncRun;
-bool MiniMapActivated;
 sf::Vector2f CameraPos(0, 0), miniCameraPos((scw - m * miniSize) / 2, (sch - n * miniSize) / 2);
 float WallMinSize = size / 8, WallMaxSize = size;
 vvr wallsRect(0);
@@ -62,7 +62,7 @@ bool multiplayer;
 sf::CircleShape CircleOfSmallPlayer;  // for drawing players on minimap
 
 //////////////////////////////////////////////////////////// other stuff
-PlaccedText TextFPS;
+// PlaccedText TextFPS;
 Point tempPoint;
 sf::Vector2i MouseBuffer;
 sf::CircleShape BulletShape;
@@ -89,12 +89,8 @@ int main() {
     window.setFramerateLimit(60);
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
-    // GameView.zoom(2.f);
     window.setView(GameView);
 
-    // flame.openFromFile("soirces/glame.mp4");
-    // flame.fit(0, 0, 250, 250);
-    // flame.play();
 
     // Load locations
     LoadLocationFromFile(WaitingRoomWalls, "sources/locations/WaitingRoom.txt");
@@ -102,8 +98,11 @@ int main() {
 
     CurLocation = &LabirintWalls;
 
-    TextFPS.text.setPosition(20, 20);
-    TextFPS.text.setFillColor(sf::Color(255, 255, 255));
+    WallRectG.setFillColor(sf::Color(120, 120, 120));
+    WallRectV.setFillColor(sf::Color(120, 120, 120));
+
+    // TextFPS.text.setPosition(20, 20);
+    // TextFPS.text.setFillColor(sf::Color(255, 255, 255));
 
     setlocale(LC_ALL, "rus");
     listener.setBlocking(false);
@@ -153,7 +152,6 @@ int main() {
     player.CurWeapon = player.FirstWeapon;
 
     while (window.isOpen()) {
-        // std::this_thread::sleep_for(std::chrono::duration<float, std::milli>(1000 * (1.f / 120 - (clock.getElapsedTime() - time).asSeconds())));
         if (!window.hasFocus()) {
             if (HostFuncRun) {
                 mutex.lock();
@@ -173,7 +171,7 @@ int main() {
             }
             while (window.pollEvent(event)) {}
             draw();
-            TextFPS.text.setString(std::to_string((int)std::round(1.f / (clock.getElapsedTime() - time).asSeconds())) + " fps");
+            // TextFPS.text.setString(std::to_string((int)std::round(1.f / (clock.getElapsedTime() - time).asSeconds())) + " fps");
             time = clock.getElapsedTime();
         } else {
             if (screen == screens::Solo || screen == screens::Host || screen == screens::Connect) {
@@ -221,7 +219,7 @@ int main() {
             }
             MouseBuffer = Mouse.getPosition();
             draw();
-            TextFPS.text.setString(std::to_string((int)std::round(1.f / (clock.getElapsedTime() - time).asSeconds())) + " fps");
+            // TextFPS.text.setString(std::to_string((int)std::round(1.f / (clock.getElapsedTime() - time).asSeconds())) + " fps");
             time = clock.getElapsedTime();
         }
 
@@ -234,12 +232,14 @@ int main() {
                     screen = screens::Coop;
                     multiplayer = true;
                     MiniMapActivated = false;
+                    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
                 } else if (SoloButton.isActivated(event)) {
                     screen = screens::Solo;
                     LevelGenerate();
                     multiplayer = false;
                     MiniMapActivated = false;
+                    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
                 }
                 break;
@@ -282,12 +282,17 @@ int main() {
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
                         if (event.key.code == sf::Keyboard::Escape)
-                            if (MiniMapActivated) MiniMapActivated = false;
-                            else screen = screens::EscOfCoop;
+                            if (MiniMapActivated) {
+                                MiniMapActivated = false;
+                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                            } else screen = screens::EscOfCoop;
                         else if (event.key.code == sf::Keyboard::Enter)
                             chat.Enterred();
-                        else if (event.key.code == sf::Keyboard::Tab) MiniMapActivated = !MiniMapActivated;
-                        else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
+                        else if (event.key.code == sf::Keyboard::Tab) {
+                            MiniMapActivated = !MiniMapActivated;
+                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
                         else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
                         else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
                         else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
@@ -414,11 +419,16 @@ int main() {
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
                         if (event.key.code == sf::Keyboard::Escape)
-                            if (MiniMapActivated) MiniMapActivated = false;
-                            else screen = screens::EscOfCoop;
+                            if (MiniMapActivated) {
+                                MiniMapActivated = false;
+                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f)); 
+                            } else screen = screens::EscOfCoop;
                         else if (event.key.code == sf::Keyboard::Enter) chat.Enterred();
-                        else if (event.key.code == sf::Keyboard::Tab) MiniMapActivated = !MiniMapActivated;
-                        else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
+                        else if (event.key.code == sf::Keyboard::Tab) {
+                            MiniMapActivated = !MiniMapActivated;
+                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
                         else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
                         else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
                         else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
@@ -446,8 +456,10 @@ int main() {
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
                         if (event.key.code == sf::Keyboard::Escape)
-                            if (MiniMapActivated) MiniMapActivated = false;
-                            else screen = screens::EscOfCoop;
+                            if (MiniMapActivated) {
+                                MiniMapActivated = false;
+                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                            } else screen = screens::EscOfCoop;
                         else if (event.key.code == sf::Keyboard::Enter)
                             chat.Enterred();
                         else if (event.key.code == sf::Keyboard::H) {
@@ -456,8 +468,11 @@ int main() {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomWalls;
                         }
-                        else if (event.key.code == sf::Keyboard::Tab) MiniMapActivated = !MiniMapActivated;
-                        else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
+                        else if (event.key.code == sf::Keyboard::Tab) {
+                            MiniMapActivated = !MiniMapActivated;
+                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
                         else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
                         else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
                         else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
@@ -493,25 +508,24 @@ void draw() {
         break;
     case screens::Solo:
         window.clear(sf::Color::Black);
-        drawWalls();
-        if (!MiniMapActivated) {
-            for (sf::Sprite& s: Sprites) {
-                sf::FloatRect fr = s.getGlobalBounds();
-                if (in({fr.left, fr.top, fr.width, fr.height}, CameraPos.x, CameraPos.x, scw, sch)) {
-                    s.setPosition(s.getPosition() - CameraPos);
-                    window.draw(s);
-                    s.setPosition(s.getPosition() + CameraPos);
-                }
+        for (sf::Sprite& s: Sprites) {
+            sf::FloatRect fr = s.getGlobalBounds();
+            if (fr.intersects({CameraPos.x, CameraPos.x, scw, sch})) {
+                s.setPosition(s.getPosition() - CameraPos);
+                window.draw(s);
+                s.setPosition(s.getPosition() + CameraPos);
             }
-            player.draw(window);
-            for (int i = 0; i < Bullets.size(); i++)
-                Bullets[i].draw(window, CameraPos);
-        } else {
-            window.setView(MiniMapView);
-            CircleOfSmallPlayer.setPosition(player.getPosition() / float(size) * float(miniSize) + miniCameraPos);
-            window.draw(CircleOfSmallPlayer);
-            window.setView(GameView);
         }
+        player.draw(window);
+        drawWalls();
+        for (int i = 0; i < Bullets.size(); i++)
+            Bullets[i].draw(window, CameraPos);
+        // draw minimap
+        window.setView(MiniMapView);
+        CircleOfSmallPlayer.setPosition(player.getPosition() / float(size) * float(miniSize) + miniCameraPos);
+        window.draw(CircleOfSmallPlayer);
+        window.setView(GameView);
+        
         player.interface(window);
         chat.draw(window);
         break;
@@ -521,72 +535,65 @@ void draw() {
         break;
     case screens::Connect:
         window.clear(sf::Color::Black);
-        drawWalls();
-        for (Player& p: ConnectedPlayers)
-            if (!MiniMapActivated) {
-                for (sf::Sprite& s: Sprites) {
-                    sf::FloatRect fr = s.getGlobalBounds();
-                    if (in({fr.left, fr.top, fr.width, fr.height}, CameraPos.x, CameraPos.x, scw, sch)) {
-                        s.setPosition(s.getPosition() - CameraPos);
-                        window.draw(s);
-                        s.setPosition(s.getPosition() + CameraPos);
-                    }
+        for (Player& p: ConnectedPlayers) {
+            for (sf::Sprite& s: Sprites) {
+                sf::FloatRect fr = s.getGlobalBounds();
+                if (fr.intersects({CameraPos.x, CameraPos.x, scw, sch})) {
+                    s.setPosition(s.getPosition() - CameraPos);
+                    window.draw(s);
+                    s.setPosition(s.getPosition() + CameraPos);
                 }
-                p.draw(window);
-                for (int i = 0; i < Bullets.size(); i++)
-                    Bullets[i].draw(window, CameraPos);
-            } else {
-                window.setView(MiniMapView);
-                CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize) + miniCameraPos);
-                window.draw(CircleOfSmallPlayer);
-                window.setView(GameView);
             }
+            p.draw(window);
+            for (int i = 0; i < Bullets.size(); i++)
+                Bullets[i].draw(window, CameraPos);
+            // draw minimap
+            window.setView(MiniMapView);
+            CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize) + miniCameraPos);
+            window.draw(CircleOfSmallPlayer);
+            window.setView(GameView);
+        }
+        drawWalls();
         player.interface(window);
         chat.draw(window);
         break;
     case screens::Host:
         window.clear(sf::Color::Black);
-        drawWalls();
-        for (Player& p: ConnectedPlayers)
-            if (!MiniMapActivated) {
-                for (sf::Sprite& s: Sprites) {
-                    sf::FloatRect fr = s.getGlobalBounds();
-                    if (in({fr.left, fr.top, fr.width, fr.height}, CameraPos.x, CameraPos.x, scw, sch)) {
-                        s.setPosition(s.getPosition() - CameraPos);
-                        window.draw(s);
-                        s.setPosition(s.getPosition() + CameraPos);
-                    }
+        for (Player& p: ConnectedPlayers) {
+            for (sf::Sprite& s: Sprites) {
+                sf::FloatRect fr = s.getGlobalBounds();
+                if (fr.intersects({CameraPos.x, CameraPos.x, scw, sch})) {
+                    s.setPosition(s.getPosition() - CameraPos);
+                    window.draw(s);
+                    s.setPosition(s.getPosition() + CameraPos);
                 }
-                // window.setView(MiniMapView);
-                p.draw(window);
-                for (int i = 0; i < Bullets.size(); i++)
-                    Bullets[i].draw(window, CameraPos);
-                // window.setView(GameView);
-            } else {
-                CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize) + miniCameraPos);
-                window.draw(CircleOfSmallPlayer);
             }
+            p.draw(window);
+            for (int i = 0; i < Bullets.size(); i++)
+                Bullets[i].draw(window, CameraPos);
+            // draw minimap
+            window.setView(MiniMapView);
+            CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize) + miniCameraPos);
+            window.draw(CircleOfSmallPlayer);
+            window.setView(GameView);
+        }
+        drawWalls();
         player.interface(window);
         chat.draw(window);
         break;
     case screens::EscOfCoop:
         window.clear(sf::Color::Black);
-        drawWalls();
         for (Player& p: ConnectedPlayers)
-            if (!MiniMapActivated) {
-                for (sf::Sprite& s: Sprites) {
-                    sf::FloatRect fr = s.getGlobalBounds();
-                    if (in({fr.left, fr.top, fr.width, fr.height}, CameraPos.x, CameraPos.x, scw, sch)) {
-                        s.setPosition(s.getPosition() - CameraPos);
-                        window.draw(s);
-                        s.setPosition(s.getPosition() + CameraPos);
-                    }
-                }
-                p.draw(window);
-            } else {
-                CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize) + miniCameraPos);
-                window.draw(CircleOfSmallPlayer);
+            p.draw(window);
+        for (sf::Sprite& s: Sprites) {
+            sf::FloatRect fr = s.getGlobalBounds();
+            if (fr.intersects({CameraPos.x, CameraPos.x, scw, sch})) {
+                s.setPosition(s.getPosition() - CameraPos);
+                window.draw(s);
+                s.setPosition(s.getPosition() + CameraPos);
             }
+        }
+        drawWalls();
         chat.draw(window);
         ListOfPlayers.draw(window);
         MainMenuButton.draw(window);
@@ -595,7 +602,7 @@ void draw() {
         IPPanel.draw(window);
         break;
     }
-    window.draw(TextFPS.text);
+    // window.draw(TextFPS.text);
     window.display();
 }
 
@@ -844,37 +851,36 @@ void LevelGenerate() {
 }
 
 void drawWalls() {
-    if (!MiniMapActivated) {
-        for (int i = std::max(0, 2 * int(CameraPos.y) / size - 1);
-                i <= std::min(2 * n, 2 * int(CameraPos.y + sch + WallMinSize) / size + 1); i++)
-            for (int j = std::max(0, 2 * int(CameraPos.x) / size - 1);
-                    j <= std::min(2 * m, 2 * int(CameraPos.x + scw + WallMinSize) / size + 1); j++)
-                if ((*CurLocation)[i][j] == LocationIndex::wall)
-                    if (i % 2 == 1) { // |
-                        WallRectV.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
-                        window.draw(WallRectV);
-                    } else { // -
-                        WallRectG.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
-                        window.draw(WallRectG);
-                    }
-    } else {
-        window.setView(MiniMapView);
-        for (int i = 0; i <= n * 2; i++)
-            for (int j = 0; j <= m * 2; j++)
-                if ((*CurLocation)[i][j] == LocationIndex::wall)
-                    if (i % 2 == 1) { // |
-                    sf::Vertex line[2] = {
-                        sf::Vertex(sf::Vector2f((miniSize * j) / 2, miniSize * (i - 1) / 2) + miniCameraPos),
-                        sf::Vertex(sf::Vector2f((miniSize * j) / 2, miniSize * (i + 1) / 2) + miniCameraPos)
-                    };
-                    window.draw(line, 2, sf::Lines);
-                    } else { // -
-                    sf::Vertex line[2] = {
-                        sf::Vertex(sf::Vector2f(miniSize * (j - 1) / 2, (miniSize * i) / 2) + miniCameraPos),
-                        sf::Vertex(sf::Vector2f(miniSize * (j + 1) / 2, (miniSize * i) / 2) + miniCameraPos)
-                    };
-                    window.draw(line, 2, sf::Lines);
-                    }
-        window.setView(GameView);
-    }
+    // draw main wall
+    for (int i = std::max(0, 2 * int(CameraPos.y) / size - 1);
+            i <= std::min(2 * n, 2 * int(CameraPos.y + sch + WallMinSize) / size + 1); i++)
+        for (int j = std::max(0, 2 * int(CameraPos.x) / size - 1);
+                j <= std::min(2 * m, 2 * int(CameraPos.x + scw + WallMinSize) / size + 1); j++)
+            if ((*CurLocation)[i][j] == LocationIndex::wall)
+                if (i % 2 == 1) { // |
+                    WallRectV.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
+                    window.draw(WallRectV);
+                } else { // -
+                    WallRectG.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
+                    window.draw(WallRectG);
+                }
+    // draw minimap wall
+    window.setView(MiniMapView);
+    for (int i = 0; i <= n * 2; i++)
+        for (int j = 0; j <= m * 2; j++)
+            if ((*CurLocation)[i][j] == LocationIndex::wall)
+                if (i % 2 == 1) { // |
+                sf::Vertex line[2] = {
+                    sf::Vertex(sf::Vector2f((miniSize * j) / 2, miniSize * (i - 1) / 2) + miniCameraPos),
+                    sf::Vertex(sf::Vector2f((miniSize * j) / 2, miniSize * (i + 1) / 2) + miniCameraPos)
+                };
+                window.draw(line, 2, sf::Lines);
+                } else { // -
+                sf::Vertex line[2] = {
+                    sf::Vertex(sf::Vector2f(miniSize * (j - 1) / 2, (miniSize * i) / 2) + miniCameraPos),
+                    sf::Vertex(sf::Vector2f(miniSize * (j + 1) / 2, (miniSize * i) / 2) + miniCameraPos)
+                };
+                window.draw(line, 2, sf::Lines);
+                }
+    window.setView(GameView);
 }

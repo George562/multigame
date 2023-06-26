@@ -4,3 +4,4 @@ config file
 portal.h
 fundamentally change the server
 restructure files to improve readability
+на миникарте отображать только те стены, которые попали в поле зрения игрока
