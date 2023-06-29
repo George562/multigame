@@ -45,8 +45,6 @@ location LabirintWalls(0), WaitingRoomWalls(0);
 
 //////////////////////////////////////////////////////////// System stuff
 bool ClientFuncRun, HostFuncRun;
-sf::Vector2f CameraPos(0, 0), miniCameraPos((scw - m * miniSize) / 2, (sch - n * miniSize) / 2);
-float WallMinSize = size / 8, WallMaxSize = size;
 vvr wallsRect(0);
 std::vector<sf::Sprite> Sprites(0);
 sf::Sprite tempSprite;

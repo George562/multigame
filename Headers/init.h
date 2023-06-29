@@ -68,6 +68,9 @@ int sch = sf::VideoMode::getDesktopMode().height; // screen height
 int size = 540, miniSize = 50, n = 15, m = 15; // map is matrix n x m cells with size of one; minisize for minimap
 #define BigN n * 2 + 1
 #define BigM m * 2 + 1
+float WallMinSize = size / 8, WallMaxSize = size;
+
+sf::Vector2f CameraPos(0, 0), miniCameraPos((scw - m * miniSize) / 2, (sch - n * miniSize) / 2);
 
 sf::Texture Box;
 sf::Texture RedPanel;
