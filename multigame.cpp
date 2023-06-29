@@ -34,7 +34,6 @@ Button CoopButton       ("sources/RedPanel",    "Online"    );
 Button HostButton       ("sources/GreenPanel",  "Host"      );
 Button ConnectButton    ("sources/BluePanel",   "Connect"   );
 Button MainMenuButton   ("sources/RedPanel",    "Exit"      );
-Button EnterButton      ("sources/RedPanel",    "Enter"      );
 
 //////////////////////////////////////////////////////////// Pannels
 Panel  IPPanel          ("sources/YellowPanel", "IP:"       );
