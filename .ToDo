@@ -1,8 +1,10 @@
-item.h
-wall.h
-config file
-portal.h
-fundamentally change the server
-restructure files to improve readability
-на миникарте отображать только те стены, которые попали в поле зрения игрока
-в зоне отдыха играет фортепиано
+create item.h and machanich link at items
+create wall as class and use it at location
+set config file for use it in init() by initialisation stuff
+гоша: fundamentally change the server
+гоша: restructure files to improve readability
+on the minimap, display only those walls that fell into the player field of view
+piano playing in the rest area
+гоша: рефактор кнопки, как в нирс
+make portal class which teleport from one location to other
+make location loading from file
