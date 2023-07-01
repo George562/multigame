@@ -2,7 +2,6 @@
 #include "Headers/player.h"
 #include "Headers/client.h"
 #include "Headers/chat.h"
-#include "../SFML-2.5.1/include/SFML/Audio.hpp"
 
 //////////////////////////////////////////////////////////// Stuff for work with sistem and screen
 sf::ContextSettings settings;
