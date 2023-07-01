@@ -17,8 +17,8 @@ sf::Event event;
 sf::Mouse Mouse;
 screens::screens screen = screens::Main;
 
+//////////////////////////////////////////////////////////// Music
 sf::Music music;
-bool music_plays = false;
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
@@ -87,7 +87,6 @@ Button SoloButton ("sources/RedPanel", "Play" ,[](){
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
     music.stop();
-    music_plays = false;
 });
 
 Button NewGameButton ("sources/GreenPanel", "New Game", [](){});
@@ -101,7 +100,6 @@ Button CoopButton ("sources/RedPanel", "Online", [](){
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
     music.stop();
-    music_plays = false;
 });
 
 Button HostButton ("sources/GreenPanel", "Host", [](){
@@ -140,9 +138,6 @@ Button MainMenuButton ("sources/RedPanel", "Exit", [](){
             SelfDisconnect();
     }
     screen = screens::Main;
-    music.play();
-    sf::SoundSource::Status st = music.getStatus();
-    music_plays = true;
     ListOfPlayers.clear();
     Bullets.clear();
 });
@@ -185,11 +180,12 @@ int main() {
     HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,          sch * 5 / 8);
     ConnectButton.setPosition   (scw - scw / 6 - ConnectButton.Width * 3 / 4,   sch * 5 / 8);
     MainMenuButton.setPosition  (scw / 2 -       MainMenuButton.Width / 2,      sch * 5 / 8);
+    
     IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,             scw / 8    );
     ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,       scw / 16   );
 
     sf::Clock clock;
-    sf::Time time = clock.getElapsedTime();
+    // sf::Time time = clock.getElapsedTime();
 
     player.Clock  = &clock;
     player.Camera  = &CameraPos;
@@ -215,8 +211,7 @@ int main() {
     player.SecondWeapon = &shotgun;
     player.CurWeapon = player.FirstWeapon;
 
-    if (!music.openFromFile("sources/music/gambang.ogg"))
-        return -1; // error
+    music.openFromFile("sources/music/gambang.ogg");
 
     while (window.isOpen()) {
         if (!window.hasFocus()) {
@@ -239,7 +234,7 @@ int main() {
             while (window.pollEvent(event)) {}
             draw();
             // TextFPS.text.setString(std::to_string((int)std::round(1.f / (clock.getElapsedTime() - time).asSeconds())) + " fps");
-            time = clock.getElapsedTime();
+            // time = clock.getElapsedTime();
         } else {
             if (screen == screens::Solo || screen == screens::Host || screen == screens::Connect) {
                 if (!chat.inputted) {
@@ -289,16 +284,15 @@ int main() {
             MouseBuffer = Mouse.getPosition();
             draw();
             // TextFPS.text.setString(std::to_string((int)std::round(1.f / (clock.getElapsedTime() - time).asSeconds())) + " fps");
-            time = clock.getElapsedTime();
+            // time = clock.getElapsedTime();
         }
 
         while (window.pollEvent(event))
             switch (screen) {
             case screens::Main:
-                if (!music_plays) {
+                if (music.getStatus() != sf::Music::Playing)
                     music.play();
-                    music_plays = true;
-                }
+
                 if (event.type == sf::Event::KeyPressed)
                     if (event.key.code == sf::Keyboard::Escape) window.close();
                 CoopButton.isActivated(event);
