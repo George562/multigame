@@ -1,14 +1,15 @@
 create item.h and machanich link at items
 create wall as class and use it at location
 set config file for use it in init() by initialisation stuff
-гоша: fundamentally change the server
-гоша: restructure files to improve readability
-on the minimap, display only those walls that fell into the player field of view
-piano playing in the rest area
-гоша: рефактор кнопки, как в нирс
+Гоша: fundamentally change the server
+Гоша: restructure files to improve readability
+Ваня: on the minimap, display only those walls that fell into the player field of view
+Ваня: piano playing in the rest area and main menu
+Гоша: рефактор кнопки, как в нирс
 make portal class which teleport from one location to other
 make location loading from file
 replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
 add gas cloud objects and liquid puddles to the location
 set github
 add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
+remake location class and thinking about map class
