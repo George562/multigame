@@ -5,7 +5,7 @@ set config file for use it in init() by initialisation stuff
 Гоша: restructure files to improve readability
 Ваня: on the minimap, display only those walls that fell into the player field of view
 +/- Ваня: piano playing in the rest area and main menu
-Гоша: рефактор кнопки, как в нирс
++++ Гоша: рефактор кнопки, как в нирс
 make portal class which teleport from one location to other
 make location loading from file
 replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it

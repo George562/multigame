@@ -30,19 +30,6 @@ Client MySocket; // this computer socket
 int packetState, ComputerID;
 sf::Mutex mutex;
 
-//////////////////////////////////////////////////////////// Buttons
-Button SoloButton       ("sources/RedPanel",    "Play"      );
-Button NewGameButton    ("sources/GreenPanel",  "New Game"  );
-Button ContinueButton   ("sources/BluePanel",   "Continue"  );
-Button CoopButton       ("sources/RedPanel",    "Online"    );
-Button HostButton       ("sources/GreenPanel",  "Host"      );
-Button ConnectButton    ("sources/BluePanel",   "Connect"   );
-Button MainMenuButton   ("sources/RedPanel",    "Exit"      );
-
-//////////////////////////////////////////////////////////// Pannels
-Panel  IPPanel          ("sources/YellowPanel", "IP:"       );
-Panel  ListOfPlayers    ("sources/SteelFrame"               );
-
 //////////////////////////////////////////////////////////// Locations
 location* CurLocation = nullptr;
 location LabirintWalls(0), WaitingRoomWalls(0);
@@ -81,6 +68,84 @@ void funcOfHost();
 void funcOfClient();
 void LevelGenerate();
 void drawWalls();
+
+//////////////////////////////////////////////////////////// Threads
+sf::Thread HostTread(funcOfHost);
+sf::Thread ClientTread(funcOfClient);
+
+//////////////////////////////////////////////////////////// Pannels
+Panel  IPPanel          ("sources/YellowPanel", "IP:"       );
+Panel  ListOfPlayers    ("sources/SteelFrame"               );
+
+//////////////////////////////////////////////////////////// Buttons
+Button SoloButton ("sources/RedPanel", "Play" ,[](){
+    screen = screens::Solo;
+    Bullets.clear();
+    LevelGenerate();
+    multiplayer = false;
+    MiniMapActivated = false;
+    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+    miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+    music.stop();
+    music_plays = false;
+});
+
+Button NewGameButton ("sources/GreenPanel", "New Game", [](){});
+
+Button ContinueButton ("sources/BluePanel", "Continue", [](){});
+
+Button CoopButton ("sources/RedPanel", "Online", [](){
+    screen = screens::Coop;
+    multiplayer = true;
+    MiniMapActivated = false;
+    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+    miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+    music.stop();
+    music_plays = false;
+});
+
+Button HostButton ("sources/GreenPanel", "Host", [](){
+    screen = screens::Host;
+    listener.listen(53000);
+    selector.add(listener);
+    ListOfPlayers.setWord(MyIP);
+    Bullets.clear();
+    LevelGenerate();
+    ComputerID = 0;
+    Player* NewPlayer = new Player();
+    NewPlayer->Camera = &CameraPos;
+    ConnectedPlayers.push_back(*NewPlayer);
+    HostFuncRun = true;
+    HostTread.launch();
+});
+
+Button ConnectButton ("sources/BluePanel", "Connect", [](){
+    screen = screens::SetIP;
+});
+
+Button MainMenuButton ("sources/RedPanel", "Exit", [](){
+    if (multiplayer) {
+        if (HostFuncRun) {
+            mutex.lock();
+            SendPacket << pacetStates::disconnect;
+            SendToClients(SendPacket);
+            SendPacket.clear();
+            mutex.unlock();
+            clients.clear();
+            selector.clear();
+            listener.close();
+            HostFuncRun = false;
+            ConnectedPlayers.clear();
+        } else
+            SelfDisconnect();
+    }
+    screen = screens::Main;
+    music.play();
+    sf::SoundSource::Status st = music.getStatus();
+    music_plays = true;
+    ListOfPlayers.clear();
+    Bullets.clear();
+});
 
 //////////////////////////////////////////////////////////// the program
 int main() {
@@ -133,9 +198,6 @@ int main() {
 
     CircleOfSmallPlayer.setRadius(9);
     CircleOfSmallPlayer.setFillColor(sf::Color(0, 180, 0));
-
-    sf::Thread HostTread(funcOfHost);
-    sf::Thread ClientTread(funcOfClient);
 
     if (!LoadLocationFromFile(LabirintWalls, "save/LabirintWalls.dat"))
         LevelGenerate();
@@ -239,46 +301,15 @@ int main() {
                 }
                 if (event.type == sf::Event::KeyPressed)
                     if (event.key.code == sf::Keyboard::Escape) window.close();
-                if (CoopButton.isActivated(event)) {
-                    screen = screens::Coop;
-                    multiplayer = true;
-                    MiniMapActivated = false;
-                    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                    miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
-                    music.stop();
-                    music_plays = false;
-                } else if (SoloButton.isActivated(event)) {
-                    screen = screens::Solo;
-                    Bullets.clear();
-                    LevelGenerate();
-                    multiplayer = false;
-                    MiniMapActivated = false;
-                    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                    miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
-                    music.stop();
-                    music_plays = false;
-                }
+                CoopButton.isActivated(event);
+                SoloButton.isActivated(event);
                 break;
 
             case screens::Coop:
                 if (event.type == sf::Event::KeyPressed)
                     if (event.key.code == sf::Keyboard::Escape) screen = screens::Main;
-                if (HostButton.isActivated(event)) { 
-                    screen = screens::Host;
-                    listener.listen(53000);
-                    selector.add(listener);
-                    ListOfPlayers.setWord(MyIP);
-                    Bullets.clear();
-                    LevelGenerate();
-                    ComputerID = 0;
-                    { Player* NewPlayer = new Player();
-                      NewPlayer->Camera = &CameraPos;
-                      ConnectedPlayers.push_back(*NewPlayer);
-                      }
-                    HostFuncRun = true;
-                    HostTread.launch();
-                }
-                if (ConnectButton.isActivated(event)) screen = screens::SetIP;
+                HostButton.isActivated(event);
+                ConnectButton.isActivated(event);
                 break;
 
             case screens::Host:
@@ -343,28 +374,8 @@ int main() {
                 break;
 
             case screens::EscOfCoop:
-                if (MainMenuButton.isActivated(event)) {
-                    if (multiplayer) {
-                        if (HostFuncRun) {
-                            mutex.lock();
-                            SendPacket << pacetStates::disconnect;
-                            SendToClients(SendPacket);
-                            SendPacket.clear();
-                            mutex.unlock();
-                            clients.clear();
-                            selector.clear();
-                            listener.close();
-                            HostFuncRun = false;
-                            ConnectedPlayers.clear();
-                        } else
-                            SelfDisconnect();
-                    }
-                    screen = screens::Main;
-                    music.play();
-                    music_plays = true;
-                    ListOfPlayers.clear();
-                    Bullets.clear();
-                } else if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
+                MainMenuButton.isActivated(event);
+                if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
                     if (multiplayer)
                         screen = HostFuncRun ? screens::Host : screens::Connect;
                     else screen = screens::Solo;

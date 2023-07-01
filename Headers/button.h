@@ -8,8 +8,9 @@ class Button : public Panel {
 public:
     sf::Texture pushedTexture;
     bool Pushed;
+    void (*buttonFunction)(void);
 
-    Button(str, str);
+    Button(str, str, void (*)(void));
     void setWord(str);
     str getWord();
     void setPosition(float, float);
@@ -22,9 +23,10 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Button::Button(str name, str word = "") : Panel(name, word) {
+Button::Button(str name, str word, void (*foo)(void)) : Panel(name, word) {
     pushedTexture.loadFromFile(name + "Pushed.png");
     setWord(word);
+    buttonFunction = foo;
 }
 
 void Button::setWord(str word) {
@@ -54,8 +56,10 @@ bool Button::isActivated(sf::Event& event) {
     if (Pushed && event.type == sf::Event::MouseButtonReleased) {
         Pushed = false;
         rect.setTexture(texture);
-        if (OnTheButton(event.mouseButton.x, event.mouseButton.y))
+        if (OnTheButton(event.mouseButton.x, event.mouseButton.y)) {
+            buttonFunction();
             return true;
+        }
     }
     if (event.type == sf::Event::MouseButtonPressed &&
         OnTheButton(event.mouseButton.x, event.mouseButton.y) && 
