@@ -26,4 +26,4 @@ add gas cloud objects and liquid puddles to the location
 
 Рома: add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
 
-+++ Гоша: remake location class and thinking about map class
+Гоша: remake location class and thinking about map class
