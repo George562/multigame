@@ -2,6 +2,7 @@
 #include "Headers/player.h"
 #include "Headers/client.h"
 #include "Headers/chat.h"
+#include "../SFML-2.5.1/include/SFML/Audio.hpp"
 
 //////////////////////////////////////////////////////////// Stuff for work with sistem and screen
 sf::ContextSettings settings;
@@ -15,6 +16,9 @@ bool MiniMapActivated;
 sf::Event event;
 sf::Mouse Mouse;
 screens::screens screen = screens::Main;
+
+sf::Music music;
+bool music_plays = false;
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
@@ -149,6 +153,9 @@ int main() {
     player.SecondWeapon = &shotgun;
     player.CurWeapon = player.FirstWeapon;
 
+    if (!music.openFromFile("sources/music/gambang.ogg"))
+        return -1; // error
+
     while (window.isOpen()) {
         if (!window.hasFocus()) {
             if (HostFuncRun) {
@@ -226,6 +233,10 @@ int main() {
         while (window.pollEvent(event))
             switch (screen) {
             case screens::Main:
+                if (!music_plays) {
+                    music.play();
+                    music_plays = true;
+                }
                 if (event.type == sf::Event::KeyPressed)
                     if (event.key.code == sf::Keyboard::Escape) window.close();
                 if (CoopButton.isActivated(event)) {
@@ -234,6 +245,8 @@ int main() {
                     MiniMapActivated = false;
                     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+                    music.stop();
+                    music_plays = false;
                 } else if (SoloButton.isActivated(event)) {
                     screen = screens::Solo;
                     Bullets.clear();
@@ -242,6 +255,8 @@ int main() {
                     MiniMapActivated = false;
                     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+                    music.stop();
+                    music_plays = false;
                 }
                 break;
 
@@ -345,6 +360,8 @@ int main() {
                             SelfDisconnect();
                     }
                     screen = screens::Main;
+                    music.play();
+                    music_plays = true;
                     ListOfPlayers.clear();
                     Bullets.clear();
                 } else if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {

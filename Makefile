@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -O3
+CFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lsfml-audio -O3
 dir = Headers
 
 # include $(dir)
