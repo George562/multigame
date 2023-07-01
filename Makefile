@@ -7,10 +7,10 @@ dir = Headers
 all: multigame
 
 multigame: multigame.cpp $(dir)/*
-	$(CC) multigame.cpp -o multigame $(CFLAGS) -I./$(dir) -I./SFML-2.5.1 -L .
+	$(CC) multigame.cpp -o multigame $(CFLAGS) -I./$(dir) -I./SFML-2.5.1/include/ -L ./SFML-2.5.1/lib/
 
 hide: multigame.cpp $(dir)/*
-	$(CC) multigame.cpp -o multigame $(CFLAGS) -mwindows -I./$(dir) -I./SFML-2.5.1 -L .
+	$(CC) multigame.cpp -o multigame $(CFLAGS) -mwindows -I./$(dir) -I./SFML-2.5.1/include/ -L ./SFML-2.5.1/lib/
 
 # multigame.o: multigame.cpp $(dir)/*
 # 	$(CC) multigame.cpp -c -O3 -I ./$(dir) -L ./bin
