@@ -9,4 +9,3 @@ piano playing in the rest area
 make portal class which teleport from one location to other
 make location loading from file
 replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
-add gas cloud objects and liquid puddles to the location
