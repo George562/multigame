@@ -11,4 +11,4 @@ make location loading from file
 replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
 add gas cloud objects and liquid puddles to the location
 set github
-add intersects and contains
+add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
