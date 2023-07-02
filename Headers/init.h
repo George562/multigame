@@ -2,7 +2,6 @@
 #include "../SFML-2.5.1/include/SFML/Graphics.hpp"
 #include "../SFML-2.5.1/include/SFML/Audio.hpp"
 #include <iostream>
-#include <stdio.h>
 #include <fstream>
 #include <vector>
 #include <map>
@@ -10,10 +9,6 @@
 #include <ctime>
 #include <queue>
 #include <cmath>
-#include <math.h>
-#include <conio.h>
-#include <thread>
-#include <chrono>
 #include "scale.h"
 #define M_PI       3.14159265358979323846   // pi
 
