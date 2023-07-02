@@ -2,15 +2,13 @@
 
 #define COMMON_BULLET_RADIUS 7
 
-namespace BulletType {
+struct Bullet {
     enum Type {
         Common,
         Bubble,
         // Explosion
     };
-}
 
-struct Bullet {
     float PosX, PosY, dx, dy;
     sf::Color color;
     int penetration;
@@ -19,12 +17,12 @@ struct Bullet {
     sf::CircleShape* circle;
     bool exlpode = false;
     sf::Time timer;
-    Scale<float> ExplosionRadius = {1, 12, 0};
-    BulletType::Type type;
+    Scale<float> ExplosionRadius = {1, 12, 1};
+    Bullet::Type type;
     bool todel = false;
 
     Bullet() {}
-    Bullet(float x, float y, float vx, float vy, sf::Color c, int pen, float d, float time, BulletType::Type t = BulletType::Common) {
+    Bullet(float x, float y, float vx, float vy, sf::Color c, int pen, float d, float time, Bullet::Type t = Bullet::Common) {
         PosX = x; PosY = y; dx = vx; dy = vy;
         color = c;
         penetration = pen;
@@ -47,7 +45,7 @@ struct Bullet {
 
     virtual void draw(sf::RenderWindow& window, sf::Vector2f& camera) {
         switch (type) {
-        case BulletType::Bubble:
+        case Bullet::Bubble:
             if (exlpode && !todel) {
                 if (ExplosionRadius.fromTop() > 0) {
                     ExplosionRadius += 1.f / 5;
@@ -57,7 +55,7 @@ struct Bullet {
                     PosY -= radius / 5;
                 } else todel = true;
             }
-        case BulletType::Common:
+        case Bullet::Common:
             if (in(PosX, PosY, camera.x, camera.y, scw, sch)) {
                 circle->setPosition(PosX - camera.x, PosY - camera.y);
                 window.draw(*circle);
@@ -65,18 +63,18 @@ struct Bullet {
         }
     }
 
-    virtual void move(const vvr& wallsRect, int& size, sf::Clock& clock) {
+    virtual void move(const vvr& wallsRect, sf::Clock& clock) {
         if (dx == 0 && dy == 0) return;
-        sf::Vector2i res = WillCollisionWithWalls(wallsRect, size, PosX, PosY, radius, radius, dx, dy);
+        sf::Vector2i res = WillCollisionWithWalls(wallsRect, PosX, PosY, radius, radius, dx, dy);
         dx *= res.x;
         dy *= res.y;
         switch (type) {
-        case BulletType::Bubble:
+        case Bullet::Bubble:
             PosX += dx * (timer - clock.getElapsedTime()).asSeconds();
             PosY += dy * (timer - clock.getElapsedTime()).asSeconds();
             if (timer < clock.getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
             break;
-        case BulletType::Common:
+        case Bullet::Common:
             PosX += dx;
             PosY += dy;
         }
@@ -87,8 +85,10 @@ using vB = std::vector<Bullet>;
 vB Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
-    return packet << b.PosX << b.PosY << b.dx << b.dy << b.color << b.damage << b.radius;
+    return packet << b.PosX << b.PosY << b.dx << b.dy << b.color << b.damage << b.type;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
-    return packet >> b.PosX >> b.PosY >> b.dx >> b.dy >> b.color >> b.damage >> b.radius;
+    packet >> b.PosX >> b.PosY >> b.dx >> b.dy >> b.color >> b.damage;
+    int t; packet >> t; b.type = Bullet::Type(t);
+    return packet;
 }

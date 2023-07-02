@@ -31,7 +31,7 @@ bool in(const float ax, const float ay, const float& x, const float& y, const fl
 }
 
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
-sf::Vector2i WillCollisionWithWalls(vvr Walls, int& size, float& PosX, float& PosY, float& Width, float& Height, float& dx, float& dy) {
+sf::Vector2i WillCollisionWithWalls(vvr Walls, float& PosX, float& PosY, float& Width, float& Height, float& dx, float& dy) {
     sf::Vector2i res = {-1, -1};
     int y = (int(PosY) / size) * 2, x = (int(PosX) / size) * 2;
     int WallHight = Walls.size(), WallLength = Walls[0].size();
@@ -159,7 +159,7 @@ bool LoadLocationFromFile(location& arr, str FileName) {
     return true;
 }
 
-void CreateWallRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites, int& size, float& minisize) {
+void CreateWallRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites) {
     int n = arr.size(), m = arr[0].size();
     Sprites.clear();
     wallsRect.assign(n, vr(m));
@@ -167,9 +167,9 @@ void CreateWallRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Spr
         for (int j = 0; j < m; j++) {
             if (arr[i][j] == LocationIndex::wall) {
                 if (i % 2 == 1) // |
-                    wallsRect[i][j].setRect((size * j - minisize) / 2, size * (i - 1) / 2.f, minisize, float(size));
+                    wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
                 else // -
-                    wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - minisize) / 2, float(size), minisize);
+                    wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize);
             } else  {
                 wallsRect[i][j].setRect(-1, -1, -1, -1);
                 if (arr[i][j] == LocationIndex::box) {

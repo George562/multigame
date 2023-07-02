@@ -17,7 +17,7 @@ sf::Mouse Mouse;
 screens::screens screen = screens::Main;
 
 //////////////////////////////////////////////////////////// Music
-sf::Music music;
+sf::Music MainMenuMusic;
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
@@ -85,7 +85,7 @@ Button SoloButton ("sources/RedPanel", "Play" ,[](){
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
-    music.stop();
+    MainMenuMusic.stop();
 });
 
 Button NewGameButton ("sources/GreenPanel", "New Game", [](){});
@@ -98,7 +98,7 @@ Button CoopButton ("sources/RedPanel", "Online", [](){
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
-    music.stop();
+    MainMenuMusic.stop();
 });
 
 Button HostButton ("sources/GreenPanel", "Host", [](){
@@ -122,8 +122,10 @@ Button ConnectButton ("sources/BluePanel", "Connect", [](){
 
 Button MainMenuButton ("sources/RedPanel", "Exit", [](){
     if (multiplayer) {
+        std::cout << "bruh\n";
         if (HostFuncRun) {
             mutex.lock();
+            std::cout << "client loh\n";
             SendPacket << pacetStates::disconnect;
             SendToClients(SendPacket);
             SendPacket.clear();
@@ -155,7 +157,7 @@ int main() {
 
     // Load locations
     LoadLocationFromFile(WaitingRoomWalls, "sources/locations/WaitingRoom.txt");
-    CreateWallRectByLocation(WaitingRoomWalls, wallsRect, Sprites, size, WallMinSize);
+    CreateWallRectByLocation(WaitingRoomWalls, wallsRect, Sprites);
 
     CurLocation = &LabirintWalls;
 
@@ -197,7 +199,7 @@ int main() {
     if (!LoadLocationFromFile(LabirintWalls, "save/LabirintWalls.dat"))
         LevelGenerate();
     else
-        CreateWallRectByLocation(LabirintWalls, wallsRect, Sprites, size, WallMinSize);
+        CreateWallRectByLocation(LabirintWalls, wallsRect, Sprites);
 
     Pistol pistol;
     Shotgun shotgun;
@@ -210,7 +212,7 @@ int main() {
     player.SecondWeapon = &shotgun;
     player.CurWeapon = player.FirstWeapon;
 
-    music.openFromFile("sources/music/gambang.ogg");
+    MainMenuMusic.openFromFile("sources/music/gambang.ogg");
 
     while (window.isOpen()) {
         if (!window.hasFocus()) {
@@ -228,7 +230,7 @@ int main() {
                 if (!(0 <= x && x < BigM && 0 <= y && y < BigN) || Bullets[i].penetration < 0 || Bullets[i].todel) {
                     Bullets.erase(Bullets.begin() + i--); continue;
                 }
-                Bullets[i++].move(wallsRect, size, clock);
+                Bullets[i++].move(wallsRect, clock);
             }
             while (window.pollEvent(event)) {}
             draw();
@@ -237,7 +239,7 @@ int main() {
         } else {
             if (screen == screens::Solo || screen == screens::Host || screen == screens::Connect) {
                 if (!chat.inputted) {
-                    player.move(wallsRect, size);
+                    player.move(wallsRect);
                     CameraPos = {player.PosX - scw / 2 + player.radius, player.PosY - sch / 2 + player.radius};
                 }
                 int wasBulletsCount = Bullets.size();
@@ -258,7 +260,7 @@ int main() {
                         CountOfBulletsOtOfScreen++;
                         continue;
                     } else
-                        Bullets[i++].move(wallsRect, size, clock);
+                        Bullets[i++].move(wallsRect, clock);
                 }
                 Bullets.resize(Bullets.size() - CountOfBulletsOtOfScreen);
             }
@@ -289,8 +291,8 @@ int main() {
         while (window.pollEvent(event))
             switch (screen) {
             case screens::Main:
-                if (music.getStatus() != sf::Music::Playing)
-                    music.play();
+                if (MainMenuMusic.getStatus() != sf::Music::Playing)
+                    MainMenuMusic.play();
 
                 if (event.type == sf::Event::KeyPressed)
                     if (event.key.code == sf::Keyboard::Escape) window.close();
@@ -391,7 +393,6 @@ int main() {
                         if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
                             screen = screens::Connect;
                             selector.add(MySocket);
-                            ClientFuncRun = true;
                             
                             if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
                             MySocket.receive(ReceivePacket) == sf::Socket::Done)
@@ -416,6 +417,7 @@ int main() {
                                         player.setPosition(ConnectedPlayers[ComputerID].getPosition());
                                     }
                                 }
+                            ClientFuncRun = true;
                             ClientTread.launch();
                         }
                         IPPanel.setWord("IP:" + IPOfHost);
@@ -676,7 +678,7 @@ void ClientConnect() {
 
 void ClientDisconnect(int i) {
     selector.remove(*clients[i]);
-    std::cout << (*clients[i]).getRemoteAddress().toString() << " disconnected; numver = " << i << "\n";
+    std::cout << (*clients[i]).getRemoteAddress().toString() << " disconnected; number = " << i << "\n";
     clients.erase(clients.begin() + i);
     ConnectedPlayers.erase(ConnectedPlayers.begin() + i + 1);
     ListOfPlayers.removeWord(i);
@@ -733,6 +735,7 @@ void funcOfHost() {
                             ReceivePacket >> packetState;
                             switch (packetState) {
                                 case pacetStates::disconnect:
+                                    std::cout << "client self disconect\n";
                                     ClientDisconnect(i--);
                                     break;
                                 case pacetStates::PlayerPos:
@@ -777,6 +780,7 @@ void funcOfClient() {
                     ReceivePacket >> packetState;
                     switch (packetState) {
                         case pacetStates::disconnect:
+                            std::cout << "bruh!\n";
                             SelfDisconnect();
                             break;
                         case pacetStates::PlayerConnect:

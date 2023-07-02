@@ -186,7 +186,7 @@ public:
         dx *= velocity / len; dy *= velocity / len;
         sf::Vector2f CenterOfPlayer(player.PosX + player.Width / 2, player.PosY + player.Height / 2);
         newBullet = new Bullet(CenterOfPlayer.x, CenterOfPlayer.y, dx, dy,
-sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 3 + clock->getElapsedTime().asSeconds(), BulletType::Bubble);
+sf::Color(rand() % 256, rand() % 256, rand() % 256), 1, damage, 3 + clock->getElapsedTime().asSeconds(), Bullet::Bubble);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         lastShoot = clock->getElapsedTime();

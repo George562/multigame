@@ -17,7 +17,7 @@ public:
     Player();
     void draw(sf::RenderWindow&);
     void interface(sf::RenderWindow&);
-    void move(const vvr&, int&);
+    void move(const vvr&);
     void update(vB&);
     void update(sf::Event&, bool&);
     void ChangeWeapon(int);
@@ -82,7 +82,7 @@ void Player::draw(sf::RenderWindow& window) {
     }
 }
 
-void Player::move(const vvr& walls, int& size) {
+void Player::move(const vvr& walls) {
     int N = walls.size(), M = walls[0].size(), y = (int(PosY) / size) * 2, x = (int(PosX) / size) * 2;
 
     if (!(0 <= y && y < N && 0 <= x && x < M)) return;
@@ -120,7 +120,7 @@ void Player::move(const vvr& walls, int& size) {
             Velocity.cur.x -= Acceleration * ((Velocity.cur.x > 0) ? 1 : -1);
     }
 
-    sf::Vector2i tempv = WillCollisionWithWalls(walls, size, PosX, PosY, Width, Height, Velocity.cur.x, Velocity.cur.y);
+    sf::Vector2i tempv = WillCollisionWithWalls(walls, PosX, PosY, Width, Height, Velocity.cur.x, Velocity.cur.y);
 
     if (tempv.x == 1) PosX += Velocity.cur.x;
     else Velocity.cur.x = 0;
