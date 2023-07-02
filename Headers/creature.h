@@ -6,11 +6,11 @@
 
 class Creature : public Rect {
 public:
-    Scale<float> Health; // if less than 0, creature will die
+    Scale<float> Health;
     Scale<float> Mana; // Used for everything
     float ManaRecovery;
     Scale<float> Armor; // blocking damage = min(1, damage - armor)
-    float Money; // you can buy something with this
+    float Money;
     Scale<sf::Vector2f> Velocity; // [bottom{x,y}, top{x,y}, cur{x,y}]
     float Acceleration;
     Point direction;

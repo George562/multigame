@@ -6,7 +6,7 @@
 class Weapon {
 public:
     Scale<int> ammunition;
-    float cost;
+    float ManaCost;
     sf::Time FireRate, lastShoot;
     float damage;
     float velocity;
@@ -20,10 +20,10 @@ public:
     Bullet* newBullet;
 
     Weapon() {};
-    Weapon(int MaxAmmo, float cost, float time, int dmg) {
+    Weapon(int MaxAmmo, float ManaCost, float FireRate, int dmg) {
         this->ammunition = {0, MaxAmmo, MaxAmmo};
-        this->cost = cost;
-        this->FireRate = sf::seconds(time);
+        this->ManaCost = ManaCost;
+        this->FireRate = sf::seconds(FireRate);
         this->damage = dmg;
         lastShoot = sf::seconds(0);
         lock = true;
@@ -63,8 +63,8 @@ public:
     }
 
     virtual void Reload(Scale<float>& Mana) {
-        int x = std::min(int(Mana.cur / cost), ammunition.fromTop());
-        Mana -= cost * x;
+        int x = std::min(int(Mana.cur / ManaCost), ammunition.fromTop());
+        Mana -= ManaCost * x;
         ammunition += x;
     };
 

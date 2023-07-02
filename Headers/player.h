@@ -17,7 +17,7 @@ public:
     Player();
     void draw(sf::RenderWindow&);
     void interface(sf::RenderWindow&);
-    void move(const vvr&);
+    void move(vvr&);
     void update(vB&);
     void update(sf::Event&, bool&);
     void ChangeWeapon(int);
@@ -82,7 +82,7 @@ void Player::draw(sf::RenderWindow& window) {
     }
 }
 
-void Player::move(const vvr& walls) {
+void Player::move(vvr& walls) {
     int N = walls.size(), M = walls[0].size(), y = (int(PosY) / size) * 2, x = (int(PosX) / size) * 2;
 
     if (!(0 <= y && y < N && 0 <= x && x < M)) return;

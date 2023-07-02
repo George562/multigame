@@ -22,11 +22,11 @@ struct Bullet {
     bool todel = false;
 
     Bullet() {}
-    Bullet(float x, float y, float vx, float vy, sf::Color c, int pen, float d, float time, Bullet::Type t = Bullet::Common) {
+    Bullet(float x, float y, float vx, float vy, sf::Color clr, int penetr, float dmg, float time, Bullet::Type t = Bullet::Common) {
         PosX = x; PosY = y; dx = vx; dy = vy;
-        color = c;
-        penetration = pen;
-        damage = d;
+        color = clr;
+        penetration = penetr;
+        damage = dmg;
         circle = new sf::CircleShape();
         timer = sf::seconds(time);
         type = t;

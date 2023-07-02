@@ -15,7 +15,7 @@ public:
     str getWord();
     void setPosition(float, float);
     void draw(sf::RenderWindow&);
-    bool OnTheButton(int, int);
+    bool OnTheButton(int&, int&);
     bool isActivated(sf::Event&);
 };
 
@@ -48,8 +48,8 @@ void Button::draw(sf::RenderWindow& window) {
     window.draw(text);
 }
 
-bool Button::OnTheButton(int x, int y) {
-    return PosX <= x && x <= PosX + Width && PosY <= y && y <= PosY + Height;
+bool Button::OnTheButton(int& x, int& y) {
+    return in(x, y, PosX, PosY, Width, Height);
 }
 
 bool Button::isActivated(sf::Event& event) {

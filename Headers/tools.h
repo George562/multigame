@@ -158,7 +158,7 @@ bool LoadLocationFromFile(location& arr, str FileName) {
     return true;
 }
 
-void CreateWallRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites) {
+void CreateMapRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites) {
     int n = arr.size(), m = arr[0].size();
     Sprites.clear();
     wallsRect.assign(n, vr(m));

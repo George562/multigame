@@ -155,7 +155,7 @@ int main() {
 
     // Load locations
     LoadLocationFromFile(WaitingRoomWalls, "sources/locations/WaitingRoom.txt");
-    CreateWallRectByLocation(WaitingRoomWalls, wallsRect, Sprites);
+    CreateMapRectByLocation(WaitingRoomWalls, wallsRect, Sprites);
 
     CurLocation = &LabirintWalls;
 
@@ -187,7 +187,7 @@ int main() {
     // sf::Time time = clock.getElapsedTime();
 
     player.Clock  = &clock;
-    player.Camera  = &CameraPos;
+    player.Camera = &CameraPos;
 
     chat.Clock    = &clock;
 
@@ -197,7 +197,7 @@ int main() {
     if (!LoadLocationFromFile(LabirintWalls, "save/LabirintWalls.dat"))
         LevelGenerate();
     else
-        CreateWallRectByLocation(LabirintWalls, wallsRect, Sprites);
+        CreateMapRectByLocation(LabirintWalls, wallsRect, Sprites);
 
     Pistol pistol;
     Shotgun shotgun;
