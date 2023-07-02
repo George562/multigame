@@ -26,8 +26,8 @@ bool in(const Rect& a, const Rect& b) {
 bool in(const sf::Vector2f& a, const float& x, const float& y, const float& w = 0, const float& h = 0) {
     return a.x <= x + w && x <= a.x && a.y <= y + h && y <= a.y;
 }
-bool in(const float ax, const float ay, const float& x, const float& y, const float& w = 0, const float& h = 0) {
-    return ax <= x + w && x <= ax && ay <= y + h && y <= ay;
+bool in(const float px, const float py, const float& left, const float& top, const float& w = 0, const float& h = 0) {
+    return px <= left + w && left <= px && py <= top + h && top <= py;
 }
 
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
@@ -70,11 +70,10 @@ sf::Vector2i WillCollisionWithWalls(vvr Walls, float& PosX, float& PosY, float& 
     return res;  // if value of vector == -1 => there was collision
 }
 
-void find_ways(vp& arr, location& walls, const int x, const int y, const int n, const int m) {
-    arr.clear();
+void find_ways(size_t& arr, location& walls, const int x, const int y, const int n, const int m) {
     vvb used(n, vb(m, false));
     std::queue<Point> q; q.push(Point{x, y});
-    arr.push_back(Point{x, y});
+    arr = 1;
     int N = n * 2, M = m * 2;
     Point cur, check, next;
     while (!q.empty()) {
@@ -84,9 +83,9 @@ void find_ways(vp& arr, location& walls, const int x, const int y, const int n, 
         for (Point dir: dirs) {
             check = cur + dir;
             next = check + dir;
-            if (M > next.x && next.x > 0 && 0 < next.y && next.y < N && !used[next.y / 2][next.x / 2] && !walls[check.y][check.x]) {
+            if (in(next.x, next.y, 0, 0, M, N) && !used[next.y / 2][next.x / 2] && !walls[check.y][check.x]) {
                 q.push(next);
-                arr.push_back(next);
+                arr++;
             }
         }
     }
@@ -97,12 +96,12 @@ void find_ways(vp& arr, location& walls, const int x, const int y, const int n, 
             for (Point& dir: dirs) {
                 check = Point{j, i} + dir;
                 if (check.y % 2 == 0 || check.x % 2 == 0) continue;
-                if (M > check.x && check.x > 0 && 0 < check.y && check.y < N && used[check.y / 2][check.x / 2]) {
+                if (in(check.x, check.y, 0, 0, M, N) && used[check.y / 2][check.x / 2]) {
                     todel = false;
                     break;
                 }
             }
-            if (todel) walls[i][j] = false;
+            if (todel) walls[i][j] = 0;
         }
 }
 

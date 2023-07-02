@@ -26,7 +26,7 @@ std::vector<Client*> clients(0);
 sf::SocketSelector selector;
 str ClientState, IPOfHost, MyIP, PacetData;
 Client MySocket; // this computer socket
-int packetState, ComputerID;
+sf::Int32 packetState, ComputerID;
 sf::Mutex mutex;
 
 //////////////////////////////////////////////////////////// Locations
@@ -38,7 +38,7 @@ bool ClientFuncRun, HostFuncRun;
 vvr wallsRect(0);
 std::vector<sf::Sprite> Sprites(0);
 sf::Sprite tempSprite;
-vp ways(0);
+size_t CountOfEnableTilesOnMap;
 sf::RectangleShape WallRectG(sf::Vector2f(WallMaxSize, WallMinSize));
 sf::RectangleShape WallRectV(sf::Vector2f(WallMinSize, WallMaxSize));
 
@@ -122,11 +122,9 @@ Button ConnectButton ("sources/BluePanel", "Connect", [](){
 
 Button MainMenuButton ("sources/RedPanel", "Exit", [](){
     if (multiplayer) {
-        std::cout << "bruh\n";
         if (HostFuncRun) {
             mutex.lock();
-            std::cout << "client loh\n";
-            SendPacket << pacetStates::disconnect;
+            SendPacket << sf::Int32(pacetStates::disconnect);
             SendToClients(SendPacket);
             SendPacket.clear();
             mutex.unlock();
@@ -218,7 +216,7 @@ int main() {
         if (!window.hasFocus()) {
             if (HostFuncRun) {
                 mutex.lock();
-                SendPacket << pacetStates::PlayerPos;
+                SendPacket << sf::Int32(pacetStates::PlayerPos);
                 for (Player& x: ConnectedPlayers) SendPacket << x;
                 SendToClients(SendPacket);
                 SendPacket.clear();
@@ -246,7 +244,7 @@ int main() {
                 player.update(Bullets);
                 if (wasBulletsCount < Bullets.size() && (screen == screens::Host || screen == screens::Connect)) {
                     mutex.lock();
-                    SendPacket << pacetStates::Shooting << (int)Bullets.size() - wasBulletsCount;
+                    SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size() - wasBulletsCount;
                     for (; wasBulletsCount < Bullets.size(); wasBulletsCount++) SendPacket << Bullets[wasBulletsCount];
                     if (HostFuncRun)        SendToClients(SendPacket);
                     else if (ClientFuncRun) MySocket.send(SendPacket);
@@ -267,7 +265,7 @@ int main() {
             if (HostFuncRun || ClientFuncRun) {
                 ConnectedPlayers[ComputerID].setPosition(player.getPosition());
                 mutex.lock();
-                SendPacket << pacetStates::PlayerPos;
+                SendPacket << sf::Int32(pacetStates::PlayerPos);
                 if (HostFuncRun) {
                     for (Player& x: ConnectedPlayers) SendPacket << x;
                     SendToClients(SendPacket);
@@ -295,7 +293,10 @@ int main() {
                     MainMenuMusic.play();
 
                 if (event.type == sf::Event::KeyPressed)
-                    if (event.key.code == sf::Keyboard::Escape) window.close();
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        MainMenuMusic.stop();
+                        window.close();
+                    }
                 CoopButton.isActivated(event);
                 SoloButton.isActivated(event);
                 break;
@@ -315,7 +316,7 @@ int main() {
                         else if (event.key.code == sf::Keyboard::Enter)
                             if (chat.Enterred()) {
                                 mutex.lock();
-                                SendPacket << pacetStates::ChatEvent << chat.Last();
+                                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
                                 SendToClients(SendPacket);
                                 SendPacket.clear();
                                 mutex.unlock();
@@ -358,7 +359,7 @@ int main() {
                             SendToClients(LabirintData);
                             for (Player& p: ConnectedPlayers)
                                 p.setPosition(player.getPosition());
-                            SendPacket << pacetStates::SetPos;
+                            SendPacket << sf::Int32(pacetStates::SetPos);
                             for (Player& x: ConnectedPlayers) SendPacket << x;
                             SendToClients(SendPacket);
                             SendPacket.clear();
@@ -435,7 +436,7 @@ int main() {
                         else if (event.key.code == sf::Keyboard::Enter)
                             if (chat.Enterred()) {
                                 mutex.lock();
-                                SendPacket << pacetStates::ChatEvent << chat.Last();
+                                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
                                 MySocket.send(SendPacket);
                                 SendPacket.clear();
                                 mutex.unlock();
@@ -637,7 +638,7 @@ void ClientConnect() {
         mutex.lock();
 
         str ConnectedClientIP = (*client).getRemoteAddress().toString();
-        SendPacket << pacetStates::PlayerConnect << ConnectedClientIP;
+        SendPacket << sf::Int32(pacetStates::PlayerConnect) << ConnectedClientIP;
         SendToClients(SendPacket);
         SendPacket.clear();
 
@@ -652,17 +653,17 @@ void ClientConnect() {
         NewPlayer->Camera = &CameraPos;
         NewPlayer->setPosition({float(m - m % 2 + 1) * size / 2, float(n - n % 2 + 1) * size / 2});
         ConnectedPlayers.push_back(*NewPlayer);
-        SendPacket << pacetStates::PlayersAmount << (int)ConnectedPlayers.size() - 1;
+        SendPacket << sf::Int32(pacetStates::PlayersAmount) << (int)ConnectedPlayers.size() - 1;
 
         for (int i = 0; i < ListOfPlayers.size(); i++)
-            SendPacket << pacetStates::PlayerConnect << ListOfPlayers[i];
+            SendPacket << sf::Int32(pacetStates::PlayerConnect) << ListOfPlayers[i];
 
-        SendPacket << pacetStates::Shooting << (int)Bullets.size();
+        SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size();
         std::cout << "bullets: " << Bullets.size() << "\n";
         for (int i = 0; i < Bullets.size(); i++) SendPacket << Bullets[i];
 
         std::cout << "amount players = " << ConnectedPlayers.size() - 1 << '\n';
-        SendPacket << pacetStates::SetPos;
+        SendPacket << sf::Int32(pacetStates::SetPos);
         for (Player& x: ConnectedPlayers) SendPacket << x;
 
         if (client->send(SendPacket) == sf::Socket::Done) std::cout << "SendPacket was sended\n";
@@ -685,7 +686,7 @@ void ClientDisconnect(int i) {
     
     std::cout << "amount of clients = " << clients.size() << "\n";
     mutex.lock();
-    SendPacket << pacetStates::PlayerDisconnect << i;
+    SendPacket << sf::Int32(pacetStates::PlayerDisconnect) << i;
     SendToClients(SendPacket);
     SendPacket.clear();
     mutex.unlock();
@@ -696,7 +697,7 @@ void SelfDisconnect() {
     ClientFuncRun = false;
     screen = screens::Main;
     mutex.lock();
-    SendPacket << pacetStates::disconnect;
+    SendPacket << sf::Int32(pacetStates::disconnect);
     MySocket.send(SendPacket);
     SendPacket.clear();
     mutex.unlock();
@@ -745,7 +746,7 @@ void funcOfHost() {
                                     ReceivePacket >> PacetData;
                                     chat.addLine(PacetData);
                                     mutex.lock();
-                                    SendPacket << pacetStates::ChatEvent << PacetData;
+                                    SendPacket << sf::Int32(pacetStates::ChatEvent) << PacetData;
                                     SendToOtherClients(SendPacket, i);
                                     SendPacket.clear();
                                     mutex.unlock();
@@ -753,7 +754,7 @@ void funcOfHost() {
                                 case pacetStates::Shooting: {
                                     mutex.lock();
                                     int i; ReceivePacket >> i;
-                                    SendPacket << pacetStates::Shooting << i;
+                                    SendPacket << sf::Int32(pacetStates::Shooting) << i;
                                     for (; i > 0; i--) {
                                         ReceivePacket >> tempBullet;
                                         tempBullet.UpdateCircleShape();
@@ -806,10 +807,9 @@ void funcOfClient() {
                             std::cout << "n = " << n << " m = " << m << '\n';
                             LabirintWalls.assign(BigN, vu(BigM, 0));
                             wallsRect.assign(BigN, vr(BigM, Rect{-1, -1, -1, -1}));
-                            bool tempBool;
                             for (int i = 0; i <= n * 2; i++)
                                 for (int j = 0; j <= m * 2; j++) {
-                                    ReceivePacket >> tempBool; LabirintWalls[i][j] = tempBool;
+                                    ReceivePacket >> LabirintWalls[i][j];
                                     if (LabirintWalls[i][j]) {
                                         if (i % 2 == 1) // |
                                             wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
@@ -851,14 +851,14 @@ void funcOfClient() {
 
 void LevelGenerate() {
     LabirintData.clear();
-    LabirintData << pacetStates::Labirint << n << m;
+    LabirintData << sf::Int32(pacetStates::Labirint) << n << m;
     player.setPosition({float(m - m % 2 + 1) * size / 2, float(n - n % 2 + 1) * size / 2});
     size_t CounterOfGenerations = 0;
     do {
         generation(LabirintWalls, n, m, 0.48);
-        find_ways(ways, LabirintWalls, m - m % 2 + 1, n - n % 2 + 1, n, m);
+        find_ways(CountOfEnableTilesOnMap, LabirintWalls, m - m % 2 + 1, n - n % 2 + 1, n, m);
         CounterOfGenerations++;
-    } while (ways.size() < float(n * m) / 3 || ways.size() > float(n * m) / 1.5);
+    } while (CountOfEnableTilesOnMap < float(n * m) / 3 || CountOfEnableTilesOnMap > float(n * m) / 1.5);
     std::cout << "total count of generations = " << CounterOfGenerations <<'\n';
     wallsRect.assign(BigN, vr(BigM));
     for (int i = 0; i <= n * 2; i++)

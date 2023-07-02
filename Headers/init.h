@@ -17,12 +17,6 @@
 #include "scale.h"
 #define M_PI       3.14159265358979323846   // pi
 
-namespace LocationIndex {
-    unsigned short int nothing = 0;
-    unsigned short int wall = 1;
-    unsigned short int box = 2;
-}
-
 using Point = sf::Vector2i;
 using vp = std::vector<Point>;
 using vvp = std::vector<vp>;
@@ -44,8 +38,13 @@ using str = std::string;
 using vb = std::vector<bool>;
 using vvb = std::vector<vb>;
 
-using vu = std::vector<unsigned short int>;
+using vu = std::vector<sf::Uint16>;
 using location = std::vector<vu>;
+namespace LocationIndex {
+    sf::Uint16 nothing = 0;
+    sf::Uint16 wall = 1;
+    sf::Uint16 box = 2;
+}
 
 Point dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
