@@ -1,29 +1,33 @@
++++ set up Роме github
+
++++ Гоша: рефактор кнопки, как в нирс
+
++/- Ваня: piano playing in the rest area and main menu
+
+Гоша: Bugfix server
+
+Гоша: make location loading from file
+
+Гоша: replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
+
+Гоша: remake location class and thinking about map class
+
+Ваня: on the minimap, display only those walls that fell into the player field of view
+
+Рома: make portal class which teleport from one location to other
+
+Рома: add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
+
 create item.h and machanich link at items
 
 create wall as class and use it at location
 
 set config file for use it in init() by initialisation stuff
 
-Гоша: fundamentally change the server
-
-Гоша: restructure files to improve readability
-
-Ваня: on the minimap, display only those walls that fell into the player field of view
-
-+/- Ваня: piano playing in the rest area and main menu
-
-+++ Гоша: рефактор кнопки, как в нирс
-
-make portal class which teleport from one location to other
-
-make location loading from file
-
-Гоша: replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
+fundamentally change the server
 
 add gas cloud objects and liquid puddles to the location
 
-+++ set up Роме github
+make main menu from where player go to labyrinth
 
-+++ Рома: add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
-
-Гоша: remake location class and thinking about map class
+make a game settings window with the subsequent launch of the passage of the dungeon

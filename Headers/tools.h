@@ -169,7 +169,7 @@ void CreateMapRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Spri
                     wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
                 else // -
                     wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize);
-            } else  {
+            } else {
                 wallsRect[i][j].setRect(-1, -1, -1, -1);
                 if (arr[i][j] == LocationIndex::box) {
                     sf::Texture* tempTexture = new sf::Texture;

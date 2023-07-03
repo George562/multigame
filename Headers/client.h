@@ -6,7 +6,7 @@ namespace pacetStates {
         PlayersAmount,      // to connecting client
         PlayerConnect,      // host sent to clients when someone connected
         PlayerDisconnect,   // host sent to clients when someone disconnected
-        Labirint,           // for LabirintData
+        Labyrinth,           // for LabirintData
         PlayerPos,          // send from client to host than host sending others clients
         SetPos,             // for set pos of player, because PlayerPos just say positions of others players
         ChatEvent,
