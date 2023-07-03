@@ -24,6 +24,44 @@ struct Rect {
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
     void setSize(float w, float h) { Width = w; Height = h; }
     void setRect(float x, float y, float w, float h) { PosX = x; PosY = y; Width = w; Height = h; }
+    bool intersect(const Rect& rect)
+    {
+        float thisLeft = std::min(this->PosX, this->PosX + this->Width);
+        float thisRight = std::max(this->PosX, this->PosX + this->Width);
+        float thisTop = std::min(this->PosY, this->PosY + this->Height);
+        float thisBottom = std::max(this->PosY, this->PosY + this->Height);
+
+        float rectLeft = std::min(rect.PosX, rect.PosX + rect.Width);
+        float rectRight = std::max(rect.PosX, rect.PosX + rect.Width);
+        float rectTop = std::min(rect.PosY, rect.PosY + rect.Height);
+        float rectBottom = std::max(rect.PosY, rect.PosY + rect.Height);
+
+        bool condXleft = thisRight <= rectLeft;
+        bool condXright = rectRight <= thisLeft;
+        bool condYtop = thisBottom <= rectTop;
+        bool condYbottom = rectBottom <= rectTop;
+
+        return !(condYtop || condYbottom || condXleft || condXright);
+    }
+    bool contains(const Rect& rect)
+    {
+        float thisLeft = std::min(this->PosX, this->PosX + this->Width);
+        float thisRight = std::max(this->PosX, this->PosX + this->Width);
+        float thisTop = std::min(this->PosY, this->PosY + this->Height);
+        float thisBottom = std::max(this->PosY, this->PosY + this->Height);
+
+        float rectLeft = std::min(rect.PosX, rect.PosX + rect.Width);
+        float rectRight = std::max(rect.PosX, rect.PosX + rect.Width);
+        float rectTop = std::min(rect.PosY, rect.PosY + rect.Height);
+        float rectBottom = std::max(rect.PosY, rect.PosY + rect.Height);
+
+        bool condLeftLess = thisLeft <= rectLeft;
+        bool condTopLess = thisTop <= rectTop;
+        bool condRightMore = thisRight >= rectRight;
+        bool condBottomMore = thisBottom >= rectBottom;
+
+        return condLeftLess && condTopLess && condRightMore && condBottomMore;
+    }
 };
 using vr = std::vector<Rect>;
 using vvr = std::vector<vr>;
