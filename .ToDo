@@ -2,15 +2,17 @@
 
 +++ Гоша: рефактор кнопки, как в нирс
 
++++ Гоша: make location loading from file
+
++++ Гоша: remake location class and thinking about map class
+
 +/- Ваня: piano playing in the rest area and main menu
 
 Гоша: Bugfix server
 
-Гоша: make location loading from file
-
 Гоша: replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
 
-Гоша: remake location class and thinking about map class
+Гоша: Bugfix minimap view
 
 Ваня: on the minimap, display only those walls that fell into the player field of view
 
