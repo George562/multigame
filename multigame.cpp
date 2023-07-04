@@ -30,8 +30,8 @@ sf::Int32 packetState, ComputerID;
 sf::Mutex mutex;
 
 //////////////////////////////////////////////////////////// Locations
-location* CurLocation = nullptr;
-location LabyrinthWalls(0), WaitingRoom(0);
+Location* CurLocation = nullptr;
+Location LabyrinthWalls, WaitingRoom;
 
 //////////////////////////////////////////////////////////// System stuff
 bool ClientFuncRun, HostFuncRun;
@@ -65,7 +65,7 @@ void SendToClients(sf::Packet&);
 void SendToOtherClients(sf::Packet&, int);
 void funcOfHost();
 void funcOfClient();
-void LevelGenerate();
+void LevelGenerate(size_t, size_t);
 void drawWalls();
 
 //////////////////////////////////////////////////////////// Threads
@@ -80,11 +80,11 @@ Panel  ListOfPlayers    ("sources/SteelFrame"               );
 Button SoloButton ("sources/RedPanel", "Play" ,[](){
     screen = screens::Solo;
     Bullets.clear();
-    LevelGenerate();
+    LevelGenerate(START_N, START_M);
     multiplayer = false;
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+    miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
     MainMenuMusic.stop();
 });
 
@@ -97,7 +97,7 @@ Button CoopButton ("sources/RedPanel", "Online", [](){
     multiplayer = true;
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+    miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
     MainMenuMusic.stop();
 });
 
@@ -107,7 +107,7 @@ Button HostButton ("sources/GreenPanel", "Host", [](){
     selector.add(listener);
     ListOfPlayers.setWord(MyIP);
     Bullets.clear();
-    LevelGenerate();
+    LevelGenerate(START_N, START_M);
     ComputerID = 0;
     Player* NewPlayer = new Player();
     NewPlayer->Camera = &CameraPos;
@@ -152,12 +152,22 @@ int main() {
     settings.antialiasingLevel = 8;
     window.setView(GameView);
 
-
+    std::cout << "bruh1\n";
     // Load locations
-    LoadLocationFromFile(WaitingRoom, "sources/locations/WaitingRoom.txt");
-    CreateMapRectByLocation(WaitingRoom, wallsRect, Sprites);
+    if (!LabyrinthWalls.LoadLocationFromFile("save/LabyrinthWalls.dat"))
+        LevelGenerate(START_N, START_M);
+    else
+        CreateMapRectByLocation(LabyrinthWalls, wallsRect, Sprites);
+    std::cout << "bruh2\n";
+
+    WaitingRoom.LoadLocationFromFile("sources/locations/WaitingRoom.txt");
+    // CreateMapRectByLocation(WaitingRoom, wallsRect, Sprites);
 
     CurLocation = &LabyrinthWalls;
+
+    // Set cameras
+    CameraPos = {0, 0};
+    miniCameraPos = {(scw - float(LabyrinthWalls.m) * miniSize) / 2, (sch - float(LabyrinthWalls.n) * miniSize) / 2};
 
     WallRectG.setFillColor(sf::Color(120, 120, 120));
     WallRectV.setFillColor(sf::Color(120, 120, 120));
@@ -194,11 +204,6 @@ int main() {
     CircleOfSmallPlayer.setRadius(9);
     CircleOfSmallPlayer.setFillColor(sf::Color(0, 180, 0));
 
-    if (!LoadLocationFromFile(LabyrinthWalls, "save/LabyrinthWalls.dat"))
-        LevelGenerate();
-    else
-        CreateMapRectByLocation(LabyrinthWalls, wallsRect, Sprites);
-
     Pistol pistol;
     Shotgun shotgun;
     Revolver revolver;
@@ -224,8 +229,9 @@ int main() {
             }
             player.update(Bullets);
             for (int i = 0; i < Bullets.size();) {
-                int y = (int(Bullets[i].PosY) / size) * 2, x = (int(Bullets[i].PosX) / size) * 2;
-                if (!(0 <= x && x < BigM && 0 <= y && y < BigN) || Bullets[i].penetration < 0 || Bullets[i].todel) {
+                // int y = (int(Bullets[i].PosY) / size), x = (int(Bullets[i].PosX) / size);
+                // if (!(0 <= x && x < BigM && 0 <= y && y < BigN) || Bullets[i].penetration < 0 || Bullets[i].todel) {
+                if (Bullets[i].penetration < 0 || Bullets[i].todel) {
                     Bullets.erase(Bullets.begin() + i--); continue;
                 }
                 Bullets[i++].move(wallsRect, clock);
@@ -348,13 +354,13 @@ int main() {
                             if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
                             else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
                         } else {
-                            if (n > 2 || event.mouseWheel.delta > 0) {
-                                n += event.mouseWheel.delta;
-                                m += event.mouseWheel.delta;
+                            if (CurLocation->n > 2 || event.mouseWheel.delta > 0) {
+                                CurLocation->n += std::max(event.mouseWheel.delta + CurLocation->n, 2ULL);
+                                CurLocation->m += std::max(event.mouseWheel.delta + CurLocation->m, 2ULL);
                             }
-                            miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+                            miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
                             Bullets.clear();
-                            LevelGenerate();
+                            LevelGenerate(START_N, START_M);
                             mutex.lock();
                             SendToClients(LabyrinthData);
                             for (Player& p: ConnectedPlayers)
@@ -490,8 +496,6 @@ int main() {
                         else if (event.key.code == sf::Keyboard::Enter)
                             chat.Enterred();
                         else if (event.key.code == sf::Keyboard::H) {
-                            n = WaitingRoom.size() / 2;
-                            m = WaitingRoom[0].size() / 2;
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoom;
                         }
@@ -511,11 +515,11 @@ int main() {
                             if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
                             else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
                         } else {
-                            n = std::max(event.mouseWheel.delta + n, 2);
-                            m = std::max(event.mouseWheel.delta + m, 2);
-                            miniCameraPos = {float(scw - m * miniSize) / 2, float(sch - n * miniSize) / 2};
+                            CurLocation->n = std::max(event.mouseWheel.delta + CurLocation->n, 2ULL);
+                            CurLocation->m = std::max(event.mouseWheel.delta + CurLocation->m, 2ULL);
+                            miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
                             Bullets.clear();
-                            LevelGenerate();
+                            LevelGenerate(START_N, START_M);
                         }
                     }
                 }
@@ -651,7 +655,7 @@ void ClientConnect() {
 
         Player* NewPlayer = new Player();
         NewPlayer->Camera = &CameraPos;
-        NewPlayer->setPosition({float(m - m % 2 + 1) * size / 2, float(n - n % 2 + 1) * size / 2});
+        NewPlayer->setPosition({float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2});
         ConnectedPlayers.push_back(*NewPlayer);
         SendPacket << sf::Int32(pacetStates::PlayersAmount) << (int)ConnectedPlayers.size() - 1;
 
@@ -803,20 +807,20 @@ void funcOfClient() {
                             break;
                         case pacetStates::Labyrinth:
                             std::cout << "Labyrinth receiving\n";
-                            ReceivePacket >> n >> m;
-                            std::cout << "n = " << n << " m = " << m << '\n';
-                            LabyrinthWalls.assign(BigN, vu(BigM, 0));
-                            wallsRect.assign(BigN, vr(BigM, Rect{-1, -1, -1, -1}));
-                            for (int i = 0; i <= n * 2; i++)
-                                for (int j = 0; j <= m * 2; j++) {
+                            ReceivePacket >> LabyrinthWalls.n >> LabyrinthWalls.m;
+                            std::cout << "n = " << LabyrinthWalls.n << " m = " << LabyrinthWalls.m << '\n';
+                            LabyrinthWalls.SetSize(LabyrinthWalls.n, LabyrinthWalls.n);
+                            wallsRect.assign(LabyrinthWalls.n, vr(LabyrinthWalls.m, Rect{-1, -1, -1, -1}));
+                            for (int i = 0; i < LabyrinthWalls.n; i++)
+                                for (int j = 0; j < LabyrinthWalls[i].size(); j++) {
                                     ReceivePacket >> LabyrinthWalls[i][j];
-                                    if (LabyrinthWalls[i][j]) {
+                                    if (LabyrinthWalls[i][j] == Tiles::wall) {
                                         if (i % 2 == 1) // |
                                             wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
                                         else // -
                                             wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize);
                                     }
-                            }
+                                }
                             std::cout << "Labyrinth receive\n";
                             break;
                         case pacetStates::PlayerPos:
@@ -849,44 +853,35 @@ void funcOfClient() {
     }
 }
 
-void LevelGenerate() {
+void LevelGenerate(size_t n, size_t m) {
+    LabyrinthWalls.SetSize(n, m);
     LabyrinthData.clear();
-    LabyrinthData << sf::Int32(pacetStates::Labyrinth) << n << m;
-    player.setPosition({float(m - m % 2 + 1) * size / 2, float(n - n % 2 + 1) * size / 2});
+    LabyrinthData << sf::Int32(pacetStates::Labyrinth) << LabyrinthWalls.n << LabyrinthWalls.m;
+    player.setPosition({float(LabyrinthWalls.m) * size / 2, float(LabyrinthWalls.n) * size / 2});
     size_t CounterOfGenerations = 0;
+    std::cout << "bruh3\n";
     do {
-        generation(LabyrinthWalls, n, m, 0.48);
-        find_ways(CountOfEnableTilesOnMap, LabyrinthWalls, m - m % 2 + 1, n - n % 2 + 1, n, m);
+        LabyrinthWalls.WallGenerator(0.48);
+        std::cout << "bruh4\n";
+        CountOfEnableTilesOnMap = LabyrinthWalls.BuildWayFrom(LabyrinthWalls.m / 2, LabyrinthWalls.n / 2);
+        std::cout << "bruh5\n";
         CounterOfGenerations++;
-    } while (CountOfEnableTilesOnMap < float(n * m) / 3 || CountOfEnableTilesOnMap > float(n * m) / 1.5);
-    std::cout << "total count of generations = " << CounterOfGenerations <<'\n';
-    wallsRect.assign(BigN, vr(BigM));
-    for (int i = 0; i <= n * 2; i++)
-        for (int j = 0; j <= m * 2; j++) {
-            if (LabyrinthWalls[i][j] == LocationIndex::wall) {
-                if (i % 2 == 1) // |
-                    wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
-                else // -
-                    wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize);
-            } else  {
-                wallsRect[i][j].setRect(-1, -1, -1, -1);
-                if (LabyrinthWalls[i][j] == LocationIndex::box) {
-                    tempSprite.setTexture(Box);
-                    tempSprite.setPosition(size * j / 2, size * i / 2);
-                    Sprites.push_back(tempSprite);
-                }
-            }
+    } while (CountOfEnableTilesOnMap < float(LabyrinthWalls.n * LabyrinthWalls.m) / 3 || CountOfEnableTilesOnMap > float(LabyrinthWalls.n * LabyrinthWalls.m) / 1.5);
+    std::cout << "total count of generations = " << CounterOfGenerations;
+    wallsRect.assign(LabyrinthWalls.n, vr(LabyrinthWalls.m));
+    for (int i = 0; i < LabyrinthWalls.n; i++)
+        for (int j = 0; j < LabyrinthWalls[i].size(); j++)
             LabyrinthData << LabyrinthWalls[i][j];
-        }
+    CreateMapRectByLocation(LabyrinthWalls, wallsRect, Sprites);
 }
 
 void drawWalls() {
     // draw main wall
-    for (int i = std::max(0, 2 * int(CameraPos.y) / size - 1);
-            i <= std::min(2 * n, 2 * int(CameraPos.y + sch + WallMinSize) / size + 1); i++)
-        for (int j = std::max(0, 2 * int(CameraPos.x) / size - 1);
-                j <= std::min(2 * m, 2 * int(CameraPos.x + scw + WallMinSize) / size + 1); j++)
-            if ((*CurLocation)[i][j] == LocationIndex::wall)
+    for (int i = std::max(0ULL, 2 * size_t(CameraPos.y) / size - 1);
+            i <= std::min(CurLocation->n, 2 * size_t(CameraPos.y + sch + WallMinSize) / size + 1); i++)
+        for (int j = std::max(0ULL, 2 * size_t(CameraPos.x) / size - 1);
+                j <= std::min(CurLocation->m, 2 * size_t(CameraPos.x + scw + WallMinSize) / size + 1); j++)
+            if ((*CurLocation)[i][j] == Tiles::wall)
                 if (i % 2 == 1) { // |
                     WallRectV.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
                     window.draw(WallRectV);
@@ -896,9 +891,9 @@ void drawWalls() {
                 }
     // draw minimap wall
     window.setView(MiniMapView);
-    for (int i = 0; i <= n * 2; i++)
-        for (int j = 0; j <= m * 2; j++)
-            if ((*CurLocation)[i][j] == LocationIndex::wall)
+    for (int i = 0; i <= CurLocation->n; i++)
+        for (int j = 0; j < CurLocation->data[i].size(); j++)
+            if ((*CurLocation)[i][j] == Tiles::wall)
                 if (i % 2 == 1) { // |
                     sf::VertexArray line(sf::Lines, 2);
                     line[0] = sf::Vertex(sf::Vector2f((miniSize * j) / 2, miniSize * (i - 1) / 2) + miniCameraPos);

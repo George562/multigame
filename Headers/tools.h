@@ -1,5 +1,6 @@
 #pragma once
 #include "init.h"
+#include "location.h"
 
 // check existing element in vector
 template <typename T>
@@ -70,58 +71,6 @@ sf::Vector2i WillCollisionWithWalls(vvr Walls, float& PosX, float& PosY, float& 
     return res;  // if value of vector == -1 => there was collision
 }
 
-void find_ways(size_t& arr, location& walls, const int x, const int y, const int n, const int m) {
-    vvb used(n, vb(m, false));
-    std::queue<Point> q; q.push(Point{x, y});
-    arr = 1;
-    int N = n * 2, M = m * 2;
-    Point cur, check, next;
-    while (!q.empty()) {
-        cur = q.front(); q.pop();
-        if (used[cur.y / 2][cur.x / 2]) continue;
-        used[cur.y / 2][cur.x / 2] = true;
-        for (Point dir: dirs) {
-            check = cur + dir;
-            next = check + dir;
-            if (in(next.x, next.y, 0, 0, M, N) && !used[next.y / 2][next.x / 2] && !walls[check.y][check.x]) {
-                q.push(next);
-                arr++;
-            }
-        }
-    }
-    bool todel;
-    for (int i = 0; i <= N; i++)
-        for (int j = 0; j <= M; j++) {
-            todel = true;
-            for (Point& dir: dirs) {
-                check = Point{j, i} + dir;
-                if (check.y % 2 == 0 || check.x % 2 == 0) continue;
-                if (in(check.x, check.y, 0, 0, M, N) && used[check.y / 2][check.x / 2]) {
-                    todel = false;
-                    break;
-                }
-            }
-            if (todel) walls[i][j] = 0;
-        }
-}
-
-void generation(location& arr, int& n, int& m, float probability) {
-    int N = n * 2, M = m * 2;
-    arr.assign(N + 1, vu(M + 1, 0));
-
-    for (int j = 1; j < M; j += 2) arr[0][j] = 1;
-
-    for (int i = 1; i < N; i++) {
-        if (i % 2 == 1) arr[i][0] = 1;
-        for (int j = 1 + i % 2; j < M; j += 2)
-            if (float(rand() % 100) / 100 < probability)
-                arr[i][j] = 1;
-        if (i % 2 == 1) arr[i][M] = 1;
-    }
-
-    for (int j = 1; j < M; j += 2) arr[N][j] = 1;
-}
-
 void RotateOn(float phi, float& x, float& y) {
     float oldX = x, OldY = y;
     x =   oldX * cos(phi) + OldY * sin(phi);
@@ -146,32 +95,20 @@ sf::Vector2f RotateAround(float phi, sf::Vector2f& a, float& X, float& Y) {
     return newA;
 }
 
-bool LoadLocationFromFile(location& arr, str FileName) {
-    std::ifstream file(FileName);
-    if (!file.is_open()) return false;
-    int n, m; file >> n >> m;
-    arr.assign(n, vu(m, 0));
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < m; j++)
-            file >> arr[i][j];
-    file.close();
-    return true;
-}
-
-void CreateMapRectByLocation(location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites) {
-    int n = arr.size(), m = arr[0].size();
+void CreateMapRectByLocation(Location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites) {
+    int n = arr.n, m = arr.m;
     Sprites.clear();
     wallsRect.assign(n, vr(m));
     for (int i = 0; i < n; i++)
         for (int j = 0; j < m; j++) {
-            if (arr[i][j] == LocationIndex::wall) {
+            if (arr[i][j] == Tiles::wall) {
                 if (i % 2 == 1) // |
                     wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
                 else // -
                     wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize);
             } else {
                 wallsRect[i][j].setRect(-1, -1, -1, -1);
-                if (arr[i][j] == LocationIndex::box) {
+                if (arr[i][j] == Tiles::box) {
                     sf::Texture* tempTexture = new sf::Texture;
                     tempTexture->loadFromFile("sources/Box.png");
                     sf::Sprite* tempSprite = new sf::Sprite;

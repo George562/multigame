@@ -20,8 +20,6 @@
 
 create item.h and machanich link at items
 
-create wall as class and use it at location
-
 set config file for use it in init() by initialisation stuff
 
 fundamentally change the server

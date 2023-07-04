@@ -1,3 +1,4 @@
+#pragma once
 #include "../SFML-2.5.1/include/SFML/Network.hpp"
 #include "../SFML-2.5.1/include/SFML/Graphics.hpp"
 #include "../SFML-2.5.1/include/SFML/Audio.hpp"
@@ -25,21 +26,12 @@ struct Rect {
     void setSize(float w, float h) { Width = w; Height = h; }
     void setRect(float x, float y, float w, float h) { PosX = x; PosY = y; Width = w; Height = h; }
     bool intersect(const Rect& rect) {
-        bool thisRightLess = this->PosX + this->Width <= rect.PosX;
-        bool thisTopLess = this->PosY + this->Height <= rect.PosY;
-        bool thisLeftMore = rect.PosX + rect.Width <= this->PosX;
-        bool thisBottomMore = this->PosY <= rect.PosY + rect.PosY;
-
-        return !(thisRightLess || thisTopLess || thisLeftMore || thisBottomMore);
+        return rect.PosX <= PosX + Width && PosX <= rect.PosX + rect.Width && rect.PosY <= PosY + Height && PosY <= rect.PosY + rect.Height;
     }
-    bool contains(const Rect& rect) {
-        bool condLeftLess = this->PosX <= rect.PosX;
-        bool condTopLess = this->PosY <= rect.PosY;
-        bool condRightMore = this->PosX + this->Width >= rect.PosX + rect.Width;
-        bool condBottomMore = this->PosY + this->Height >= rect.PosY + rect.Height;
-
-        return condLeftLess && condTopLess && condRightMore && condBottomMore;
+    bool contains(const float& x, const float& y) {
+        return PosX <= x && x <= PosX + Width && PosY <= y && y <= PosY + Height;
     }
+    bool contains(const sf::Vector2f& point) { return contains(point.x, point.y); }
 };
 using vr = std::vector<Rect>;
 using vvr = std::vector<vr>;
@@ -49,18 +41,10 @@ using str = std::string;
 using vb = std::vector<bool>;
 using vvb = std::vector<vb>;
 
-using vu = std::vector<sf::Uint16>;
-using location = std::vector<vu>;
-namespace LocationIndex {
-    sf::Uint16 nothing = 0;
-    sf::Uint16 wall = 1;
-    sf::Uint16 box = 2;
-}
-
 Point dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
 namespace screens {
-    enum screens { // the types of screen
+    enum screens {  // the types of screen
         Main,       // main menu                -> Solo, Coop
         Coop,       // coop                     -> Host, Connect
         Host,       // choose be a host         -> .
@@ -76,12 +60,14 @@ namespace screens {
 int scw = sf::VideoMode::getDesktopMode().width; // screen width
 int sch = sf::VideoMode::getDesktopMode().height; // screen height
 
-int size = 540, miniSize = 50, n = 15, m = 15; // map is matrix n x m cells with size of one; minisize for minimap
-#define BigN n * 2 + 1
-#define BigM m * 2 + 1
+int size = 540, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
+// int n = 15, m = 15;
+// #define BigN n * 2 + 1
+// #define BigM m * 2 + 1
+size_t START_N = 15, START_M = 15;
 float WallMinSize = size / 8, WallMaxSize = size;
 
-sf::Vector2f CameraPos(0, 0), miniCameraPos((scw - m * miniSize) / 2, (sch - n * miniSize) / 2);
+sf::Vector2f CameraPos, miniCameraPos;
 
 sf::Texture Box;
 sf::Texture RedPanel;
