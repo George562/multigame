@@ -14,6 +14,8 @@
 
 Гоша: Bugfix minimap view
 
+Гоша: make WillCollisionWithWalls function work correctly
+
 Ваня: on the minimap, display only those walls that fell into the player field of view
 
 Рома: make portal class which teleport from one location to other
