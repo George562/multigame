@@ -83,10 +83,6 @@ void Player::draw(sf::RenderWindow& window) {
 }
 
 void Player::move(vvr& walls) {
-    int N = walls.size(), M = walls[0].size(), y = (int(PosY) / size) * 2, x = (int(PosX) / size) * 2;
-
-    if (!(0 <= y && y < N && 0 <= x && x < M)) return;
-
     std::map<char, bool> PressedKeys = {
         {'w', sf::Keyboard::isKeyPressed(sf::Keyboard::W)},
         {'a', sf::Keyboard::isKeyPressed(sf::Keyboard::A)},
