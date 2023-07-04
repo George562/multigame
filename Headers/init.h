@@ -28,6 +28,24 @@ struct Rect {
     bool intersect(const Rect& rect) {
         return rect.PosX <= PosX + Width && PosX <= rect.PosX + rect.Width && rect.PosY <= PosY + Height && PosY <= rect.PosY + rect.Height;
     }
+    bool intersect(const Rect& rect, Rect& intersection) {
+        if(rect.PosX <= PosX + Width && PosX <= rect.PosX + rect.Width && rect.PosY <= PosY + Height && PosY <= rect.PosY + rect.Height)
+        {
+            intersection.setRect(std::max(PosX, rect.PosX),         // The X coordinate of the intersection rectangle's topleft corner is always
+                                                                    // the X coordinate of the rightmost topleft corner of the compared rectangles
+                                 std::max(PosY, rect.PosY),         // Same logic as with the X coordinate, but it's the lowest point now
+
+                                 std::min(PosX + Width, rect.PosX + rect.Width) - std::max(PosX, rect.PosX),        // Width is just a difference between the X coordinates
+                                                                                                                    // of the bottom-right and top-left corners
+                                 std::min(PosY + Height, rect.PosY + rect.Height) - std::max(PosY, rect.PosY));     // Same logic as with width, but now it's the Y coordinates
+            return true;
+        }
+        else
+        {
+            intersection.setRect(0, 0, 0, 0);
+            return false;
+        }
+    }
     bool contains(const float& x, const float& y) {
         return PosX <= x && x <= PosX + Width && PosY <= y && y <= PosY + Height;
     }

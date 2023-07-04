@@ -4,6 +4,8 @@
 
 +/- Ваня: piano playing in the rest area and main menu
 
++++ Рома: add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
+
 Гоша: Bugfix server
 
 Гоша: make location loading from file
@@ -15,8 +17,6 @@
 Ваня: on the minimap, display only those walls that fell into the player field of view
 
 Рома: make portal class which teleport from one location to other
-
-Рома: add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
 
 create item.h and machanich link at items
 
