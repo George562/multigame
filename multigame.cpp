@@ -152,13 +152,11 @@ int main() {
     settings.antialiasingLevel = 8;
     window.setView(GameView);
 
-    std::cout << "bruh1\n";
     // Load locations
     if (!LabyrinthWalls.LoadLocationFromFile("save/LabyrinthWalls.dat"))
         LevelGenerate(START_N, START_M);
     else
         CreateMapRectByLocation(LabyrinthWalls, wallsRect, Sprites);
-    std::cout << "bruh2\n";
 
     WaitingRoom.LoadLocationFromFile("sources/locations/WaitingRoom.txt");
     // CreateMapRectByLocation(WaitingRoom, wallsRect, Sprites);
@@ -360,7 +358,7 @@ int main() {
                             }
                             miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
                             Bullets.clear();
-                            LevelGenerate(START_N, START_M);
+                            LevelGenerate(CurLocation->n, CurLocation->m);
                             mutex.lock();
                             SendToClients(LabyrinthData);
                             for (Player& p: ConnectedPlayers)
@@ -519,7 +517,7 @@ int main() {
                             CurLocation->m = std::max(event.mouseWheel.delta + CurLocation->m, 2ULL);
                             miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
                             Bullets.clear();
-                            LevelGenerate(START_N, START_M);
+                            LevelGenerate(CurLocation->n, CurLocation->m);
                         }
                     }
                 }
@@ -810,17 +808,10 @@ void funcOfClient() {
                             ReceivePacket >> LabyrinthWalls.n >> LabyrinthWalls.m;
                             std::cout << "n = " << LabyrinthWalls.n << " m = " << LabyrinthWalls.m << '\n';
                             LabyrinthWalls.SetSize(LabyrinthWalls.n, LabyrinthWalls.n);
-                            wallsRect.assign(LabyrinthWalls.n, vr(LabyrinthWalls.m, Rect{-1, -1, -1, -1}));
-                            for (int i = 0; i < LabyrinthWalls.n; i++)
-                                for (int j = 0; j < LabyrinthWalls[i].size(); j++) {
+                            for (int i = 0; i < LabyrinthWalls.data.size(); i++)
+                                for (int j = 0; j < LabyrinthWalls[i].size(); j++)
                                     ReceivePacket >> LabyrinthWalls[i][j];
-                                    if (LabyrinthWalls[i][j] == Tiles::wall) {
-                                        if (i % 2 == 1) // |
-                                            wallsRect[i][j].setRect((size * j - WallMinSize) / 2, size * (i - 1) / 2.f, WallMinSize, float(size));
-                                        else // -
-                                            wallsRect[i][j].setRect(size * (j - 1) / 2.f, (size * i - WallMinSize) / 2, float(size), WallMinSize);
-                                    }
-                                }
+                            CreateMapRectByLocation(LabyrinthWalls, wallsRect, Sprites);
                             std::cout << "Labyrinth receive\n";
                             break;
                         case pacetStates::PlayerPos:
@@ -854,21 +845,18 @@ void funcOfClient() {
 }
 
 void LevelGenerate(size_t n, size_t m) {
-    LabyrinthWalls.SetSize(n, m);
+    LabyrinthWalls.SetSize(m, n);
     LabyrinthData.clear();
     LabyrinthData << sf::Int32(pacetStates::Labyrinth) << LabyrinthWalls.n << LabyrinthWalls.m;
-    player.setPosition({float(LabyrinthWalls.m) * size / 2, float(LabyrinthWalls.n) * size / 2});
+    player.setPosition(sf::Vector2f{(float(LabyrinthWalls.m / 2) + 0.5f) * size, (float(LabyrinthWalls.n / 2) + 0.5f) * size} - player.getSize() / 2.f);
     size_t CounterOfGenerations = 0;
-    std::cout << "bruh3\n";
     do {
         LabyrinthWalls.WallGenerator(0.48);
-        std::cout << "bruh4\n";
-        CountOfEnableTilesOnMap = LabyrinthWalls.BuildWayFrom(LabyrinthWalls.m / 2, LabyrinthWalls.n / 2);
-        std::cout << "bruh5\n";
+        CountOfEnableTilesOnMap = LabyrinthWalls.BuildWayFrom(int(player.PosX / size), int(player.PosY / size));
         CounterOfGenerations++;
     } while (CountOfEnableTilesOnMap < float(LabyrinthWalls.n * LabyrinthWalls.m) / 3 || CountOfEnableTilesOnMap > float(LabyrinthWalls.n * LabyrinthWalls.m) / 1.5);
-    std::cout << "total count of generations = " << CounterOfGenerations;
-    wallsRect.assign(LabyrinthWalls.n, vr(LabyrinthWalls.m));
+    std::cout << "total count of generations = " << CounterOfGenerations
+              << " CountOfEnableTilesOnMap = " << CountOfEnableTilesOnMap << '\n';
     for (int i = 0; i < LabyrinthWalls.n; i++)
         for (int j = 0; j < LabyrinthWalls[i].size(); j++)
             LabyrinthData << LabyrinthWalls[i][j];
@@ -877,11 +865,11 @@ void LevelGenerate(size_t n, size_t m) {
 
 void drawWalls() {
     // draw main wall
-    for (int i = std::max(0ULL, 2 * size_t(CameraPos.y) / size - 1);
-            i <= std::min(CurLocation->n, 2 * size_t(CameraPos.y + sch + WallMinSize) / size + 1); i++)
-        for (int j = std::max(0ULL, 2 * size_t(CameraPos.x) / size - 1);
-                j <= std::min(CurLocation->m, 2 * size_t(CameraPos.x + scw + WallMinSize) / size + 1); j++)
-            if ((*CurLocation)[i][j] == Tiles::wall)
+    for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
+            i <= std::min(int(CurLocation->data.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++)
+        for (int j = std::max(0, int(CameraPos.x / size) - 1);
+                j <= std::min(int(CurLocation->data[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
+            if ((*CurLocation)[i][j] == Tiles::wall) {
                 if (i % 2 == 1) { // |
                     WallRectV.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
                     window.draw(WallRectV);
@@ -889,21 +877,22 @@ void drawWalls() {
                     WallRectG.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
                     window.draw(WallRectG);
                 }
+            }
+        }
     // draw minimap wall
     window.setView(MiniMapView);
-    for (int i = 0; i <= CurLocation->n; i++)
+    sf::VertexArray line(sf::Lines, 2);
+    for (int i = 0; i < CurLocation->data.size(); i++)
         for (int j = 0; j < CurLocation->data[i].size(); j++)
-            if ((*CurLocation)[i][j] == Tiles::wall)
+            if ((*CurLocation)[i][j] == Tiles::wall) {
                 if (i % 2 == 1) { // |
-                    sf::VertexArray line(sf::Lines, 2);
-                    line[0] = sf::Vertex(sf::Vector2f((miniSize * j) / 2, miniSize * (i - 1) / 2) + miniCameraPos);
-                    line[1] = sf::Vertex(sf::Vector2f((miniSize * j) / 2, miniSize * (i + 1) / 2) + miniCameraPos);
-                    window.draw(line);
+                    line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2) + miniCameraPos, sf::Color::White);
+                    line[1] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i + 1) / 2) + miniCameraPos, sf::Color::White);
                 } else { // -
-                    sf::VertexArray line(sf::Lines, 2);
-                    line[0] = sf::Vertex(sf::Vector2f(miniSize * (j - 1) / 2, (miniSize * i) / 2) + miniCameraPos);
-                    line[1] = sf::Vertex(sf::Vector2f(miniSize * (j + 1) / 2, (miniSize * i) / 2) + miniCameraPos);
-                    window.draw(line);
+                    line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * i / 2) + miniCameraPos);
+                    line[1] = sf::Vertex(sf::Vector2f(miniSize * (j + 1), miniSize * i / 2) + miniCameraPos);
                 }
+                window.draw(line);
+            }
     window.setView(GameView);
 }

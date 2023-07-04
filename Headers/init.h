@@ -82,7 +82,7 @@ int size = 540, miniSize = 50; // map is matrix n x m cells with size of one; mi
 // int n = 15, m = 15;
 // #define BigN n * 2 + 1
 // #define BigM m * 2 + 1
-size_t START_N = 15, START_M = 15;
+size_t START_N = 4, START_M = 4;
 float WallMinSize = size / 8, WallMaxSize = size;
 
 sf::Vector2f CameraPos, miniCameraPos;

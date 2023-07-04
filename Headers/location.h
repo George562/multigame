@@ -24,6 +24,7 @@ public:
     size_t BuildWayFrom(int x, int y);
     void WallGenerator(float probability);
     bool LoadLocationFromFile(str FileName);
+    bool WriteLocationToFile(str FileName);
 };
 
 ////////////////////////////////////////////////////////////
@@ -33,7 +34,7 @@ public:
 void Location::SetSize(size_t w, size_t h) {
     m = w;
     n = h;
-    data.assign(n, std::vector<TileID>(m, Tiles::nothing));
+    data.assign(n * 2 + 1, std::vector<TileID>(m, Tiles::nothing));
     for (size_t i = 1; i < data.size(); i += 2) data[i].push_back(Tiles::nothing);
 }
 
@@ -42,17 +43,15 @@ size_t Location::BuildWayFrom(int x, int y) {
     std::queue<Point> q; q.push(Point{x, y});
     size_t res = 1;
     Point cur, check;
-    Rect UsedAreaRect{0, 0, float(used.size()), float(used[0].size())};
+    Rect UsedAreaRect{0, 0, float(used.size()) - 1, float(used[0].size()) - 1};
     while (!q.empty()) {
         cur = q.front(); q.pop();
         if (used[cur.y][cur.x]) continue;
         used[cur.y][cur.x] = true;
         check = cur + dirs[0]; // {1, 0}
-        std::cout << "bruh inf\n";
         if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && data[check.y * 2 + 1][check.x] == Tiles::nothing) {
             q.push(check); res++;
         }
-        std::cout << "bruh inf2\n";
         check = cur + dirs[2]; // {-1, 0}
         if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && data[check.y * 2 + 1][check.x + 1] == Tiles::nothing) {
             q.push(check); res++;
@@ -67,13 +66,13 @@ size_t Location::BuildWayFrom(int x, int y) {
         }
     }
     bool todel;
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < data.size(); i++)
         for (int j = 0; j < data[i].size(); j++) {
             todel = true;
             check = Point{j, i / 2};
             if (UsedAreaRect.contains(check.x, check.y) && used[check.y][check.x])
                 todel = false;
-            check = (i % 2) ? Point{j, i / 2 - 1} : Point{j - 1, i / 2};
+            check = (i % 2 == 0) ? Point{j, i / 2 - 1} : Point{j - 1, i / 2};
             if (UsedAreaRect.contains(check.x, check.y) && used[check.y][check.x])
                 todel = false;
             if (todel) data[i][j] = Tiles::nothing;
@@ -84,27 +83,36 @@ size_t Location::BuildWayFrom(int x, int y) {
 void Location::WallGenerator(float probability) {
     data[0].assign(m, Tiles::wall);
 
-    for (int i = 1; i < n - 1; i++) {
+    for (int i = 1; i < data.size() - 1; i++) {
         if (i % 2 == 1) data[i][0] = Tiles::wall;
-        for (int j = i % 2; j < m; j++)
-            if (float(rand() % 100) / 100 < probability)
-                data[i][j] = Tiles::wall;
-        if (i % 2 == 1) data[i][m - 1] = Tiles::wall;
+        for (int j = i % 2; j < data[i].size() - 1; j++)
+            data[i][j] = (float(rand() % 100) / 100 < probability) ? Tiles::wall : Tiles::nothing;
+        if (i % 2 == 1) data[i][data[i].size() - 1] = Tiles::wall;
     }
 
-    data[n - 1].assign(m, Tiles::wall);
+    data[data.size() - 1].assign(m, Tiles::wall);
 }
 
 bool Location::LoadLocationFromFile(str FileName) {
     std::ifstream file(FileName);
     if (!file.is_open()) return false;
     int n, m; file >> n >> m;
-    data.assign(n, std::vector<TileID>(m));
-    for (int i = 0; i < n; i++) {
-        data[i].push_back(0);
+    SetSize(m, n);
+    for (int i = 0; i < data.size(); i++)
         for (int j = 0; j < data[i].size(); j++)
             file >> data[i][j];
-        }
+    file.close();
+    return true;
+}
+
+bool Location::WriteLocationToFile(str FileName) {
+    std::ofstream file(FileName);
+    file << n << ' ' << m << '\n';
+    for (int i = 0; i < data.size(); i++) {
+        for (int j = 0; j < data[i].size(); j++)
+            file << data[i][j] << ' ';
+        file << '\n';
+    }
     file.close();
     return true;
 }
