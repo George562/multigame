@@ -898,3 +898,34 @@ void drawWalls() {
             }
     window.setView(GameView);
 }
+
+
+/* minimap walls will be rendered as soon as the player sees them
+
+std::vector<std::vector<sf::Uint16>> SeenWalls(0); // at the top of code: in ////Locations
+
+ // draw minimap wall
+    bool WallIsSeen = false;
+    window.setView(MiniMapView);
+    sf::VertexArray line(sf::Lines, 2);
+    for (int i = 0; i < CurLocation->data.size(); i++)
+        for (int j = 0; j < CurLocation->data[i].size(); j++) {
+            for (int k = 0; k < SeenWalls[i].size(); k++) {
+                    if (SeenWalls[i][k] == j) {
+                        WallIsSeen = true;
+                        break;
+                    }
+                }
+            if ((*CurLocation)[i][j] == Tiles::wall &&  (WallIsSeen || стена в поле зрения)) {
+                if (i % 2 == 1) { // |
+                    line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2) + miniCameraPos, sf::Color::White);
+                    line[1] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i + 1) / 2) + miniCameraPos, sf::Color::White);
+                } else { // -
+                    line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * i / 2) + miniCameraPos);
+                    line[1] = sf::Vertex(sf::Vector2f(miniSize * (j + 1), miniSize * i / 2) + miniCameraPos);
+                }
+                window.draw(line);
+            }
+        }
+    window.setView(GameView);
+*/
