@@ -6,23 +6,23 @@
 
 +++ Гоша: remake location class and thinking about map class
 
-+/- Ваня: piano playing in the rest area and main menu
-
 +++ Рома: add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
+
++++ Гоша: Bugfix minimap view
+
++++ Гоша: make WillCollisionWithWalls function work correctly
+
++/- Ваня: piano playing in the rest area and main menu
 
 Гоша: Bugfix server
 
 Гоша: replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
 
-Гоша: Bugfix minimap view
-
-Гоша: make WillCollisionWithWalls function work correctly
-
 Ваня: on the minimap, display only those walls that fell into the player field of view
 
 Рома: make portal class which teleport from one location to other
 
-create item.h and machanich link at items
+create item.h and mechanich link at items
 
 set config file for use it in init() by initialisation stuff
 

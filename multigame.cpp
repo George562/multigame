@@ -38,7 +38,7 @@ bool ClientFuncRun, HostFuncRun;
 vvr wallsRect(0);
 std::vector<sf::Sprite> Sprites(0);
 sf::Sprite tempSprite;
-size_t CountOfEnableTilesOnMap;
+int CountOfEnableTilesOnMap;
 sf::RectangleShape WallRectG(sf::Vector2f(WallMaxSize, WallMinSize));
 sf::RectangleShape WallRectV(sf::Vector2f(WallMinSize, WallMaxSize));
 
@@ -65,7 +65,7 @@ void SendToClients(sf::Packet&);
 void SendToOtherClients(sf::Packet&, int);
 void funcOfHost();
 void funcOfClient();
-void LevelGenerate(size_t, size_t);
+void LevelGenerate(int, int);
 void drawWalls();
 
 //////////////////////////////////////////////////////////// Threads
@@ -213,7 +213,9 @@ int main() {
     player.SecondWeapon = &shotgun;
     player.CurWeapon = player.FirstWeapon;
 
-    MainMenuMusic.openFromFile("sources/music/gambang.ogg");
+    MainMenuMusic.openFromFile("sources/music/RestAreaMusic.wav");
+    MainMenuMusic.setLoop(true);
+    MainMenuMusic.setVolume(50);
 
     while (window.isOpen()) {
         if (!window.hasFocus()) {
@@ -255,8 +257,8 @@ int main() {
                     SendPacket.clear();
                     mutex.unlock();
                 }
-                size_t CountOfBulletsOtOfScreen = 0;
-                for (size_t i = 0; i < Bullets.size() - CountOfBulletsOtOfScreen;) {
+                int CountOfBulletsOtOfScreen = 0;
+                for (int i = 0; i < Bullets.size() - CountOfBulletsOtOfScreen;) {
                     if (Bullets[i].penetration < 0 || Bullets[i].todel) {
                         std::swap(Bullets[i], Bullets[Bullets.size() - 1 - CountOfBulletsOtOfScreen]);
                         CountOfBulletsOtOfScreen++;
@@ -353,8 +355,8 @@ int main() {
                             else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
                         } else {
                             if (CurLocation->n > 2 || event.mouseWheel.delta > 0) {
-                                CurLocation->n += std::max(event.mouseWheel.delta + CurLocation->n, 2ULL);
-                                CurLocation->m += std::max(event.mouseWheel.delta + CurLocation->m, 2ULL);
+                                CurLocation->n += std::max(event.mouseWheel.delta + CurLocation->n, 2);
+                                CurLocation->m += std::max(event.mouseWheel.delta + CurLocation->m, 2);
                             }
                             miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
                             Bullets.clear();
@@ -513,9 +515,9 @@ int main() {
                             if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
                             else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
                         } else {
-                            CurLocation->n = std::max(event.mouseWheel.delta + CurLocation->n, 2ULL);
-                            CurLocation->m = std::max(event.mouseWheel.delta + CurLocation->m, 2ULL);
-                            miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
+                            CurLocation->n = std::max(event.mouseWheel.delta + CurLocation->n, 2);
+                            CurLocation->m = std::max(event.mouseWheel.delta + CurLocation->m, 2);
+                            miniCameraPos = {float(scw - (int)CurLocation->m * miniSize) / 2, float(sch - (int)CurLocation->n * miniSize) / 2};
                             Bullets.clear();
                             LevelGenerate(CurLocation->n, CurLocation->m);
                         }
@@ -844,12 +846,12 @@ void funcOfClient() {
     }
 }
 
-void LevelGenerate(size_t n, size_t m) {
+void LevelGenerate(int n, int m) {
     LabyrinthWalls.SetSize(m, n);
     LabyrinthData.clear();
     LabyrinthData << sf::Int32(pacetStates::Labyrinth) << LabyrinthWalls.n << LabyrinthWalls.m;
     player.setPosition(sf::Vector2f{(float(LabyrinthWalls.m / 2) + 0.5f) * size, (float(LabyrinthWalls.n / 2) + 0.5f) * size} - player.getSize() / 2.f);
-    size_t CounterOfGenerations = 0;
+    int CounterOfGenerations = 0;
     do {
         LabyrinthWalls.WallGenerator(0.48);
         CountOfEnableTilesOnMap = LabyrinthWalls.BuildWayFrom(int(player.PosX / size), int(player.PosY / size));

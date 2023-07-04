@@ -25,26 +25,17 @@ struct Rect {
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
     void setSize(float w, float h) { Width = w; Height = h; }
     void setRect(float x, float y, float w, float h) { PosX = x; PosY = y; Width = w; Height = h; }
+    bool intersect(float& x, float& y, float& w, float& h) {
+        return x <= PosX + Width && PosX <= x + w && y <= PosY + Height && PosY <= y + h;
+    }
     bool intersect(const Rect& rect) {
         return rect.PosX <= PosX + Width && PosX <= rect.PosX + rect.Width && rect.PosY <= PosY + Height && PosY <= rect.PosY + rect.Height;
     }
     bool intersect(const Rect& rect, Rect& intersection) {
-        if(rect.PosX <= PosX + Width && PosX <= rect.PosX + rect.Width && rect.PosY <= PosY + Height && PosY <= rect.PosY + rect.Height)
-        {
-            intersection.setRect(std::max(PosX, rect.PosX),         // The X coordinate of the intersection rectangle's topleft corner is always
-                                                                    // the X coordinate of the rightmost topleft corner of the compared rectangles
-                                 std::max(PosY, rect.PosY),         // Same logic as with the X coordinate, but it's the lowest point now
-
-                                 std::min(PosX + Width, rect.PosX + rect.Width) - std::max(PosX, rect.PosX),        // Width is just a difference between the X coordinates
-                                                                                                                    // of the bottom-right and top-left corners
-                                 std::min(PosY + Height, rect.PosY + rect.Height) - std::max(PosY, rect.PosY));     // Same logic as with width, but now it's the Y coordinates
-            return true;
-        }
-        else
-        {
-            intersection.setRect(0, 0, 0, 0);
-            return false;
-        }
+        intersection.setPosition(std::max(PosX, rect.PosX), std::max(PosY, rect.PosY));
+        intersection.setSize(std::min(PosX + Width, rect.PosX + rect.Width) - intersection.PosX,
+                             std::min(PosY + Height, rect.PosY + rect.Height) - intersection.PosX);
+        return intersect(rect);
     }
     bool contains(const float& x, const float& y) {
         return PosX <= x && x <= PosX + Width && PosY <= y && y <= PosY + Height;
@@ -82,7 +73,7 @@ int size = 540, miniSize = 50; // map is matrix n x m cells with size of one; mi
 // int n = 15, m = 15;
 // #define BigN n * 2 + 1
 // #define BigM m * 2 + 1
-size_t START_N = 4, START_M = 4;
+int START_N = 4, START_M = 4;
 float WallMinSize = size / 8, WallMaxSize = size;
 
 sf::Vector2f CameraPos, miniCameraPos;

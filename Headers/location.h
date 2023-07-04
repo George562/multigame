@@ -14,14 +14,14 @@ namespace Tiles {
 
 class Location {
 public:
-    size_t n, m;
+    int n, m;
     std::vector<std::vector<TileID>> data; // location itself
 
     Location() {}
-    Location(size_t w, size_t h) { SetSize(w, h); }
-    void SetSize(size_t w, size_t h);
-    std::vector<TileID>& operator[](size_t index) { return data[index]; }
-    size_t BuildWayFrom(int x, int y);
+    Location(int w, int h) { SetSize(w, h); }
+    void SetSize(int w, int h);
+    std::vector<TileID>& operator[](int index) { return data[index]; }
+    int BuildWayFrom(int x, int y);
     void WallGenerator(float probability);
     bool LoadLocationFromFile(str FileName);
     bool WriteLocationToFile(str FileName);
@@ -31,17 +31,17 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-void Location::SetSize(size_t w, size_t h) {
+void Location::SetSize(int w, int h) {
     m = w;
     n = h;
     data.assign(n * 2 + 1, std::vector<TileID>(m, Tiles::nothing));
-    for (size_t i = 1; i < data.size(); i += 2) data[i].push_back(Tiles::nothing);
+    for (int i = 1; i < data.size(); i += 2) data[i].push_back(Tiles::nothing);
 }
 
-size_t Location::BuildWayFrom(int x, int y) {
+int Location::BuildWayFrom(int x, int y) {
     vvb used(n, vb(m, false));
     std::queue<Point> q; q.push(Point{x, y});
-    size_t res = 1;
+    int res = 1;
     Point cur, check;
     Rect UsedAreaRect{0, 0, float(used.size()) - 1, float(used[0].size()) - 1};
     while (!q.empty()) {
@@ -85,7 +85,7 @@ void Location::WallGenerator(float probability) {
 
     for (int i = 1; i < data.size() - 1; i++) {
         if (i % 2 == 1) data[i][0] = Tiles::wall;
-        for (int j = i % 2; j < data[i].size() - 1; j++)
+        for (int j = i % 2; j < data[i].size(); j++)
             data[i][j] = (float(rand() % 100) / 100 < probability) ? Tiles::wall : Tiles::nothing;
         if (i % 2 == 1) data[i][data[i].size() - 1] = Tiles::wall;
     }

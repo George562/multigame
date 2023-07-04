@@ -34,39 +34,36 @@ bool in(const float px, const float py, const float& left, const float& top, con
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
 sf::Vector2i WillCollisionWithWalls(vvr Walls, float& PosX, float& PosY, float& Width, float& Height, float& dx, float& dy) {
     sf::Vector2i res = {-1, -1};
-    return sf::Vector2i{1, 1};
-    int y = (int(PosY) / size) * 2, x = int(PosX) / size;
+    int y = int(PosY) / size, x = int(PosX) / size;
     int WallHight = Walls.size(), WallLength = Walls[0].size();
-    if (0 > y || y > WallHight || 0 > x || x > WallLength) return res;
-
     float nextX = PosX + dx, nextY = PosY + dy;
 
     if (dy < 0) {
-        if ((y <= 0 || !in(Walls[y - 1][x],              PosX, nextY, Width, Height)) &&
-            (!in(Walls[y][x + 1],                        PosX, nextY, Width, Height)) &&
-            (y <= 0 || !in(Walls[y - 1][x + 2],          PosX, nextY, Width, Height)) &&
-            (x + 3 >= WallLength || !in(Walls[y][x + 3], PosX, nextY, Width, Height)))
+        if ((y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(PosX, nextY, Width, Height)) &&
+            (!Walls[y * 2][x].intersect(PosX, nextY, Width, Height)) &&
+            (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x + 1].intersect(PosX, nextY, Width, Height)) &&
+            (x + 1 >= WallLength || !Walls[y * 2][x + 1].intersect(PosX, nextY, Width, Height)))
             res.y = 1;
     }
     if (dx < 0) {
-        if ((x <= 0 || !in(Walls[y][x - 1],             nextX, PosY, Width, Height)) &&
-            (!in(Walls[y + 1][x],                       nextX, PosY, Width, Height)) &&
-            (x <= 0 || !in(Walls[y + 2][x - 1],         nextX, PosY, Width, Height)) &&
-            (y + 3 >= WallHight || !in(Walls[y + 3][x], nextX, PosY, Width, Height)))
+        if ((x - 1 < 0 || !Walls[y * 2][x - 1].intersect(nextX, PosY, Width, Height)) &&
+            (!Walls[y * 2 + 1][x].intersect(nextX, PosY, Width, Height)) &&
+            (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(nextX, PosY, Width, Height)) &&
+            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x].intersect(nextX, PosY, Width, Height)))
             res.x = 1;
     }
     if (dy > 0) {
-        if ((y + 3 >= WallHight || !in(Walls[y + 3][x],      PosX, nextY, Width, Height)) &&
-            (!in(Walls[y + 2][x + 1],                        PosX, nextY, Width, Height)) &&
-            (y + 3 >= WallHight || !in(Walls[y + 3][x + 2],  PosX, nextY, Width, Height)) &&
-            (x + 3 >= WallLength || !in(Walls[y + 2][x + 3], PosX, nextY, Width, Height)))
+        if ((y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x].intersect(PosX, nextY, Width, Height)) &&
+            (!Walls[y * 2 + 2][x].intersect(PosX, nextY, Width, Height)) &&
+            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x + 1].intersect(PosX, nextY, Width, Height)) &&
+            (x + 1 >= WallLength || !Walls[y * 2 + 2][x + 1].intersect(PosX, nextY, Width, Height)))
             res.y = 1;
     }
     if (dx > 0) {
-        if ((x + 3 >= WallLength || !in(Walls[y][x + 3],     nextX, PosY, Width, Height)) &&
-            (!in(Walls[y + 1][x + 2],                        nextX, PosY, Width, Height)) &&
-            (x + 3 >= WallLength || !in(Walls[y + 2][x + 3], nextX, PosY, Width, Height)) &&
-            (y + 3 >= WallHight || !in(Walls[y + 3][x + 2],  nextX, PosY, Width, Height)))
+        if ((x + 1 >= WallLength || !Walls[y * 2][x + 1].intersect(nextX, PosY, Width, Height)) &&
+            (!Walls[y * 2 + 1][x + 1].intersect(nextX, PosY, Width, Height)) &&
+            (x + 1 >= WallLength || !Walls[y * 2 + 2][x + 1].intersect(nextX, PosY, Width, Height)) &&
+            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x + 1].intersect(nextX, PosY, Width, Height)))
             res.x = 1;
     }
     return res;  // if value of vector == -1 => there was collision
@@ -101,10 +98,12 @@ void CreateMapRectByLocation(Location& arr, vvr& wallsRect, std::vector<sf::Spri
     wallsRect.assign(arr.data.size(), vr(0));
     for (int i = 0; i < arr.data.size(); i++)
         for (int j = 0; j < arr[i].size(); j++)
-            if (i % 2 == 1) // |
-                wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
-            else // -
-                wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
+            if (arr[i][j] == Tiles::wall) {
+                if (i % 2 == 1) // |
+                    wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
+                else // -
+                    wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
+            } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
     // wallsRect[i][j].setRect(-1, -1, -1, -1);
     // if (arr[i][j] == Tiles::box) {
     //     sf::Texture* tempTexture = new sf::Texture;
