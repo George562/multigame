@@ -11,7 +11,7 @@
 class Player : public Creature {
 public:
     Bar<float> ManaBar, HpBar;
-    PlaccedText HpText, ManaText;
+    PlacedText HpText, ManaText;
     bool ShiftPressed;
 
     Player();

@@ -16,7 +16,7 @@ public:
     int mode;
     
     Bar<int> AmmoBar;
-    PlaccedText NameText, AmmoText;
+    PlacedText NameText, AmmoText;
     Bullet* newBullet;
 
     Weapon() {};

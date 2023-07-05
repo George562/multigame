@@ -5,13 +5,13 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class PlaccedText : public Rect {
+class PlacedText : public Rect {
 public:
     sf::Font font;
     sf::Text text;
     std::vector<str> lines;
 
-    PlaccedText();
+    PlacedText();
     void setPosition(float, float);
     virtual void draw(sf::RenderWindow& window) { window.draw(text); };
     void setText(str s) { text.setString(s); Width = text.getGlobalBounds().width; Height = text.getGlobalBounds().height; }
@@ -22,12 +22,12 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-PlaccedText::PlaccedText() {
+PlacedText::PlacedText() {
     font.loadFromFile("sources/ljk_Inky Thin Pixels.otf");
     text.setFont(font);
 }
 
-void PlaccedText::setPosition(float x, float y) {
+void PlacedText::setPosition(float x, float y) {
     PosX = x; PosY = y;
     text.setPosition(x, y);
 }
