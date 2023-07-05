@@ -63,7 +63,7 @@ struct Bullet {
         }
     }
 
-    virtual void move(const vvr& wallsRect, sf::Clock& clock) {
+    virtual void move(vvr& wallsRect, sf::Clock& clock) {
         if (dx == 0 && dy == 0) return;
         sf::Vector2i res = WillCollisionWithWalls(wallsRect, PosX, PosY, radius, radius, dx, dy);
         dx *= res.x;

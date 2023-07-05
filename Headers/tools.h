@@ -32,7 +32,7 @@ bool in(const float px, const float py, const float& left, const float& top, con
 }
 
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
-sf::Vector2i WillCollisionWithWalls(vvr Walls, float& PosX, float& PosY, float& Width, float& Height, float& dx, float& dy) {
+sf::Vector2i WillCollisionWithWalls(vvr& Walls, float& PosX, float& PosY, float& Width, float& Height, float& dx, float& dy) {
     sf::Vector2i res = {-1, -1};
     int y = int(PosY) / size, x = int(PosX) / size;
     int WallHight = Walls.size(), WallLength = Walls[0].size();

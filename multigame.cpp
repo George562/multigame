@@ -74,11 +74,11 @@ sf::Thread HostTread(funcOfHost);
 sf::Thread ClientTread(funcOfClient);
 
 //////////////////////////////////////////////////////////// Pannels
-Panel  IPPanel          ("sources/YellowPanel", "IP:"       );
-Panel  ListOfPlayers    ("sources/SteelFrame"               );
+Panel  IPPanel          ("sources/textures/YellowPanel", "IP:");
+Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
 
 //////////////////////////////////////////////////////////// Buttons
-Button SoloButton ("sources/RedPanel", "Play" ,[](){
+Button SoloButton ("sources/textures/RedPanel", "Play" ,[](){
     screen = screens::Solo;
     Bullets.clear();
     LevelGenerate(START_N, START_M);
@@ -89,11 +89,11 @@ Button SoloButton ("sources/RedPanel", "Play" ,[](){
     MainMenuMusic.pause();
 });
 
-Button NewGameButton ("sources/GreenPanel", "New Game", [](){});
+Button NewGameButton ("sources/textures/GreenPanel", "New Game", [](){});
 
-Button ContinueButton ("sources/BluePanel", "Continue", [](){});
+Button ContinueButton ("sources/textures/BluePanel", "Continue", [](){});
 
-Button CoopButton ("sources/RedPanel", "Online", [](){
+Button CoopButton ("sources/textures/RedPanel", "Online", [](){
     screen = screens::Coop;
     multiplayer = true;
     MiniMapActivated = false;
@@ -102,7 +102,7 @@ Button CoopButton ("sources/RedPanel", "Online", [](){
     MainMenuMusic.pause();
 });
 
-Button HostButton ("sources/GreenPanel", "Host", [](){
+Button HostButton ("sources/textures/GreenPanel", "Host", [](){
     screen = screens::Host;
     listener.listen(53000);
     selector.add(listener);
@@ -117,11 +117,11 @@ Button HostButton ("sources/GreenPanel", "Host", [](){
     HostTread.launch();
 });
 
-Button ConnectButton ("sources/BluePanel", "Connect", [](){
+Button ConnectButton ("sources/textures/BluePanel", "Connect", [](){
     screen = screens::SetIP;
 });
 
-Button MainMenuButton ("sources/RedPanel", "Exit", [](){
+Button MainMenuButton ("sources/textures/RedPanel", "Exit", [](){
     if (multiplayer) {
         if (HostFuncRun) {
             mutex.lock();
@@ -810,7 +810,7 @@ void funcOfClient() {
                             std::cout << "Labyrinth receiving\n";
                             ReceivePacket >> LabyrinthWalls.n >> LabyrinthWalls.m;
                             std::cout << "n = " << LabyrinthWalls.n << " m = " << LabyrinthWalls.m << '\n';
-                            LabyrinthWalls.SetSize(LabyrinthWalls.n, LabyrinthWalls.n);
+                            LabyrinthWalls.SetSize(LabyrinthWalls.n, LabyrinthWalls.m);
                             for (int i = 0; i < LabyrinthWalls.data.size(); i++)
                                 for (int j = 0; j < LabyrinthWalls[i].size(); j++)
                                     ReceivePacket >> LabyrinthWalls[i][j];
@@ -848,16 +848,16 @@ void funcOfClient() {
 }
 
 void LevelGenerate(int n, int m) {
-    LabyrinthWalls.SetSize(m, n);
+    LabyrinthWalls.SetSize(n, m);
     LabyrinthData.clear();
-    LabyrinthData << sf::Int32(pacetStates::Labyrinth) << LabyrinthWalls.n << LabyrinthWalls.m;
-    player.setPosition(sf::Vector2f{(float(LabyrinthWalls.m / 2) + 0.5f) * size, (float(LabyrinthWalls.n / 2) + 0.5f) * size} - player.getSize() / 2.f);
+    LabyrinthData << sf::Int32(pacetStates::Labyrinth) << n << m;
+    player.setPosition(sf::Vector2f{(m / 2 + 0.5f) * size, (n / 2 + 0.5f) * size} - player.getSize() / 2.f);
     int CounterOfGenerations = 0;
     do {
         LabyrinthWalls.WallGenerator(0.48);
         CountOfEnableTilesOnMap = LabyrinthWalls.BuildWayFrom(int(player.PosX / size), int(player.PosY / size));
         CounterOfGenerations++;
-    } while (CountOfEnableTilesOnMap < float(LabyrinthWalls.n * LabyrinthWalls.m) / 3 || CountOfEnableTilesOnMap > float(LabyrinthWalls.n * LabyrinthWalls.m) / 1.5);
+    } while (CountOfEnableTilesOnMap < float(n * m) / 3 || CountOfEnableTilesOnMap > float(n * m) / 1.5);
     std::cout << "total count of generations = " << CounterOfGenerations
               << " CountOfEnableTilesOnMap = " << CountOfEnableTilesOnMap << '\n';
     for (int i = 0; i < LabyrinthWalls.data.size(); i++)

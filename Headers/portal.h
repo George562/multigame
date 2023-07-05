@@ -25,11 +25,11 @@ public:
 
 Portal::Portal(float x, float y) {
     setPosition(x, y);
-    texture.loadFromFile("sources/Portal.png");
+    texture.loadFromFile("sources/textures/Portal.png");
     sprite.setTexture(texture);
     setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
-    yesButton = Button("sources/BluePanel.png", "Yes", [](){});
-    noButton = Button("sources/YellowPanel.png", "No", [](){});
+    yesButton = Button("sources/textures/BluePanel.png", "Yes", [](){});
+    noButton = Button("sources/textures/YellowPanel.png", "No", [](){});
     questionText.setText("Do you want to go through this portal?");
 }
 

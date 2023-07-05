@@ -31,11 +31,11 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-void Location::SetSize(int w, int h) {
-    m = w;
-    n = h;
-    data.assign(n * 2 + 1, std::vector<TileID>(m, Tiles::nothing));
-    for (int i = 1; i < data.size(); i += 2) data[i].push_back(Tiles::nothing);
+void Location::SetSize(int NewN, int NewM) {
+    n = NewN;
+    m = NewM;
+    data.assign(n * 2 + 1, std::vector<TileID>(0));
+    for (int i = 0; i < data.size(); i++) data[i].assign(m + (i % 2), Tiles::nothing);
 }
 
 int Location::BuildWayFrom(int x, int y) {
@@ -43,7 +43,7 @@ int Location::BuildWayFrom(int x, int y) {
     std::queue<Point> q; q.push(Point{x, y});
     int res = 1;
     Point cur, check;
-    Rect UsedAreaRect{0, 0, float(used.size()) - 1, float(used[0].size()) - 1};
+    Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
     while (!q.empty()) {
         cur = q.front(); q.pop();
         if (used[cur.y][cur.x]) continue;
@@ -84,10 +84,12 @@ void Location::WallGenerator(float probability) {
     data[0].assign(m, Tiles::wall);
 
     for (int i = 1; i < data.size() - 1; i++) {
-        if (i % 2 == 1) data[i][0] = Tiles::wall;
-        for (int j = i % 2; j < data[i].size(); j++)
+        for (int j = 0; j < data[i].size(); j++)
             data[i][j] = (float(rand() % 100) / 100 < probability) ? Tiles::wall : Tiles::nothing;
-        if (i % 2 == 1) data[i][data[i].size() - 1] = Tiles::wall;
+        if (i % 2 == 1) {
+            data[i][0] = Tiles::wall;
+            data[i][m] = Tiles::wall;
+        }
     }
 
     data[data.size() - 1].assign(m, Tiles::wall);

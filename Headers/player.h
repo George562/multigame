@@ -43,7 +43,7 @@ Player::Player() : Creature() {
     circle.setFillColor(sf::Color(0, 180, 0));
     circle.setOutlineColor(sf::Color(100, 50, 50));
     circle.setOutlineThickness(Velocity.cur.x);
-    SetTexture("sources/Player");
+    SetTexture("sources/textures/Player");
 
     HpBar.setSize(360, 60);
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);

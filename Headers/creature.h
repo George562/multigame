@@ -24,9 +24,9 @@ public:
     sf::Time LastCheck;
 
     Creature() : Rect() {};
-    virtual void draw(sf::RenderWindow&, sf::Vector2f*) {};
+    virtual void draw(sf::RenderWindow&) {};
     virtual void getDamage(float dmg) { Health -= dmg; }
-    virtual void move(const vvr&, const int&, const int&) {}; // walls, size of walls, miniSize of walls
+    virtual void move(vvr&) {};
     virtual void update(vB&, sf::Event&) {};
     void SetTexture(str name) {
         texture.loadFromFile(name + ".png");
