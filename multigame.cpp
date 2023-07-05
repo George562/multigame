@@ -85,7 +85,7 @@ Button SoloButton ("sources/RedPanel", "Play" ,[](){
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
-    MainMenuMusic.stop();
+    MainMenuMusic.pause();
 });
 
 Button NewGameButton ("sources/GreenPanel", "New Game", [](){});
@@ -98,7 +98,7 @@ Button CoopButton ("sources/RedPanel", "Online", [](){
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
-    MainMenuMusic.stop();
+    MainMenuMusic.pause();
 });
 
 Button HostButton ("sources/GreenPanel", "Host", [](){
@@ -300,7 +300,7 @@ int main() {
 
                 if (event.type == sf::Event::KeyPressed)
                     if (event.key.code == sf::Keyboard::Escape) {
-                        MainMenuMusic.stop();
+                        MainMenuMusic.pause();
                         window.close();
                     }
                 CoopButton.isActivated(event);

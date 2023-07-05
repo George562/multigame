@@ -10,6 +10,7 @@ public:
     bool Pushed;
     void (*buttonFunction)(void);
 
+    Button() : Panel() {}
     Button(str, str, void (*)(void));
     void setWord(str);
     str getWord();
