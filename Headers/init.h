@@ -34,7 +34,7 @@ struct Rect {
     bool intersect(const Rect& rect, Rect& intersection) {
         intersection.setPosition(std::max(PosX, rect.PosX), std::max(PosY, rect.PosY));
         intersection.setSize(std::min(PosX + Width, rect.PosX + rect.Width) - intersection.PosX,
-                             std::min(PosY + Height, rect.PosY + rect.Height) - intersection.PosX);
+                             std::min(PosY + Height, rect.PosY + rect.Height) - intersection.PosY);
         return intersect(rect);
     }
     bool contains(const float& x, const float& y) {

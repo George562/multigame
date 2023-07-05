@@ -4,7 +4,7 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Chat : public PlaccedText {
+class Chat : public PlacedText {
 public:
     str buffer;
     bool inputted;
@@ -18,7 +18,7 @@ public:
     Chat();
     void draw(sf::RenderWindow&);
     void InputText(sf::Event&);
-    bool Enterred();
+    bool Entered();
     void addLine(str);
     str Last();
 };
@@ -27,7 +27,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Chat::Chat() : PlaccedText(), inputted(false), start(0), len(11), CharacterSize(27) {
+Chat::Chat() : PlacedText(), inputted(false), start(0), len(11), CharacterSize(27) {
     dy = 35;
     PosX = 150; PosY = sch - dy * (len + 2);
     Width = scw - PosX * 2; Height = 35;
@@ -47,7 +47,7 @@ Chat::Chat() : PlaccedText(), inputted(false), start(0), len(11), CharacterSize(
 void Chat::draw(sf::RenderWindow& window) {
     if (inputted) {
         window.draw(rect);
-        PlaccedText tempText; tempText.text.setString(lines[start].substr(0, cursorPos));
+        PlacedText tempText; tempText.text.setString(lines[start].substr(0, cursorPos));
         tempText.text.setCharacterSize(CharacterSize);
         cursor.setPosition(PosX + 5 + tempText.text.getLocalBounds().width, PosY + dy * len);
         if (Clock->getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2))
@@ -82,7 +82,7 @@ void Chat::InputText(sf::Event& event) {
     }
 }
 
-bool Chat::Enterred() {
+bool Chat::Entered() {
     if (inputted && lines[start].size() > 0) {
         times[start] = Clock->getElapsedTime();
         start = (start + 1) % len;

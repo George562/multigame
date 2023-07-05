@@ -5,12 +5,12 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Panel : public PlaccedText {
+class Panel : public PlacedText {
 public:
     sf::Texture texture;
     sf::Sprite rect;
 
-    Panel() : PlaccedText() {};
+    Panel() : PlacedText() {};
     Panel(str, str);
     void setTexture(str);
     void addWord(str);
@@ -33,7 +33,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Panel::Panel(str name, str word = "") : PlaccedText() {
+Panel::Panel(str name, str word = "") : PlacedText() {
     setTexture(name);
     text.setCharacterSize(150);
     text.setFillColor(sf::Color(199, 199, 199));

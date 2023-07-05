@@ -215,7 +215,7 @@ int main() {
 
     MainMenuMusic.openFromFile("sources/music/RestAreaMusic.wav");
     MainMenuMusic.setLoop(true);
-    MainMenuMusic.setVolume(50);
+    MainMenuMusic.setVolume(20);
 
     while (window.isOpen()) {
         if (!window.hasFocus()) {
@@ -320,7 +320,7 @@ int main() {
                         if (event.key.code == sf::Keyboard::Escape)
                             chat.inputted = false;
                         else if (event.key.code == sf::Keyboard::Enter)
-                            if (chat.Enterred()) {
+                            if (chat.Entered()) {
                                 mutex.lock();
                                 SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
                                 SendToClients(SendPacket);
@@ -337,7 +337,7 @@ int main() {
                                 MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                             } else screen = screens::EscOfCoop;
                         else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Enterred();
+                            chat.Entered();
                         else if (event.key.code == sf::Keyboard::Tab) {
                             MiniMapActivated = !MiniMapActivated;
                             if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
@@ -440,7 +440,7 @@ int main() {
                         if (event.key.code == sf::Keyboard::Escape)
                             chat.inputted = false;
                         else if (event.key.code == sf::Keyboard::Enter)
-                            if (chat.Enterred()) {
+                            if (chat.Entered()) {
                                 mutex.lock();
                                 SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
                                 MySocket.send(SendPacket);
@@ -456,7 +456,7 @@ int main() {
                                 MiniMapActivated = false;
                                 MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f)); 
                             } else screen = screens::EscOfCoop;
-                        else if (event.key.code == sf::Keyboard::Enter) chat.Enterred();
+                        else if (event.key.code == sf::Keyboard::Enter) chat.Entered();
                         else if (event.key.code == sf::Keyboard::Tab) {
                             MiniMapActivated = !MiniMapActivated;
                             if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
@@ -483,7 +483,7 @@ int main() {
                         if (event.key.code == sf::Keyboard::Escape)
                             chat.inputted = false;
                         else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Enterred();
+                            chat.Entered();
                     chat.InputText(event);
                 } else {
                     player.update(event, MiniMapActivated);
@@ -494,7 +494,7 @@ int main() {
                                 MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                             } else screen = screens::EscOfCoop;
                         else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Enterred();
+                            chat.Entered();
                         else if (event.key.code == sf::Keyboard::H) {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoom;
