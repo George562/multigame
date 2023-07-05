@@ -860,10 +860,13 @@ void LevelGenerate(int n, int m) {
     } while (CountOfEnableTilesOnMap < float(LabyrinthWalls.n * LabyrinthWalls.m) / 3 || CountOfEnableTilesOnMap > float(LabyrinthWalls.n * LabyrinthWalls.m) / 1.5);
     std::cout << "total count of generations = " << CounterOfGenerations
               << " CountOfEnableTilesOnMap = " << CountOfEnableTilesOnMap << '\n';
-    for (int i = 0; i < LabyrinthWalls.n; i++)
+    for (int i = 0; i < LabyrinthWalls.data.size(); i++)
         for (int j = 0; j < LabyrinthWalls[i].size(); j++)
             LabyrinthData << LabyrinthWalls[i][j];
     CreateMapRectByLocation(LabyrinthWalls, wallsRect, Sprites);
+    SeenWalls.assign(LabyrinthWalls.data.size(), vb(0));
+    for (int i = 0; i < LabyrinthWalls.data.size(); i++)
+        SeenWalls[i].assign(LabyrinthWalls[i].size(), false);
 }
 
 void drawWalls() {

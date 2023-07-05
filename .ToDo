@@ -1,9 +1,3 @@
-+++ set up Роме github
-
-+++ Гоша: рефактор кнопки, как в нирс
-
-+++ Гоша: make location loading from file
-
 +++ Гоша: remake location class and thinking about map class
 
 +++ Рома: add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
@@ -12,21 +6,21 @@
 
 +++ Гоша: make WillCollisionWithWalls function work correctly
 
++++ Ваня: on the minimap, display only those walls that fell into the player field of view
+
++++ Ваня: piano playing in the rest area and main menu
+
 +/- Рома: make portal class which teleport from one location to other
 
 +/- Рома: make game event and interactible classes
-
-+/- Ваня: piano playing in the rest area and main menu
 
 Гоша: Bugfix server
 
 Гоша: replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
 
-Ваня: on the minimap, display only those walls that fell into the player field of view
+Ваня: set config file for use it in init() by initialisation stuff
 
 create item.h and mechanich link at items
-
-set config file for use it in init() by initialisation stuff
 
 fundamentally change the server
 

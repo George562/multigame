@@ -47,10 +47,10 @@ bool Portal::isActivated(Rect rect, sf::Event& event) {
         noButton.isActivated(event);
         yesButton.isActivated(event);
     }
-    if (intersect(rect) && event.type == sf::Event::KeyPressed && event.KeyPressed == sf::Keyboard::X) {
+    
+    if (intersect(rect) && event.type == sf::Event::KeyPressed && event.KeyPressed == sf::Keyboard::X)
         isInterfaceDrawn = true;
-    }
-    if (isInterfaceDrawn && ((event.type == sf::Event::KeyPressed && event.KeyPressed == sf::Keyboard::Escape) || noButton.isActivated(event))) {
+
+    if (isInterfaceDrawn && ((event.type == sf::Event::KeyPressed && event.KeyPressed == sf::Keyboard::Escape) || noButton.isActivated(event)))
         isInterfaceDrawn = false;
-    }
 }
