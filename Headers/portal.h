@@ -9,14 +9,14 @@
 
 class Portal : public Interactible {
 public:
-    Button yesButton, noButton;
+    Button *yesButton, *noButton;
     PlacedText questionText;
 
     Portal(float, float);
     bool isActivated(Rect, sf::Event&);
     bool isInterfaceDrawn = false;
-    void setFunction(void (*func)(void)) { yesButton.buttonFunction = func; }
-    void draw(sf::RenderWindow&);
+    void setFunction(void (*func)(void)) { yesButton->buttonFunction = func; }
+    void draw(sf::RenderWindow&, sf::Vector2f&);
 };
 
 ////////////////////////////////////////////////////////////
@@ -28,29 +28,40 @@ Portal::Portal(float x, float y) {
     texture.loadFromFile("sources/textures/Portal.png");
     sprite.setTexture(texture);
     setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
-    yesButton = Button("sources/textures/BluePanel.png", "Yes", [](){});
-    noButton = Button("sources/textures/YellowPanel.png", "No", [](){});
+    yesButton = new Button("sources/textures/BluePanel", "Yes", [](){});
+    yesButton->setSize(200, 100);
+    yesButton->setPosition(1920 / 3 - yesButton->getSize().x / 2, 680);
+    yesButton->setTextSize(10);
+    noButton = new Button("sources/textures/YellowPanel", "No", [](){});
+    noButton->setSize(200, 100);
+    noButton->setPosition(1920 * 2 / 3 - noButton->getSize().x / 2, 680);
+    noButton->setTextSize(10);
     questionText.setText("Do you want to go through this portal?");
+    questionText.setPosition(1920 / 2 - questionText.text.getGlobalBounds().width / 2, 200);
 }
 
-void Portal::draw(sf::RenderWindow& window) {
+void Portal::draw(sf::RenderWindow& window, sf::Vector2f& cam) {
+    sprite.setPosition(getPosition() - cam);
     window.draw(sprite);
     if (isInterfaceDrawn) {
-        yesButton.draw(window);
-        noButton.draw(window);
+        yesButton->draw(window);
+        noButton->draw(window);
         questionText.draw(window);
     }
 }
 
 bool Portal::isActivated(Rect rect, sf::Event& event) {
     if (isInterfaceDrawn) {
-        noButton.isActivated(event);
-        yesButton.isActivated(event);
+        if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) || noButton->isActivated(event) || yesButton->isActivated(event)) {
+            isInterfaceDrawn = false;
+            return false;
+        }
     }
     
-    if (intersect(rect) && event.type == sf::Event::KeyPressed && event.KeyPressed == sf::Keyboard::X)
+    if (intersect(rect) && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::X) {
         isInterfaceDrawn = true;
+        return true;
+    }
 
-    if (isInterfaceDrawn && ((event.type == sf::Event::KeyPressed && event.KeyPressed == sf::Keyboard::Escape) || noButton.isActivated(event)))
-        isInterfaceDrawn = false;
+    return false;
 }

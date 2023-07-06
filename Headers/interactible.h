@@ -12,8 +12,8 @@ public:
 
     Interactible() {}
     virtual void setFunction(void (*func)(void)) { function = func; }
-    virtual bool isActivated(Rect, sf::Event&);
-    virtual void draw(sf::RenderWindow&);
+    virtual bool isActivated(Rect, sf::Event&) { return false; }
+    virtual void draw(sf::RenderWindow&) {}
 };
 
 ////////////////////////////////////////////////////////////
