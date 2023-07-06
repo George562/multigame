@@ -4,16 +4,15 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Interactible : public Rect {
+class GameEvent {
 public:
-    sf::Texture texture;
-    sf::Sprite sprite;
+    bool (*eventCondition) ();
     void (*function)(void);
 
-    Interactible() {}
+    GameEvent() {}
     virtual void setFunction(void (*func)(void)) { function = func; }
-    virtual bool isActivated(Rect, sf::Event&) { return false; }
-    virtual void draw(sf::RenderWindow&) {}
+    //virtual void setCondition(bool eventCond) { eventCondition = eventCond; } TO BE FIXED
+    virtual bool isActivated(Rect, sf::Event&);
 };
 
 ////////////////////////////////////////////////////////////

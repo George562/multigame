@@ -1,4 +1,5 @@
 #include "Headers/button.h"
+#include "Headers/portal.h"
 #include "Headers/player.h"
 #include "Headers/client.h"
 #include "Headers/chat.h"
@@ -28,6 +29,10 @@ str ClientState, IPOfHost, MyIP, PacetData;
 Client MySocket; // this computer socket
 sf::Int32 packetState, ComputerID;
 sf::Mutex mutex;
+
+//////////////////////TEST///////////////////////////////////////////////////////
+Portal testPortal(0, 0);
+//////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
@@ -479,6 +484,7 @@ int main() {
                 break;
 
             case screens::Solo:
+            testPortal.isActivated(player, event);
                 if (chat.inputted) {
                     if (event.type == sf::Event::KeyPressed)
                         if (event.key.code == sf::Keyboard::Escape)
@@ -511,6 +517,9 @@ int main() {
                         else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
                         else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
                         else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
+                        // TEST
+                        else if (event.key.code == sf::Keyboard::Num9) testPortal.setPosition(player.getPosition());
+                        // TEST
                     } else if (event.type == sf::Event::MouseWheelMoved) {
                         if (MiniMapActivated) {
                             if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
@@ -549,6 +558,7 @@ void draw() {
         }
         player.draw(window);
         drawWalls();
+        testPortal.draw(window, CameraPos);
         for (int i = 0; i < Bullets.size(); i++)
             Bullets[i].draw(window, CameraPos);
         // draw minimap
