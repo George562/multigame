@@ -2,13 +2,10 @@
 #include "../SFML-2.5.1/include/SFML/Network.hpp"
 #include "../SFML-2.5.1/include/SFML/Graphics.hpp"
 #include "../SFML-2.5.1/include/SFML/Audio.hpp"
-#include "../rapidxml-1.13/rapidxml.hpp"
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <vector>
 #include <map>
-#include <cstring>
 #include <string>
 #include <ctime>
 #include <queue>
@@ -72,34 +69,9 @@ namespace screens {
 int scw = sf::VideoMode::getDesktopMode().width; // screen width
 int sch = sf::VideoMode::getDesktopMode().height; // screen height
 
-int size, miniSize; // map is matrix n x m cells with size of one; minisize for minimap
-int START_N, START_M;
+int size = 540, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
+int START_N = 6, START_M = 6;
 float WallMinSize = size / 8, WallMaxSize = size;
-
-void SetSettings() {
-    rapidxml::xml_document<> settings;
-    std::ifstream file("config.xml");
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    file.close();
-    std::string content(buffer.str());
-    settings.parse<0>(&content[0]);
-    rapidxml::xml_node<>* root = settings.first_node();
-    for (rapidxml::xml_node<>* node = root->first_node(); node; node = node->next_sibling()) {
-        if (strcmp(node->name(), "size") == 0)
-            size = stoi(std::string (node->value()));
-        else
-        if (strcmp(node->name(), "miniSize") == 0)
-            miniSize = stoi(std::string (node->value()));
-        else
-        if (strcmp(node->name(), "START_N") == 0)
-            START_N = stoi(std::string (node->value()));
-        else
-        if (strcmp(node->name(), "START_M") == 0)
-            START_M = stoi(std::string (node->value()));
-    }
-    settings.clear();
-}
 
 sf::Vector2f CameraPos, miniCameraPos;
 
