@@ -12,7 +12,7 @@ public:
     Button *yesButton, *noButton;
     PlacedText questionText;
 
-    Portal(float, float);
+    Portal();
     bool isActivated(Rect, sf::Event&);
     bool isInterfaceDrawn = false;
     void setFunction(void (*func)(void)) { yesButton->buttonFunction = func; }
@@ -23,21 +23,21 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Portal::Portal(float x, float y) {
-    setPosition(x, y);
+Portal::Portal() {
     texture.loadFromFile("sources/textures/Portal.png");
     sprite.setTexture(texture);
     setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
+
     yesButton = new Button("sources/textures/BluePanel", "Yes", [](){});
     yesButton->setSize(200, 100);
-    yesButton->setPosition(1920 / 3 - yesButton->getSize().x / 2, 680);
-    yesButton->setTextSize(10);
+    yesButton->setPosition(scw / 3 - yesButton->getSize().x / 2, 680);
+
     noButton = new Button("sources/textures/YellowPanel", "No", [](){});
     noButton->setSize(200, 100);
-    noButton->setPosition(1920 * 2 / 3 - noButton->getSize().x / 2, 680);
-    noButton->setTextSize(10);
+    noButton->setPosition(scw * 2 / 3 - noButton->getSize().x / 2, 680);
+
     questionText.setText("Do you want to go through this portal?");
-    questionText.setPosition(1920 / 2 - questionText.text.getGlobalBounds().width / 2, 200);
+    questionText.setCenter(scw / 2, 200);
 }
 
 void Portal::draw(sf::RenderWindow& window, sf::Vector2f& cam) {
@@ -54,11 +54,11 @@ bool Portal::isActivated(Rect rect, sf::Event& event) {
     if (isInterfaceDrawn) {
         if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) || noButton->isActivated(event) || yesButton->isActivated(event)) {
             isInterfaceDrawn = false;
-            return false;
+            return !(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape);
         }
     }
     
-    if (intersect(rect) && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::X) {
+    if (intersect(rect) && event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
         isInterfaceDrawn = true;
         return true;
     }

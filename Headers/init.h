@@ -13,6 +13,8 @@
 #include "scale.h"
 #define M_PI       3.14159265358979323846   // pi
 
+#define ActivationButton sf::Keyboard::X
+
 using Point = sf::Vector2i;
 using vp = std::vector<Point>;
 using vvp = std::vector<vp>;
@@ -54,7 +56,7 @@ Point dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
 namespace screens {
     enum screens {  // the types of screen
-        Main,       // main menu                -> Solo, Coop
+        MainRoom,       // main menu                -> Solo, Coop
         Coop,       // coop                     -> Host, Connect
         Host,       // choose be a host         -> .
         SetIP,      // input IP to connect      -> Connect
@@ -75,4 +77,4 @@ float WallMinSize = size / 8, WallMaxSize = size;
 
 sf::Vector2f CameraPos, miniCameraPos;
 
-void init() {}
+sf::Clock GlobalClock;

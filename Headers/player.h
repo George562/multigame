@@ -37,7 +37,7 @@ Player::Player() : Creature() {
     Width = Height = radius * 2;
     PosX = 0; PosY = 0; Velocity = {{-MAX_VELOCITY, -MAX_VELOCITY}, {MAX_VELOCITY, MAX_VELOCITY}, {0, 0}}, Acceleration = 0.6 * 2;
     ShiftPressed = false;
-    LastCheck = sf::Clock().getElapsedTime();
+    LastCheck = sf::seconds(0);
     circle.setRadius(radius);
     // circle.setPointCount(4);
     circle.setFillColor(sf::Color(0, 180, 0));
@@ -69,7 +69,8 @@ void Player::interface(sf::RenderWindow& window) {
 
     HpText.draw(window);
     ManaText.draw(window);
-    CurWeapon->interface(window);
+    if (CurWeapon != nullptr)
+        CurWeapon->interface(window);
 }
 
 void Player::draw(sf::RenderWindow& window) {
@@ -138,9 +139,10 @@ void Player::update(sf::Event& event, bool& MiniMapActivated) {
             CurWeapon->Update(event);
     }
     if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::R)
-            CurWeapon->Reload(Mana);
-        else if (event.key.code == sf::Keyboard::LShift && !ShiftPressed) {
+        if (event.key.code == sf::Keyboard::R) {
+            if (CurWeapon != nullptr)
+                CurWeapon->Reload(Mana);
+        } else if (event.key.code == sf::Keyboard::LShift && !ShiftPressed) {
             Velocity.top    *= 2.f;
             Velocity.bottom *= 2.f;
             ShiftPressed = true;

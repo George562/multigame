@@ -26,7 +26,12 @@ public:
     int size();
     str& operator[](int);
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
-    void setSize(float w, float h) { Width = w; Height = h; rect.setScale(w / rect.getGlobalBounds().width, h / rect.getGlobalBounds().height); }
+    void setSize(float w, float h) {
+        Width = w; Height = h;
+        text.setScale(w / rect.getGlobalBounds().width, h / rect.getGlobalBounds().height);
+        text.setPosition(PosX + 50 * w / rect.getGlobalBounds().width, PosX + 50 * h / rect.getGlobalBounds().height);
+        rect.setScale(w / rect.getGlobalBounds().width, h / rect.getGlobalBounds().height);
+    }
 };
 
 ////////////////////////////////////////////////////////////

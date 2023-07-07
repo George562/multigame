@@ -63,16 +63,16 @@ struct Bullet {
         }
     }
 
-    virtual void move(vvr& wallsRect, sf::Clock& clock) {
+    virtual void move(vvr& wallsRect, sf::Clock* clock) {
         if (dx == 0 && dy == 0) return;
         sf::Vector2i res = WillCollisionWithWalls(wallsRect, PosX, PosY, radius, radius, dx, dy);
         dx *= res.x;
         dy *= res.y;
         switch (type) {
         case Bullet::Bubble:
-            PosX += dx * (timer - clock.getElapsedTime()).asSeconds();
-            PosY += dy * (timer - clock.getElapsedTime()).asSeconds();
-            if (timer < clock.getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
+            PosX += dx * (timer - clock->getElapsedTime()).asSeconds();
+            PosY += dy * (timer - clock->getElapsedTime()).asSeconds();
+            if (timer < clock->getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
             break;
         case Bullet::Common:
             PosX += dx;

@@ -99,7 +99,7 @@ bool Location::LoadLocationFromFile(str FileName) {
     std::ifstream file(FileName);
     if (!file.is_open()) return false;
     int n, m; file >> n >> m;
-    SetSize(m, n);
+    SetSize(n, m);
     for (int i = 0; i < data.size(); i++)
         for (int j = 0; j < data[i].size(); j++)
             file >> data[i][j];
