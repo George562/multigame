@@ -491,7 +491,7 @@ void draw() {
     switch (screen) {
     case screens::MainRoom:
         window.clear(sf::Color::Black);
-        player.draw(window);
+        drawWalls();
         for (sf::Sprite& s: Sprites) {
             sf::FloatRect fr = s.getGlobalBounds();
             if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
@@ -500,13 +500,13 @@ void draw() {
                 s.setPosition(s.getPosition() + CameraPos);
             }
         }
-        drawWalls();
-        drawMiniMap();
         portal.draw(window, CameraPos);
+        player.draw(window);
+        drawMiniMap();
         break;
     case screens::Solo:
         window.clear(sf::Color::Black);
-        player.draw(window);
+        drawWalls();
         for (sf::Sprite& s: Sprites) {
             sf::FloatRect fr = s.getGlobalBounds();
             if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
@@ -515,9 +515,9 @@ void draw() {
                 s.setPosition(s.getPosition() + CameraPos);
             }
         }
-        drawWalls();
-        drawMiniMap();
         portal.draw(window, CameraPos);
+        player.draw(window);
+        drawMiniMap();
         for (int i = 0; i < Bullets.size(); i++)
             Bullets[i].draw(window, CameraPos);
         
@@ -530,8 +530,7 @@ void draw() {
         break;
     case screens::Connect:
         window.clear(sf::Color::Black);
-        for (Player& p: ConnectedPlayers)
-            p.draw(window);
+        drawWalls();
         for (sf::Sprite& s: Sprites) {
             sf::FloatRect fr = s.getGlobalBounds();
             if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
@@ -540,17 +539,17 @@ void draw() {
                 s.setPosition(s.getPosition() + CameraPos);
             }
         }
+        for (Player& p: ConnectedPlayers)
+            p.draw(window);
         for (int i = 0; i < Bullets.size(); i++)
             Bullets[i].draw(window, CameraPos);
-        drawWalls();
         drawMiniMap();
         player.interface(window);
         chat.draw(window);
         break;
     case screens::Host:
         window.clear(sf::Color::Black);
-        for (Player& p: ConnectedPlayers)
-            p.draw(window);
+        drawWalls();
         for (sf::Sprite& s: Sprites) {
             sf::FloatRect fr = s.getGlobalBounds();
             if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
@@ -559,17 +558,17 @@ void draw() {
                 s.setPosition(s.getPosition() + CameraPos);
             }
         }
+        for (Player& p: ConnectedPlayers)
+            p.draw(window);
         for (int i = 0; i < Bullets.size(); i++)
             Bullets[i].draw(window, CameraPos);
-        drawWalls();
         drawMiniMap();
         player.interface(window);
         chat.draw(window);
         break;
     case screens::EscOfCoop:
         window.clear(sf::Color::Black);
-        for (Player& p: ConnectedPlayers)
-            p.draw(window);
+        drawWalls();
         for (sf::Sprite& s: Sprites) {
             sf::FloatRect fr = s.getGlobalBounds();
             if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
@@ -578,9 +577,10 @@ void draw() {
                 s.setPosition(s.getPosition() + CameraPos);
             }
         }
+        for (Player& p: ConnectedPlayers)
+            p.draw(window);
         for (int i = 0; i < Bullets.size(); i++)
             Bullets[i].draw(window, CameraPos);
-        drawWalls();
         drawMiniMap();
         chat.draw(window);
         ListOfPlayers.draw(window);
@@ -880,9 +880,9 @@ void LoadMainMenu() {
     for (int i = 0; i < CurLocation->data.size(); i++)
         SeenWalls[i].assign(CurLocation->data[i].size(), false);
     
-    player.setPosition(sf::Vector2f{1.f * size, 1.f * size});
+    player.setCenter(1.f * size, 1.f * size);
 
-    portal.setPosition(size * 3, size);
+    portal.setCenter(size * 3, size);
     portal.setFunction([](){
         screen = screens::Solo;
         Bullets.clear();

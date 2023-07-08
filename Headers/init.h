@@ -23,6 +23,8 @@ struct Rect {
     sf::Vector2f getPosition() { return {PosX, PosY}; }
     void setPosition(sf::Vector2f v) { PosX = v.x; PosY = v.y; }
     void setPosition(float x, float y) { PosX = x; PosY = y; }
+    void setCenter(float x, float y) { PosX = x - Width / 2; PosY = y - Height / 2; }
+    void setCenter(sf::Vector2f v) { PosX = v.x - Width / 2; PosY = v.y - Height / 2; }
     sf::Vector2f getSize() { return {Width, Height}; }
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
     void setSize(float w, float h) { Width = w; Height = h; }

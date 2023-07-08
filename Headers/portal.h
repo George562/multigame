@@ -30,11 +30,11 @@ Portal::Portal() {
 
     yesButton = new Button("sources/textures/BluePanel", "Yes", [](){});
     yesButton->setSize(200, 100);
-    yesButton->setPosition(scw / 3 - yesButton->getSize().x / 2, 680);
+    yesButton->setPosition(scw / 3 - yesButton->Width / 2, 680);
 
     noButton = new Button("sources/textures/YellowPanel", "No", [](){});
     noButton->setSize(200, 100);
-    noButton->setPosition(scw * 2 / 3 - noButton->getSize().x / 2, 680);
+    noButton->setPosition(scw * 2 / 3 - noButton->Width / 2, 680);
 
     questionText.setText("Do you want to go through this portal?");
     questionText.setCenter(scw / 2, 200);
