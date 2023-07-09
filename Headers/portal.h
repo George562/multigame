@@ -1,7 +1,5 @@
-#include "init.h"
 #include "interactible.h"
 #include "button.h"
-#include "text.h"
 
 ////////////////////////////////////////////////////////////
 // Class

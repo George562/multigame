@@ -1,4 +1,4 @@
-#include "text.h"
+#include "tools.h"
 
 #define COMMON_BULLET_RADIUS 7
 
@@ -45,20 +45,22 @@ struct Bullet {
 
     virtual void draw(sf::RenderWindow& window, sf::Vector2f& camera) {
         switch (type) {
-        case Bullet::Bubble:
-            if (exlpode && !todel) {
-                if (ExplosionRadius.fromTop() > 0) {
-                    ExplosionRadius += 1.f / 5;
-                    circle->setFillColor(circle->getFillColor() - sf::Color(0, 0, 0, 4));
-                    circle->setRadius(radius * ExplosionRadius.cur);
-                    PosX -= radius / 5;
-                    PosY -= radius / 5;
-                } else todel = true;
-            }
-        case Bullet::Common:
-            if (in(PosX, PosY, camera.x, camera.y, scw, sch)) {
-                circle->setPosition(PosX - camera.x, PosY - camera.y);
-                window.draw(*circle);
+            case Bullet::Bubble:
+                if (exlpode && !todel) {
+                    if (ExplosionRadius.fromTop() > 0) {
+                        ExplosionRadius += 1.f / 5;
+                        circle->setFillColor(circle->getFillColor() - sf::Color(0, 0, 0, 4));
+                        circle->setRadius(radius * ExplosionRadius.cur);
+                        PosX -= radius / 5;
+                        PosY -= radius / 5;
+                    } else todel = true;
+                }
+            case Bullet::Common: {
+                Rect screenRect{camera.x, camera.y, float(scw), float(sch)};
+                if (screenRect.contains(PosX, PosY)) {
+                    circle->setPosition(PosX - camera.x, PosY - camera.y);
+                    window.draw(*circle);
+                }
             }
         }
     }

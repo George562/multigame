@@ -51,7 +51,7 @@ void Button::draw(sf::RenderWindow& window) {
 }
 
 bool Button::OnTheButton(int& x, int& y) {
-    return in(x, y, PosX, PosY, Width, Height);
+    return contains(x, y);
 }
 
 bool Button::isActivated(sf::Event& event) {

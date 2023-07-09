@@ -1,5 +1,4 @@
 #pragma once
-#include "init.h"
 #include "location.h"
 
 // check existing element in vector
@@ -91,29 +90,6 @@ sf::Vector2f RotateAround(float phi, sf::Vector2f& a, float& X, float& Y) {
     newA.x =   (a.x - X) * cos(phi) + (a.y - Y) * sin(phi) + X;
     newA.y = - (a.x - X) * sin(phi) + (a.y - Y) * cos(phi) + Y;
     return newA;
-}
-
-void CreateMapRectByLocation(Location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites) {
-    Sprites.clear();
-    wallsRect.assign(arr.data.size(), vr(0));
-    for (int i = 0; i < arr.data.size(); i++)
-        for (int j = 0; j < arr[i].size(); j++)
-            if (arr[i][j] == Tiles::wall) {
-                if (i % 2 == 1) // |
-                    wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
-                else // -
-                    wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
-            } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
-    // wallsRect[i][j].setRect(-1, -1, -1, -1);
-    // if (arr[i][j] == Tiles::box) {
-    //     sf::Texture* tempTexture = new sf::Texture;
-    //     tempTexture->loadFromFile("sources/Box.png");
-    //     sf::Sprite* tempSprite = new sf::Sprite;
-    //     tempSprite->setTexture(*tempTexture);
-    //     tempSprite->setScale(250 / tempSprite->getGlobalBounds().width, 250 / tempSprite->getGlobalBounds().height);
-    //     tempSprite->setPosition(size * j / 2, size * i / 2);
-    //     Sprites.push_back(*tempSprite);
-    // }
 }
 
 Rect& operator+=(Rect& a, Point& b) { a.PosX += b.x; a.PosY += b.y; return a; } // summ position

@@ -118,3 +118,26 @@ bool Location::WriteLocationToFile(str FileName) {
     file.close();
     return true;
 }
+
+void CreateMapRectByLocation(Location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites) {
+    Sprites.clear();
+    wallsRect.assign(arr.data.size(), vr(0));
+    for (int i = 0; i < arr.data.size(); i++)
+        for (int j = 0; j < arr[i].size(); j++)
+            if (arr[i][j] == Tiles::wall) {
+                if (i % 2 == 1) // |
+                    wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
+                else // -
+                    wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
+            } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
+    // wallsRect[i][j].setRect(-1, -1, -1, -1);
+    // if (arr[i][j] == Tiles::box) {
+    //     sf::Texture* tempTexture = new sf::Texture;
+    //     tempTexture->loadFromFile("sources/Box.png");
+    //     sf::Sprite* tempSprite = new sf::Sprite;
+    //     tempSprite->setTexture(*tempTexture);
+    //     tempSprite->setScale(250 / tempSprite->getGlobalBounds().width, 250 / tempSprite->getGlobalBounds().height);
+    //     tempSprite->setPosition(size * j / 2, size * i / 2);
+    //     Sprites.push_back(*tempSprite);
+    // }
+}

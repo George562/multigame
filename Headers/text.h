@@ -1,5 +1,5 @@
 #pragma once
-#include "tools.h"
+#include "init.h"
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -14,7 +14,7 @@ public:
     PlacedText();
     void setPosition(float, float);
     void setCenter(float, float);
-    virtual void draw(sf::RenderWindow& window) { window.draw(text); };
+    void draw(sf::RenderWindow& window) { window.draw(text); };
     void setText(str s) { text.setString(s); Width = text.getGlobalBounds().width; Height = text.getGlobalBounds().height; }
     void setCharacterSize(int x) { text.setCharacterSize(x); Width = text.getGlobalBounds().width; Height = text.getGlobalBounds().height; }
 };
