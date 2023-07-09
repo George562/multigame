@@ -3,6 +3,7 @@
 #include "Headers/player.h"
 #include "Headers/client.h"
 #include "Headers/chat.h"
+#include "Headers/contextMenu.h"
 
 //////////////////////////////////////////////////////////// Stuff for work with sistem and screen
 sf::ContextSettings settings;
@@ -32,6 +33,11 @@ sf::Mutex mutex;
 
 //////////////////////////////////////////////////////////// Portal
 Portal portal;
+
+// DEBUG
+ContextMenu *contextMenu;
+Portal optionPortal;
+// DEBUG
 
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
@@ -246,6 +252,12 @@ int main() {
             case screens::MainRoom:
                 player.update(event, MiniMapActivated);
                 portal.isActivated(player, event);
+
+                // DEBUG
+                optionPortal.isActivated(player, event);
+                if(contextMenu != nullptr)
+                    contextMenu->isActive(event);
+                // DEBUG
 
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
@@ -464,9 +476,6 @@ int main() {
                         else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
                         else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
                         else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
-                        // TEST
-                        else if (event.key.code == sf::Keyboard::Num9) portal.setPosition(player.getPosition());
-                        // TEST
                     } else if (event.type == sf::Event::MouseWheelMoved) {
                         if (MiniMapActivated) {
                             if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
@@ -501,6 +510,13 @@ void draw() {
             }
         }
         portal.draw(window, CameraPos);
+
+        // DEBUG
+        optionPortal.draw(window, CameraPos);
+        if(contextMenu != nullptr)
+            contextMenu->draw(window);
+        // DEBUG
+        
         player.draw(window);
         drawMiniMap();
         break;
@@ -900,6 +916,32 @@ void LoadMainMenu() {
             portal.setPosition(-10 * size, -10 * size);
         });
     });
+
+    // DEBUG
+    optionPortal.setPosition(500, 500);
+    optionPortal.setFunction([](){
+        if(contextMenu != nullptr)
+            contextMenu->isInterfaceDrawn = false;
+        contextMenu = nullptr;
+        contextMenu = new ContextMenu("sources/textures/SteelFrame", "Options");
+        contextMenu->setSize(900, 900);
+        Panel *testPanel1 = new Panel("sources/textures/GreenPanel", "Option1");
+        testPanel1->setSize(200, 200);
+        testPanel1->setPosition(600, 400);
+        testPanel1->addWord("Lmfao");
+        Panel *testPanel2 = new Panel("sources/textures/BluePanel", "Option2");
+        testPanel2->setSize(100, 100);
+        testPanel2->setPosition(600, 800);
+        testPanel2->addWord("oafmL");
+        Button *testButton1 = new Button("sources/textures/RedPanel", "lolButton", [](){ contextMenu->removeElement(0); });
+        testButton1->setSize(500, 300);
+        testButton1->setPosition(1300, 600);
+        contextMenu->addElement(testPanel1);
+        contextMenu->addElement(testPanel2);
+        contextMenu->addElement(testButton1);
+        contextMenu->isInterfaceDrawn = true;
+    });
+    // DEBUG
 
     // Set cameras
     CameraPos = {0, 0};

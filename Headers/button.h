@@ -19,7 +19,7 @@ public:
     void draw(sf::RenderWindow&);
     bool OnTheButton(int&, int&);
     bool isActivated(sf::Event&);
-};
+}; 
 
 ////////////////////////////////////////////////////////////
 // Realization
