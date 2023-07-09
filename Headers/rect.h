@@ -11,6 +11,7 @@ struct Rect {
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
     void setSize(float w, float h) { Width = w; Height = h; }
     void setRect(float x, float y, float w, float h) { PosX = x; PosY = y; Width = w; Height = h; }
+    void setRect(Rect rect) { PosX = rect.PosX; PosY = rect.PosY; Width = rect.Width; Height = rect.Height; }
     bool intersect(float& x, float& y, float w, float h) {
         return x <= PosX + Width && PosX <= x + w && y <= PosY + Height && PosY <= y + h;
     }
