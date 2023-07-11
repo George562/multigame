@@ -1,31 +1,11 @@
-+++ Гоша: remake location class and thinking about map class
-
-+++ Рома: add intersects and contains to Rect class like sf::RectFloat::intersects and sf::RectFloat::contains
-
-+++ Гоша: Bugfix minimap view
-
-+++ Гоша: make WillCollisionWithWalls function work correctly
-
-+++ Ваня: on the minimap, display only those walls that fell into the player field of view
-
-+++ Ваня: piano playing in the rest area and main menu
-
-+/- Рома: make portal class which teleport from one location to other
-
-+++ Рома: make game event and interactible classes
-
 Гоша: Bugfix server
 
 Гоша: replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
-
-Ваня: set config file for use it in init() by initialisation stuff
 
 create item.h and mechanich link at items
 
 fundamentally change the server
 
 add gas cloud objects and liquid puddles to the location
-
-make main menu from where player go to labyrinth
 
 make a game settings window with the subsequent launch of the passage of the dungeon
