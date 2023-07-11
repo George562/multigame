@@ -14,7 +14,6 @@ public:
     sf::RectangleShape rect, cursor;
     float dy;
 
-    sf::Clock* Clock;
     Chat();
     void draw(sf::RenderWindow&);
     void InputText(sf::Event&);
@@ -50,11 +49,11 @@ void Chat::draw(sf::RenderWindow& window) {
         PlacedText tempText; tempText.text.setString(lines[start].substr(0, cursorPos));
         tempText.text.setCharacterSize(CharacterSize);
         cursor.setPosition(PosX + 5 + tempText.text.getLocalBounds().width, PosY + dy * len);
-        if (Clock->getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2))
+        if (GlobalClock.getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2))
             window.draw(cursor);
     }
     for (int i = 0; i < len; i++)
-        if (Clock->getElapsedTime() - times[(start - i + len) % len] < sf::seconds(5) || inputted) {
+        if (GlobalClock.getElapsedTime() - times[(start - i + len) % len] < sf::seconds(5) || inputted) {
             text.setString(lines[(start - i + len) % len]);
             text.setPosition(PosX + 5, PosY + dy * (len - i) + 4);
             window.draw(text);
@@ -84,7 +83,7 @@ void Chat::InputText(sf::Event& event) {
 
 bool Chat::Entered() {
     if (inputted && lines[start].size() > 0) {
-        times[start] = Clock->getElapsedTime();
+        times[start] = GlobalClock.getElapsedTime();
         start = (start + 1) % len;
         lines[start].clear();
     }
@@ -95,7 +94,7 @@ bool Chat::Entered() {
 
 void Chat::addLine(str word) {
     std::swap(lines[start], lines[(start + 1) % len]);
-    times[start] = Clock->getElapsedTime();
+    times[start] = GlobalClock.getElapsedTime();
     lines[start] = word;
     start = (start + 1) % len;
 }

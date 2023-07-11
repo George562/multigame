@@ -1,4 +1,3 @@
-#include "panel.h"
 #include "button.h"
 
 ////////////////////////////////////////////////////////////
@@ -14,7 +13,7 @@ public:
     ContextMenu(str, str, Rect);
     void addElement(str, str, void (*)(void), sf::Vector2f, sf::Vector2f);
     void removeElement(int index) { elements.erase(elements.begin() + index); }
-    void draw(sf::RenderWindow&);
+    virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
     void update(sf::Event&);
 };
 
@@ -34,11 +33,11 @@ void ContextMenu::addElement(str name, str text, void (*func)(void), sf::Vector2
     elements[elements.size() - 1].setSize(elemSize);
 }
 
-void ContextMenu::draw(sf::RenderWindow& window) {
+void ContextMenu::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if(isMenuActive) {
-        window.draw(rect);
+        target.draw(rect);
         for(int i = 0; i < elements.size(); i++)
-            elements[i].draw(window);
+            target.draw(elements[i]);
     }
 }
 

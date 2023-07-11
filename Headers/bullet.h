@@ -2,7 +2,7 @@
 
 #define COMMON_BULLET_RADIUS 7
 
-struct Bullet {
+struct Bullet : public sf::Drawable {
     enum Type {
         Common,
         Bubble,
@@ -33,19 +33,30 @@ struct Bullet {
         UpdateCircleShape();
     }
 
-    virtual void UpdateCircleShape() {
+    void UpdateCircleShape() {
         circle->setRadius(radius);
         circle->setFillColor(color);
     }
     
-    virtual sf::Rect<float> getRect() { return {PosX, PosY, dx, dy}; }
-    virtual sf::Vector2f getPosition() { return {PosX, PosY}; }
-    virtual void setPosition(sf::Vector2f &v) { PosX = v.x; PosY = v.y; }
-    virtual void setPosition(float x, float y) { PosX = x; PosY = y; }
+    sf::Rect<float> getRect() { return {PosX, PosY, dx, dy}; }
+    sf::Vector2f getPosition() { return {PosX, PosY}; }
+    void setPosition(sf::Vector2f &v) { PosX = v.x; PosY = v.y; }
+    void setPosition(float x, float y) { PosX = x; PosY = y; }
 
-    virtual void draw(sf::RenderWindow& window, sf::Vector2f& camera) {
+    void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        target.draw(*circle);
+    }
+
+    void move(vvr& wallsRect, sf::Clock* clock) {
+        if (dx == 0 && dy == 0) return;
+        sf::Vector2i res = WillCollisionWithWalls(wallsRect, PosX, PosY, radius, radius, dx, dy);
+        dx *= res.x;
+        dy *= res.y;
         switch (type) {
             case Bullet::Bubble:
+                PosX += dx * (timer - clock->getElapsedTime()).asSeconds();
+                PosY += dy * (timer - clock->getElapsedTime()).asSeconds();
+                if (timer < clock->getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
                 if (exlpode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
                         ExplosionRadius += 1.f / 5;
@@ -55,31 +66,12 @@ struct Bullet {
                         PosY -= radius / 5;
                     } else todel = true;
                 }
-            case Bullet::Common: {
-                Rect screenRect{camera.x, camera.y, float(scw), float(sch)};
-                if (screenRect.contains(PosX, PosY)) {
-                    circle->setPosition(PosX - camera.x, PosY - camera.y);
-                    window.draw(*circle);
-                }
-            }
+                break;
+            case Bullet::Common:
+                PosX += dx;
+                PosY += dy;
         }
-    }
-
-    virtual void move(vvr& wallsRect, sf::Clock* clock) {
-        if (dx == 0 && dy == 0) return;
-        sf::Vector2i res = WillCollisionWithWalls(wallsRect, PosX, PosY, radius, radius, dx, dy);
-        dx *= res.x;
-        dy *= res.y;
-        switch (type) {
-        case Bullet::Bubble:
-            PosX += dx * (timer - clock->getElapsedTime()).asSeconds();
-            PosY += dy * (timer - clock->getElapsedTime()).asSeconds();
-            if (timer < clock->getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
-            break;
-        case Bullet::Common:
-            PosX += dx;
-            PosY += dy;
-        }
+        circle->setPosition(PosX, PosY);
     }
 };
 

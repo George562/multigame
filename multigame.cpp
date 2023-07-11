@@ -4,6 +4,11 @@
 #include "Headers/chat.h"
 #include "Headers/contextMenu.h"
 
+//////////////////////////////////////////////////////////// Settings of the game
+bool IsDrawMinimap = true;
+bool IsDrawInterface = true;
+
+
 //////////////////////////////////////////////////////////// Stuff for work with sistem and screen
 sf::ContextSettings settings;
 
@@ -82,6 +87,7 @@ void funcOfClient();
 void LevelGenerate(int, int);
 void drawWalls();
 void drawMiniMap();
+void drawIterface();
 void LoadMainMenu();
 void init();
 
@@ -101,7 +107,7 @@ Button SoloButton("sources/textures/RedPanel", "Play" , [](){
     multiplayer = false;
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
+    MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
     MainMenuMusic.pause();
 });
 
@@ -114,7 +120,7 @@ Button CoopButton("sources/textures/RedPanel", "Online", [](){
     multiplayer = true;
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
+    MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
     MainMenuMusic.pause();
 });
 
@@ -127,7 +133,6 @@ Button HostButton("sources/textures/GreenPanel", "Host", [](){
     LevelGenerate(START_N, START_M);
     ComputerID = 0;
     Player* NewPlayer = new Player();
-    NewPlayer->Camera = &CameraPos;
     ConnectedPlayers.push_back(*NewPlayer);
     HostFuncRun = true;
     HostTread.launch();
@@ -189,11 +194,11 @@ int main() {
         } else {
             if (screen == screens::MainRoom) {
                 player.move(wallsRect);
-                CameraPos = {player.PosX - scw / 2 + player.radius, player.PosY - sch / 2 + player.radius};
+                GameView.setCenter(player.getCenter());
             } else if (screen == screens::Solo || screen == screens::Host || screen == screens::Connect) {
                 if (!chat.inputted) {
                     player.move(wallsRect);
-                    CameraPos = {player.PosX - scw / 2 + player.radius, player.PosY - sch / 2 + player.radius};
+                    GameView.setCenter(player.getCenter());
                 }
                 int wasBulletsCount = Bullets.size();
                 player.update(Bullets);
@@ -233,7 +238,7 @@ int main() {
             }
             if (MiniMapActivated) {
                 if (Mouse.isButtonPressed(Mouse.Left))
-                    miniCameraPos += sf::Vector2f(Mouse.getPosition() - MouseBuffer) * MiniMapZoom;
+                    MiniMapView.move(-sf::Vector2f(Mouse.getPosition() - MouseBuffer) * MiniMapZoom);
             }
             MouseBuffer = Mouse.getPosition();
             draw();
@@ -249,12 +254,23 @@ int main() {
 
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
-                        MainMenuMusic.pause();
-                        window.close();
+                        if (MiniMapActivated) {
+                            MiniMapActivated = false;
+                            MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        } else if (portal.isInterfaceDrawn) portal.isInterfaceDrawn = false;
+                        else {
+                            MainMenuMusic.pause();
+                            window.close();
+                        }
                     } else if (event.key.code == sf::Keyboard::Tab) {
                         MiniMapActivated = !MiniMapActivated;
                         if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
                         else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                    }
+                } else if (event.type == sf::Event::MouseWheelMoved) {
+                    if (MiniMapActivated) {
+                        if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
+                        else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
                     }
                 }
                 break;
@@ -310,7 +326,7 @@ int main() {
                                 CurLocation->n += std::max(event.mouseWheel.delta + CurLocation->n, 2);
                                 CurLocation->m += std::max(event.mouseWheel.delta + CurLocation->m, 2);
                             }
-                            miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
+                            MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
                             Bullets.clear();
                             LevelGenerate(CurLocation->n, CurLocation->m);
                             mutex.lock();
@@ -366,7 +382,6 @@ int main() {
                                         ReceivePacket >> PacetData;
                                         ListOfPlayers.addWord(PacetData);
                                         { Player* NewPlayer = new Player();
-                                          NewPlayer->Camera = &CameraPos;
                                           ConnectedPlayers.push_back(*NewPlayer);
                                           }
                                         std::cout << PacetData << " connected\n";
@@ -471,7 +486,7 @@ int main() {
                         } else {
                             CurLocation->n = std::max(event.mouseWheel.delta + CurLocation->n, 2);
                             CurLocation->m = std::max(event.mouseWheel.delta + CurLocation->m, 2);
-                            miniCameraPos = {float(scw - (int)CurLocation->m * miniSize) / 2, float(sch - (int)CurLocation->n * miniSize) / 2};
+                            MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
                             Bullets.clear();
                             LevelGenerate(CurLocation->n, CurLocation->m);
                         }
@@ -484,111 +499,126 @@ int main() {
 }
 
 void draw() {
-    window.clear(sf::Color::White);
+    window.clear(sf::Color::Black);
+    drawWalls();
+
+    for (sf::Sprite& s: Sprites) window.draw(s);
+
     switch (screen) {
-    case screens::MainRoom:
-        window.clear(sf::Color::Black);
-        drawWalls();
-        for (sf::Sprite& s: Sprites) {
-            sf::FloatRect fr = s.getGlobalBounds();
-            if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
-                s.setPosition(s.getPosition() - CameraPos);
-                window.draw(s);
-                s.setPosition(s.getPosition() + CameraPos);
-            }
-        }
-        portal.draw(window, CameraPos);        
-        player.draw(window);
-        drawMiniMap();
-        break;
-    case screens::Solo:
-        window.clear(sf::Color::Black);
-        drawWalls();
-        for (sf::Sprite& s: Sprites) {
-            sf::FloatRect fr = s.getGlobalBounds();
-            if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
-                s.setPosition(s.getPosition() - CameraPos);
-                window.draw(s);
-                s.setPosition(s.getPosition() + CameraPos);
-            }
-        }
-        portal.draw(window, CameraPos);
-        player.draw(window);
-        drawMiniMap();
-        for (int i = 0; i < Bullets.size(); i++)
-            Bullets[i].draw(window, CameraPos);
-        
-        player.interface(window);
-        chat.draw(window);
-        break;
-    case screens::Coop:
-        HostButton.draw(window);
-        ConnectButton.draw(window);
-        break;
-    case screens::Connect:
-        window.clear(sf::Color::Black);
-        drawWalls();
-        for (sf::Sprite& s: Sprites) {
-            sf::FloatRect fr = s.getGlobalBounds();
-            if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
-                s.setPosition(s.getPosition() - CameraPos);
-                window.draw(s);
-                s.setPosition(s.getPosition() + CameraPos);
-            }
-        }
-        for (Player& p: ConnectedPlayers)
-            p.draw(window);
-        for (int i = 0; i < Bullets.size(); i++)
-            Bullets[i].draw(window, CameraPos);
-        drawMiniMap();
-        player.interface(window);
-        chat.draw(window);
-        break;
-    case screens::Host:
-        window.clear(sf::Color::Black);
-        drawWalls();
-        for (sf::Sprite& s: Sprites) {
-            sf::FloatRect fr = s.getGlobalBounds();
-            if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
-                s.setPosition(s.getPosition() - CameraPos);
-                window.draw(s);
-                s.setPosition(s.getPosition() + CameraPos);
-            }
-        }
-        for (Player& p: ConnectedPlayers)
-            p.draw(window);
-        for (int i = 0; i < Bullets.size(); i++)
-            Bullets[i].draw(window, CameraPos);
-        drawMiniMap();
-        player.interface(window);
-        chat.draw(window);
-        break;
-    case screens::EscOfCoop:
-        window.clear(sf::Color::Black);
-        drawWalls();
-        for (sf::Sprite& s: Sprites) {
-            sf::FloatRect fr = s.getGlobalBounds();
-            if (fr.intersects({CameraPos.x, CameraPos.x, float(scw), float(sch)})) {
-                s.setPosition(s.getPosition() - CameraPos);
-                window.draw(s);
-                s.setPosition(s.getPosition() + CameraPos);
-            }
-        }
-        for (Player& p: ConnectedPlayers)
-            p.draw(window);
-        for (int i = 0; i < Bullets.size(); i++)
-            Bullets[i].draw(window, CameraPos);
-        drawMiniMap();
-        chat.draw(window);
-        ListOfPlayers.draw(window);
-        MainMenuButton.draw(window);
-        break;
-    case screens::SetIP:
-        IPPanel.draw(window);
-        break;
+        case screens::MainRoom:
+        case screens::Solo:
+            window.draw(portal);
+            window.draw(player);
+            break;
+        case screens::Coop:
+            window.draw(HostButton);
+            window.draw(ConnectButton);
+            break;
+        case screens::Connect:
+        case screens::Host:
+        case screens::EscOfCoop:
+            for (Player& p: ConnectedPlayers)
+                window.draw(p);
+            window.draw(player);
+            break;
+        case screens::SetIP:
+            break;
     }
+
+    for (int i = 0; i < Bullets.size(); i++)
+        window.draw(Bullets[i]);
+
+    if (IsDrawMinimap)      drawMiniMap();
+    if (IsDrawInterface)    drawIterface();
     // window.draw(TextFPS.text);
     window.display();
+}
+
+void drawWalls() {
+    CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
+    for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
+            i <= std::min(int(CurLocation->data.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++)
+        for (int j = std::max(0, int(CameraPos.x / size) - 1);
+                j <= std::min(int(CurLocation->data[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
+            if (wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, (float)scw, (float)sch))
+                SeenWalls[i][j] = true;
+            if ((*CurLocation)[i][j] == Tiles::wall) {
+                if (i % 2 == 1) { // |
+                    WallRectV.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY));
+                    window.draw(WallRectV);
+                } else { // -
+                    WallRectG.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY));
+                    window.draw(WallRectG);
+                }
+            }
+        }
+}
+void drawMiniMap() {
+    // draw minimap wall
+    window.setView(MiniMapView);
+    sf::VertexArray line(sf::Lines, 2);
+    for (int i = 0; i < CurLocation->data.size(); i++)
+        for (int j = 0; j < CurLocation->data[i].size(); j++)
+            if ((*CurLocation)[i][j] == Tiles::wall && SeenWalls[i][j]) {
+                if (i % 2 == 1) { // |
+                    line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2), sf::Color::White);
+                    line[1] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i + 1) / 2), sf::Color::White);
+                } else { // -
+                    line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * i / 2));
+                    line[1] = sf::Vertex(sf::Vector2f(miniSize * (j + 1), miniSize * i / 2));
+                }
+                window.draw(line);
+            }
+    // draw minimap players
+    if (multiplayer){
+        for (Player& p: ConnectedPlayers) {
+            CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize));
+            window.draw(CircleOfSmallPlayer);
+        }
+    } else {
+        CircleOfSmallPlayer.setPosition(player.getPosition() / float(size) * float(miniSize));
+        window.draw(CircleOfSmallPlayer);
+    }
+    window.setView(GameView);
+}
+
+void drawIterface() {
+    window.setView(InterfaceView);
+    switch (screen) {
+        case screens::MainRoom:
+            portal.interface(window);
+            break;
+        case screens::Solo:
+            player.interface(window);
+            portal.interface(window);
+            chat.draw(window);
+            break;
+        case screens::Coop:
+            window.draw(HostButton);
+            window.draw(ConnectButton);
+            break;
+        case screens::Connect:
+            player.interface(window);
+            portal.interface(window);
+            chat.draw(window);
+            break;
+        case screens::Host:
+            player.interface(window);
+            portal.interface(window);
+            chat.draw(window);
+            break;
+        case screens::EscOfCoop:
+            player.interface(window);
+            portal.interface(window);
+            chat.draw(window);
+            window.draw(ListOfPlayers);
+            window.draw(MainMenuButton);
+            break;
+        case screens::SetIP:
+            IPPanel.draw(window);
+            break;
+    }
+    window.setView(GameView);
 }
 
 void ClientConnect() {
@@ -609,7 +639,6 @@ void ClientConnect() {
         selector.add(*client);
 
         Player* NewPlayer = new Player();
-        NewPlayer->Camera = &CameraPos;
         NewPlayer->setPosition({float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2});
         ConnectedPlayers.push_back(*NewPlayer);
         SendPacket << sf::Int32(pacetStates::PlayersAmount) << (int)ConnectedPlayers.size() - 1;
@@ -747,7 +776,6 @@ void funcOfClient() {
                             ReceivePacket >> PacetData;
                             ListOfPlayers.addWord(PacetData);
                             { Player* NewPlayer = new Player();
-                            NewPlayer->Camera = &CameraPos;
                             ConnectedPlayers.push_back(*NewPlayer);
                             }
                             std::cout << PacetData + " connected\n";
@@ -781,7 +809,7 @@ void funcOfClient() {
                         case pacetStates::SetPos:
                             for (Player& x: ConnectedPlayers) ReceivePacket >> x;
                             player.setPosition(ConnectedPlayers[ComputerID].getPosition());
-                            CameraPos = {player.PosX - scw / 2 + player.radius, player.PosY - sch / 2 + player.radius};
+                            GameView.setCenter(player.getCenter());
                             break;
                         case pacetStates::ChatEvent:
                             ReceivePacket >> PacetData;
@@ -821,53 +849,9 @@ void LevelGenerate(int n, int m) {
     SeenWalls.assign(LabyrinthLocation.data.size(), vb(0));
     for (int i = 0; i < LabyrinthLocation.data.size(); i++)
         SeenWalls[i].assign(LabyrinthLocation[i].size(), false);
-}
-
-void drawWalls() {
-    for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
-            i <= std::min(int(CurLocation->data.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++)
-        for (int j = std::max(0, int(CameraPos.x / size) - 1);
-                j <= std::min(int(CurLocation->data[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
-            if (wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, (float)scw, (float)sch))
-                SeenWalls[i][j] = true;
-            if ((*CurLocation)[i][j] == Tiles::wall) {
-                if (i % 2 == 1) { // |
-                    WallRectV.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
-                    window.draw(WallRectV);
-                } else { // -
-                    WallRectG.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY) - CameraPos);
-                    window.draw(WallRectG);
-                }
-            }
-        }
-}
-void drawMiniMap() {
-    // draw minimap wall
-    window.setView(MiniMapView);
-    sf::VertexArray line(sf::Lines, 2);
-    for (int i = 0; i < CurLocation->data.size(); i++)
-        for (int j = 0; j < CurLocation->data[i].size(); j++)
-            if ((*CurLocation)[i][j] == Tiles::wall && SeenWalls[i][j]) {
-                if (i % 2 == 1) { // |
-                    line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2) + miniCameraPos, sf::Color::White);
-                    line[1] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i + 1) / 2) + miniCameraPos, sf::Color::White);
-                } else { // -
-                    line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * i / 2) + miniCameraPos);
-                    line[1] = sf::Vertex(sf::Vector2f(miniSize * (j + 1), miniSize * i / 2) + miniCameraPos);
-                }
-                window.draw(line);
-            }
-    // draw minimap players
-    if (multiplayer){
-        for (Player& p: ConnectedPlayers) {
-            CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize) + miniCameraPos);
-            window.draw(CircleOfSmallPlayer);
-        }
-    } else {
-        CircleOfSmallPlayer.setPosition(player.getPosition() / float(size) * float(miniSize) + miniCameraPos);
-        window.draw(CircleOfSmallPlayer);
-    }
-    window.setView(GameView);
+    
+    MiniMapView.zoom(1 / MiniMapZoom);
+    MiniMapZoom = 1;
 }
 
 void LoadMainMenu() {
@@ -886,12 +870,12 @@ void LoadMainMenu() {
         multiplayer = false;
         MiniMapActivated = false;
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+        MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
         MainMenuMusic.pause();
         CurLocation = &LabyrinthLocation;
-        miniCameraPos = {float(scw - CurLocation->m * miniSize) / 2, float(sch - CurLocation->n * miniSize) / 2};
         LevelGenerate(START_N, START_M);
-        portal.setPosition(float(-200) * size, float(-200) * size);
 
+        portal.setPosition(float(-200) * size, float(-200) * size);
         portal.setFunction([](){
             LevelGenerate(START_N, START_M);
             portal.setPosition(-10 * size, -10 * size);
@@ -899,8 +883,9 @@ void LoadMainMenu() {
     });
 
     // Set cameras
-    CameraPos = {0, 0};
-    miniCameraPos = {(scw - float(CurLocation->m) * miniSize) / 2, (sch - float(CurLocation->n) * miniSize) / 2};
+    GameView.setCenter(player.getCenter());
+    MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
+    InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     MainMenuMusic.play();
 }
@@ -951,11 +936,6 @@ void init() {
     ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,       scw / 16   );
 
     // sf::Time time = GlobalClock.getElapsedTime();
-
-    player.Clock = &GlobalClock;
-    player.Camera = &CameraPos;
-
-    chat.Clock = &GlobalClock;
 
     CircleOfSmallPlayer.setRadius(9);
     CircleOfSmallPlayer.setFillColor(sf::Color(0, 180, 0));

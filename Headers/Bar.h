@@ -5,7 +5,7 @@
 ////////////////////////////////////////////////////////////
 
 template <typename T>
-class Bar {
+class Bar : public sf::Drawable {
 public:
     sf::RectangleShape background, foreground, wall;
     Scale<T>* value = nullptr;
@@ -31,12 +31,13 @@ public:
         background.setFillColor(backgroundColor);
         foreground.setFillColor(foregroundColor);
     }
-    void draw(sf::RenderWindow &window) {
-        foreground.setScale(((value) ?value->filling() : 1), 1);
-        
-        if (ShowWall) window.draw(wall);
-        if (ShowBackground) window.draw(background);
-        if (ShowForeground) window.draw(foreground);
+
+    void Update() { foreground.setScale(((value != nullptr) ? value->filling() : 1), 1); }
+    
+    void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        if (ShowWall) target.draw(wall);
+        if (ShowBackground) target.draw(background);
+        if (ShowForeground) target.draw(foreground);
     }
 };
 

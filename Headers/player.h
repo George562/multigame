@@ -15,8 +15,8 @@ public:
     bool ShiftPressed;
 
     Player();
-    void draw(sf::RenderWindow&);
-    void interface(sf::RenderWindow&);
+    virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
+    void interface(sf::RenderTarget&);
     void move(vvr&);
     void update(vB&);
     void update(sf::Event&, bool&);
@@ -38,11 +38,7 @@ Player::Player() : Creature() {
     PosX = 0; PosY = 0; Velocity = {{-MAX_VELOCITY, -MAX_VELOCITY}, {MAX_VELOCITY, MAX_VELOCITY}, {0, 0}}, Acceleration = 0.6 * 2;
     ShiftPressed = false;
     LastCheck = sf::seconds(0);
-    circle.setRadius(radius);
-    // circle.setPointCount(4);
-    circle.setFillColor(sf::Color(0, 180, 0));
-    circle.setOutlineColor(sf::Color(100, 50, 50));
-    circle.setOutlineThickness(Velocity.cur.x);
+
     SetTexture("sources/textures/Player");
 
     HpBar.setSize(360, 60);
@@ -56,7 +52,7 @@ Player::Player() : Creature() {
     ManaBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
 }
 
-void Player::interface(sf::RenderWindow& window) {
+void Player::interface(sf::RenderTarget& target) {
     HpText.setText(std::to_string((int)Health.cur));
     HpText.setPosition(HpBar.getPosition().x + HpBar.getSize().x / 2 - HpText.Width  / 2,
                        HpBar.getPosition().y + HpBar.getSize().y / 2 - HpText.Height / 2);
@@ -64,23 +60,17 @@ void Player::interface(sf::RenderWindow& window) {
     ManaText.setPosition(ManaBar.getPosition().x + ManaBar.getSize().x / 2 - ManaText.Width  / 2,
                        ManaBar.getPosition().y + ManaBar.getSize().y / 2 - ManaText.Height / 2);
 
-    HpBar.draw(window);
-    ManaBar.draw(window);
+    target.draw(HpBar);
+    target.draw(ManaBar);
 
-    HpText.draw(window);
-    ManaText.draw(window);
+    target.draw(HpText);
+    target.draw(ManaText);
     if (CurWeapon != nullptr)
-        CurWeapon->interface(window);
+        CurWeapon->interface(target);
 }
 
-void Player::draw(sf::RenderWindow& window) {
-    if (rect.getGlobalBounds().width == 0) {
-        circle.setPosition(PosX - Camera->x, PosY - Camera->y);
-        window.draw(circle);
-    } else {
-        rect.setPosition(PosX - Camera->x, PosY - Camera->y);
-        window.draw(rect);
-    }
+void Player::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    target.draw(rect);
 }
 
 void Player::move(vvr& walls) {
@@ -123,14 +113,17 @@ void Player::move(vvr& walls) {
     else Velocity.cur.x = 0;
     if (tempv.y == 1) PosY += Velocity.cur.y;
     else Velocity.cur.y = 0;
+
+    rect.setPosition(PosX, PosY);
 }
 
 void Player::update(vB& Bullets) {
-    Mana += ManaRecovery * (Clock->getElapsedTime() - LastCheck).asSeconds();
+    Mana += ManaRecovery * (GlobalClock.getElapsedTime() - LastCheck).asSeconds();
     if (CurWeapon != nullptr) {
-        CurWeapon->Update(Bullets, *this, Clock, Camera);
+        CurWeapon->Update(Bullets, *this);
     }
-    LastCheck = Clock->getElapsedTime();
+    LastCheck = GlobalClock.getElapsedTime();
+    ManaBar.Update();
 }
 
 void Player::update(sf::Event& event, bool& MiniMapActivated) {
@@ -154,6 +147,7 @@ void Player::update(sf::Event& event, bool& MiniMapActivated) {
             ShiftPressed = false;
         }
     }
+    ManaBar.Update();
 }
 
 void Player::ChangeWeapon(int to) {

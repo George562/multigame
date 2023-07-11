@@ -16,7 +16,7 @@ public:
     void setWord(str);
     str getWord();
     void setPosition(float, float);
-    void draw(sf::RenderWindow&);
+    virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
     bool OnTheButton(int&, int&);
     bool isActivated(sf::Event&);
 }; 
@@ -45,9 +45,9 @@ void Button::setPosition(float x, float y) {
                      y + Height / 2 - text.getGlobalBounds().height / 2);
 }
 
-void Button::draw(sf::RenderWindow& window) {
-    window.draw(rect);
-    window.draw(text);
+void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    target.draw(rect);
+    target.draw(text);
 }
 
 bool Button::OnTheButton(int& x, int& y) {

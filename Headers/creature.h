@@ -4,7 +4,7 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Creature : public Rect {
+class Creature : public Rect, public sf::Drawable {
 public:
     Scale<float> Health;
     Scale<float> Mana; // Used for everything
@@ -14,17 +14,14 @@ public:
     Scale<sf::Vector2f> Velocity; // [bottom{x,y}, top{x,y}, cur{x,y}]
     float Acceleration;
     Point direction;
-    sf::Clock* Clock;
-    sf::Vector2f* Camera;
     sf::Texture texture;
     sf::Sprite rect;
-    sf::CircleShape circle;
     float radius;
     Weapon *FirstWeapon, *SecondWeapon, *CurWeapon;
     sf::Time LastCheck;
 
     Creature() : Rect() {};
-    virtual void draw(sf::RenderWindow&) {};
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {};
     virtual void getDamage(float dmg) { Health -= dmg; }
     virtual void move(vvr&) {};
     virtual void update(vB&, sf::Event&) {};

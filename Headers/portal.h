@@ -11,10 +11,17 @@ public:
     PlacedText questionText;
 
     Portal();
-    bool isActivated(Rect, sf::Event&);
     bool isInterfaceDrawn = false;
     void setFunction(void (*func)(void)) { yesButton->buttonFunction = func; }
-    void draw(sf::RenderWindow&, sf::Vector2f&);
+    void interface(sf::RenderTarget&);
+    virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
+    bool isActivated(Rect, sf::Event&);
+
+    void setPosition(sf::Vector2f v) { PosX = v.x; PosY = v.y; sprite.setPosition(PosX, PosY); }
+    void setPosition(float x, float y) { PosX = x; PosY = y; sprite.setPosition(PosX, PosY); }
+
+    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 };
 
 ////////////////////////////////////////////////////////////
@@ -36,16 +43,20 @@ Portal::Portal() {
 
     questionText.setText("Do you want to go through this portal?");
     questionText.setCenter(scw / 2, 200);
+
+    sprite.setPosition(PosX, PosY);
 }
 
-void Portal::draw(sf::RenderWindow& window, sf::Vector2f& cam) {
-    sprite.setPosition(getPosition() - cam);
-    window.draw(sprite);
+void Portal::interface(sf::RenderTarget& target) {
     if (isInterfaceDrawn) {
-        yesButton->draw(window);
-        noButton->draw(window);
-        questionText.draw(window);
+        target.draw(*yesButton);
+        target.draw(*noButton);
+        target.draw(questionText);
     }
+}
+
+void Portal::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    target.draw(sprite);
 }
 
 bool Portal::isActivated(Rect rect, sf::Event& event) {

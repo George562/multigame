@@ -5,7 +5,7 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class PlacedText : public Rect {
+class PlacedText : public Rect, public sf::Drawable {
 public:
     sf::Font font;
     sf::Text text;
@@ -14,9 +14,9 @@ public:
     PlacedText();
     void setPosition(float, float);
     void setCenter(float, float);
-    void draw(sf::RenderWindow& window) { window.draw(text); };
-    void setText(str s) { text.setString(s); Width = text.getGlobalBounds().width; Height = text.getGlobalBounds().height; }
-    void setCharacterSize(int x) { text.setCharacterSize(x); Width = text.getGlobalBounds().width; Height = text.getGlobalBounds().height; }
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { target.draw(text); };
+    void setText(str s);
+    void setCharacterSize(int x);
 };
 
 ////////////////////////////////////////////////////////////
@@ -36,4 +36,16 @@ void PlacedText::setPosition(float x, float y) {
 void PlacedText::setCenter(float x, float y) {
     PosX = x - Width / 2; PosY = y - Height / 2;
     text.setPosition(PosX, PosY);
+}
+
+void PlacedText::setText(str s) {
+    text.setString(s);
+    Width = text.getGlobalBounds().width;
+    Height = text.getGlobalBounds().height;
+}
+
+void PlacedText::setCharacterSize(int x) {
+    text.setCharacterSize(x);
+    Width = text.getGlobalBounds().width;
+    Height = text.getGlobalBounds().height;
 }
