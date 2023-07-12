@@ -5,9 +5,8 @@
 #include "Headers/contextMenu.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
-bool IsDrawMinimap = true;
+bool IsDrawMinimap   = true;
 bool IsDrawInterface = true;
-
 
 //////////////////////////////////////////////////////////// Stuff for work with sistem and screen
 sf::ContextSettings settings;
@@ -90,6 +89,7 @@ void drawMiniMap();
 void drawIterface();
 void LoadMainMenu();
 void init();
+void EventHandler();
 
 //////////////////////////////////////////////////////////// Threads
 sf::Thread HostTread(funcOfHost);
@@ -246,254 +246,7 @@ int main() {
             // time = GlobalClock.getElapsedTime();
         }
 
-        while (window.pollEvent(event))
-            switch (screen) {
-            case screens::MainRoom:
-                player.update(event, MiniMapActivated);
-                portal.isActivated(player, event);
-
-                if (event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Escape) {
-                        if (MiniMapActivated) {
-                            MiniMapActivated = false;
-                            MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                        } else if (portal.isInterfaceDrawn) portal.isInterfaceDrawn = false;
-                        else {
-                            MainMenuMusic.pause();
-                            window.close();
-                        }
-                    } else if (event.key.code == sf::Keyboard::Tab) {
-                        MiniMapActivated = !MiniMapActivated;
-                        if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
-                        else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                    }
-                } else if (event.type == sf::Event::MouseWheelMoved) {
-                    if (MiniMapActivated) {
-                        if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
-                        else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
-                    }
-                }
-                break;
-
-            case screens::Coop:
-                if (event.type == sf::Event::KeyPressed)
-                    if (event.key.code == sf::Keyboard::Escape) screen = screens::MainRoom;
-                HostButton.isActivated(event);
-                ConnectButton.isActivated(event);
-                break;
-
-            case screens::Host:
-                if (chat.inputted) {
-                    if (event.type == sf::Event::KeyPressed)
-                        if (event.key.code == sf::Keyboard::Escape)
-                            chat.inputted = false;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            if (chat.Entered()) {
-                                mutex.lock();
-                                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
-                                SendToClients(SendPacket);
-                                SendPacket.clear();
-                                mutex.unlock();
-                            }
-                    chat.InputText(event);
-                } else {
-                    player.update(event, MiniMapActivated);
-                    if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Escape)
-                            if (MiniMapActivated) {
-                                MiniMapActivated = false;
-                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                            } else screen = screens::EscOfCoop;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Entered();
-                        else if (event.key.code == sf::Keyboard::Tab) {
-                            MiniMapActivated = !MiniMapActivated;
-                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
-                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
-                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
-                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
-                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
-                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
-                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
-                    } else if (event.type == sf::Event::MouseWheelMoved) {
-                        if (MiniMapActivated) {
-                            if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
-                            else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
-                        } else {
-                            if (CurLocation->n > 2 || event.mouseWheel.delta > 0) {
-                                CurLocation->n += std::max(event.mouseWheel.delta + CurLocation->n, 2);
-                                CurLocation->m += std::max(event.mouseWheel.delta + CurLocation->m, 2);
-                            }
-                            MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
-                            Bullets.clear();
-                            LevelGenerate(CurLocation->n, CurLocation->m);
-                            mutex.lock();
-                            SendToClients(LabyrinthData);
-                            for (Player& p: ConnectedPlayers)
-                                p.setPosition(player.getPosition());
-                            SendPacket << sf::Int32(pacetStates::SetPos);
-                            for (Player& x: ConnectedPlayers) SendPacket << x;
-                            SendToClients(SendPacket);
-                            SendPacket.clear();
-                            mutex.unlock();
-                        }
-                    }
-                }
-                break;
-
-            case screens::EscOfCoop:
-                MainMenuButton.isActivated(event);
-                if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
-                    if (multiplayer)
-                        screen = HostFuncRun ? screens::Host : screens::Connect;
-                    else screen = screens::Solo;
-                }
-                break;
-
-            case screens::SetIP:
-                if (event.type == sf::Event::TextEntered) {
-                    sf::Uint32 code = event.text.unicode;
-                    if (46 == code || (48 <= code && code <= 57)) {
-                        IPOfHost.push_back(code);
-                        IPPanel.setWord("IP:" + IPOfHost);
-                    }
-                }
-                if (event.type == sf::Event::KeyPressed)
-                    if (event.key.code == sf::Keyboard::Escape) screen = screens::Coop;
-                    else if (event.key.code == sf::Keyboard::Enter) {
-                        IPPanel.setWord("Connecting...");
-                        draw();
-                        if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
-                            screen = screens::Connect;
-                            selector.add(MySocket);
-                            
-                            if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
-                            MySocket.receive(ReceivePacket) == sf::Socket::Done)
-                                while (!ReceivePacket.endOfPacket()) {
-                                    ReceivePacket >> packetState;
-                                    switch (packetState) {
-                                    case pacetStates::PlayersAmount:
-                                        ReceivePacket >> ComputerID;
-                                        std::cout << "My ID = " << ComputerID << '\n';
-                                        break;
-                                    case pacetStates::PlayerConnect:
-                                        ReceivePacket >> PacetData;
-                                        ListOfPlayers.addWord(PacetData);
-                                        { Player* NewPlayer = new Player();
-                                          ConnectedPlayers.push_back(*NewPlayer);
-                                          }
-                                        std::cout << PacetData << " connected\n";
-                                        break;
-                                    case pacetStates::SetPos:
-                                        for (Player& x: ConnectedPlayers) ReceivePacket >> x;
-                                        player.setPosition(ConnectedPlayers[ComputerID].getPosition());
-                                    }
-                                }
-                            ClientFuncRun = true;
-                            ClientTread.launch();
-                        }
-                        IPPanel.setWord("IP:" + IPOfHost);
-                    } else if (event.key.code == sf::Keyboard::BackSpace && IPOfHost.size() > 0) {
-                        IPOfHost.pop_back();
-                        IPPanel.setWord("IP:" + IPOfHost);
-                    }
-                break;
-
-            case screens::Connect:
-                if (chat.inputted) {
-                    if (event.type == sf::Event::KeyPressed)
-                        if (event.key.code == sf::Keyboard::Escape)
-                            chat.inputted = false;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            if (chat.Entered()) {
-                                mutex.lock();
-                                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
-                                MySocket.send(SendPacket);
-                                SendPacket.clear();
-                                mutex.unlock();
-                            }
-                    chat.InputText(event);
-                } else {
-                    player.update(event, MiniMapActivated);
-                    if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Escape)
-                            if (MiniMapActivated) {
-                                MiniMapActivated = false;
-                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f)); 
-                            } else screen = screens::EscOfCoop;
-                        else if (event.key.code == sf::Keyboard::Enter) chat.Entered();
-                        else if (event.key.code == sf::Keyboard::Tab) {
-                            MiniMapActivated = !MiniMapActivated;
-                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
-                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
-                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
-                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
-                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
-                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
-                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
-                    } else if (event.type == sf::Event::MouseWheelMoved) {
-                        if (MiniMapActivated) {
-                            if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
-                            else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
-                        }
-                    }
-                }
-                break;
-
-            case screens::Solo:
-                portal.isActivated(player, event);
-                if (chat.inputted) {
-                    if (event.type == sf::Event::KeyPressed)
-                        if (event.key.code == sf::Keyboard::Escape)
-                            chat.inputted = false;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Entered();
-                    chat.InputText(event);
-                } else {
-                    player.update(event, MiniMapActivated);
-                    if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Escape)
-                            if (MiniMapActivated) {
-                                MiniMapActivated = false;
-                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                            } else screen = screens::EscOfCoop;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Entered();
-                        else if (event.key.code == sf::Keyboard::H) {
-                            player.setPosition(size, size);
-                            CurLocation = &WaitingRoomLoaction;
-                            CreateMapRectByLocation(WaitingRoomLoaction, wallsRect, Sprites);
-                        }
-                        else if (event.key.code == sf::Keyboard::Tab) {
-                            MiniMapActivated = !MiniMapActivated;
-                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
-                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
-                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
-                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
-                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
-                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
-                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
-                    } else if (event.type == sf::Event::MouseWheelMoved) {
-                        if (MiniMapActivated) {
-                            if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
-                            else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
-                        } else {
-                            CurLocation->n = std::max(event.mouseWheel.delta + CurLocation->n, 2);
-                            CurLocation->m = std::max(event.mouseWheel.delta + CurLocation->m, 2);
-                            MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
-                            Bullets.clear();
-                            LevelGenerate(CurLocation->n, CurLocation->m);
-                        }
-                    }
-                }
-                break;
-            }
+        EventHandler();
     }
     return 0;
 }
@@ -553,6 +306,7 @@ void drawWalls() {
             }
         }
 }
+
 void drawMiniMap() {
     // draw minimap wall
     window.setView(MiniMapView);
@@ -944,4 +698,255 @@ void init() {
     player.SecondWeapon = &shotgun;
     // player.CurWeapon = player.FirstWeapon;
     player.CurWeapon = nullptr;
+}
+
+void EventHandler() {
+    while (window.pollEvent(event))
+        switch (screen) {
+            case screens::MainRoom:
+                player.update(event, MiniMapActivated);
+                portal.isActivated(player, event);
+
+                if (event.type == sf::Event::KeyPressed) {
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        if (MiniMapActivated) {
+                            MiniMapActivated = false;
+                            MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        } else if (portal.isInterfaceDrawn) portal.isInterfaceDrawn = false;
+                        else {
+                            MainMenuMusic.pause();
+                            window.close();
+                        }
+                    } else if (event.key.code == sf::Keyboard::Tab) {
+                        MiniMapActivated = !MiniMapActivated;
+                        if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                        else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                    }
+                } else if (event.type == sf::Event::MouseWheelMoved) {
+                    if (MiniMapActivated) {
+                        if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
+                        else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
+                    }
+                }
+                break;
+
+            case screens::Coop:
+                if (event.type == sf::Event::KeyPressed)
+                    if (event.key.code == sf::Keyboard::Escape) screen = screens::MainRoom;
+                HostButton.isActivated(event);
+                ConnectButton.isActivated(event);
+                break;
+
+            case screens::Host:
+                if (chat.inputted) {
+                    if (event.type == sf::Event::KeyPressed)
+                        if (event.key.code == sf::Keyboard::Escape)
+                            chat.inputted = false;
+                        else if (event.key.code == sf::Keyboard::Enter)
+                            if (chat.Entered()) {
+                                mutex.lock();
+                                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
+                                SendToClients(SendPacket);
+                                SendPacket.clear();
+                                mutex.unlock();
+                            }
+                    chat.InputText(event);
+                } else {
+                    player.update(event, MiniMapActivated);
+                    if (event.type == sf::Event::KeyPressed) {
+                        if (event.key.code == sf::Keyboard::Escape)
+                            if (MiniMapActivated) {
+                                MiniMapActivated = false;
+                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                            } else screen = screens::EscOfCoop;
+                        else if (event.key.code == sf::Keyboard::Enter)
+                            chat.Entered();
+                        else if (event.key.code == sf::Keyboard::Tab) {
+                            MiniMapActivated = !MiniMapActivated;
+                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
+                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
+                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
+                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
+                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
+                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
+                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
+                    } else if (event.type == sf::Event::MouseWheelMoved) {
+                        if (MiniMapActivated) {
+                            if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
+                            else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
+                        } else {
+                            if (CurLocation->n > 2 || event.mouseWheel.delta > 0) {
+                                CurLocation->n += std::max(event.mouseWheel.delta + CurLocation->n, 2);
+                                CurLocation->m += std::max(event.mouseWheel.delta + CurLocation->m, 2);
+                            }
+                            MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
+                            Bullets.clear();
+                            LevelGenerate(CurLocation->n, CurLocation->m);
+                            mutex.lock();
+                            SendToClients(LabyrinthData);
+                            for (Player& p: ConnectedPlayers)
+                                p.setPosition(player.getPosition());
+                            SendPacket << sf::Int32(pacetStates::SetPos);
+                            for (Player& x: ConnectedPlayers) SendPacket << x;
+                            SendToClients(SendPacket);
+                            SendPacket.clear();
+                            mutex.unlock();
+                        }
+                    }
+                }
+                break;
+
+            case screens::EscOfCoop:
+                MainMenuButton.isActivated(event);
+                if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
+                    if (multiplayer)
+                        screen = HostFuncRun ? screens::Host : screens::Connect;
+                    else screen = screens::Solo;
+                }
+                break;
+
+            case screens::SetIP:
+                if (event.type == sf::Event::TextEntered) {
+                    sf::Uint32 code = event.text.unicode;
+                    if (46 == code || (48 <= code && code <= 57)) {
+                        IPOfHost.push_back(code);
+                        IPPanel.setWord("IP:" + IPOfHost);
+                    }
+                }
+                if (event.type == sf::Event::KeyPressed)
+                    if (event.key.code == sf::Keyboard::Escape) screen = screens::Coop;
+                    else if (event.key.code == sf::Keyboard::Enter) {
+                        IPPanel.setWord("Connecting...");
+                        draw();
+                        if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
+                            screen = screens::Connect;
+                            selector.add(MySocket);
+                            
+                            if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
+                            MySocket.receive(ReceivePacket) == sf::Socket::Done)
+                                while (!ReceivePacket.endOfPacket()) {
+                                    ReceivePacket >> packetState;
+                                    switch (packetState) {
+                                    case pacetStates::PlayersAmount:
+                                        ReceivePacket >> ComputerID;
+                                        std::cout << "My ID = " << ComputerID << '\n';
+                                        break;
+                                    case pacetStates::PlayerConnect:
+                                        ReceivePacket >> PacetData;
+                                        ListOfPlayers.addWord(PacetData);
+                                        { Player* NewPlayer = new Player();
+                                        ConnectedPlayers.push_back(*NewPlayer);
+                                        }
+                                        std::cout << PacetData << " connected\n";
+                                        break;
+                                    case pacetStates::SetPos:
+                                        for (Player& x: ConnectedPlayers) ReceivePacket >> x;
+                                        player.setPosition(ConnectedPlayers[ComputerID].getPosition());
+                                    }
+                                }
+                            ClientFuncRun = true;
+                            ClientTread.launch();
+                        }
+                        IPPanel.setWord("IP:" + IPOfHost);
+                    } else if (event.key.code == sf::Keyboard::BackSpace && IPOfHost.size() > 0) {
+                        IPOfHost.pop_back();
+                        IPPanel.setWord("IP:" + IPOfHost);
+                    }
+                break;
+
+            case screens::Connect:
+                if (chat.inputted) {
+                    if (event.type == sf::Event::KeyPressed)
+                        if (event.key.code == sf::Keyboard::Escape)
+                            chat.inputted = false;
+                        else if (event.key.code == sf::Keyboard::Enter)
+                            if (chat.Entered()) {
+                                mutex.lock();
+                                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
+                                MySocket.send(SendPacket);
+                                SendPacket.clear();
+                                mutex.unlock();
+                            }
+                    chat.InputText(event);
+                } else {
+                    player.update(event, MiniMapActivated);
+                    if (event.type == sf::Event::KeyPressed) {
+                        if (event.key.code == sf::Keyboard::Escape)
+                            if (MiniMapActivated) {
+                                MiniMapActivated = false;
+                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f)); 
+                            } else screen = screens::EscOfCoop;
+                        else if (event.key.code == sf::Keyboard::Enter) chat.Entered();
+                        else if (event.key.code == sf::Keyboard::Tab) {
+                            MiniMapActivated = !MiniMapActivated;
+                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
+                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
+                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
+                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
+                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
+                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
+                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
+                    } else if (event.type == sf::Event::MouseWheelMoved) {
+                        if (MiniMapActivated) {
+                            if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
+                            else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
+                        }
+                    }
+                }
+                break;
+
+            case screens::Solo:
+                portal.isActivated(player, event);
+                if (chat.inputted) {
+                    if (event.type == sf::Event::KeyPressed)
+                        if (event.key.code == sf::Keyboard::Escape)
+                            chat.inputted = false;
+                        else if (event.key.code == sf::Keyboard::Enter)
+                            chat.Entered();
+                    chat.InputText(event);
+                } else {
+                    player.update(event, MiniMapActivated);
+                    if (event.type == sf::Event::KeyPressed) {
+                        if (event.key.code == sf::Keyboard::Escape)
+                            if (MiniMapActivated) {
+                                MiniMapActivated = false;
+                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                            } else screen = screens::EscOfCoop;
+                        else if (event.key.code == sf::Keyboard::Enter)
+                            chat.Entered();
+                        else if (event.key.code == sf::Keyboard::H) {
+                            player.setPosition(size, size);
+                            CurLocation = &WaitingRoomLoaction;
+                            CreateMapRectByLocation(WaitingRoomLoaction, wallsRect, Sprites);
+                        }
+                        else if (event.key.code == sf::Keyboard::Tab) {
+                            MiniMapActivated = !MiniMapActivated;
+                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
+                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
+                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
+                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
+                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
+                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
+                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
+                    } else if (event.type == sf::Event::MouseWheelMoved) {
+                        if (MiniMapActivated) {
+                            if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
+                            else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
+                        } else {
+                            CurLocation->n = std::max(event.mouseWheel.delta + CurLocation->n, 2);
+                            CurLocation->m = std::max(event.mouseWheel.delta + CurLocation->m, 2);
+                            MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
+                            Bullets.clear();
+                            LevelGenerate(CurLocation->n, CurLocation->m);
+                        }
+                    }
+                }
+                break;
+            }
 }

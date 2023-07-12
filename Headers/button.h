@@ -19,7 +19,7 @@ public:
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
     bool OnTheButton(int&, int&);
     bool isActivated(sf::Event&);
-}; 
+};
 
 ////////////////////////////////////////////////////////////
 // Realization

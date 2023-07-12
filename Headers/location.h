@@ -6,6 +6,7 @@ namespace Tiles {
     TileID nothing = 0;
     TileID wall = 1;
     TileID box = 2;
+    TileID portal = 3;
 }
 
 ////////////////////////////////////////////////////////////

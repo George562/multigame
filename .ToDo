@@ -2,10 +2,20 @@
 
 Гоша: replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
 
+Гоша/Рома: make GameEvent class correctly
+
+Рома: Level editor
+
+Ваня: create NPC class
+
 create item.h and mechanich link at items
 
 fundamentally change the server
 
 add gas cloud objects and liquid puddles to the location
 
-make a game settings window with the subsequent launch of the passage of the dungeon
+make animated objects class
+
+make setting room
+
+create NPC bricker
