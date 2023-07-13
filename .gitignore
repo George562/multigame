@@ -3,3 +3,5 @@
 .vscode/
 server.cpp
 client.cpp
+setupScript.iss
+multigame setup.exe
