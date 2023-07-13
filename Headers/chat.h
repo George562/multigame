@@ -13,6 +13,7 @@ public:
     size_t cursorPos;
     sf::RectangleShape rect, cursor;
     float dy;
+    std::map<str, void (*)(void)> commands;
 
     Chat();
     void draw(sf::RenderWindow&);
@@ -20,6 +21,8 @@ public:
     bool Entered();
     void addLine(str);
     str Last();
+
+    void SetCommand(str, void (*)(void));
 };
 
 ////////////////////////////////////////////////////////////
@@ -83,9 +86,13 @@ void Chat::InputText(sf::Event& event) {
 
 bool Chat::Entered() {
     if (inputted && lines[start].size() > 0) {
-        times[start] = GlobalClock.getElapsedTime();
-        start = (start + 1) % len;
-        lines[start].clear();
+        if (commands.count(lines[start]))
+            commands[lines[start]];
+        else {
+            times[start] = GlobalClock.getElapsedTime();
+            start = (start + 1) % len;
+            lines[start].clear();
+        }
     }
     inputted = !inputted;
     cursorPos = 0;
@@ -100,3 +107,7 @@ void Chat::addLine(str word) {
 }
 
 str Chat::Last() { return lines[(start + len - 1) % len]; }
+
+void Chat::SetCommand(str CommandString, void (*CommandFunction)(void)) {
+    commands[CommandString] = CommandFunction;
+}

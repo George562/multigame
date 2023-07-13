@@ -182,10 +182,10 @@ int main() {
             for (int i = 0; i < Bullets.size();) {
                 // int y = (int(Bullets[i].PosY) / size), x = (int(Bullets[i].PosX) / size);
                 // if (!(0 <= x && x < BigM && 0 <= y && y < BigN) || Bullets[i].penetration < 0 || Bullets[i].todel) {
-                if (Bullets[i].penetration < 0 || Bullets[i].todel) {
-                    Bullets.erase(Bullets.begin() + i--); continue;
-                }
-                Bullets[i++].move(wallsRect, &GlobalClock);
+                if (Bullets[i].penetration < 0 || Bullets[i].todel)
+                    Bullets.erase(Bullets.begin() + i--);
+                else
+                    Bullets[i++].move(wallsRect);
             }
             while (window.pollEvent(event)) {}
             draw();
@@ -205,7 +205,8 @@ int main() {
                 if (wasBulletsCount < Bullets.size() && (screen == screens::Host || screen == screens::Connect)) {
                     mutex.lock();
                     SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size() - wasBulletsCount;
-                    for (; wasBulletsCount < Bullets.size(); wasBulletsCount++) SendPacket << Bullets[wasBulletsCount];
+                    for (; wasBulletsCount < Bullets.size(); wasBulletsCount++)
+                        SendPacket << Bullets[wasBulletsCount];
                     if (HostFuncRun)        SendToClients(SendPacket);
                     else if (ClientFuncRun) MySocket.send(SendPacket);
                     SendPacket.clear();
@@ -213,12 +214,10 @@ int main() {
                 }
                 int CountOfBulletsOtOfScreen = 0;
                 for (int i = 0; i < Bullets.size() - CountOfBulletsOtOfScreen;) {
-                    if (Bullets[i].penetration < 0 || Bullets[i].todel) {
-                        std::swap(Bullets[i], Bullets[Bullets.size() - 1 - CountOfBulletsOtOfScreen]);
-                        CountOfBulletsOtOfScreen++;
-                        continue;
-                    } else
-                        Bullets[i++].move(wallsRect, &GlobalClock);
+                    if (Bullets[i].penetration < 0 || Bullets[i].todel)
+                        std::swap(Bullets[i], Bullets[Bullets.size() - 1 - CountOfBulletsOtOfScreen++]);
+                    else
+                        Bullets[i++].move(wallsRect);
                 }
                 Bullets.resize(Bullets.size() - CountOfBulletsOtOfScreen);
             }
@@ -227,7 +226,8 @@ int main() {
                 mutex.lock();
                 SendPacket << sf::Int32(pacetStates::PlayerPos);
                 if (HostFuncRun) {
-                    for (Player& x: ConnectedPlayers) SendPacket << x;
+                    for (Player& x: ConnectedPlayers)
+                        SendPacket << x;
                     SendToClients(SendPacket);
                 } else if (ClientFuncRun) {
                     SendPacket << player;

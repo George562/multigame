@@ -22,13 +22,13 @@ struct Bullet : public sf::Drawable {
     bool todel = false;
 
     Bullet() {}
-    Bullet(float x, float y, float vx, float vy, sf::Color clr, int penetr, float dmg, float time, Bullet::Type t = Bullet::Common) {
+    Bullet(float x, float y, float vx, float vy, sf::Color clr, int penetr, float dmg, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
         PosX = x; PosY = y; dx = vx; dy = vy;
         color = clr;
         penetration = penetr;
         damage = dmg;
         circle = new sf::CircleShape();
-        timer = sf::seconds(time);
+        timer = time;
         type = t;
         UpdateCircleShape();
     }
@@ -47,16 +47,15 @@ struct Bullet : public sf::Drawable {
         target.draw(*circle);
     }
 
-    void move(vvr& wallsRect, sf::Clock* clock) {
-        if (dx == 0 && dy == 0) return;
+    void move(vvr& wallsRect) {
         sf::Vector2i res = WillCollisionWithWalls(wallsRect, PosX, PosY, radius, radius, dx, dy);
         dx *= res.x;
         dy *= res.y;
         switch (type) {
             case Bullet::Bubble:
-                PosX += dx * (timer - clock->getElapsedTime()).asSeconds();
-                PosY += dy * (timer - clock->getElapsedTime()).asSeconds();
-                if (timer < clock->getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
+                PosX += dx * (timer - GlobalClock.getElapsedTime()).asSeconds();
+                PosY += dy * (timer - GlobalClock.getElapsedTime()).asSeconds();
+                if (timer < GlobalClock.getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
                 if (exlpode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
                         ExplosionRadius += 1.f / 5;

@@ -56,7 +56,7 @@ public:
         dx *= velocity / len; dy *= velocity / len;
         sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
         newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                               1, damage, 0);
+                               1, damage);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         lastShoot = GlobalClock.getElapsedTime();
@@ -134,7 +134,7 @@ public:
         for (int i = 0; i < count; i++, RotateOn(M_PI * scatter / float(180 * count), dx, dy)) {
             sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
             newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                                   1, damage, 0);
+                                   1, damage);
             Bullets.push_back(*newBullet);
         }
         ammunition -= 1;
@@ -191,7 +191,7 @@ public:
         dx *= velocity / len; dy *= velocity / len;
         sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
         newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                               1, damage, 3 + GlobalClock.getElapsedTime().asSeconds(), Bullet::Bubble);
+                               1, damage, Bullet::Bubble, sf::seconds(3) + GlobalClock.getElapsedTime());
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         lastShoot = GlobalClock.getElapsedTime();
@@ -222,7 +222,7 @@ public:
         RotateOn(float(-M_PI * count) / 12, dx, dy);
         sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
         newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                               1, damage, 0);
+                               1, damage);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         count++;
@@ -247,7 +247,7 @@ public:
         RotateOn(float(rand()), dx, dy);
         sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
         newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                               1, damage, 0);
+                               1, damage);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
         lastShoot = GlobalClock.getElapsedTime();
