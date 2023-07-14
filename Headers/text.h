@@ -13,7 +13,9 @@ public:
 
     PlacedText();
     void setPosition(float, float);
+    void setPosition(sf::Vector2f);
     void setCenter(float, float);
+    void setCenter(sf::Vector2f);
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { target.draw(text); };
     void setText(str s);
     void setCharacterSize(int x);
@@ -32,11 +34,13 @@ void PlacedText::setPosition(float x, float y) {
     PosX = x; PosY = y;
     text.setPosition(PosX, PosY);
 }
+void PlacedText::setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
 void PlacedText::setCenter(float x, float y) {
     PosX = x - Width / 2; PosY = y - Height / 2;
     text.setPosition(PosX, PosY);
 }
+void PlacedText::setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 
 void PlacedText::setText(str s) {
     text.setString(s);

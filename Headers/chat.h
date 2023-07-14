@@ -86,13 +86,13 @@ void Chat::InputText(sf::Event& event) {
 
 bool Chat::Entered() {
     if (inputted && lines[start].size() > 0) {
-        if (commands.count(lines[start]))
-            commands[lines[start]];
+        if (commands.count(lines[start]) != 0)
+            commands[lines[start]]();
         else {
             times[start] = GlobalClock.getElapsedTime();
             start = (start + 1) % len;
-            lines[start].clear();
         }
+        lines[start].clear();
     }
     inputted = !inputted;
     cursorPos = 0;

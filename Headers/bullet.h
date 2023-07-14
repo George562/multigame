@@ -22,8 +22,9 @@ struct Bullet : public sf::Drawable {
     bool todel = false;
 
     Bullet() {}
-    Bullet(float x, float y, float vx, float vy, sf::Color clr, int penetr, float dmg, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
-        PosX = x; PosY = y; dx = vx; dy = vy;
+    Bullet(sf::Vector2f pos, sf::Vector2f v, sf::Color clr, int penetr, float dmg, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
+        PosX = pos.x; PosY = pos.y; 
+        dx = v.x; dy = v.y;
         color = clr;
         penetration = penetr;
         damage = dmg;

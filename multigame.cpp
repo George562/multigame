@@ -616,6 +616,7 @@ void LoadMainMenu() {
         SeenWalls[i].assign(CurLocation->data[i].size(), false);
     
     player.setCenter(1.f * size, 1.f * size);
+    player.CurWeapon = nullptr;
 
     portal.setCenter(size * 3, size);
     portal.setFunction([](){
@@ -696,8 +697,6 @@ void init() {
 
     player.FirstWeapon  = &pistol;
     player.SecondWeapon = &shotgun;
-    // player.CurWeapon = player.FirstWeapon;
-    player.CurWeapon = nullptr;
 }
 
 void EventHandler() {

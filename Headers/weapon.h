@@ -16,7 +16,7 @@ public:
     int mode;
     
     Bar<int> AmmoBar;
-    PlacedText NameText, AmmoText;
+    PlacedText NameText;
     Bullet* newBullet;
 
     Weapon() {};
@@ -29,7 +29,7 @@ public:
         lock = true;
         mode = 1;
 
-        AmmoBar.setSize(160, 40);
+        AmmoBar.setWidth(160);
         AmmoBar.setPosition(scw - AmmoBar.getSize().x - 10, 120);
         AmmoBar.value = &ammunition;
         AmmoBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(128, 128, 128, 160), sf::Color(32, 32, 32, 160));
@@ -54,8 +54,8 @@ public:
         if (len == 0) return;
         RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, dx, dy);
         dx *= velocity / len; dy *= velocity / len;
-        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
-        newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
+        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
+        newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
                                1, damage);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
@@ -69,12 +69,7 @@ public:
     };
 
     virtual void interface(sf::RenderTarget& window) {
-        AmmoText.setText(std::to_string((int)ammunition.cur));
-        AmmoText.setPosition(AmmoBar.getPosition().x + AmmoBar.getSize().x / 2 - AmmoText.Width  / 2,
-                             AmmoBar.getPosition().y + AmmoBar.getSize().y / 2 - AmmoText.Height / 2);
-
         window.draw(AmmoBar);
-        window.draw(AmmoText);
         window.draw(NameText);
     }
 };
@@ -132,8 +127,8 @@ public:
         dx *= velocity / len; dy *= velocity / len;
         RotateOn(-M_PI * scatter / float(180 * 2), dx, dy);
         for (int i = 0; i < count; i++, RotateOn(M_PI * scatter / float(180 * count), dx, dy)) {
-            sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
-            newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
+            sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
+            newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
                                    1, damage);
             Bullets.push_back(*newBullet);
         }
@@ -189,8 +184,8 @@ public:
         if (len == 0) return;
         RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, dx, dy);
         dx *= velocity / len; dy *= velocity / len;
-        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
-        newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
+        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
+        newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
                                1, damage, Bullet::Bubble, sf::seconds(3) + GlobalClock.getElapsedTime());
         Bullets.push_back(*newBullet);
         ammunition -= 1;
@@ -220,8 +215,8 @@ public:
         float dx = 0, dy = velocity;
         float len = hypotf(dx, dy);
         RotateOn(float(-M_PI * count) / 12, dx, dy);
-        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
-        newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
+        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
+        newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
                                1, damage);
         Bullets.push_back(*newBullet);
         ammunition -= 1;
@@ -245,8 +240,8 @@ public:
         float dx = 0, dy = velocity;
         float len = hypotf(dx, dy);
         RotateOn(float(rand()), dx, dy);
-        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} / velocity);
-        newBullet = new Bullet(SpawnPoint.x, SpawnPoint.y, dx, dy, sf::Color(rand() % 256, rand() % 256, rand() % 256),
+        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
+        newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
                                1, damage);
         Bullets.push_back(*newBullet);
         ammunition -= 1;

@@ -11,7 +11,6 @@
 class Player : public Creature {
 public:
     Bar<float> ManaBar, HpBar;
-    PlacedText HpText, ManaText;
     bool ShiftPressed;
 
     Player();
@@ -41,30 +40,20 @@ Player::Player() : Creature() {
 
     SetTexture("sources/textures/Player");
 
-    HpBar.setSize(360, 60);
+    HpBar.setWidth(360);
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
     HpBar.value = &Health;
     HpBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
     
-    ManaBar.setSize(240, 50);
-    ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y - 5);
+    ManaBar.setWidth(240);
+    ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
     ManaBar.value = &Mana;
     ManaBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
 }
 
 void Player::interface(sf::RenderTarget& target) {
-    HpText.setText(std::to_string((int)Health.cur));
-    HpText.setPosition(HpBar.getPosition().x + HpBar.getSize().x / 2 - HpText.Width  / 2,
-                       HpBar.getPosition().y + HpBar.getSize().y / 2 - HpText.Height / 2);
-    ManaText.setText(std::to_string((int)Mana.cur));
-    ManaText.setPosition(ManaBar.getPosition().x + ManaBar.getSize().x / 2 - ManaText.Width  / 2,
-                       ManaBar.getPosition().y + ManaBar.getSize().y / 2 - ManaText.Height / 2);
-
     target.draw(HpBar);
     target.draw(ManaBar);
-
-    target.draw(HpText);
-    target.draw(ManaText);
     if (CurWeapon != nullptr)
         CurWeapon->interface(target);
 }
@@ -124,6 +113,7 @@ void Player::update(vB& Bullets) {
     }
     LastCheck = GlobalClock.getElapsedTime();
     ManaBar.Update();
+    HpBar.Update();
 }
 
 void Player::update(sf::Event& event, bool& MiniMapActivated) {
@@ -148,6 +138,7 @@ void Player::update(sf::Event& event, bool& MiniMapActivated) {
         }
     }
     ManaBar.Update();
+    HpBar.Update();
 }
 
 void Player::ChangeWeapon(int to) {
