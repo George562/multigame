@@ -180,8 +180,6 @@ int main() {
             }
             player.update(Bullets);
             for (int i = 0; i < Bullets.size();) {
-                // int y = (int(Bullets[i].PosY) / size), x = (int(Bullets[i].PosX) / size);
-                // if (!(0 <= x && x < BigM && 0 <= y && y < BigN) || Bullets[i].penetration < 0 || Bullets[i].todel) {
                 if (Bullets[i].penetration < 0 || Bullets[i].todel)
                     Bullets.erase(Bullets.begin() + i--);
                 else
@@ -193,8 +191,10 @@ int main() {
             // time = GlobalClock.getElapsedTime();
         } else {
             if (screen == screens::MainRoom) {
-                player.move(wallsRect);
-                GameView.setCenter(player.getCenter());
+                if (!chat.inputted) {
+                    player.move(wallsRect);
+                    GameView.setCenter(player.getCenter());
+                }
             } else if (screen == screens::Solo || screen == screens::Host || screen == screens::Connect) {
                 if (!chat.inputted) {
                     player.move(wallsRect);
@@ -341,6 +341,7 @@ void drawIterface() {
     switch (screen) {
         case screens::MainRoom:
             portal.interface(window);
+            chat.draw(window);
             break;
         case screens::Solo:
             player.interface(window);
@@ -703,28 +704,30 @@ void EventHandler() {
     while (window.pollEvent(event))
         switch (screen) {
             case screens::MainRoom:
-                player.update(event, MiniMapActivated);
-                portal.isActivated(player, event);
+                if (!chat.InputText(event)) {
+                    player.update(event, MiniMapActivated);
+                    portal.isActivated(player, event);
 
-                if (event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Escape) {
-                        if (MiniMapActivated) {
-                            MiniMapActivated = false;
-                            MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                        } else if (portal.isInterfaceDrawn) portal.isInterfaceDrawn = false;
-                        else {
-                            MainMenuMusic.pause();
-                            window.close();
+                    if (event.type == sf::Event::KeyPressed) {
+                        if (event.key.code == sf::Keyboard::Escape) {
+                            if (MiniMapActivated) {
+                                MiniMapActivated = false;
+                                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                            } else if (portal.isInterfaceDrawn) portal.isInterfaceDrawn = false;
+                            else {
+                                MainMenuMusic.pause();
+                                window.close();
+                            }
+                        } else if (event.key.code == sf::Keyboard::Tab) {
+                            MiniMapActivated = !MiniMapActivated;
+                            if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                            else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                         }
-                    } else if (event.key.code == sf::Keyboard::Tab) {
-                        MiniMapActivated = !MiniMapActivated;
-                        if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
-                        else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                    }
-                } else if (event.type == sf::Event::MouseWheelMoved) {
-                    if (MiniMapActivated) {
-                        if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
-                        else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
+                    } else if (event.type == sf::Event::MouseWheelMoved) {
+                        if (MiniMapActivated) {
+                            if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
+                            else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
+                        }
                     }
                 }
                 break;
@@ -737,19 +740,14 @@ void EventHandler() {
                 break;
 
             case screens::Host:
-                if (chat.inputted) {
-                    if (event.type == sf::Event::KeyPressed)
-                        if (event.key.code == sf::Keyboard::Escape)
-                            chat.inputted = false;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            if (chat.Entered()) {
-                                mutex.lock();
-                                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
-                                SendToClients(SendPacket);
-                                SendPacket.clear();
-                                mutex.unlock();
-                            }
-                    chat.InputText(event);
+                if (chat.InputText(event)) {
+                    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
+                        mutex.lock();
+                        SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
+                        SendToClients(SendPacket);
+                        SendPacket.clear();
+                        mutex.unlock();
+                    }
                 } else {
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
@@ -758,8 +756,6 @@ void EventHandler() {
                                 MiniMapActivated = false;
                                 MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                             } else screen = screens::EscOfCoop;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Entered();
                         else if (event.key.code == sf::Keyboard::Tab) {
                             MiniMapActivated = !MiniMapActivated;
                             if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
@@ -856,19 +852,14 @@ void EventHandler() {
                 break;
 
             case screens::Connect:
-                if (chat.inputted) {
-                    if (event.type == sf::Event::KeyPressed)
-                        if (event.key.code == sf::Keyboard::Escape)
-                            chat.inputted = false;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            if (chat.Entered()) {
-                                mutex.lock();
-                                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
-                                MySocket.send(SendPacket);
-                                SendPacket.clear();
-                                mutex.unlock();
-                            }
-                    chat.InputText(event);
+                if (chat.InputText(event)) {
+                    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
+                        mutex.lock();
+                        SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
+                        MySocket.send(SendPacket);
+                        SendPacket.clear();
+                        mutex.unlock();
+                    }
                 } else {
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
@@ -877,7 +868,6 @@ void EventHandler() {
                                 MiniMapActivated = false;
                                 MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f)); 
                             } else screen = screens::EscOfCoop;
-                        else if (event.key.code == sf::Keyboard::Enter) chat.Entered();
                         else if (event.key.code == sf::Keyboard::Tab) {
                             MiniMapActivated = !MiniMapActivated;
                             if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
@@ -900,14 +890,7 @@ void EventHandler() {
 
             case screens::Solo:
                 portal.isActivated(player, event);
-                if (chat.inputted) {
-                    if (event.type == sf::Event::KeyPressed)
-                        if (event.key.code == sf::Keyboard::Escape)
-                            chat.inputted = false;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Entered();
-                    chat.InputText(event);
-                } else {
+                if (!chat.InputText(event)) {
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
                         if (event.key.code == sf::Keyboard::Escape)
@@ -915,8 +898,6 @@ void EventHandler() {
                                 MiniMapActivated = false;
                                 MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                             } else screen = screens::EscOfCoop;
-                        else if (event.key.code == sf::Keyboard::Enter)
-                            chat.Entered();
                         else if (event.key.code == sf::Keyboard::H) {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomLoaction;
