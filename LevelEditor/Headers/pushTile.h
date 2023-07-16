@@ -23,10 +23,11 @@ public:
     int getHeight() { return height; }
     int getState() { return state; }
     bool isActivated(sf::Event&);
-    void draw(sf::RenderTarget&, sf::RenderStates) const;
     void setState(int val);
     bool in(sf::Event::MouseButtonEvent&);
     bool in(sf::Event::MouseMoveEvent&);
+    void centerText();
+    void draw(sf::RenderTarget&, sf::RenderStates) const;
 };
 
 PushTile::PushTile(float _posX, float _posY, int _width, int _height)
@@ -42,8 +43,9 @@ PushTile::PushTile(float _posX, float _posY, int _width, int _height)
     font.loadFromFile("Resources/Fonts/arial.ttf");
 
     text = sf::Text((char)('0' + state), font, std::min(width / 2, height / 2));
-    text.setPosition(posX + width / 2 - text.getCharacterSize() / 3, posY + height / 2 - text.getCharacterSize() / 3);
+    text.setPosition(tileRect.getPosition());
     text.setFillColor(sf::Color::Black);
+    centerText();
 }
 
 bool PushTile::isActivated(sf::Event& event)
@@ -111,8 +113,14 @@ bool PushTile::in(sf::Event::MouseMoveEvent& event)
     return event.x >= posX && event.x <= posX + width && event.y >= posY && event.y <= posY + height;
 }
 
+void PushTile::centerText()
+{
+    text.setPosition(tileRect.getPosition().x + tileRect.getGlobalBounds().width / 2 - text.getGlobalBounds().width / 2,
+                     tileRect.getPosition().y + tileRect.getGlobalBounds().height / 2 - text.getGlobalBounds().height * 2 / 3);
+}
+
 void PushTile::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-    target.draw(tileRect, states);
-    target.draw(text, states);
+    target.draw(tileRect);
+    target.draw(text);
 }

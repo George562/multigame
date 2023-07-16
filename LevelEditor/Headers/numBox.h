@@ -1,7 +1,7 @@
 #pragma once
 #include "../../SFML-2.5.1/include/SFML/Graphics.hpp"
 
-class NumBox : sf::Drawable
+class NumBox : public sf::Drawable
 {
 private:
     float posX, posY;
@@ -10,11 +10,11 @@ private:
     sf::Color inactiveColor = sf::Color(200, 200, 200);
     sf::Color activeColor = sf::Color::White;
     sf::RectangleShape boxRect;
-    sf::Font font;
     sf::Text text;
 
 public:
-    NumBox(float, float, int, int);
+    NumBox() {}
+    NumBox(float, float, int, int, sf::Font&);
     float getX() { return posX; }
     float getY() { return posY; }
     int getWidth() { return width; }
@@ -24,7 +24,7 @@ public:
     void draw(sf::RenderTarget&, sf::RenderStates) const;
 };
 
-NumBox::NumBox(float _posX, float _posY, int _width, int _height)
+NumBox::NumBox(float _posX, float _posY, int _width, int _height, sf::Font& font)
 {
     posX = _posX; posY = _posY;
     width = _width; height = _height;
@@ -33,8 +33,6 @@ NumBox::NumBox(float _posX, float _posY, int _width, int _height)
     boxRect.setPosition(posX, posY); boxRect.setSize(sf::Vector2f(width, height));
     boxRect.setOutlineColor(sf::Color::Black); boxRect.setOutlineThickness(3);
     boxRect.setFillColor(inactiveColor);
-
-    font.loadFromFile("Resources/Fonts/arial.ttf");
 
     text = sf::Text("", font, 40);
     text.setPosition(boxRect.getPosition() + sf::Vector2f(5, 0));
@@ -75,6 +73,6 @@ std::string NumBox::getText()
 
 void NumBox::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-    target.draw(boxRect, states);
-    target.draw(text, states);
+    target.draw(boxRect);
+    target.draw(text);
 }
