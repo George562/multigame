@@ -2,6 +2,8 @@
 #include "textBox.h"
 #include "button.h"
 #include "pushTile.h"
+#include "label.h"
+#include "scrollContainer.h"
 #include <fstream>
 #include <iostream>
 #include <utility>
@@ -18,20 +20,26 @@ enum item
 class App
 {
 private:
-    sf::RenderWindow *mainWindow;
-    Button genButton, saveButton;
-    NumBox levelSizeBoxes[2];
-    TextBox nameBox;
-    sf::Font font;
-    sf::RectangleShape editorRect;
     int levelMatrixN, levelMatrixM, editorRectX, editorRectY, editorRectWidth, editorRectHeight;
     int scrW, scrH, wndW, wndH;
     vvpt levelMatrix;
 
-    std::vector<sf::Drawable*> drawnElements;
+    sf::RenderWindow *mainWindow;
+    sf::Font font;
+
+    ScrollContainer optionsContainer;
+    NumBox levelSizeBoxes[2];
+    Label mapWidthText, mapHeightText;
+    Button genButton, saveButton;
+    TextBox nameBox;
+    InteractionRect editorRect;
+
+    std::vector<InteractionRect*> drawnElements;
 
     void init();
     void loop();
+    void poll(sf::Event&);
+    void draw();
     void generateMatrix(int, int, vvpt&, float, float, int, int);
     void saveMap(std::string, int, int, vvpt&);
 public:
@@ -49,36 +57,46 @@ App::App(sf::RenderWindow& window)
 
 void App::init()
 {
-    font.loadFromFile("Resources/Fonts/consola.ttf");
-
-    levelSizeBoxes[0] = NumBox((float)wndW / 10, (float)wndH / 10, 150, 50, font);
-    levelSizeBoxes[1] = NumBox((float)wndW / 10, (float)wndH * 2 / 10 + 50, 150, 50, font);
-
-    genButton = Button((float)wndW / 10, (float)wndH * 3 / 10 + 50, 200, 100, font);
-    genButton.setText("Generate\nMatrix");
-
-    nameBox = TextBox((float)wndW / 10, (float)wndH * 4 / 10 + 100, 200, 50, font);
-
-    saveButton = Button((float)wndW / 10, (float)wndH * 6 / 10 + 50, 200, 100, font);
-    saveButton.setText("Save\nLevel");
-
     levelMatrixN = 1, levelMatrixM = 1;
     levelMatrix.resize(0);
+
+    font.loadFromFile("Resources/Fonts/consola.ttf");
+
+    optionsContainer = ScrollContainer((float)wndW / 20, (float)wndH / 20, wndW / 4, wndH * 18 / 20);
+
+    levelSizeBoxes[0] = NumBox((float)wndW * 2 / 10, (float)wndH / 10, 60, 50, font, 2);
+    levelSizeBoxes[1] = NumBox((float)wndW * 2 / 10, levelSizeBoxes[0].getBottom() + 20, 60, 50, font, 2);
+
+    mapWidthText = Label(optionsContainer.getX() + 24, levelSizeBoxes[0].getY() + 10, 180, 20, font);
+    mapWidthText.setText("Map width"); mapWidthText.setCharacterSize(mapWidthText.getHeight());
+
+    mapHeightText = Label(optionsContainer.getX() + 24, levelSizeBoxes[1].getY() + 10, 200, 20, font);
+    mapHeightText.setText("Map height"); mapHeightText.setCharacterSize(mapHeightText.getHeight());
+
+    genButton = Button((float)wndW / 10, levelSizeBoxes[1].getBottom() + 40, 150, 100, font);
+    genButton.setText("Generate\nMatrix");
+
+    nameBox = TextBox((float)wndW / 10, genButton.getBottom() + 80, 150, 50, font);
+
+    saveButton = Button((float)wndW / 10, nameBox.getBottom() + 20, 150, 100, font);
+    saveButton.setText("Save\nLevel");
+
+    optionsContainer.addElement(levelSizeBoxes[0]); optionsContainer.addElement(levelSizeBoxes[1]);
+    optionsContainer.addElement(mapWidthText); optionsContainer.addElement(mapHeightText);
+    optionsContainer.addElement(genButton);
+    optionsContainer.addElement(nameBox); optionsContainer.addElement(saveButton);
 
     editorRectX = levelSizeBoxes[0].getX() + levelSizeBoxes[0].getWidth() + 100;
     editorRectY = levelSizeBoxes[0].getY();
     editorRectWidth = wndW - editorRectX - wndW / 10;
     editorRectHeight = wndH - editorRectY - wndW / 10;
     
-    editorRect = sf::RectangleShape(sf::Vector2f(editorRectWidth, editorRectHeight));
-    editorRect.setPosition(editorRectX, editorRectY);
+    editorRect = InteractionRect(editorRectX, editorRectY, editorRectWidth, editorRectHeight);
     editorRect.setFillColor(sf::Color(200, 200, 200));
     editorRect.setOutlineColor(sf::Color::Black);
     editorRect.setOutlineThickness(3);
 
-    drawnElements.push_back(&levelSizeBoxes[0]); drawnElements.push_back(&levelSizeBoxes[1]);
-    drawnElements.push_back(&nameBox);
-    drawnElements.push_back(&genButton); drawnElements.push_back(&saveButton);
+    drawnElements.push_back(&optionsContainer);
     drawnElements.push_back(&editorRect);
 }
 
@@ -87,44 +105,59 @@ void App::loop()
     while(mainWindow->isOpen())
     {
         mainWindow->clear(sf::Color::White);
+
         sf::Event event;
-        while (mainWindow->pollEvent(event))
-        {
-            levelSizeBoxes[0].isActivated(event);
-            levelSizeBoxes[1].isActivated(event);
-            nameBox.isActivated(event);
+        poll(event);
 
-            if(genButton.isActivated(event))
-                generateMatrix(levelMatrixN, levelMatrixM, levelMatrix, editorRectX, editorRectY, editorRectWidth, editorRectHeight);
+        draw();
+        mainWindow->display();
+    }
+}
 
-            if(saveButton.isActivated(event))
-                saveMap(nameBox.getText(), levelMatrixN, levelMatrixM, levelMatrix);
+void App::poll(sf::Event& event)
+{
+    while (mainWindow->pollEvent(event))
+    {
+        optionsContainer.isActivated(event);
 
-            if(!levelSizeBoxes[0].getText().empty())
-                levelMatrixN = std::stoi(levelSizeBoxes[0].getText());
-            if(!levelSizeBoxes[1].getText().empty())
-                levelMatrixM = std::stoi(levelSizeBoxes[1].getText());
-            
-            if(!levelMatrix.empty())
-                for(int i = 0; i < levelMatrix.size(); i++)
-                    for(int j = 0; j < levelMatrix[0].size(); j++)
-                        if(levelMatrix[i][j]->isActivated(event))
-                            levelMatrix[i][j]->setState(wall);
+        levelSizeBoxes[0].isActivated(event);
+        levelSizeBoxes[1].isActivated(event);
+        nameBox.isActivated(event);
 
-            if(event.type == sf::Event::Closed)
-                mainWindow->close();
-        }
+        if(genButton.isActivated(event))
+            generateMatrix(levelMatrixN, levelMatrixM, levelMatrix, editorRectX, editorRectY, editorRectWidth, editorRectHeight);
 
-        for(int i = 0; i < drawnElements.size(); i++)
-            mainWindow->draw(*drawnElements[i]);
+        if(saveButton.isActivated(event))
+            saveMap(nameBox.getText(), levelMatrixN, levelMatrixM, levelMatrix);
 
+        if(!levelSizeBoxes[0].getText().empty())
+            levelMatrixN = std::stoi(levelSizeBoxes[0].getText());
+        if(!levelSizeBoxes[1].getText().empty())
+            levelMatrixM = std::stoi(levelSizeBoxes[1].getText());
+        
         if(!levelMatrix.empty())
             for(int i = 0; i < levelMatrix.size(); i++)
                 for(int j = 0; j < levelMatrix[0].size(); j++)
-                    levelMatrix[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+                    if(levelMatrix[i][j]->isActivated(event))
+                        levelMatrix[i][j]->setState(wall);
 
-        mainWindow->display();
+        if(event.type == sf::Event::Closed)
+            mainWindow->close();
     }
+}
+
+void App::draw()
+{
+    for(int i = 0; i < drawnElements.size(); i++)
+        drawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
+
+    if(!levelMatrix.empty())
+        for(int i = 0; i < levelMatrix.size(); i++)
+            for(int j = 0; j < levelMatrix[0].size(); j++)
+                levelMatrix[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+
+    if(nameBox.getRight() >= optionsContainer.getRight())
+        nameBox.draw(*mainWindow, sf::RenderStates::Default);
 }
 
 void App::generateMatrix(int n, int m, vvpt& matrix, float posX, float posY, int width, int height)
