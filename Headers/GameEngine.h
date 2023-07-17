@@ -105,10 +105,6 @@ Button SoloButton("sources/textures/RedPanel", "Play" , [](){
     MainMenuMusic.pause();
 });
 
-Button NewGameButton("sources/textures/GreenPanel", "New Game", [](){});
-
-Button ContinueButton("sources/textures/BluePanel", "Continue", [](){});
-
 Button CoopButton("sources/textures/RedPanel", "Online", [](){
     screen = screens::Coop;
     multiplayer = true;
@@ -299,12 +295,12 @@ void ClientConnect() {
         Player* NewPlayer = new Player();
         NewPlayer->setPosition({float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2});
         ConnectedPlayers.push_back(*NewPlayer);
-        SendPacket << sf::Int32(pacetStates::PlayersAmount) << (int)ConnectedPlayers.size() - 1;
+        SendPacket << sf::Int32(pacetStates::PlayersAmount) << (sf::Int32)ConnectedPlayers.size() - 1;
 
         for (int i = 0; i < ListOfPlayers.size(); i++)
             SendPacket << sf::Int32(pacetStates::PlayerConnect) << ListOfPlayers[i];
 
-        SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size();
+        SendPacket << sf::Int32(pacetStates::Shooting) << (sf::Int32)Bullets.size();
         std::cout << "bullets: " << Bullets.size() << "\n";
         for (int i = 0; i < Bullets.size(); i++) SendPacket << Bullets[i];
 
@@ -326,6 +322,7 @@ void ClientConnect() {
 void ClientDisconnect(int i) {
     selector.remove(*clients[i]);
     std::cout << (*clients[i]).getRemoteAddress().toString() << " disconnected; number = " << i << "\n";
+    delete clients[i];
     clients.erase(clients.begin() + i);
     ConnectedPlayers.erase(ConnectedPlayers.begin() + i + 1);
     ListOfPlayers.removeWord(i);
@@ -427,7 +424,6 @@ void funcOfClient() {
                     ReceivePacket >> packetState;
                     switch (packetState) {
                         case pacetStates::disconnect:
-                            std::cout << "bruh!\n";
                             SelfDisconnect();
                             break;
                         case pacetStates::PlayerConnect:
@@ -540,7 +536,7 @@ void LoadMainMenu() {
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
 
-        portal.setPosition(float(-200) * size, float(-200) * size);
+        portal.setPosition(-10 * size, -10 * size);
         portal.setFunction([](){
             LevelGenerate(START_N, START_M);
             portal.setPosition(-10 * size, -10 * size);
@@ -860,9 +856,6 @@ void MainLoop() {
             }
             sf::Event event;
             while (window.pollEvent(event)) {}
-            draw();
-            // TextFPS.text.setString(std::to_string((int)std::round(1.f / (GlobalClock.getElapsedTime() - time).asSeconds())) + " fps");
-            // time = GlobalClock.getElapsedTime();
         } else {
             if (screen == screens::MainRoom) {
                 if (!chat.inputted) {
@@ -915,10 +908,8 @@ void MainLoop() {
                     MiniMapView.move(-sf::Vector2f(sf::Mouse::getPosition() - MouseBuffer) * MiniMapZoom);
             }
             MouseBuffer = sf::Mouse::getPosition();
-            draw();
-            // TextFPS.text.setString(std::to_string((int)std::round(1.f / (GlobalClock.getElapsedTime() - time).asSeconds())) + " fps");
-            // time = GlobalClock.getElapsedTime();
         }
+        draw();
 
         EventHandler();
     }
