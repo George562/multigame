@@ -8,7 +8,7 @@
 bool IsDrawMinimap   = true;
 bool IsDrawInterface = true;
 
-//////////////////////////////////////////////////////////// Stuff for work with sistem and screen
+//////////////////////////////////////////////////////////// Stuff for work with system and screen
 sf::ContextSettings settings;
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "main", sf::Style::Fullscreen, settings);
@@ -17,8 +17,6 @@ sf::View InterfaceView = window.getDefaultView();
 sf::View MiniMapView = window.getDefaultView();
 float MiniMapZoom = 1.f;
 bool MiniMapActivated;
-sf::Event event;
-sf::Mouse Mouse;
 screens::screens screen = screens::MainRoom;
 
 //////////////////////////////////////////////////////////// Music
@@ -46,10 +44,7 @@ bool ClientFuncRun, HostFuncRun;
 vvr wallsRect(0);
 vvb SeenWalls;
 std::vector<sf::Sprite> Sprites(0);
-sf::Sprite tempSprite;
-int CountOfEnableTilesOnMap;
-sf::RectangleShape WallRectG(sf::Vector2f(WallMaxSize, WallMinSize));
-sf::RectangleShape WallRectV(sf::Vector2f(WallMinSize, WallMaxSize));
+sf::RectangleShape WallRect;
 
 //////////////////////////////////////////////////////////// Players and chat
 Player player;
@@ -60,9 +55,7 @@ sf::CircleShape CircleOfSmallPlayer;  // for drawing players on minimap
 
 //////////////////////////////////////////////////////////// other stuff
 // PlaccedText TextFPS;
-Point tempPoint;
 sf::Vector2i MouseBuffer;
-sf::CircleShape BulletShape;
 Bullet tempBullet;
 
 //////////////////////////////////////////////////////////// the weapons
@@ -210,13 +203,9 @@ void drawWalls() {
             if (wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, (float)scw, (float)sch))
                 SeenWalls[i][j] = true;
             if ((*CurLocation)[i][j] == Tiles::wall) {
-                if (i % 2 == 1) { // |
-                    WallRectV.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY));
-                    window.draw(WallRectV);
-                } else { // -
-                    WallRectG.setPosition(sf::Vector2f(wallsRect[i][j].PosX, wallsRect[i][j].PosY));
-                    window.draw(WallRectG);
-                }
+                WallRect.setPosition(wallsRect[i][j].getPosition());
+                WallRect.setSize(wallsRect[i][j].getSize());
+                window.draw(WallRect);
             }
         }
 }
@@ -238,7 +227,7 @@ void drawMiniMap() {
                 window.draw(line);
             }
     // draw minimap players
-    if (multiplayer){
+    if (multiplayer) {
         for (Player& p: ConnectedPlayers) {
             CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize));
             window.draw(CircleOfSmallPlayer);
@@ -472,8 +461,10 @@ void funcOfClient() {
                             for (int i = 0; i < ConnectedPlayers.size(); i++) 
                                 if (i != ComputerID)
                                     ReceivePacket >> ConnectedPlayers[i];
-                                else
+                                else {
+                                    Point tempPoint;
                                     ReceivePacket >> tempPoint;
+                                }
                             break;
                         case pacetStates::SetPos:
                             for (Player& x: ConnectedPlayers) ReceivePacket >> x;
@@ -502,19 +493,23 @@ void LevelGenerate(int n, int m) {
     LabyrinthLocation.SetSize(n, m);
     LabyrinthData.clear();
     LabyrinthData << sf::Int32(pacetStates::Labyrinth) << n << m;
+
     player.setPosition(sf::Vector2f{(m / 2 + 0.5f) * size, (n / 2 + 0.5f) * size} - player.getSize() / 2.f);
-    int CounterOfGenerations = 0;
+    
+    int CounterOfGenerations = 0, CountOfEnableTilesOnMap;
     do {
         LabyrinthLocation.WallGenerator(0.48);
-        CountOfEnableTilesOnMap = LabyrinthLocation.BuildWayFrom(int(player.PosX / size), int(player.PosY / size));
+        CountOfEnableTilesOnMap = LabyrinthLocation.BuildWayFrom(player.getPosition() / (float)size);
         CounterOfGenerations++;
     } while (CountOfEnableTilesOnMap < float(n * m) / 3 || CountOfEnableTilesOnMap > float(n * m) / 1.5);
     std::cout << "total count of generations = " << CounterOfGenerations
               << " CountOfEnableTilesOnMap = " << CountOfEnableTilesOnMap << '\n';
+    
     for (int i = 0; i < LabyrinthLocation.data.size(); i++)
         for (int j = 0; j < LabyrinthLocation[i].size(); j++)
             LabyrinthData << LabyrinthLocation[i][j];
     CreateMapRectByLocation(LabyrinthLocation, wallsRect, Sprites);
+    
     SeenWalls.assign(LabyrinthLocation.data.size(), vb(0));
     for (int i = 0; i < LabyrinthLocation.data.size(); i++)
         SeenWalls[i].assign(LabyrinthLocation[i].size(), false);
@@ -582,8 +577,7 @@ void init() {
     
     LoadMainMenu();
 
-    WallRectG.setFillColor(sf::Color(120, 120, 120));
-    WallRectV.setFillColor(sf::Color(120, 120, 120));
+    WallRect.setFillColor(sf::Color(120, 120, 120));
 
     // TextFPS.text.setPosition(20, 20);
     // TextFPS.text.setFillColor(sf::Color(255, 255, 255));
@@ -615,6 +609,7 @@ void init() {
 }
 
 void EventHandler() {
+    sf::Event event;
     while (window.pollEvent(event))
         switch (screen) {
             case screens::MainRoom:
@@ -863,6 +858,7 @@ void MainLoop() {
                 else
                     Bullets[i++].move(wallsRect);
             }
+            sf::Event event;
             while (window.pollEvent(event)) {}
             draw();
             // TextFPS.text.setString(std::to_string((int)std::round(1.f / (GlobalClock.getElapsedTime() - time).asSeconds())) + " fps");
@@ -915,10 +911,10 @@ void MainLoop() {
                 mutex.unlock();
             }
             if (MiniMapActivated) {
-                if (Mouse.isButtonPressed(Mouse.Left))
-                    MiniMapView.move(-sf::Vector2f(Mouse.getPosition() - MouseBuffer) * MiniMapZoom);
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                    MiniMapView.move(-sf::Vector2f(sf::Mouse::getPosition() - MouseBuffer) * MiniMapZoom);
             }
-            MouseBuffer = Mouse.getPosition();
+            MouseBuffer = sf::Mouse::getPosition();
             draw();
             // TextFPS.text.setString(std::to_string((int)std::round(1.f / (GlobalClock.getElapsedTime() - time).asSeconds())) + " fps");
             // time = GlobalClock.getElapsedTime();

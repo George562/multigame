@@ -22,7 +22,7 @@ public:
     Location(int w, int h) { SetSize(w, h); }
     void SetSize(int w, int h);
     std::vector<TileID>& operator[](int index) { return data[index]; }
-    int BuildWayFrom(int x, int y);
+    int BuildWayFrom(sf::Vector2f);
     void WallGenerator(float probability);
     bool LoadLocationFromFile(str FileName);
     bool WriteLocationToFile(str FileName);
@@ -39,9 +39,9 @@ void Location::SetSize(int NewN, int NewM) {
     for (int i = 0; i < data.size(); i++) data[i].assign(m + (i % 2), Tiles::nothing);
 }
 
-int Location::BuildWayFrom(int x, int y) {
+int Location::BuildWayFrom(sf::Vector2f p) {
     vvb used(n, vb(m, false));
-    std::queue<Point> q; q.push(Point{x, y});
+    std::queue<Point> q; q.push(Point{int(p.x), int(p.y)});
     int res = 1;
     Point cur, check;
     Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
