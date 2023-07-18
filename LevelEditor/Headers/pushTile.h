@@ -18,8 +18,16 @@ public:
     PushTile(float, float, int, int);
 
     int getState() { return state; }
-    void setState(int val) { state = val; };
-    void centerText();
+    void setState(int val, sf::Color color = sf::Color(0, 175, 100))
+    {
+        state = val;
+        if(state != 0)
+        {
+            activeColor = color;
+            drawRect.setFillColor(activeColor);
+        }
+        else drawRect.setFillColor(inactiveColor);
+    };
 
     void move(float x, float y) override { posX += x; posY += y; drawRect.setPosition(posX, posY); }
 
@@ -39,7 +47,19 @@ bool PushTile::isActivated(sf::Event& event)
     {
         readPosition = true;
         lastButton = event.mouseButton.button;
-        return in(posX, posY, width, height, event.mouseButton);
+        return in(posX, posY, width, height, event.mouseButton) && lastButton != sf::Mouse::Button::Right;
+    }
+
+    if(readPosition && in(posX, posY, width, height, event.mouseMove))
+    {
+        readPosition = false;
+        if(lastButton == sf::Mouse::Left)
+            return true;
+        else if(lastButton == sf::Mouse::Right)
+        {
+            setState(0, inactiveColor);
+            return false;
+        }
     }
 
     if(readPosition && event.type == sf::Event::MouseButtonReleased)
@@ -48,35 +68,13 @@ bool PushTile::isActivated(sf::Event& event)
         if(in(posX, posY, width, height, event.mouseButton))
         {
             if(lastButton == sf::Mouse::Left)
-            {
-                setState(1);
-                drawRect.setFillColor(activeColor);
-            }
+                return true;
             else if(lastButton == sf::Mouse::Right)
             {
-                setState(0);
-                drawRect.setFillColor(inactiveColor);
+                setState(0, inactiveColor);
+                return false;
             }
-
-            return true;
         }
-    }
-
-    if(readPosition && in(posX, posY, width, height, event.mouseMove))
-    {
-        readPosition = false;
-        if(lastButton == sf::Mouse::Left)
-        {
-            setState(1);
-            drawRect.setFillColor(activeColor);
-        }
-        else if(lastButton == sf::Mouse::Right)
-        {
-            setState(0);
-            drawRect.setFillColor(inactiveColor);
-        }
-
-        return true;
     }
 
     return false;

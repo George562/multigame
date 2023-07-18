@@ -51,14 +51,14 @@ bool Button::isActivated(sf::Event& event)
     {
         pressed = in(posX, posY, width, height, event.mouseButton);
         drawRect.setFillColor(pressed ? pressColor : inactiveColor);
-        return pressed;
+        return false;
     }
     
-    if(event.type == sf::Event::MouseButtonReleased)
+    if(event.type == sf::Event::MouseButtonReleased && pressed)
     {
-        pressed = in(posX, posY, width, height, event.mouseButton);
+        pressed = false;
         drawRect.setFillColor(inactiveColor);
-        return pressed;
+        return in(posX, posY, width, height, event.mouseButton);
     }
 
     return false;
