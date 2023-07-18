@@ -3,14 +3,12 @@
 #define COMMON_BULLET_RADIUS 7
 
 struct Bullet : public sf::Drawable {
-    enum Type {
+    enum Type : sf::Uint8 {
         Common,
-        Bubble,
-        // Explosion
+        Bubble
     };
 
     float PosX, PosY, dx, dy;
-    sf::Color color;
     int penetration;
     float damage;
     float radius = COMMON_BULLET_RADIUS;
@@ -22,21 +20,23 @@ struct Bullet : public sf::Drawable {
     bool todel = false;
 
     Bullet() {}
-    Bullet(sf::Vector2f pos, sf::Vector2f v, sf::Color clr, int penetr, float dmg, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
+    Bullet(sf::Vector2f pos, sf::Vector2f v, int penetr, float dmg, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
         PosX = pos.x; PosY = pos.y; 
         dx = v.x; dy = v.y;
-        color = clr;
         penetration = penetr;
         damage = dmg;
-        circle = new sf::CircleShape();
         timer = time;
         type = t;
-        UpdateCircleShape();
-    }
-
-    void UpdateCircleShape() {
+        circle = new sf::CircleShape();
+        switch (t) {
+            case Bullet::Common:
+                circle->setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+                break;
+            case Bullet::Bubble:
+                circle->setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+                break;
+        }
         circle->setRadius(radius);
-        circle->setFillColor(color);
     }
     
     sf::Rect<float> getRect() { return {PosX, PosY, dx, dy}; }
@@ -79,10 +79,16 @@ using vB = std::vector<Bullet>;
 vB Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
-    return packet << b.PosX << b.PosY << b.dx << b.dy << b.color << b.damage << b.type;
+    sf::Color clr = b.circle->getFillColor();
+    return packet << b.PosX << b.PosY << b.dx << b.dy << b.penetration << clr << b.damage << b.timer.asSeconds() << b.type;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
-    packet >> b.PosX >> b.PosY >> b.dx >> b.dy >> b.color >> b.damage;
-    int t; packet >> t; b.type = Bullet::Type(t);
+    sf::Color clr;
+    float timer;
+    packet >> b.PosX >> b.PosY >> b.dx >> b.dy >> b.penetration >> clr >> b.damage >> timer;
+    b.timer = sf::seconds(timer);
+    sf::Uint8 t; packet >> t; b.type = Bullet::Type(t);
+    b.circle->setFillColor(clr);
+    b.circle->setRadius(b.radius);
     return packet;
 }

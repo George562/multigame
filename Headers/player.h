@@ -14,13 +14,10 @@ public:
     bool ShiftPressed;
 
     Player();
-    virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
     void interface(sf::RenderTarget&);
     void move(vvr&);
-    void update(vB&);
+    void update();
     void update(sf::Event&, bool&);
-    void ChangeWeapon(int);
-    void ChangeWeapon(Weapon*);
 };
 
 ////////////////////////////////////////////////////////////
@@ -56,10 +53,6 @@ void Player::interface(sf::RenderTarget& target) {
     target.draw(ManaBar);
     if (CurWeapon != nullptr)
         CurWeapon->interface(target);
-}
-
-void Player::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    target.draw(rect);
 }
 
 void Player::move(vvr& walls) {
@@ -106,10 +99,10 @@ void Player::move(vvr& walls) {
     rect.setPosition(PosX, PosY);
 }
 
-void Player::update(vB& Bullets) {
+void Player::update() {
     Mana += ManaRecovery * (GlobalClock.getElapsedTime() - LastCheck).asSeconds();
     if (CurWeapon != nullptr) {
-        CurWeapon->Update(Bullets, *this);
+        CurWeapon->Update(*this);
     }
     LastCheck = GlobalClock.getElapsedTime();
     ManaBar.Update();
@@ -139,14 +132,6 @@ void Player::update(sf::Event& event, bool& MiniMapActivated) {
     }
     ManaBar.Update();
     HpBar.Update();
-}
-
-void Player::ChangeWeapon(int to) {
-    CurWeapon = ((to == sf::Keyboard::Num1) ? FirstWeapon : SecondWeapon);
-}
-
-void Player::ChangeWeapon(Weapon* to) {
-    CurWeapon = to;
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Player& a) { return packet << a.PosX << a.PosY; }

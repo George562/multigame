@@ -14,11 +14,11 @@ public:
     Scale<T>* value = nullptr;
     bool ShowWall = true, ShowBackground = true, ShowForeground = true, ShowText = true;
 
-    Bar();
-    sf::Vector2f getSize();
+    Bar() {}
+    sf::Vector2f getSize() { return wall.getSize(); }
     void setWidth(float);
     void setSize(float, float);
-    sf::Vector2f getPosition();
+    sf::Vector2f getPosition() { return wall.getPosition(); }
     void setPosition(float, float);
     void setColors(sf::Color, sf::Color, sf::Color);
     void Update();
@@ -30,16 +30,11 @@ public:
 ////////////////////////////////////////////////////////////
 
 template <typename T>
-Bar<T>::Bar() {}
-
-template <typename T>
 void Bar<T>::setWidth(float w) {
     wall.setSize({w, STANDART_BAR_HEIGHT});
     background.setSize({w - 10, STANDART_BAR_HEIGHT - 10});
     foreground.setSize({w - 10, STANDART_BAR_HEIGHT - 10});
 }
-template <typename T>
-sf::Vector2f Bar<T>::getSize() { return wall.getSize(); }
 template <typename T>
 void Bar<T>::setSize(float w, float h) {
     wall.setSize({w, h});
@@ -47,8 +42,6 @@ void Bar<T>::setSize(float w, float h) {
     foreground.setSize({w - 10, h - 10});
 }
 
-template <typename T>
-sf::Vector2f Bar<T>::getPosition() { return wall.getPosition(); }
 template <typename T>
 void Bar<T>::setPosition(float x, float y) {
     wall.setPosition(x, y);

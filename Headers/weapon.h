@@ -13,11 +13,9 @@ public:
     int count;
     float scatter; // degree
     bool lock;
-    int mode;
     
     Bar<int> AmmoBar;
     PlacedText NameText;
-    Bullet* newBullet;
 
     Weapon() {};
     Weapon(int MaxAmmo, float ManaCost, float FireRate, int dmg) {
@@ -27,7 +25,6 @@ public:
         this->damage = dmg;
         lastShoot = sf::seconds(0);
         lock = true;
-        mode = 1;
 
         AmmoBar.setWidth(160);
         AmmoBar.setPosition(scw - AmmoBar.getSize().x - 10, 120);
@@ -45,19 +42,15 @@ public:
             lock = true;
     };
 
-    virtual void Update(vB&, Rect&) { AmmoBar.Update(); };
+    virtual void Update(Rect&) { AmmoBar.Update(); };
 
-    virtual void Shoot(vB& Bullets, Rect& player, sf::Vector2f& direction) {
-        float dx = direction.x - player.PosX - player.Width  / 2 + CameraPos.x,
-              dy = direction.y - player.PosY - player.Height / 2 + CameraPos.y;
-        float len = hypotf(dx, dy);
+    virtual void Shoot(Rect& player, sf::Vector2f& direction) {
+        sf::Vector2f d = direction - player.getPosition() - player.getSize() / 2.f + CameraPos;
+        float len = hypotf(d.x, d.y);
         if (len == 0) return;
-        RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, dx, dy);
-        dx *= velocity / len; dy *= velocity / len;
-        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
-        newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                               1, damage);
-        Bullets.push_back(*newBullet);
+        d = RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, d) * velocity / len;
+        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{d.x * player.Width, d.y * player.Height} * 0.7f / velocity);
+        Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage)));
         ammunition -= 1;
         lastShoot = GlobalClock.getElapsedTime();
     }
@@ -79,10 +72,10 @@ public:
 class Pistol : public Weapon {
 public:
     Pistol() : Weapon(9, 1, 0.35, 2) { velocity = 10; count = 1;  scatter = 20; NameText.setText("Pistol"); }
-    void Update(vB& Bullets, Rect& player) {
+    void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
-            Shoot(Bullets, player, dir);
+            Shoot(player, dir);
         } else if (ammunition.toBottom() == 0) {
             lock = true;
         }
@@ -94,10 +87,10 @@ public:
 class Revolver : public Weapon {
 public:
     Revolver() : Weapon(6, 2, 0, 5) { velocity = 16; count = 1;  scatter = 10; NameText.setText("Revolver"); }
-    void Update(vB& Bullets, Rect& player) {
+    void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
-            Shoot(Bullets, player, dir);
+            Shoot(player, dir);
             lock = true;
         } else if (ammunition.toBottom() == 0) {
             lock = true;
@@ -110,27 +103,23 @@ public:
 class Shotgun : public Weapon {
 public:
     Shotgun() : Weapon(5, 5, 1, 3) { velocity = 10; count = 10;  scatter = 50; NameText.setText("Shotgun"); }
-    void Update(vB& Bullets, Rect& player) {
+    void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
-            Shoot(Bullets, player);
+            Shoot(player);
             lock = true;
         } else if (ammunition.toBottom() == 0) {
             lock = true;
         }
         AmmoBar.Update();
     }
-    void Shoot(vB& Bullets, Rect& player) {
-        float dx = sf::Mouse::getPosition().x - player.PosX - player.Width  / 2 + CameraPos.x,
-              dy = sf::Mouse::getPosition().y - player.PosY - player.Height / 2 + CameraPos.y;
-        float len = hypotf(dx, dy);
+    void Shoot(Rect& player) {
+        sf::Vector2f d = (sf::Vector2f)sf::Mouse::getPosition() - player.getPosition() - player.getSize() / 2.f + CameraPos;
+        float len = hypotf(d.x, d.y);
         if (len == 0) return;
-        dx *= velocity / len; dy *= velocity / len;
-        RotateOn(-M_PI * scatter / float(180 * 2), dx, dy);
-        for (int i = 0; i < count; i++, RotateOn(M_PI * scatter / float(180 * count), dx, dy)) {
-            sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
-            newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                                   1, damage);
-            Bullets.push_back(*newBullet);
+        d = RotateOn(-M_PI * scatter / float(180 * 2), d) * velocity / len;
+        for (int i = 0; i < count; i++, d = RotateOn(M_PI * scatter / float(180 * count), d)) {
+            sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{d.x * player.Width, d.y * player.Height} * 0.7f / velocity);
+            Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage)));
         }
         ammunition -= 1;
         lastShoot = GlobalClock.getElapsedTime();
@@ -141,10 +130,10 @@ public:
 class Rifle : public Weapon {
 public:
     Rifle() : Weapon(25, 1, 0.05, 2) { velocity = 16; count = 10;  scatter = 17; NameText.setText("Rifle"); }
-    void Update(vB& Bullets, Rect& player) {
+    void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
-            Shoot(Bullets, player, dir);
+            Shoot(player, dir);
         } else if (ammunition.toBottom() == 0) {
             lock = true;
         }
@@ -163,11 +152,11 @@ public:
             position = {0, 0};
         }
     };
-    void Update(vB& Bullets, Rect& player) {
+    void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             if (position.x == 0 && position.y == 0)
                 position = sf::Vector2f(sf::Mouse::getPosition());
-            Shoot(Bullets, player, position);
+            Shoot(player, position);
             if ((--count) == 0) {
                 count = 10;
                 lock = true;
@@ -177,17 +166,13 @@ public:
         }
         AmmoBar.Update();
     }
-    void Shoot(vB& Bullets, Rect& player, sf::Vector2f& direction) {
-        float dx = direction.x - player.PosX - player.Width  / 2 + CameraPos.x,
-              dy = direction.y - player.PosY - player.Height / 2 + CameraPos.y;
-        float len = hypotf(dx, dy);
+    void Shoot(Rect& player, sf::Vector2f& direction) {
+        sf::Vector2f d = direction - player.getPosition() - player.getSize() / 2.f + CameraPos;
+        float len = hypotf(d.x, d.y);
         if (len == 0) return;
-        RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, dx, dy);
-        dx *= velocity / len; dy *= velocity / len;
-        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
-        newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                               1, damage, Bullet::Bubble, sf::seconds(3) + GlobalClock.getElapsedTime());
-        Bullets.push_back(*newBullet);
+        d = RotateOn(-M_PI * (rand() % (int)scatter - scatter / 2) / 180, d) * velocity / len;
+        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{d.x * player.Width, d.y * player.Height} * 0.7f / velocity);
+        Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage, Bullet::Bubble, sf::seconds(3) + GlobalClock.getElapsedTime())));
         ammunition -= 1;
         lastShoot = GlobalClock.getElapsedTime();
     }
@@ -204,21 +189,18 @@ public:
         } if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
             lock = true;
     };
-    void Update(vB& Bullets, Rect& player) {
+    void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate)
-            Shoot(Bullets, player);
+            Shoot(player);
         else if (ammunition.toBottom() == 0)
             lock = true;
         AmmoBar.Update();
     }
-    void Shoot(vB& Bullets, Rect& player) {
-        float dx = 0, dy = velocity;
-        float len = hypotf(dx, dy);
-        RotateOn(float(-M_PI * count) / 12, dx, dy);
-        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
-        newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                               1, damage);
-        Bullets.push_back(*newBullet);
+    void Shoot(Rect& player) {
+        sf::Vector2f d{0, velocity};
+        d = RotateOn(float(-M_PI * count) / 12, d);
+        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{d.x * player.Width, d.y * player.Height} * 0.7f / velocity);
+        Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage)));
         ammunition -= 1;
         count++;
         lastShoot = GlobalClock.getElapsedTime();
@@ -229,21 +211,18 @@ public:
 class Chaotic : public Weapon {
 public:
     Chaotic() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText.setText("Chaotic"); }
-    void Update(vB& Bullets, Rect& player) {
+    void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate)
-            Shoot(Bullets, player);
+            Shoot(player);
         else if (ammunition.toBottom() == 0)
             lock = true;
         AmmoBar.Update();
     }
-    void Shoot(vB& Bullets, Rect& player) {
-        float dx = 0, dy = velocity;
-        float len = hypotf(dx, dy);
-        RotateOn(float(rand()), dx, dy);
-        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{dx * player.Width, dy * player.Height} * 0.7f / velocity);
-        newBullet = new Bullet(SpawnPoint, {dx, dy}, sf::Color(rand() % 256, rand() % 256, rand() % 256),
-                               1, damage);
-        Bullets.push_back(*newBullet);
+    void Shoot(Rect& player) {
+        sf::Vector2f d{0, velocity};
+        d = RotateOn(float(rand()), d);
+        sf::Vector2f SpawnPoint(player.getCenter() + sf::Vector2f{d.x * player.Width, d.y * player.Height} * 0.7f / velocity);
+        Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage)));
         ammunition -= 1;
         lastShoot = GlobalClock.getElapsedTime();
     }

@@ -13,7 +13,6 @@ public:
     float Money;
     Scale<sf::Vector2f> Velocity; // [bottom{x,y}, top{x,y}, cur{x,y}]
     float Acceleration;
-    Point direction;
     sf::Texture texture;
     sf::Sprite rect;
     float radius;
@@ -21,10 +20,13 @@ public:
     sf::Time LastCheck;
 
     Creature() : Rect() {};
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {};
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        target.draw(rect, states);
+    };
     virtual void getDamage(float dmg) { Health -= dmg; }
     virtual void move(vvr&) {};
-    virtual void update(vB&, sf::Event&) {};
+    virtual void update() {};
+    virtual void update(sf::Event&, bool&) {};
     void SetTexture(str name) {
         texture.loadFromFile(name + ".png");
         texture.setSmooth(true);
@@ -32,6 +34,9 @@ public:
         if (rect.getGlobalBounds().width != Width)
             rect.setScale(Width / rect.getGlobalBounds().width, Height / rect.getGlobalBounds().height);
     };
+    void ChangeWeapon(Weapon* to) {
+        CurWeapon = to;
+    }
 };
 
 ////////////////////////////////////////////////////////////

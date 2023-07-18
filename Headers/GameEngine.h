@@ -400,7 +400,6 @@ void funcOfHost() {
                                     SendPacket << sf::Int32(pacetStates::Shooting) << i;
                                     for (; i > 0; i--) {
                                         ReceivePacket >> tempBullet;
-                                        tempBullet.UpdateCircleShape();
                                         Bullets.push_back(tempBullet);
                                         SendPacket << tempBullet;
                                     }
@@ -475,7 +474,6 @@ void funcOfClient() {
                             int i; ReceivePacket >> i;
                             for (; i > 0; i--) {
                                 ReceivePacket >> tempBullet;
-                                tempBullet.UpdateCircleShape();
                                 Bullets.push_back(tempBullet);
                             }
                             break;
@@ -847,7 +845,7 @@ void MainLoop() {
                 SendPacket.clear();
                 mutex.unlock();
             }
-            player.update(Bullets);
+            player.update();
             for (int i = 0; i < Bullets.size();) {
                 if (Bullets[i].penetration < 0 || Bullets[i].todel)
                     Bullets.erase(Bullets.begin() + i--);
@@ -868,7 +866,7 @@ void MainLoop() {
                     GameView.setCenter(player.getCenter());
                 }
                 int wasBulletsCount = Bullets.size();
-                player.update(Bullets);
+                player.update();
                 if (wasBulletsCount < Bullets.size() && (screen == screens::Host || screen == screens::Connect)) {
                     mutex.lock();
                     SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size() - wasBulletsCount;
