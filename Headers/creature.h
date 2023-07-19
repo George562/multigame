@@ -31,12 +31,12 @@ public:
         texture.loadFromFile(name + ".png");
         texture.setSmooth(true);
         rect.setTexture(texture);
-        if (rect.getGlobalBounds().width != Width)
+        if (Width == 0 && Height == 0)
+            setSize(rect.getGlobalBounds().width, rect.getGlobalBounds().height);
+        else
             rect.setScale(Width / rect.getGlobalBounds().width, Height / rect.getGlobalBounds().height);
     };
-    void ChangeWeapon(Weapon* to) {
-        CurWeapon = to;
-    }
+    void ChangeWeapon(Weapon* to) { CurWeapon = to; }
 };
 
 ////////////////////////////////////////////////////////////

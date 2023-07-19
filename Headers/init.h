@@ -17,10 +17,6 @@
 #define ActivationButton sf::Keyboard::X
 
 using Point = sf::Vector2i;
-using vp = std::vector<Point>;
-using vvp = std::vector<vp>;
-
-struct Circle { float PosX, PosY, Radius; };
 
 using str = std::string;
 using vb = std::vector<bool>;

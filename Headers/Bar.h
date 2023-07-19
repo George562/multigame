@@ -60,7 +60,7 @@ template <typename T>
 void Bar<T>::Update() {
     if (value != nullptr) {
         foreground.setScale(value->filling(), 1);
-        ValueText.setText(std::to_string((int)value->cur) + " / " + std::to_string((int)value->top));
+        ValueText.setString(std::to_string((int)value->cur) + " / " + std::to_string((int)value->top));
         ValueText.setCenter(wall.getPosition() + wall.getSize() / 2.f);
     }
 }

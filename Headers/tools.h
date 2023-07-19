@@ -1,5 +1,5 @@
 #pragma once
-#include "location.h"
+#include "init.h"
 
 // check existing element in vector
 template <typename T>
@@ -75,13 +75,6 @@ sf::Packet& operator<<(sf::Packet& packet, Point& a) {
 }
 sf::Packet& operator>>(sf::Packet& packet, Point& a) {
     return packet >> a.x >> a.y;
-}
-
-sf::Packet& operator<<(sf::Packet& packet, Rect& a) {
-    return packet << a.PosX << a.PosY << a.Width << a.Height;
-}
-sf::Packet& operator>>(sf::Packet& packet, Rect& a) {
-    return packet >> a.PosX >> a.PosY >> a.Width >> a.Height;
 }
 
 sf::Packet& operator<<(sf::Packet& packet, sf::Color& a) {
