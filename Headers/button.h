@@ -10,7 +10,7 @@ public:
     sf::Texture texture, pushedTexture;
     sf::Sprite rect;
     PlacedText ButtonText;
-    bool Pushed;
+    bool Pushed = false, ShowText = true;
     void (*buttonFunction)(void);
 
     Button() {}
@@ -34,8 +34,7 @@ Button::Button(str name, str word, void (*foo)(void)) {
     ButtonText.setCharacterSize(150);
     ButtonText.setFillColor(sf::Color(199, 199, 199));
     setTexture(name);
-    // setSize(rect.getGlobalBounds().width, rect.getGlobalBounds().height);
-    Width = rect.getGlobalBounds().width; Height = rect.getGlobalBounds().height;
+    setSize(rect.getGlobalBounds().width, rect.getGlobalBounds().height);
     setWord(word);
     buttonFunction = foo;
 }
@@ -58,9 +57,11 @@ void Button::setPosition(float x, float y) {
 }
 
 void Button::setSize(float w, float h) {
-    ButtonText.setScale(w / Width, h / Height);
-    ButtonText.setCenter(getPosition() + getSize() / 2.f);
-    rect.setScale(w / Width, h / Height);
+    if (Width != 0 && Height != 0) {
+        ButtonText.setScale(w / Width, h / Height);
+        ButtonText.setCenter(getPosition() + getSize() / 2.f);
+        rect.setScale(w / Width, h / Height);
+    }
     Width = w; Height = h;
 }
 
@@ -71,7 +72,7 @@ void Button::setCharacterSize(int size) {
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     target.draw(rect);
-    target.draw(ButtonText);
+    if (ShowText) target.draw(ButtonText);
 }
 
 bool Button::OnTheButton(int& x, int& y) { return contains(x, y); }

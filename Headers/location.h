@@ -113,6 +113,7 @@ bool Location::LoadFromFile(str FileName) {
         objects.resize(k);
         for (LocationObject& obj: objects) file >> obj.id >> obj.pos.x >> obj.pos.y;
     }
+
     file.close();
     return true;
 }
@@ -125,6 +126,10 @@ bool Location::WriteToFile(str FileName) {
             file << walls[i][j] << ' ';
         file << '\n';
     }
+
+    file << objects.size() << '\n';
+    for (LocationObject obj: objects) file << obj.id << ' ' << obj.pos.x << ' ' << obj.pos.y << '\n';
+
     file.close();
     return true;
 }
