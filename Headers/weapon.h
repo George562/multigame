@@ -71,7 +71,7 @@ public:
 // Pistol
 class Pistol : public Weapon {
 public:
-    Pistol() : Weapon(9, 1, 0.35, 2) { velocity = 10; count = 1;  scatter = 20; NameText.setText("Pistol"); }
+    Pistol() : Weapon(9, 1, 0.35, 2) { velocity = 10; count = 1;  scatter = 20; NameText.setString("Pistol"); }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
@@ -86,7 +86,7 @@ public:
 // Revolver
 class Revolver : public Weapon {
 public:
-    Revolver() : Weapon(6, 2, 0, 5) { velocity = 16; count = 1;  scatter = 10; NameText.setText("Revolver"); }
+    Revolver() : Weapon(6, 2, 0, 5) { velocity = 16; count = 1;  scatter = 10; NameText.setString("Revolver"); }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
@@ -102,7 +102,7 @@ public:
 // Shotgun
 class Shotgun : public Weapon {
 public:
-    Shotgun() : Weapon(5, 5, 1, 3) { velocity = 10; count = 10;  scatter = 50; NameText.setText("Shotgun"); }
+    Shotgun() : Weapon(5, 5, 1, 3) { velocity = 10; count = 10;  scatter = 50; NameText.setString("Shotgun"); }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             Shoot(player);
@@ -129,7 +129,7 @@ public:
 // Rifle
 class Rifle : public Weapon {
 public:
-    Rifle() : Weapon(25, 1, 0.05, 2) { velocity = 16; count = 10;  scatter = 17; NameText.setText("Rifle"); }
+    Rifle() : Weapon(25, 1, 0.05, 2) { velocity = 16; count = 10;  scatter = 17; NameText.setString("Rifle"); }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
@@ -145,7 +145,7 @@ public:
 class Bubblegun : public Weapon {
 public:
     sf::Vector2f position;
-    Bubblegun() : Weapon(30, 1, 0.03, 2) { velocity = 3; count = 10;  scatter = 40; NameText.setText("Bubblegun"); }
+    Bubblegun() : Weapon(30, 1, 0.03, 2) { velocity = 3; count = 10;  scatter = 40; NameText.setString("Bubblegun"); }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             lock = false;
@@ -181,7 +181,7 @@ public:
 // Armagedon
 class Armagedon : public Weapon {
 public:
-    Armagedon() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText.setText("Armagedon"); }
+    Armagedon() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText.setString("Armagedon"); }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             count = 0;
@@ -210,7 +210,7 @@ public:
 // Chaotic
 class Chaotic : public Weapon {
 public:
-    Chaotic() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText.setText("Chaotic"); }
+    Chaotic() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText.setString("Chaotic"); }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate)
             Shoot(player);

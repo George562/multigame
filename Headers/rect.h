@@ -50,3 +50,10 @@ struct Rect {
 
 using vr = std::vector<Rect>;
 using vvr = std::vector<vr>;
+
+sf::Packet& operator<<(sf::Packet& packet, Rect& a) {
+    return packet << a.PosX << a.PosY << a.Width << a.Height;
+}
+sf::Packet& operator>>(sf::Packet& packet, Rect& a) {
+    return packet >> a.PosX >> a.PosY >> a.Width >> a.Height;
+}

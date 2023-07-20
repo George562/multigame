@@ -3,6 +3,7 @@
 #include "client.h"
 #include "chat.h"
 #include "contextMenu.h"
+#include "location.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap   = true;
@@ -11,13 +12,14 @@ bool IsDrawInterface = true;
 //////////////////////////////////////////////////////////// Stuff for work with system and screen
 sf::ContextSettings settings;
 
-sf::RenderWindow window(sf::VideoMode(scw, sch), "main", sf::Style::Fullscreen, settings);
+sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 sf::View GameView = window.getDefaultView();
 sf::View InterfaceView = window.getDefaultView();
 sf::View MiniMapView = window.getDefaultView();
 float MiniMapZoom = 1.f;
 bool MiniMapActivated;
 screens::screens screen = screens::MainRoom;
+std::vector<sf::Drawable*> DrawableStuff;
 
 //////////////////////////////////////////////////////////// Music
 sf::Music MainMenuMusic;
@@ -69,6 +71,9 @@ Chaotic chaotic;
 
 //////////////////////////////////////////////////////////// functions
 void draw();
+void drawWalls();
+void drawMiniMap();
+void drawIterface();
 void ClientConnect();
 void ClientDisconnect(int);
 void SelfDisconnect();
@@ -77,9 +82,6 @@ void SendToOtherClients(sf::Packet&, int);
 void funcOfHost();
 void funcOfClient();
 void LevelGenerate(int, int);
-void drawWalls();
-void drawMiniMap();
-void drawIterface();
 void LoadMainMenu();
 void init();
 void EventHandler();
@@ -94,17 +96,6 @@ Panel  IPPanel          ("sources/textures/YellowPanel", "IP:");
 Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
 
 //////////////////////////////////////////////////////////// Buttons
-Button SoloButton("sources/textures/RedPanel", "Play" , [](){
-    screen = screens::Solo;
-    Bullets.clear();
-    LevelGenerate(START_N, START_M);
-    multiplayer = false;
-    MiniMapActivated = false;
-    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
-    MainMenuMusic.pause();
-});
-
 Button CoopButton("sources/textures/RedPanel", "Online", [](){
     screen = screens::Coop;
     multiplayer = true;
@@ -122,8 +113,7 @@ Button HostButton("sources/textures/GreenPanel", "Host", [](){
     Bullets.clear();
     LevelGenerate(START_N, START_M);
     ComputerID = 0;
-    Player* NewPlayer = new Player();
-    ConnectedPlayers.push_back(*NewPlayer);
+    ConnectedPlayers.push_back(*(new Player()));
     HostFuncRun = true;
     HostTread.launch();
 });
@@ -158,44 +148,21 @@ void draw() {
     window.clear(sf::Color::Black);
     drawWalls();
 
-    for (sf::Sprite& s: Sprites) window.draw(s);
+    for (sf::Drawable* d: DrawableStuff) window.draw(*d);
 
-    switch (screen) {
-        case screens::MainRoom:
-        case screens::Solo:
-            window.draw(portal);
-            window.draw(player);
-            break;
-        case screens::Coop:
-            window.draw(HostButton);
-            window.draw(ConnectButton);
-            break;
-        case screens::Connect:
-        case screens::Host:
-        case screens::EscOfCoop:
-            for (Player& p: ConnectedPlayers)
-                window.draw(p);
-            window.draw(player);
-            break;
-        case screens::SetIP:
-            break;
-    }
-
-    for (int i = 0; i < Bullets.size(); i++)
-        window.draw(Bullets[i]);
+    for (int i = 0; i < Bullets.size(); i++) window.draw(Bullets[i]);
 
     if (IsDrawMinimap)      drawMiniMap();
     if (IsDrawInterface)    drawIterface();
-    // window.draw(TextFPS.text);
     window.display();
 }
 
 void drawWalls() {
     CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
     for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
-            i <= std::min(int(CurLocation->data.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++)
+            i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++)
         for (int j = std::max(0, int(CameraPos.x / size) - 1);
-                j <= std::min(int(CurLocation->data[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
+                j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
             if (wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, (float)scw, (float)sch))
                 SeenWalls[i][j] = true;
             if ((*CurLocation)[i][j] == Tiles::wall) {
@@ -207,11 +174,12 @@ void drawWalls() {
 }
 
 void drawMiniMap() {
-    // draw minimap wall
+    // draw walls
+    float ScaleParam = float(miniSize) / float(size);
     window.setView(MiniMapView);
     sf::VertexArray line(sf::Lines, 2);
-    for (int i = 0; i < CurLocation->data.size(); i++)
-        for (int j = 0; j < CurLocation->data[i].size(); j++)
+    for (int i = 0; i < CurLocation->walls.size(); i++)
+        for (int j = 0; j < CurLocation->walls[i].size(); j++)
             if ((*CurLocation)[i][j] == Tiles::wall && SeenWalls[i][j]) {
                 if (i % 2 == 1) { // |
                     line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2), sf::Color::White);
@@ -222,14 +190,26 @@ void drawMiniMap() {
                 }
                 window.draw(line);
             }
-    // draw minimap players
+    
+    // draw location objects minimap
+    for (int i = 0; i < CurLocation->objects.size(); i++) {
+        if (CurLocation->objects[i].id == Tiles::portal) {
+            sf::RectangleShape portalRect(portal.getSize() * ScaleParam);
+            portalRect.setPosition(portal.getPosition() * ScaleParam);
+            portalRect.setFillColor(sf::Color(200, 0, 200, 200));
+            window.draw(portalRect);
+            break;
+        }
+    }
+
+    // draw players
     if (multiplayer) {
         for (Player& p: ConnectedPlayers) {
-            CircleOfSmallPlayer.setPosition(p.getPosition() / float(size) * float(miniSize));
+            CircleOfSmallPlayer.setPosition(p.getPosition() * ScaleParam);
             window.draw(CircleOfSmallPlayer);
         }
     } else {
-        CircleOfSmallPlayer.setPosition(player.getPosition() / float(size) * float(miniSize));
+        CircleOfSmallPlayer.setPosition(player.getPosition() * ScaleParam);
         window.draw(CircleOfSmallPlayer);
     }
     window.setView(GameView);
@@ -292,10 +272,11 @@ void ClientConnect() {
         clients.push_back(client);
         selector.add(*client);
 
-        Player* NewPlayer = new Player();
-        NewPlayer->setPosition({float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2});
-        ConnectedPlayers.push_back(*NewPlayer);
+        ConnectedPlayers.push_back(*(new Player()));
+        ConnectedPlayers[ConnectedPlayers.size() - 1].setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
         SendPacket << sf::Int32(pacetStates::PlayersAmount) << (sf::Int32)ConnectedPlayers.size() - 1;
+
+        DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
 
         for (int i = 0; i < ListOfPlayers.size(); i++)
             SendPacket << sf::Int32(pacetStates::PlayerConnect) << ListOfPlayers[i];
@@ -312,8 +293,8 @@ void ClientConnect() {
         else std::cout << "SendPacket didn't sended\n";
 
         SendPacket.clear();
-        if (client->send(LabyrinthData) == sf::Socket::Done) std::cout << "Labyrinth data sended\n";
-        else std::cout << "Labyrinth data didn't sended\n";
+        if (client->send(LabyrinthData) == sf::Socket::Done) std::cout << "Labyrinth walls sended\n";
+        else std::cout << "Labyrinth walls didn't sended\n";
 
         mutex.unlock();
     } else delete client;
@@ -428,9 +409,7 @@ void funcOfClient() {
                         case pacetStates::PlayerConnect:
                             ReceivePacket >> PacetData;
                             ListOfPlayers.addWord(PacetData);
-                            { Player* NewPlayer = new Player();
-                            ConnectedPlayers.push_back(*NewPlayer);
-                            }
+                            ConnectedPlayers.push_back(*(new Player()));
                             std::cout << PacetData + " connected\n";
                             break;
                         case pacetStates::PlayerDisconnect:
@@ -446,7 +425,7 @@ void funcOfClient() {
                             ReceivePacket >> LabyrinthLocation.n >> LabyrinthLocation.m;
                             std::cout << "n = " << LabyrinthLocation.n << " m = " << LabyrinthLocation.m << '\n';
                             LabyrinthLocation.SetSize(LabyrinthLocation.n, LabyrinthLocation.m);
-                            for (int i = 0; i < LabyrinthLocation.data.size(); i++)
+                            for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
                                 for (int j = 0; j < LabyrinthLocation[i].size(); j++)
                                     ReceivePacket >> LabyrinthLocation[i][j];
                             CreateMapRectByLocation(LabyrinthLocation, wallsRect, Sprites);
@@ -489,6 +468,8 @@ void LevelGenerate(int n, int m) {
     LabyrinthData << sf::Int32(pacetStates::Labyrinth) << n << m;
 
     player.setPosition(sf::Vector2f{(m / 2 + 0.5f) * size, (n / 2 + 0.5f) * size} - player.getSize() / 2.f);
+    LabyrinthLocation.objects.clear();
+    Bullets.clear();
     
     int CounterOfGenerations = 0, CountOfEnableTilesOnMap;
     do {
@@ -497,15 +478,15 @@ void LevelGenerate(int n, int m) {
         CounterOfGenerations++;
     } while (CountOfEnableTilesOnMap < float(n * m) / 3 || CountOfEnableTilesOnMap > float(n * m) / 1.5);
     std::cout << "total count of generations = " << CounterOfGenerations
-              << " CountOfEnableTilesOnMap = " << CountOfEnableTilesOnMap << '\n';
+              << " Count Of Enable Tiles = " << CountOfEnableTilesOnMap << '\n';
     
-    for (int i = 0; i < LabyrinthLocation.data.size(); i++)
+    for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
         for (int j = 0; j < LabyrinthLocation[i].size(); j++)
             LabyrinthData << LabyrinthLocation[i][j];
     CreateMapRectByLocation(LabyrinthLocation, wallsRect, Sprites);
     
-    SeenWalls.assign(LabyrinthLocation.data.size(), vb(0));
-    for (int i = 0; i < LabyrinthLocation.data.size(); i++)
+    SeenWalls.assign(LabyrinthLocation.walls.size(), vb(0));
+    for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
         SeenWalls[i].assign(LabyrinthLocation[i].size(), false);
     
     MiniMapView.zoom(1 / MiniMapZoom);
@@ -515,9 +496,9 @@ void LevelGenerate(int n, int m) {
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
     CreateMapRectByLocation(*CurLocation, wallsRect, Sprites);
-    SeenWalls.assign(CurLocation->data.size(), vb(0));
-    for (int i = 0; i < CurLocation->data.size(); i++)
-        SeenWalls[i].assign(CurLocation->data[i].size(), false);
+    SeenWalls.assign(CurLocation->walls.size(), vb(0));
+    for (int i = 0; i < CurLocation->walls.size(); i++)
+        SeenWalls[i].assign(CurLocation->walls[i].size(), false);
     
     player.setCenter(1.f * size, 1.f * size);
     player.CurWeapon = nullptr;
@@ -534,11 +515,13 @@ void LoadMainMenu() {
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
 
-        portal.setPosition(-10 * size, -10 * size);
+        portal.setCenter(player.getCenter());
         portal.setFunction([](){
             LevelGenerate(START_N, START_M);
-            portal.setPosition(-10 * size, -10 * size);
+            portal.setCenter(player.getCenter());
+            CurLocation->objects.push_back({Tiles::portal, portal.getPosition()});
         });
+        CurLocation->objects.push_back({Tiles::portal, portal.getPosition()});
     });
 
     // Set cameras
@@ -547,6 +530,9 @@ void LoadMainMenu() {
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     MainMenuMusic.play();
+
+    DrawableStuff.push_back(&portal);
+    DrawableStuff.push_back(&player);
 }
 
 void init() {
@@ -566,8 +552,8 @@ void init() {
     MainMenuMusic.setVolume(20);
 
     // Load locations
-    WaitingRoomLoaction.LoadLocationFromFile("sources/locations/WaitingRoom.txt");
-    MainMenuLocation.LoadLocationFromFile("sources/locations/MainMenu.txt");
+    WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
+    MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
     
     LoadMainMenu();
 
@@ -580,11 +566,10 @@ void init() {
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
     std::cout << "IP: " << MyIP << '\n';
     
-    MainMenuButton.setTextSize(110);
+    MainMenuButton.setCharacterSize(110);
     IPPanel.setTextSize(80);
     ListOfPlayers.setTextSize(60);
 
-    SoloButton.setPosition      (scw / 6 -       SoloButton.Width / 4,          sch * 5 / 8);
     CoopButton.setPosition      (scw - scw / 6 - CoopButton.Width * 3 / 4,      sch * 5 / 8);
     HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,          sch * 5 / 8);
     ConnectButton.setPosition   (scw - scw / 6 - ConnectButton.Width * 3 / 4,   sch * 5 / 8);
@@ -734,9 +719,7 @@ void EventHandler() {
                                     case pacetStates::PlayerConnect:
                                         ReceivePacket >> PacetData;
                                         ListOfPlayers.addWord(PacetData);
-                                        { Player* NewPlayer = new Player();
-                                        ConnectedPlayers.push_back(*NewPlayer);
-                                        }
+                                        ConnectedPlayers.push_back(*(new Player()));
                                         std::cout << PacetData << " connected\n";
                                         break;
                                     case pacetStates::SetPos:
@@ -821,12 +804,6 @@ void EventHandler() {
                         if (MiniMapActivated) {
                             if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
                             else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
-                        } else {
-                            CurLocation->n = std::max(event.mouseWheel.delta + CurLocation->n, 2);
-                            CurLocation->m = std::max(event.mouseWheel.delta + CurLocation->m, 2);
-                            MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
-                            Bullets.clear();
-                            LevelGenerate(CurLocation->n, CurLocation->m);
                         }
                     }
                 }
@@ -837,14 +814,6 @@ void EventHandler() {
 void MainLoop() {
     while (window.isOpen()) {
         if (!window.hasFocus()) {
-            if (HostFuncRun) {
-                mutex.lock();
-                SendPacket << sf::Int32(pacetStates::PlayerPos);
-                for (Player& x: ConnectedPlayers) SendPacket << x;
-                SendToClients(SendPacket);
-                SendPacket.clear();
-                mutex.unlock();
-            }
             player.update();
             for (int i = 0; i < Bullets.size();) {
                 if (Bullets[i].penetration < 0 || Bullets[i].todel)
@@ -854,17 +823,21 @@ void MainLoop() {
             }
             sf::Event event;
             while (window.pollEvent(event)) {}
+
+            if (HostFuncRun) {
+                mutex.lock();
+                SendPacket << sf::Int32(pacetStates::PlayerPos);
+                for (Player& x: ConnectedPlayers) SendPacket << x;
+                SendToClients(SendPacket);
+                SendPacket.clear();
+                mutex.unlock();
+            }
         } else {
-            if (screen == screens::MainRoom) {
-                if (!chat.inputted) {
-                    player.move(wallsRect);
-                    GameView.setCenter(player.getCenter());
-                }
-            } else if (screen == screens::Solo || screen == screens::Host || screen == screens::Connect) {
-                if (!chat.inputted) {
-                    player.move(wallsRect);
-                    GameView.setCenter(player.getCenter());
-                }
+            if (!chat.inputted) {
+                player.move(wallsRect);
+                GameView.setCenter(player.getCenter());
+            }
+            if (screen == screens::Solo || screen == screens::Host || screen == screens::Connect) {
                 int wasBulletsCount = Bullets.size();
                 player.update();
                 if (wasBulletsCount < Bullets.size() && (screen == screens::Host || screen == screens::Connect)) {
@@ -877,22 +850,19 @@ void MainLoop() {
                     SendPacket.clear();
                     mutex.unlock();
                 }
-                int CountOfBulletsOtOfScreen = 0;
-                for (int i = 0; i < Bullets.size() - CountOfBulletsOtOfScreen;) {
+                for (int i = 0; i < Bullets.size();) {
                     if (Bullets[i].penetration < 0 || Bullets[i].todel)
-                        std::swap(Bullets[i], Bullets[Bullets.size() - 1 - CountOfBulletsOtOfScreen++]);
+                        Bullets.erase(Bullets.begin() + i--);
                     else
                         Bullets[i++].move(wallsRect);
                 }
-                Bullets.resize(Bullets.size() - CountOfBulletsOtOfScreen);
             }
             if (HostFuncRun || ClientFuncRun) {
                 ConnectedPlayers[ComputerID].setPosition(player.getPosition());
                 mutex.lock();
                 SendPacket << sf::Int32(pacetStates::PlayerPos);
                 if (HostFuncRun) {
-                    for (Player& x: ConnectedPlayers)
-                        SendPacket << x;
+                    for (Player& x: ConnectedPlayers) SendPacket << x;
                     SendToClients(SendPacket);
                 } else if (ClientFuncRun) {
                     SendPacket << player;

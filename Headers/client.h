@@ -1,4 +1,4 @@
-#include "init.h"
+#include "../SFML-2.5.1/include/SFML/Network.hpp"
 
 namespace pacetStates {
     enum pacetStates {

@@ -12,13 +12,21 @@ public:
     std::vector<str> lines;
 
     PlacedText();
+
     void setPosition(float, float);
-    void setPosition(sf::Vector2f);
-    void setCenter(float, float);
-    void setCenter(sf::Vector2f);
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { target.draw(text); };
-    void setText(str s);
+    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
+
+    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
+
+    void setString(str s);
+
     void setCharacterSize(int x);
+    void setFillColor(sf::Color color) { text.setFillColor(color); }
+    void setScale(sf::Vector2f);
+    void setScale(float, float);
+
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { target.draw(text); };
 };
 
 ////////////////////////////////////////////////////////////
@@ -34,22 +42,22 @@ void PlacedText::setPosition(float x, float y) {
     PosX = x; PosY = y;
     text.setPosition(PosX, PosY);
 }
-void PlacedText::setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
-void PlacedText::setCenter(float x, float y) {
-    PosX = x - Width / 2; PosY = y - Height / 2;
-    text.setPosition(PosX, PosY);
-}
-void PlacedText::setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
-
-void PlacedText::setText(str s) {
+void PlacedText::setString(str s) {
     text.setString(s);
-    Width = text.getGlobalBounds().width;
-    Height = text.getGlobalBounds().height;
+    setSize(text.getGlobalBounds().width, text.getGlobalBounds().height);
 }
 
 void PlacedText::setCharacterSize(int x) {
     text.setCharacterSize(x);
-    Width = text.getGlobalBounds().width;
-    Height = text.getGlobalBounds().height;
+    setSize(text.getGlobalBounds().width, text.getGlobalBounds().height);
+}
+
+void PlacedText::setScale(sf::Vector2f factors) {
+    text.setScale(factors);
+    setSize(Width * factors.x, Height * factors.y);
+}
+void PlacedText::setScale(float factorX, float factorY) {
+    text.setScale(factorX, factorY);
+    setSize(Width * factorX, Height * factorY);
 }
