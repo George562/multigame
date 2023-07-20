@@ -6,14 +6,17 @@ class Label : public InteractionRect
 {
 private:
     sf::Text text;
+    sf::Font font;
 
 public:
     Label() {}
-    Label(float, float, int, int, sf::Font&);
+    Label(float, float, int, sf::Font&);
+
+    int getCharacterSize() { return text.getCharacterSize(); }
 
     std::string getText() { return text.getString(); }
-    void setText(std::string val) { text.setString(val); }
-    void setCharacterSize(int val) { text.setCharacterSize(val); }
+    void setText(std::string val) { text.setString(val); width = text.getGlobalBounds().width; height = text.getGlobalBounds().height; }
+    void setCharacterSize(int val) { text.setCharacterSize(val); width = text.getGlobalBounds().width; height = text.getGlobalBounds().height; }
 
     void move(float x, float y) override
     { 
@@ -25,10 +28,13 @@ public:
     void draw(sf::RenderTarget&, sf::RenderStates) const override;
 };
 
-Label::Label(float _posX, float _posY, int _width, int _height, sf::Font& font) : InteractionRect(_posX, _posY, _width, _height) 
+Label::Label(float _posX, float _posY, int characterSize, sf::Font& _font) : InteractionRect(_posX, _posY, 0, 0) 
 {
-    text = sf::Text("", font, std::min(width * 9 / 10, height * 9 / 10));
-    text.setPosition(drawRect.getPosition() + sf::Vector2f(5, 0));
+    drawRect.setFillColor(sf::Color::Transparent); drawRect.setOutlineThickness(0);
+
+    font = _font;
+    text = sf::Text("", _font, characterSize);
+    text.setPosition(drawRect.getPosition());
     text.setFillColor(sf::Color::Black);
 }
 

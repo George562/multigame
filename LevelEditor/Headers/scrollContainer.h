@@ -48,7 +48,7 @@ ScrollContainer::ScrollContainer(float _posX, float _posY, int _width, int _heig
 void ScrollContainer::updateScrollbar(InteractionRect& element)
 {
     if(element.getBottom() > maxScrollY)
-        maxScrollY = element.getBottom() + element.getHeight() / 2;
+        maxScrollY = element.getBottom() + 10;
 
     if(maxScrollY > getBottom())
     {
@@ -78,18 +78,15 @@ bool ScrollContainer::isActivated(sf::Event& event)
         return true;
     }
 
-    if(event.type == sf::Event::MouseButtonPressed)
+    if(event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left)
     {
         readInput = in(posX, posY, width, height, event.mouseButton);
+        bool elementInput = false;
+        for(InteractionRect *ir : elements)
+            elementInput |= in(ir->getX(), ir->getY(), ir->getWidth(), ir->getHeight(), event.mouseButton);
+        readInput = readInput & !elementInput;
         drawRect.setFillColor(readInput ? activeColor : inactiveColor);
-        return true;
-    }
-
-    if(event.type == sf::Event::MouseButtonReleased)
-    {
-        readInput = in(posX, posY, width, height, event.mouseButton);
-        drawRect.setFillColor(readInput ? activeColor : inactiveColor);
-        return true;
+        return readInput;
     }
 
     return false;
