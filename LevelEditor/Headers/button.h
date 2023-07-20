@@ -18,10 +18,13 @@ public:
     Button() {}
     Button(float, float, int, int, sf::Font&);
 
+    int getCharacterSize() { return text.getCharacterSize(); }
+
     void setText(std::string str) { text.setString(str); fitText(); centerText(); }
     void centerText();
     void fitText();
-    void scaleText(float);
+    void setPressColor(sf::Color color) { pressColor = color; drawRect.setFillColor(pressed ? pressColor : inactiveColor); }
+    void setInactiveColor(sf::Color color) { inactiveColor = color; drawRect.setFillColor(pressed ? pressColor : inactiveColor); }
 
     void move(float x, float y) override 
     { 
@@ -39,7 +42,7 @@ Button::Button(float _posX, float _posY, int _width, int _height, sf::Font& font
     drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(2);
     drawRect.setFillColor(inactiveColor);
 
-    text = sf::Text("", font, std::min(width * 9 / 10, height * 9 / 10));
+    text = sf::Text("", font, std::min(width * 8 / 10, height * 8 / 10));
     text.setPosition(drawRect.getPosition());
     text.setFillColor(sf::Color::Black);
     centerText();
@@ -66,27 +69,29 @@ bool Button::isActivated(sf::Event& event)
 
 void Button::centerText()
 {
-    text.setPosition(drawRect.getPosition().x + drawRect.getGlobalBounds().width / 2 - text.getGlobalBounds().width / 2,
-                     drawRect.getPosition().y + drawRect.getGlobalBounds().height / 2 - text.getGlobalBounds().height * 3 / 4);
+    if(text.getString().isEmpty())
+        return;
+
+    text.setPosition(posX + width / 2.f, posY + height / 2.f);
+    text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.f, text.getLocalBounds().top + text.getLocalBounds().height / 2.f);
 }
 
 void Button::fitText()
 {
+    if(text.getString().isEmpty())
+        return;
+
     std::vector<std::string> lines = splitString(text, '\n');
     int maxLength = 0;
 
     for(std::string s : lines)
-    {
-        if(s.size() > maxLength)
-            maxLength = s.size();
-    }
-    
-    text.setCharacterSize(width / maxLength);
-}
+        maxLength = s.size() > maxLength ? s.size() : maxLength;
 
-void Button::scaleText(float coef)
-{
-    text.setCharacterSize(text.getCharacterSize() * coef);
+    if(text.getGlobalBounds().width > width)
+        text.setCharacterSize(2 * width / maxLength);
+
+    while(width - text.getGlobalBounds().width <= 30)
+        text.setCharacterSize(text.getCharacterSize() - 1);
 }
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const

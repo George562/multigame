@@ -10,3 +10,8 @@ bool in(float posX, float posY, int width, int height, sf::Event::MouseMoveEvent
 {
     return event.x >= posX && event.x <= posX + width && event.y >= posY && event.y <= posY + height;
 }
+
+bool in(float posX, float posY, int width, int height, sf::Event::MouseWheelScrollEvent& event)
+{
+    return event.x >= posX && event.x <= posX + width && event.y >= posY && event.y <= posY + height;
+}
