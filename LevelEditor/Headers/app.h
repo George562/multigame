@@ -5,6 +5,7 @@
 #include "label.h"
 #include "scrollContainer.h"
 #include <fstream>
+#include <filesystem>
 #include <algorithm>
 #include <utility>
 
@@ -18,11 +19,18 @@ enum mapItem
     box
 };
 
+enum windowMode
+{
+    editing,
+    saving
+};
+
 class App
 {
 private:
     int levelMatrixHeight, levelMatrixWidth, editorRectX, editorRectY, editorRectWidth, editorRectHeight;
     int scrW, scrH, wndW, wndH;
+    windowMode mode = editing;
 
     mapItem selectedObject;
     std::map<mapItem, sf::Color> mapItemColor;
@@ -33,21 +41,24 @@ private:
 
     ScrollContainer optionsContainer, itemContainer;
     NumBox levelHeightBox, levelWidthBox;
-    Label mapWidthLabel, mapHeightLabel, fileNameLabel, itemMessageLabel, systemMessageLabel;
-    Button genButton, saveButton;
-    TextBox nameBox;
+    Label mapWidthLabel, mapHeightLabel, itemMessageLabel, systemMessageLabel;
+    Button genButton, saveModeButton;
     InteractionRect editorRect, itemMessageRect, systemMessageRect;
-
     vvpt levelMatrix;
     std::vector<Button*> itemButtonsList;
-    std::vector<InteractionRect*> drawnElements;
+
+    Label fileNameLabel, filePathLabel;
+    TextBox filePathBox, fileNameBox;
+    Button saveFileButton, backButton, overWriteButton;
+
+    std::vector<InteractionRect*> universalDrawnElements, editorDrawnElements, saveDrawnElements;
 
     void init();
     void loop();
     void poll(sf::Event&);
     void draw();
     std::string generateMatrix(int, int, vvpt&, float, float, int, int);
-    std::string saveMap(std::string, int, int, vvpt&);
+    std::string saveMap(std::string, std::string, int, int, vvpt&, bool);
 public:
     App(sf::RenderWindow&);
     void start(){ init(); loop(); }
@@ -78,6 +89,7 @@ void App::init()
 
     font.loadFromFile("Resources/Fonts/consola.ttf");
 
+    // [Editor window elements]. All you need for actual level editing
     optionsContainer = ScrollContainer((float)wndW / 20, (float)wndH / 20, wndW / 4, wndH * 7 / 20);
 
     levelHeightBox = NumBox(optionsContainer.getX() + optionsContainer.getWidth() * 3 / 5, optionsContainer.getY() + 10, 60, 50, font, 2);
@@ -92,18 +104,13 @@ void App::init()
     genButton = Button(optionsContainer.getX() + optionsContainer.getWidth() * 2 / 10, levelWidthBox.getBottom() + 15, 150, 100, font);
     genButton.setText("Generate\nMatrix");
 
-    fileNameLabel = Label(genButton.getX() - 5, genButton.getBottom() + 30, 20, font);
-    fileNameLabel.setText("Level file name");
-
-    nameBox = TextBox(genButton.getX(), fileNameLabel.getBottom() + 20, 150, 50, font);
-
-    saveButton = Button(nameBox.getX(), nameBox.getBottom() + 20, 150, 100, font);
-    saveButton.setText("Save\nLevel");
+    saveModeButton = Button(genButton.getX(), genButton.getBottom() + 20, 150, 100, font);
+    saveModeButton.setText("Save\nLevel");
 
     optionsContainer.addElement(levelHeightBox); optionsContainer.addElement(levelWidthBox);
-    optionsContainer.addElement(mapWidthLabel); optionsContainer.addElement(mapHeightLabel); optionsContainer.addElement(fileNameLabel);
+    optionsContainer.addElement(mapWidthLabel); optionsContainer.addElement(mapHeightLabel);
     optionsContainer.addElement(genButton);
-    optionsContainer.addElement(nameBox); optionsContainer.addElement(saveButton);
+    optionsContainer.addElement(saveModeButton);
 
     editorRectX = optionsContainer.getRight() + 20;
     editorRectY = optionsContainer.getY();
@@ -143,13 +150,44 @@ void App::init()
     systemMessageLabel = Label(systemMessageRect.getX() + 10, systemMessageRect.getY() + 10, 15, font);
     systemMessageLabel.setText("System related messages will be displayed here");
 
-    drawnElements.push_back(&optionsContainer);
-    drawnElements.push_back(&itemContainer);
-    drawnElements.push_back(&editorRect);
-    drawnElements.push_back(&itemMessageRect);
-    drawnElements.push_back(&systemMessageRect);
-    drawnElements.push_back(&itemMessageLabel);
-    drawnElements.push_back(&systemMessageLabel);
+    editorDrawnElements.push_back(&optionsContainer);
+    editorDrawnElements.push_back(&itemContainer);
+    editorDrawnElements.push_back(&editorRect);
+    editorDrawnElements.push_back(&itemMessageRect);
+    editorDrawnElements.push_back(&itemMessageLabel);
+
+    universalDrawnElements.push_back(&systemMessageRect);
+    universalDrawnElements.push_back(&systemMessageLabel);
+    // Done [Editor window elements] //
+
+    // [Save window elements]. Simple enough if you know at what path you want to save your file beforehand. 
+    // A graphical solution would be way too overkill for what is a very situational app.
+    fileNameLabel = Label(wndW / 10, wndH / 10, 20, font);
+    fileNameLabel.setText("Level file name");
+    
+    fileNameBox = TextBox(fileNameLabel.getX(), fileNameLabel.getY() + 30, wndW / 2 - wndW / 10, 40, font);
+
+    filePathLabel = Label(fileNameBox.getX(), fileNameBox.getBottom() + 40, 20, font);
+    filePathLabel.setText("Level file path");
+
+    filePathBox = TextBox(filePathLabel.getX(), filePathLabel.getBottom() + 30, wndW * 3 / 4 - wndW / 10, 25, font);
+
+    saveFileButton = Button(fileNameBox.getX(), filePathBox.getBottom() + 40, 200, 100, font);
+    saveFileButton.setText("Save\nfile");
+
+    backButton = Button(wndW / 2, saveFileButton.getY() + 50, 300, 120, font);
+    backButton.setText("Back");
+
+    overWriteButton = Button(saveFileButton.getX(), saveFileButton.getBottom() + 20, 200, 100, font);
+    overWriteButton.setText("Overwrite file");
+
+    saveDrawnElements.push_back(&fileNameLabel);
+    saveDrawnElements.push_back(&fileNameBox);
+    saveDrawnElements.push_back(&filePathLabel);
+    saveDrawnElements.push_back(&filePathBox);
+    saveDrawnElements.push_back(&saveFileButton);
+    saveDrawnElements.push_back(&backButton);
+    saveDrawnElements.push_back(&overWriteButton);
 }
 
 void App::loop()
@@ -170,42 +208,62 @@ void App::poll(sf::Event& event)
 {
     while (mainWindow->pollEvent(event))
     {
-        optionsContainer.isActivated(event);
-        itemContainer.isActivated(event);
+        switch (mode)
+        {
+        case editing:
+            optionsContainer.isActivated(event);
+            itemContainer.isActivated(event);
 
-        if(levelHeightBox.getY() >= optionsContainer.getY() && levelHeightBox.getBottom() <= optionsContainer.getBottom())
-            levelHeightBox.isActivated(event);
+            if(levelHeightBox.getY() >= optionsContainer.getY() && levelHeightBox.getBottom() <= optionsContainer.getBottom())
+                levelHeightBox.isActivated(event);
 
-        if(levelWidthBox.getY() >= optionsContainer.getY() && levelWidthBox.getBottom() <= optionsContainer.getBottom())
-            levelWidthBox.isActivated(event);
+            if(levelWidthBox.getY() >= optionsContainer.getY() && levelWidthBox.getBottom() <= optionsContainer.getBottom())
+                levelWidthBox.isActivated(event);
 
-        if(nameBox.getY() >= optionsContainer.getY() && nameBox.getBottom() <= optionsContainer.getBottom())
-            nameBox.isActivated(event); 
+            if(genButton.isActivated(event) && genButton.getY() >= optionsContainer.getY() && genButton.getBottom() <= optionsContainer.getBottom())
+                systemMessageLabel.setText(generateMatrix(levelMatrixHeight, levelMatrixWidth, levelMatrix, editorRectX, editorRectY, editorRectWidth, editorRectHeight));
 
-        if(genButton.isActivated(event) && genButton.getY() >= optionsContainer.getY() && genButton.getBottom() <= optionsContainer.getBottom())
-            systemMessageLabel.setText(generateMatrix(levelMatrixHeight, levelMatrixWidth, levelMatrix, editorRectX, editorRectY, editorRectWidth, editorRectHeight));
+            if(saveModeButton.isActivated(event) && saveModeButton.getY() >= optionsContainer.getY() && saveModeButton.getBottom() <= optionsContainer.getBottom())
+                mode = saving;
 
-        if(saveButton.isActivated(event) && saveButton.getY() >= optionsContainer.getY() && saveButton.getBottom() <= optionsContainer.getBottom())
-            systemMessageLabel.setText(fitText(saveMap(nameBox.getText(), levelMatrixHeight, levelMatrixWidth, levelMatrix), 
-                                               systemMessageLabel.getCharacterSize(), systemMessageRect.getWidth(), systemMessageRect.getHeight()));
+            for(int i = 0; i < itemButtonsList.size(); i++)
+                if(itemButtonsList[i]->isActivated(event))
+                {
+                    selectedObject = (mapItem)i;
+                    itemMessageLabel.setText("Selected item \"" + mapItemName[(mapItem)i] + "\"");
+                }
 
-        for(int i = 0; i < itemButtonsList.size(); i++)
-            if(itemButtonsList[i]->isActivated(event))
-            {
-                selectedObject = (mapItem)i;
-                itemMessageLabel.setText("Selected item \"" + mapItemName[(mapItem)i] + "\"");
-            }
-
-        if(!levelHeightBox.getText().empty())
-            levelMatrixHeight = std::stoi(levelHeightBox.getText());
-        if(!levelWidthBox.getText().empty())
-            levelMatrixWidth = std::stoi(levelWidthBox.getText());
+            if(!levelHeightBox.getText().empty())
+                levelMatrixHeight = std::stoi(levelHeightBox.getText());
+            if(!levelWidthBox.getText().empty())
+                levelMatrixWidth = std::stoi(levelWidthBox.getText());
+            
+            if(!levelMatrix.empty())
+                for(int i = 0; i < levelMatrix.size(); i++)
+                    for(int j = 0; j < levelMatrix[i].size(); j++)
+                        if(levelMatrix[i][j]->isActivated(event))
+                            levelMatrix[i][j]->setState(selectedObject, mapItemColor[selectedObject]);
+            break;
         
-        if(!levelMatrix.empty())
-            for(int i = 0; i < levelMatrix.size(); i++)
-                for(int j = 0; j < levelMatrix[i].size(); j++)
-                    if(levelMatrix[i][j]->isActivated(event))
-                        levelMatrix[i][j]->setState(selectedObject, mapItemColor[selectedObject]);
+        case saving:
+            fileNameBox.isActivated(event); 
+            filePathBox.isActivated(event);
+
+            if(saveFileButton.isActivated(event))
+                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, levelMatrix, false), 
+                                                systemMessageLabel.getCharacterSize(), systemMessageRect.getWidth(), systemMessageRect.getHeight()));
+
+            if(overWriteButton.isActivated(event))
+                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, levelMatrix, true), 
+                                                systemMessageLabel.getCharacterSize(), systemMessageRect.getWidth(), systemMessageRect.getHeight()));
+
+            if(backButton.isActivated(event))
+                mode = editing;
+            break;
+
+        default:
+            break;
+        }
 
         if(event.type == sf::Event::Closed)
             mainWindow->close();
@@ -214,16 +272,29 @@ void App::poll(sf::Event& event)
 
 void App::draw()
 {
-    for(int i = 0; i < drawnElements.size(); i++)
-        drawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
+    switch (mode)
+    {
+    case editing:
+       for(int i = 0; i < editorDrawnElements.size(); i++)
+            editorDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
 
-    if(!levelMatrix.empty())
-        for(int i = 0; i < levelMatrix.size(); i++)
-            for(int j = 0; j < levelMatrix[i].size(); j++)
-                levelMatrix[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+        if(!levelMatrix.empty())
+            for(int i = 0; i < levelMatrix.size(); i++)
+                for(int j = 0; j < levelMatrix[i].size(); j++)
+                    levelMatrix[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+        break;
 
-    if(nameBox.getRight() >= optionsContainer.getRight())
-        nameBox.draw(*mainWindow, sf::RenderStates::Default);
+    case saving:
+        for(int i = 0; i < saveDrawnElements.size(); i++)
+            saveDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
+        break;
+
+    default:
+        break;
+    }
+
+    for(int i = 0; i < universalDrawnElements.size(); i++)
+        universalDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
 }
 
 std::string App::generateMatrix(int n, int m, vvpt& matrix, float posX, float posY, int width, int height)
@@ -254,10 +325,25 @@ std::string App::generateMatrix(int n, int m, vvpt& matrix, float posX, float po
     return "Successfully generated a " + std::to_string(n) + " by " + std::to_string(m) + " cell level";
 }
 
-std::string App::saveMap(std::string filename, int n, int m, vvpt& matrix)
+std::string App::saveMap(std::string path, std::string fileName, int n, int m, vvpt& matrix, bool forceOverwrite)
 {
-    if(filename.empty())
+    char forbiddenChars[9]{'\\', '/', ':', '\"', '*', '?', '<', '>', '|'};
+
+    if(fileName.empty())
         return "Input the name for your map file!";
+    
+    for(int i = 0; i < 9; i++)
+        if(std::find(fileName.begin(), fileName.end(), forbiddenChars[i]) != fileName.end())
+            return "File name cannot have any of theese symbols: \\ / : \" * ? < > |";
+
+    std::string filePath = path;
+    std::replace(filePath.begin(), filePath.end(), '/', '\\');
+
+    if(!std::filesystem::exists(std::filesystem::path(filePath)))
+        return "Input path does not exist!";
+
+    if(std::filesystem::exists(std::filesystem::path(filePath + "\\" + fileName + ".txt")) && !forceOverwrite)
+        return "File already exists! If you wish to overwrite, click the \"Overwrite\" button.";
 
     std::ofstream levelFile;
     vvi stateMatrix;
@@ -270,7 +356,8 @@ std::string App::saveMap(std::string filename, int n, int m, vvpt& matrix)
             stateMatrix[i].push_back(matrix[i][j]->getState());
     }
 
-    levelFile.open(".\\Levels\\" + filename + ".txt");
+    // levelFile.open(".\\Levels\\" + fileName + ".txt");
+    levelFile.open(filePath + "\\" + fileName + ".txt");
     levelFile << n << ' ' << m << '\n';
     for(int i = 0; i < stateMatrix.size(); i++)
     {
@@ -288,5 +375,5 @@ std::string App::saveMap(std::string filename, int n, int m, vvpt& matrix)
     }
     levelFile.close();
 
-    return "Map saved as " + nameBox.getText() + ".txt at .\\Levels\\";
+    return "Map saved as " + fileName + ".txt at \"" + filePath + "\"";
 }

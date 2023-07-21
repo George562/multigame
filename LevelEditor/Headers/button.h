@@ -90,7 +90,7 @@ void Button::fitText()
     if(text.getGlobalBounds().width > width)
         text.setCharacterSize(2 * width / maxLength);
 
-    while(width - text.getGlobalBounds().width <= 30)
+    while(width - text.getGlobalBounds().width <= 30 || height - text.getGlobalBounds().height <= 30)
         text.setCharacterSize(text.getCharacterSize() - 1);
 }
 

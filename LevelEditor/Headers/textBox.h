@@ -6,7 +6,7 @@
 class TextBox : public InteractionRect
 {
 protected:
-    bool readInput = false;
+    bool readInput = false, shiftPressed = false;
     float initialWidth;
 
     std::string fullString;
@@ -46,16 +46,40 @@ TextBox::TextBox(float _posX, float _posY, int _width, int _height, sf::Font& fo
 
 bool TextBox::isActivated(sf::Event& event)
 {
+    if(event.type == sf::Event::KeyPressed && (event.key.code == sf::Keyboard::LShift || event.key.code == sf::Keyboard::RShift))
+    {
+        shiftPressed = true;
+        return false;
+    }
+    
+    if(event.type == sf::Event::KeyReleased && (event.key.code == sf::Keyboard::LShift || event.key.code == sf::Keyboard::RShift))
+    {
+        shiftPressed = false;
+        return false;
+    }
+
     if(event.type == sf::Event::KeyPressed && readInput)
     {
         if(event.key.code == sf::Keyboard::Backspace && text.getString().getSize() != 0)
             text.setString(text.getString().substring(0, text.getString().getSize() - 1));
 
         if(event.key.code >= sf::Keyboard::A && event.key.code <= sf::Keyboard::Z)
-            text.setString(text.getString() + (char)('a' + event.key.code));
+            text.setString(text.getString() + (char)((shiftPressed ? 'A' : 'a') + event.key.code));
 
         if(event.key.code >= sf::Keyboard::Num0 && event.key.code <= sf::Keyboard::Num9)
             text.setString(text.getString() + (char)('0' + event.key.code - sf::Keyboard::Num0));
+
+        if(event.key.code == sf::Keyboard::Hyphen)
+            text.setString(text.getString() + (char)(shiftPressed ? '_' : '-'));
+
+        if(event.key.code == sf::Keyboard::Semicolon)
+            text.setString(text.getString() + (char)(';' - shiftPressed));
+        
+        if(event.key.code == sf::Keyboard::Backslash && !shiftPressed)
+            text.setString(text.getString() + '\\');
+
+        if(event.key.code == sf::Keyboard::Slash && !shiftPressed)
+            text.setString(text.getString() + '/');
         
         fullString = (std::string)text.getString();
         width = std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3));
