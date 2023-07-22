@@ -1,7 +1,12 @@
 # multigame
-Our team writing my multiplayer game in C++ using the SFML graphics library.
 
-We developing my own engine specifically for this game, but it can be used for other projects
+![Release](https://img.shields.io/badge/Version-v0.2-blueviolet)
+![Language](https://img.shields.io/badge/Language-C%2B%2B-0052cf)
+![Open Source](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)
+
+Our team writing multiplayer game in C++ using the SFML graphics library.
+
+We developing our own engine specifically for this game, but it can be used for other projects
 
 You can suggest various features in VK messages: https://vk.com/majong562
 
