@@ -22,7 +22,7 @@ public:
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
     void setCharacterSize(int);
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
-    bool OnTheButton(int&, int&);
+    bool OnTheButton(int& x, int& y)  { return contains(x, y); }
     bool isActivated(sf::Event&);
 };
 
@@ -30,10 +30,10 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Button::Button(str name, str word, void (*foo)(void)) {
+Button::Button(str TextureFile, str word, void (*foo)(void)) {
     ButtonText.setCharacterSize(150);
     ButtonText.setFillColor(sf::Color(199, 199, 199));
-    setTexture(name);
+    setTexture(TextureFile);
     setSize(rect.getGlobalBounds().width, rect.getGlobalBounds().height);
     setWord(word);
     buttonFunction = foo;
@@ -41,25 +41,25 @@ Button::Button(str name, str word, void (*foo)(void)) {
 
 void Button::setWord(str word) {
     ButtonText.setString(word);
-    ButtonText.setCenter(getPosition() + getSize() / 2.f);
+    ButtonText.setCenter(getCenter());
 }
 
-void Button::setTexture(str name) {
-    texture.loadFromFile(name + ".png");
-    pushedTexture.loadFromFile(name + "Pushed.png");
+void Button::setTexture(str TextureFile) {
+    texture.loadFromFile(TextureFile + ".png");
+    pushedTexture.loadFromFile(TextureFile + "Pushed.png");
     rect.setTexture(texture);
 }
 
 void Button::setPosition(float x, float y) {
     PosX = x; PosY = y;
     rect.setPosition(x, y);
-    ButtonText.setCenter(getPosition() + getSize() / 2.f);
+    ButtonText.setCenter(getCenter());
 }
 
 void Button::setSize(float w, float h) {
     if (Width != 0 && Height != 0) {
         ButtonText.setScale(w / Width, h / Height);
-        ButtonText.setCenter(getPosition() + getSize() / 2.f);
+        ButtonText.setCenter(getCenter());
         rect.setScale(w / Width, h / Height);
     }
     Width = w; Height = h;
@@ -74,8 +74,6 @@ void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     target.draw(rect);
     if (ShowText) target.draw(ButtonText);
 }
-
-bool Button::OnTheButton(int& x, int& y) { return contains(x, y); }
 
 bool Button::isActivated(sf::Event& event) {
     if (Pushed && event.type == sf::Event::MouseButtonReleased) {
