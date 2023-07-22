@@ -1,6 +1,6 @@
 # multigame
 
-![Release](https://img.shields.io/badge/Release-v0.2-blueviolet)
+![Release](https://img.shields.io/badge/Version-v0.2-blueviolet)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-0052cf)
 ![Open Source](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)
 
