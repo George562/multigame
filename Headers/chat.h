@@ -59,7 +59,7 @@ void Chat::draw(sf::RenderWindow& window) {
         window.draw(rect);
         PlacedText tempText; tempText.text.setString(lines[start].substr(0, cursorPos));
         tempText.text.setCharacterSize(text.getCharacterSize());
-        cursor.setPosition(PosX + 5 + tempText.text.getLocalBounds().width, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * len);
+        cursor.setPosition(PosX + 5 + tempText.text.getGlobalBounds().width, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * len);
         if (GlobalClock.getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2))
             window.draw(cursor);
     }

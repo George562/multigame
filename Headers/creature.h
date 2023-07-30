@@ -7,8 +7,8 @@
 class Creature : public Rect, public sf::Drawable {
 public:
     Scale<float> Health;
-    Scale<float> Mana; // Used for everything
-    float ManaRecovery;
+    Scale<float> Mana;
+    float ManaRecovery, HealthRecovery;
     Scale<float> Armor; // blocking damage = min(1, damage - armor)
     float Money;
     Scale<sf::Vector2f> Velocity; // [bottom{x,y}, top{x,y}, cur{x,y}]

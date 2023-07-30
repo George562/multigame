@@ -2,8 +2,6 @@
 
 Гоша: Bugfix server
 
-Гоша: replace the player sprite with a new one + the player turns behind the mouse and shoots only when the target is in front of it
-
 Гоша/Рома: make GameEvent class correctly
 
 Ваня: create NPC class

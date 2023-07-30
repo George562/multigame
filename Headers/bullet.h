@@ -39,10 +39,11 @@ struct Bullet : public sf::Drawable {
         circle->setRadius(radius);
     }
     
-    sf::Rect<float> getRect() { return {PosX, PosY, dx, dy}; }
+    Rect getRect() { return {PosX, PosY, dx, dy}; }
     sf::Vector2f getPosition() { return {PosX, PosY}; }
     void setPosition(sf::Vector2f &v) { PosX = v.x; PosY = v.y; }
     void setPosition(float x, float y) { PosX = x; PosY = y; }
+    sf::Vector2f getCenter() { return {PosX + radius / 2, PosY + radius / 2}; }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         target.draw(*circle);

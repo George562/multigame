@@ -25,7 +25,7 @@ public:
 ////////////////////////////////////////////////////////////
 
 Player::Player() : Creature() {
-    Health = {0, MAX_HEALTH, MAX_HEALTH};
+    Health = {0, MAX_HEALTH, MAX_HEALTH}; HealthRecovery = 1;
     Mana = {0, MAX_MANA, MAX_MANA}; ManaRecovery = 10.5;
     Armor = {0, 0, 0};
     Money = 0;
@@ -101,6 +101,7 @@ void Player::move(vvr& walls) {
 
 void Player::update() {
     Mana += ManaRecovery * (GlobalClock.getElapsedTime() - LastCheck).asSeconds();
+    Health += HealthRecovery * (GlobalClock.getElapsedTime() - LastCheck).asSeconds();
     if (CurWeapon != nullptr) {
         CurWeapon->Update(*this);
     }

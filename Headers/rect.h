@@ -31,7 +31,7 @@ struct Rect {
     bool intersect(float x, float y, float w, float h) {
         return x <= PosX + Width && PosX <= x + w && y <= PosY + Height && PosY <= y + h;
     }
-    bool intersect(Rect& rect) {
+    bool intersect(Rect rect) {
         return rect.PosX <= PosX + Width && PosX <= rect.PosX + rect.Width && rect.PosY <= PosY + Height && PosY <= rect.PosY + rect.Height;
     }
     bool intersect(Rect& rect, Rect& intersection) {
