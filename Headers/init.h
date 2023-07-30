@@ -26,15 +26,9 @@ Point dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
 namespace screens {
     enum screens {  // the types of screen
-        MainRoom,       // main menu                -> Solo, Coop
-        Coop,       // coop                     -> Host, Connect
-        Host,       // choose be a host         -> .
-        SetIP,      // input IP to connect      -> Connect
-        Connect,    // Wellcome to the room     -> .
-        Solo,       // start the game alone     -> New Game, Continue
-        New_Game,   // Start new game           ->
-        Continue,   // Continue old game        ->
-        EscOfCoop   // if turn esc in game      -> Main
+        MainRoom,
+        SetIP,
+        Dungeon
     };
 };
 

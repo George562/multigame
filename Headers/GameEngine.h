@@ -17,7 +17,7 @@ sf::View GameView = window.getDefaultView();
 sf::View InterfaceView = window.getDefaultView();
 sf::View MiniMapView = window.getDefaultView();
 float MiniMapZoom = 1.f;
-bool MiniMapActivated;
+bool MiniMapActivated, EscapeMenuActivated;
 screens::screens screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff;
 
@@ -97,7 +97,6 @@ Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
 
 //////////////////////////////////////////////////////////// Buttons
 Button CoopButton("sources/textures/RedPanel", "Online", [](){
-    screen = screens::Coop;
     multiplayer = true;
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
@@ -106,7 +105,6 @@ Button CoopButton("sources/textures/RedPanel", "Online", [](){
 });
 
 Button HostButton("sources/textures/GreenPanel", "Host", [](){
-    screen = screens::Host;
     listener.listen(53000);
     selector.add(listener);
     ListOfPlayers.setWord(MyIP);
@@ -116,10 +114,6 @@ Button HostButton("sources/textures/GreenPanel", "Host", [](){
     ConnectedPlayers.push_back(*(new Player()));
     HostFuncRun = true;
     HostTread.launch();
-});
-
-Button ConnectButton("sources/textures/BluePanel", "Connect", [](){
-    screen = screens::SetIP;
 });
 
 Button EscapeToMainMenuButton("sources/textures/RedPanel", "Exit", [](){
@@ -139,6 +133,7 @@ Button EscapeToMainMenuButton("sources/textures/RedPanel", "Exit", [](){
             SelfDisconnect();
     }
     screen = screens::MainRoom;
+    EscapeMenuActivated = false;
     ListOfPlayers.clear();
     Bullets.clear();
     LoadMainMenu();
@@ -222,35 +217,19 @@ void drawIterface() {
             portal.interface(window);
             chat.draw(window);
             break;
-        case screens::Solo:
+        case screens::Dungeon:
             player.interface(window);
             portal.interface(window);
             chat.draw(window);
-            break;
-        case screens::Coop:
-            window.draw(HostButton);
-            window.draw(ConnectButton);
-            break;
-        case screens::Connect:
-            player.interface(window);
-            portal.interface(window);
-            chat.draw(window);
-            break;
-        case screens::Host:
-            player.interface(window);
-            portal.interface(window);
-            chat.draw(window);
-            break;
-        case screens::EscOfCoop:
-            player.interface(window);
-            portal.interface(window);
-            chat.draw(window);
-            window.draw(ListOfPlayers);
-            window.draw(EscapeToMainMenuButton);
             break;
         case screens::SetIP:
             IPPanel.draw(window);
             break;
+
+    }
+    if (EscapeMenuActivated) {
+        window.draw(ListOfPlayers);
+        window.draw(EscapeToMainMenuButton);
     }
     window.setView(GameView);
 }
@@ -320,6 +299,7 @@ void SelfDisconnect() {
     std::cout << "SelfDisconnect\n";
     ClientFuncRun = false;
     screen = screens::MainRoom;
+    LoadMainMenu();
     mutex.lock();
     SendPacket << sf::Int32(pacetStates::disconnect);
     MySocket.send(SendPacket);
@@ -507,10 +487,10 @@ void LoadMainMenu() {
 
     portal.setCenter(size * 3, size);
     portal.setFunction([](){
-        screen = screens::Solo;
+        screen = screens::Dungeon;
         Bullets.clear();
-        multiplayer = false;
         MiniMapActivated = false;
+        EscapeMenuActivated = false;
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
         MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
         MainMenuMusic.pause();
@@ -572,7 +552,6 @@ void init() {
 
     CoopButton.setPosition      (scw - scw / 6 - CoopButton.Width * 3 / 4,      sch * 5 / 8);
     HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,          sch * 5 / 8);
-    ConnectButton.setPosition   (scw - scw / 6 - ConnectButton.Width * 3 / 4,   sch * 5 / 8);
     EscapeToMainMenuButton.setPosition  (scw / 2 -       EscapeToMainMenuButton.Width / 2,      sch * 5 / 8);
     
     IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,             scw / 8    );
@@ -594,11 +573,15 @@ void EventHandler() {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
                 mutex.lock();
                 SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
-                if (screen == screens::Host)            SendToClients(SendPacket);
-                else if (screen == screens::Connect)    MySocket.send(SendPacket);
+                if (HostFuncRun)        SendToClients(SendPacket);
+                else if (ClientFuncRun) MySocket.send(SendPacket);
                 SendPacket.clear();
                 mutex.unlock();
             }
+        } else if (EscapeMenuActivated) {
+            EscapeToMainMenuButton.isActivated(event);
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+                EscapeMenuActivated = !EscapeMenuActivated;
         } else {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) {
@@ -610,11 +593,7 @@ void EventHandler() {
                         if (screen == screens::MainRoom) {
                             MainMenuMusic.pause();
                             window.close();
-                        } else if (screen == screens::EscOfCoop) {
-                            if (multiplayer)
-                                screen = HostFuncRun ? screens::Host : screens::Connect;
-                            else screen = screens::Solo;
-                        } else screen = screens::EscOfCoop;
+                        } else EscapeMenuActivated = true;
                     }
                 } else if (event.key.code == sf::Keyboard::Tab) {
                     MiniMapActivated = !MiniMapActivated;
@@ -630,11 +609,11 @@ void EventHandler() {
         
             switch (screen) {
                 case screens::MainRoom:
-                    player.update(event, MiniMapActivated);
                     portal.isActivated(player, event);
+                    player.update(event, MiniMapActivated);
                     break;
 
-                case screens::Solo:
+                case screens::Dungeon:
                     portal.isActivated(player, event);
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
@@ -652,30 +631,6 @@ void EventHandler() {
                     }
                     break;
 
-                case screens::Coop:
-                    if (event.type == sf::Event::KeyPressed)
-                        if (event.key.code == sf::Keyboard::Escape) screen = screens::MainRoom;
-                    HostButton.isActivated(event);
-                    ConnectButton.isActivated(event);
-                    break;
-
-                case screens::Host:
-                    player.update(event, MiniMapActivated);
-                    if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
-                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
-                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
-                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
-                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
-                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
-                    }
-                    break;
-
-                case screens::EscOfCoop:
-                    EscapeToMainMenuButton.isActivated(event);
-                    break;
-
                 case screens::SetIP:
                     if (event.type == sf::Event::TextEntered) {
                         sf::Uint32 code = event.text.unicode;
@@ -685,12 +640,10 @@ void EventHandler() {
                         }
                     }
                     if (event.type == sf::Event::KeyPressed)
-                        if (event.key.code == sf::Keyboard::Escape) screen = screens::Coop;
-                        else if (event.key.code == sf::Keyboard::Enter) {
+                        if (event.key.code == sf::Keyboard::Enter) {
                             IPPanel.setWord("Connecting...");
                             draw();
                             if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
-                                screen = screens::Connect;
                                 selector.add(MySocket);
                                 
                                 if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
@@ -722,19 +675,6 @@ void EventHandler() {
                             IPPanel.setWord("IP:" + IPOfHost);
                         }
                     break;
-
-                case screens::Connect:
-                    player.update(event, MiniMapActivated);
-                    if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
-                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
-                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
-                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
-                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
-                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
-                    }
-                    break;
                 }
         }
     }
@@ -746,7 +686,7 @@ void MainLoop() {
             player.update();
             for (int i = 0; i < Bullets.size();) {
                 if (Bullets[i].penetration < 0 || Bullets[i].todel)
-                    Bullets.erase(Bullets.begin() + i--);
+                    Bullets.erase(Bullets.begin() + i);
                 else
                     Bullets[i++].move(wallsRect);
             }
@@ -766,26 +706,27 @@ void MainLoop() {
                 player.move(wallsRect);
                 GameView.setCenter(player.getCenter());
             }
-            if (screen == screens::Solo || screen == screens::Host || screen == screens::Connect) {
-                int wasBulletsCount = Bullets.size();
-                player.update();
-                if (wasBulletsCount < Bullets.size() && (screen == screens::Host || screen == screens::Connect)) {
-                    mutex.lock();
-                    SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size() - wasBulletsCount;
-                    for (; wasBulletsCount < Bullets.size(); wasBulletsCount++)
-                        SendPacket << Bullets[wasBulletsCount];
-                    if (HostFuncRun)        SendToClients(SendPacket);
-                    else if (ClientFuncRun) MySocket.send(SendPacket);
-                    SendPacket.clear();
-                    mutex.unlock();
-                }
-                for (int i = 0; i < Bullets.size();) {
-                    if (Bullets[i].penetration < 0 || Bullets[i].todel)
-                        Bullets.erase(Bullets.begin() + i--);
-                    else
-                        Bullets[i++].move(wallsRect);
-                }
+            int wasBulletsSize = Bullets.size();
+            player.update();
+
+            if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
+                mutex.lock();
+                SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size() - wasBulletsSize;
+                for (; wasBulletsSize < Bullets.size(); wasBulletsSize++)
+                    SendPacket << Bullets[wasBulletsSize];
+                if (HostFuncRun)        SendToClients(SendPacket);
+                else if (ClientFuncRun) MySocket.send(SendPacket);
+                SendPacket.clear();
+                mutex.unlock();
             }
+
+            for (int i = 0; i < Bullets.size();) {
+                if (Bullets[i].penetration < 0 || Bullets[i].todel)
+                    Bullets.erase(Bullets.begin() + i);
+                else
+                    Bullets[i++].move(wallsRect);
+            }
+
             if (HostFuncRun || ClientFuncRun) {
                 ConnectedPlayers[ComputerID].setPosition(player.getPosition());
                 mutex.lock();
