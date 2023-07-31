@@ -19,7 +19,7 @@ sf::View MiniMapView = window.getDefaultView();
 float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated;
 screens::screens screen = screens::MainRoom;
-std::vector<sf::Drawable*> DrawableStuff;
+std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 
 //////////////////////////////////////////////////////////// Music
 sf::Music MainMenuMusic;
@@ -84,8 +84,7 @@ void MainLoop();
 void ClientConnect();
 void ClientDisconnect(int);
 void SelfDisconnect();
-void SendToClients(sf::Packet&);
-void SendToOtherClients(sf::Packet&, int);
+void SendToClients(sf::Packet&, int=-1);
 void funcOfHost();
 void funcOfClient();
 
@@ -629,22 +628,9 @@ void SelfDisconnect() {
     ConnectedPlayers.clear();
 }
 
-void SendToClients(sf::Packet& pac) {
-    if (clients.size() < 1) return;
-    // int index = -1;
+void SendToClients(sf::Packet& pac, int ExceptOf) {
     for (int i = 0; i < clients.size(); i++)
-        if (clients[i]->send(pac) != sf::Socket::Done) {}
-            // index = i;
-    // std::cout << "index = " << index << '\n';
-    // if (index != -1) ClientDisconnect(index);
-}
-
-void SendToOtherClients(sf::Packet& pac, int num) {
-    // int index = -1;
-    for (int i = 0; i < clients.size(); i++)
-        if (i != num && clients[i]->send(pac) != sf::Socket::Done) {}
-    //         index = i;
-    // if (index != -1) ClientDisconnect(index);
+        if (i != ExceptOf && clients[i]->send(pac) != sf::Socket::Done) {}
 }
 
 void funcOfHost() {
@@ -670,7 +656,7 @@ void funcOfHost() {
                                     chat.addLine(PacetData);
                                     mutex.lock();
                                     SendPacket << sf::Int32(pacetStates::ChatEvent) << PacetData;
-                                    SendToOtherClients(SendPacket, i);
+                                    SendToClients(SendPacket, i);
                                     SendPacket.clear();
                                     mutex.unlock();
                                     break;
@@ -683,7 +669,7 @@ void funcOfHost() {
                                         Bullets.push_back(tempBullet);
                                         SendPacket << tempBullet;
                                     }
-                                    SendToOtherClients(SendPacket, i);
+                                    SendToClients(SendPacket, i);
                                     SendPacket.clear();
                                     mutex.unlock();
                                     }

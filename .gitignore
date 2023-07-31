@@ -6,3 +6,4 @@ client.cpp
 setupScript.iss
 versions/
 *.exe
+*.ico
