@@ -310,7 +310,6 @@ void LoadMainMenu() {
 
 void init() {
     setlocale(LC_ALL, "rus");
-    GlobalClock.restart();
 
     window.setFramerateLimit(60);
     window.setVerticalSyncEnabled(true);
@@ -347,8 +346,6 @@ void init() {
     
     IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,             scw / 8    );
     ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,       scw / 16   );
-
-    // sf::Time time = GlobalClock.getElapsedTime();
 
     CircleOfSmallPlayer.setRadius(9);
     CircleOfSmallPlayer.setFillColor(sf::Color(0, 180, 0));

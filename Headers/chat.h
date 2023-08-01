@@ -9,15 +9,15 @@
 
 class Chat : public Rect, public sf::Drawable {
 public:
-    str buffer;
     bool inputted;
-    sf::Time times[11];
+    std::vector<sf::Clock*> clocks;
     PlacedText lines[11];
     int start, len;
     size_t cursorPos;
     sf::RectangleShape rect, cursor;
     std::map<str, void (*)(void)> commands;
     bool ChatEnable;
+    sf::Clock* localClock;
 
     Chat();
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
@@ -42,6 +42,8 @@ Chat::Chat() : inputted(false), start(0), len(11) {
         lines[i].setFillColor(sf::Color(199, 199, 199, 180));
         lines[i].setString("");
         lines[i].setPosition(PosX + 5, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * (len - i) + 4);
+
+        clocks.push_back(new sf::Clock());
     }
 
     rect.setFillColor(sf::Color(50, 50, 50, 100));
@@ -54,30 +56,33 @@ Chat::Chat() : inputted(false), start(0), len(11) {
     cursor.setSize({3, Height});
 
     ChatEnable = true;
+    localClock = new sf::Clock();
 }
 
 void Chat::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (!ChatEnable) return;
     if (inputted) {
         target.draw(rect, states);
-        if (GlobalClock.getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2))
+        if (localClock->getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2))
             target.draw(cursor, states);
     }
     for (int i = 0; i < len; i++)
-        if (GlobalClock.getElapsedTime() - times[(start - i + len) % len] < sf::seconds(5) || inputted)
+        if (clocks[i]->getElapsedTime() < sf::seconds(5) || inputted)
             target.draw(lines[i], states);
 }
 
 bool Chat::InputText(sf::Event& event) {
     if (!ChatEnable) return false;
     setlocale(LC_ALL, "rus");
-    buffer.clear();
+
+    str buffer;
     if (inputted && event.type == sf::Event::TextEntered && 32 <= event.text.unicode) {
         if (event.text.unicode <= 127)  buffer.push_back(event.text.unicode);
         else  buffer.push_back(event.text.unicode - 1072 - 32);
         lines[start].insert(cursorPos, buffer);
         cursorPos++;
     }
+    
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Escape)
             inputted = false;
@@ -85,11 +90,9 @@ bool Chat::InputText(sf::Event& event) {
             Entered();
 
         if (event.key.code == sf::Keyboard::BackSpace && cursorPos > 0)
-            lines[start].setString(lines[start].getString().substr(0, cursorPos - 1) + lines[start].getString().substr(cursorPos--, lines[start].TextSize()));
-            // lines[start].erase(lines[start].begin() + cursorPos-- - 1);
-        else if (event.key.code == sf::Keyboard::Delete && cursorPos < lines[start].TextSize() - 1)
+            lines[start].setString(lines[start].getString().substr(0, cursorPos) + lines[start].getString().substr(cursorPos--, lines[start].TextSize()));
+        else if (event.key.code == sf::Keyboard::Delete && cursorPos < lines[start].TextSize())
             lines[start].setString(lines[start].getString().substr(0, cursorPos) + lines[start].getString().substr(cursorPos + 1, lines[start].TextSize()));
-            // lines[start].erase(lines[start].begin() + cursorPos);
         else if (event.key.code == sf::Keyboard::Left && cursorPos > 0) cursorPos--;
         else if (event.key.code == sf::Keyboard::Right && cursorPos < lines[start].TextSize()) cursorPos++;
         else if (event.key.code == sf::Keyboard::Home) cursorPos = 0;
@@ -109,10 +112,13 @@ bool Chat::Entered() {
         if (commands.count(lines[start].getString()) != 0)
             commands[lines[start].getString()]();
         else {
-            times[start] = GlobalClock.getElapsedTime();
+            clocks[start]->restart();
             start = (start + 1) % len;
+            for (int i = 0; i < len; i++)
+                lines[i].setPosition(PosX + 5, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * (len - ((start - i + len) % len)) + 4);
         }
         lines[start].setString("");
+        std::cout << Last() << '\n';
     }
     inputted = !inputted;
     cursorPos = 0;
@@ -121,8 +127,10 @@ bool Chat::Entered() {
 
 void Chat::addLine(str word) {
     std::swap(lines[start], lines[(start + 1) % len]);
-    times[start] = GlobalClock.getElapsedTime();
+    clocks[start]->restart();
     lines[start].setString(word);
+    for (int i = 0; i < len; i++)
+        lines[i].setPosition(PosX + 5, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * (len - ((start - i + len) % len)) + 4);
     start = (start + 1) % len;
 }
 

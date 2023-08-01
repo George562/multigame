@@ -18,6 +18,7 @@ public:
     float radius;
     Weapon *FirstWeapon, *SecondWeapon, *CurWeapon;
     sf::Time LastCheck;
+    sf::Clock* localClock;
 
     Creature() : Rect() {};
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {

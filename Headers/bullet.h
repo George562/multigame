@@ -18,6 +18,7 @@ struct Bullet : public sf::Drawable {
     Scale<float> ExplosionRadius = {1, 12, 1};
     Bullet::Type type;
     bool todel = false;
+    sf::Clock* localClock;
 
     Bullet() {}
     Bullet(sf::Vector2f pos, sf::Vector2f v, int penetr, float dmg, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
@@ -37,6 +38,7 @@ struct Bullet : public sf::Drawable {
                 break;
         }
         circle->setRadius(radius);
+        localClock = new sf::Clock();
     }
     
     Rect getRect() { return {PosX, PosY, dx, dy}; }
@@ -55,9 +57,9 @@ struct Bullet : public sf::Drawable {
         dy *= res.y;
         switch (type) {
             case Bullet::Bubble:
-                PosX += dx * (timer - GlobalClock.getElapsedTime()).asSeconds();
-                PosY += dy * (timer - GlobalClock.getElapsedTime()).asSeconds();
-                if (timer < GlobalClock.getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
+                PosX += dx * (timer - localClock->getElapsedTime()).asSeconds();
+                PosY += dy * (timer - localClock->getElapsedTime()).asSeconds();
+                if (timer < localClock->getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
                 if (exlpode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
                         ExplosionRadius += 1.f / 5;

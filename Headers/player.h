@@ -34,6 +34,7 @@ Player::Player() : Creature() {
     LastCheck = sf::seconds(0);
 
     SetTexture("sources/textures/Player");
+    localClock = new sf::Clock();
 }
 
 void Player::move(vvr& walls) {
@@ -81,12 +82,12 @@ void Player::move(vvr& walls) {
 }
 
 void Player::update() {
-    Mana += ManaRecovery * (GlobalClock.getElapsedTime() - LastCheck).asSeconds();
-    Health += HealthRecovery * (GlobalClock.getElapsedTime() - LastCheck).asSeconds();
+    Mana += ManaRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
+    Health += HealthRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
     if (CurWeapon != nullptr) {
         CurWeapon->Update(*this);
     }
-    LastCheck = GlobalClock.getElapsedTime();
+    LastCheck = localClock->getElapsedTime();
 }
 
 void Player::update(sf::Event& event, bool& MiniMapActivated) {
