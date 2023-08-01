@@ -14,8 +14,7 @@ public:
     float scatter; // degree
     bool lock;
     
-    Bar<int> AmmoBar;
-    PlacedText NameText;
+    str NameText;
 
     Weapon() {};
     Weapon(int MaxAmmo, float ManaCost, float FireRate, int dmg) {
@@ -25,14 +24,6 @@ public:
         this->damage = dmg;
         lastShoot = sf::seconds(0);
         lock = true;
-
-        AmmoBar.setWidth(160);
-        AmmoBar.setPosition(scw - AmmoBar.getSize().x - 10, 120);
-        AmmoBar.value = &ammunition;
-        AmmoBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(128, 128, 128, 160), sf::Color(32, 32, 32, 160));
-
-        NameText.setPosition(scw - AmmoBar.getSize().x - 10, AmmoBar.getPosition().y + AmmoBar.getSize().y);
-        NameText.text.setFillColor(sf::Color(25, 192, 25, 160));
     }
 
     virtual void Update(sf::Event& event) {
@@ -42,7 +33,7 @@ public:
             lock = true;
     };
 
-    virtual void Update(Rect&) { AmmoBar.Update(); };
+    virtual void Update(Rect&) { };
 
     virtual void Shoot(Rect& player, sf::Vector2f& direction) {
         sf::Vector2f d = direction - player.getPosition() - player.getSize() / 2.f + CameraPos;
@@ -60,18 +51,13 @@ public:
         Mana -= ManaCost * x;
         ammunition += x;
     };
-
-    virtual void interface(sf::RenderTarget& window) {
-        window.draw(AmmoBar);
-        window.draw(NameText);
-    }
 };
 ////////////////////////////////////////////////////////////
 
 // Pistol
 class Pistol : public Weapon {
 public:
-    Pistol() : Weapon(9, 1, 0.35, 2) { velocity = 10; count = 1;  scatter = 20; NameText.setString("Pistol"); }
+    Pistol() : Weapon(9, 1, 0.35, 2) { velocity = 10; count = 1;  scatter = 20; NameText = "Pistol"; }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
@@ -79,14 +65,13 @@ public:
         } else if (ammunition.toBottom() == 0) {
             lock = true;
         }
-        AmmoBar.Update();
     }
 };
 
 // Revolver
 class Revolver : public Weapon {
 public:
-    Revolver() : Weapon(6, 2, 0, 5) { velocity = 16; count = 1;  scatter = 10; NameText.setString("Revolver"); }
+    Revolver() : Weapon(6, 2, 0, 5) { velocity = 16; count = 1;  scatter = 10; NameText = "Revolver"; }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
@@ -95,14 +80,13 @@ public:
         } else if (ammunition.toBottom() == 0) {
             lock = true;
         }
-        AmmoBar.Update();
     }
 };
 
 // Shotgun
 class Shotgun : public Weapon {
 public:
-    Shotgun() : Weapon(5, 5, 1, 3) { velocity = 10; count = 10;  scatter = 50; NameText.setString("Shotgun"); }
+    Shotgun() : Weapon(5, 5, 1, 3) { velocity = 10; count = 10;  scatter = 50; NameText = "Shotgun"; }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             Shoot(player);
@@ -110,7 +94,6 @@ public:
         } else if (ammunition.toBottom() == 0) {
             lock = true;
         }
-        AmmoBar.Update();
     }
     void Shoot(Rect& player) {
         sf::Vector2f d = (sf::Vector2f)sf::Mouse::getPosition() - player.getPosition() - player.getSize() / 2.f + CameraPos;
@@ -129,7 +112,7 @@ public:
 // Rifle
 class Rifle : public Weapon {
 public:
-    Rifle() : Weapon(25, 1, 0.05, 2) { velocity = 16; count = 10;  scatter = 17; NameText.setString("Rifle"); }
+    Rifle() : Weapon(25, 1, 0.05, 2) { velocity = 16; count = 10;  scatter = 17; NameText = "Rifle"; }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate) {
             sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition());
@@ -137,7 +120,6 @@ public:
         } else if (ammunition.toBottom() == 0) {
             lock = true;
         }
-        AmmoBar.Update();
     }
 };
 
@@ -145,7 +127,7 @@ public:
 class Bubblegun : public Weapon {
 public:
     sf::Vector2f position;
-    Bubblegun() : Weapon(30, 1, 0.03, 2) { velocity = 3; count = 10;  scatter = 40; NameText.setString("Bubblegun"); }
+    Bubblegun() : Weapon(30, 1, 0.03, 2) { velocity = 3; count = 10;  scatter = 40; NameText = "Bubblegun"; }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             lock = false;
@@ -164,7 +146,6 @@ public:
         } else if (ammunition.toBottom() == 0) {
             lock = true;
         }
-        AmmoBar.Update();
     }
     void Shoot(Rect& player, sf::Vector2f& direction) {
         sf::Vector2f d = direction - player.getPosition() - player.getSize() / 2.f + CameraPos;
@@ -181,7 +162,7 @@ public:
 // Armagedon
 class Armagedon : public Weapon {
 public:
-    Armagedon() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText.setString("Armagedon"); }
+    Armagedon() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText = "Armagedon"; }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             count = 0;
@@ -194,7 +175,6 @@ public:
             Shoot(player);
         else if (ammunition.toBottom() == 0)
             lock = true;
-        AmmoBar.Update();
     }
     void Shoot(Rect& player) {
         sf::Vector2f d{0, velocity};
@@ -210,13 +190,12 @@ public:
 // Chaotic
 class Chaotic : public Weapon {
 public:
-    Chaotic() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText.setString("Chaotic"); }
+    Chaotic() : Weapon(300, 0.1, 1.f / 16, 3) { velocity = 3; NameText = "Chaotic"; }
     void Update(Rect& player) {
         if (!lock && ammunition.toBottom() != 0 && GlobalClock.getElapsedTime() - lastShoot > FireRate)
             Shoot(player);
         else if (ammunition.toBottom() == 0)
             lock = true;
-        AmmoBar.Update();
     }
     void Shoot(Rect& player) {
         sf::Vector2f d{0, velocity};

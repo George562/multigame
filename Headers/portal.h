@@ -13,7 +13,6 @@ public:
     Portal();
     bool isInterfaceDrawn = false;
     void setFunction(void (*func)(void)) { yesButton->buttonFunction = func; }
-    void interface(sf::RenderTarget&);
     bool isActivated(Rect, sf::Event&);
 
     void setPosition(float x, float y) { PosX = x; PosY = y; sprite.setPosition(PosX, PosY); }
@@ -21,6 +20,17 @@ public:
 
     void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
+
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        target.draw(sprite, states);
+        if (isInterfaceDrawn) {
+            target.setView(InterfaceView);
+            target.draw(*yesButton);
+            target.draw(*noButton);
+            target.draw(questionText);
+            target.setView(GameView);
+        }
+    }
 };
 
 ////////////////////////////////////////////////////////////
@@ -44,14 +54,6 @@ Portal::Portal() {
     questionText.setCenter(scw / 2, 200);
 
     sprite.setPosition(PosX, PosY);
-}
-
-void Portal::interface(sf::RenderTarget& target) {
-    if (isInterfaceDrawn) {
-        target.draw(*yesButton);
-        target.draw(*noButton);
-        target.draw(questionText);
-    }
 }
 
 bool Portal::isActivated(Rect rect, sf::Event& event) {

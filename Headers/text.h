@@ -9,7 +9,6 @@ class PlacedText : public Rect, public sf::Drawable {
 public:
     sf::Font font;
     sf::Text text;
-    std::vector<str> lines;
 
     PlacedText();
 
@@ -20,11 +19,16 @@ public:
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 
     void setString(str s);
+    str getString() { return text.getString(); }
 
     void setCharacterSize(int x);
     void setFillColor(sf::Color color) { text.setFillColor(color); }
     void setScale(sf::Vector2f);
     void setScale(float, float);
+    size_t TextSize() { return text.getString().getSize(); }
+    void insert(int pos, str t) {
+        text.setString(text.getString().substring(0, pos) + t + text.getString().substring(pos, TextSize()));
+    }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { target.draw(text); };
 };

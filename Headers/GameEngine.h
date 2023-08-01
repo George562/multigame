@@ -13,13 +13,15 @@ bool IsDrawInterface = true;
 sf::ContextSettings settings;
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
-sf::View GameView = window.getDefaultView();
-sf::View InterfaceView = window.getDefaultView();
-sf::View MiniMapView = window.getDefaultView();
 float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated;
 screens::screens screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
+
+//////////////////////////////////////////////////////////// InterfaceStuff
+Bar<float> ManaBar, HpBar;
+Bar<int> AmmoBar;
+PlacedText WeaponNameText;
 
 //////////////////////////////////////////////////////////// Music
 sf::Music MainMenuMusic;
@@ -101,7 +103,7 @@ Button CoopButton("sources/textures/RedPanel", "Online", [](){
     multiplayer = true;
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
+    MiniMapView.setCenter(player.getCenter() * float(miniSize / size));
     MainMenuMusic.pause();
 });
 
@@ -187,7 +189,7 @@ void drawMiniMap() {
                 window.draw(line);
             }
     
-    // draw location objects minimap
+    // draw location objects
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
             sf::RectangleShape portalRect(portal.getSize() * ScaleParam);
@@ -213,21 +215,8 @@ void drawMiniMap() {
 
 void drawIterface() {
     window.setView(InterfaceView);
-    switch (screen) {
-        case screens::MainRoom:
-            portal.interface(window);
-            chat.draw(window);
-            break;
-        case screens::Dungeon:
-            player.interface(window);
-            portal.interface(window);
-            chat.draw(window);
-            break;
-        case screens::SetIP:
-            IPPanel.draw(window);
-            break;
+    for (sf::Drawable* d: InterfaceStuff) window.draw(*d);
 
-    }
     if (EscapeMenuActivated) {
         window.draw(ListOfPlayers);
         window.draw(EscapeButton);
@@ -285,10 +274,15 @@ void LoadMainMenu() {
         MiniMapActivated = false;
         EscapeMenuActivated = false;
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
+        MiniMapView.setCenter(player.getCenter() * float(miniSize / size));
         MainMenuMusic.pause();
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
+
+        InterfaceStuff.clear();
+        InterfaceStuff.push_back(&ManaBar);
+        InterfaceStuff.push_back(&HpBar);
+        InterfaceStuff.push_back(&chat);
 
         portal.setCenter(player.getCenter());
         portal.setFunction([](){
@@ -299,13 +293,19 @@ void LoadMainMenu() {
 
     // Set cameras
     GameView.setCenter(player.getCenter());
-    MiniMapView.setCenter({CurLocation->m * miniSize / 2.f, CurLocation->n * miniSize / 2.f});
+    MiniMapView.setCenter(player.getCenter() * float(miniSize / size));
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     MainMenuMusic.play();
 
+    DrawableStuff.clear();
     DrawableStuff.push_back(&portal);
     DrawableStuff.push_back(&player);
+    
+    InterfaceStuff.clear();
+    InterfaceStuff.push_back(&ManaBar);
+    InterfaceStuff.push_back(&HpBar);
+    InterfaceStuff.push_back(&chat);
 }
 
 void init() {
@@ -327,8 +327,6 @@ void init() {
     // Load locations
     WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
     MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
-    
-    LoadMainMenu();
 
     WallRect.setFillColor(sf::Color(120, 120, 120));
 
@@ -345,7 +343,7 @@ void init() {
 
     CoopButton.setPosition      (scw - scw / 6 - CoopButton.Width * 3 / 4,      sch * 5 / 8);
     HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,          sch * 5 / 8);
-    EscapeButton.setPosition  (scw / 2 -       EscapeButton.Width / 2,      sch * 5 / 8);
+    EscapeButton.setPosition    (scw / 2 -       EscapeButton.Width / 2,      sch * 5 / 8);
     
     IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,             scw / 8    );
     ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,       scw / 16   );
@@ -357,6 +355,25 @@ void init() {
 
     player.FirstWeapon  = &pistol;
     player.SecondWeapon = &shotgun;
+
+    HpBar.setWidth(360);
+    HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
+    HpBar.value = &(player.Health);
+    HpBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
+    
+    ManaBar.setWidth(240);
+    ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
+    ManaBar.value = &(player.Mana);
+    ManaBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
+
+    AmmoBar.setWidth(160);
+    AmmoBar.setPosition(scw - AmmoBar.getSize().x - 10, 120);
+    AmmoBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(128, 128, 128, 160), sf::Color(32, 32, 32, 160));
+
+    WeaponNameText.setPosition(AmmoBar.getPosition().x, AmmoBar.getPosition().y + AmmoBar.getSize().y);
+    WeaponNameText.text.setFillColor(sf::Color(25, 192, 25, 160));
+    
+    LoadMainMenu();
 }
 
 void EventHandler() {
@@ -414,13 +431,21 @@ void EventHandler() {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomLoaction;
                             CreateMapRectByLocation(WaitingRoomLoaction, wallsRect, Sprites);
-                        } else if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
-                        else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
-                        else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
-                        else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
-                        else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                        else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
-                        else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
+                        } else if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num7) {
+                            if (player.CurWeapon == nullptr) {
+                                InterfaceStuff.push_back(&AmmoBar);
+                                InterfaceStuff.push_back(&WeaponNameText);
+                            }
+                            if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
+                            else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
+                            else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
+                            else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
+                            else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
+                            else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
+                            else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
+                            AmmoBar.value = &(player.CurWeapon->ammunition);
+                            WeaponNameText.setString(player.CurWeapon->NameText);
+                        }
                     }
                     break;
 
@@ -545,6 +570,10 @@ void MainLoop() {
             }
             MouseBuffer = sf::Mouse::getPosition();
         }
+        ManaBar.Update();
+        HpBar.Update();
+        AmmoBar.Update();
+
         draw();
 
         EventHandler();

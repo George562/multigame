@@ -9,6 +9,7 @@ class Panel : public PlacedText {
 public:
     sf::Texture texture;
     sf::Sprite rect;
+    std::vector<str> lines;
 
     Panel() : PlacedText() {};
     Panel(str, str);

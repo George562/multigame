@@ -42,3 +42,7 @@ float WallMinSize = size / 8, WallMaxSize = size;
 sf::Vector2f CameraPos, miniCameraPos;
 
 sf::Clock GlobalClock;
+
+sf::View GameView({0, 0, (float)scw, (float)sch});
+sf::View InterfaceView({0, 0, (float)scw, (float)sch});
+sf::View MiniMapView({0, 0, (float)scw, (float)sch});

@@ -10,11 +10,9 @@
 
 class Player : public Creature {
 public:
-    Bar<float> ManaBar, HpBar;
     bool ShiftPressed;
 
     Player();
-    void interface(sf::RenderTarget&);
     void move(vvr&);
     void update();
     void update(sf::Event&, bool&);
@@ -36,23 +34,6 @@ Player::Player() : Creature() {
     LastCheck = sf::seconds(0);
 
     SetTexture("sources/textures/Player");
-
-    HpBar.setWidth(360);
-    HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
-    HpBar.value = &Health;
-    HpBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
-    
-    ManaBar.setWidth(240);
-    ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
-    ManaBar.value = &Mana;
-    ManaBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
-}
-
-void Player::interface(sf::RenderTarget& target) {
-    target.draw(HpBar);
-    target.draw(ManaBar);
-    if (CurWeapon != nullptr)
-        CurWeapon->interface(target);
 }
 
 void Player::move(vvr& walls) {
@@ -106,8 +87,6 @@ void Player::update() {
         CurWeapon->Update(*this);
     }
     LastCheck = GlobalClock.getElapsedTime();
-    ManaBar.Update();
-    HpBar.Update();
 }
 
 void Player::update(sf::Event& event, bool& MiniMapActivated) {
@@ -131,8 +110,6 @@ void Player::update(sf::Event& event, bool& MiniMapActivated) {
             ShiftPressed = false;
         }
     }
-    ManaBar.Update();
-    HpBar.Update();
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Player& a) { return packet << a.PosX << a.PosY; }
