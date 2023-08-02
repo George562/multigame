@@ -84,22 +84,14 @@ void Player::move(vvr& walls) {
 void Player::update() {
     Mana += ManaRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
     Health += HealthRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-    if (CurWeapon != nullptr) {
-        CurWeapon->Update(*this);
-    }
     LastCheck = localClock->getElapsedTime();
 }
 
 void Player::update(sf::Event& event, bool& MiniMapActivated) {
-    if (CurWeapon != nullptr) {
-        if (!MiniMapActivated)
-            CurWeapon->Update(event);
-    }
     if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::R) {
-            if (CurWeapon != nullptr)
-                CurWeapon->Reload(Mana);
-        } else if (event.key.code == sf::Keyboard::LShift && !ShiftPressed) {
+        if (event.key.code == sf::Keyboard::R && CurWeapon != nullptr)
+            CurWeapon->Reload(Mana);
+        else if (event.key.code == sf::Keyboard::LShift && !ShiftPressed) {
             Velocity.top    *= 2.f;
             Velocity.bottom *= 2.f;
             ShiftPressed = true;

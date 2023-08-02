@@ -24,9 +24,10 @@ public:
     bool InputText(sf::Event&);
     bool Entered();
     void addLine(str);
-    str Last();
+    void pushLine();
+    str Last() { return lines[(start + len - 1) % len].getString(); }
 
-    void SetCommand(str, void (*)(void));
+    void SetCommand(str CommandString, void (*CommandFunction)(void)) { commands[CommandString] = CommandFunction; }
 };
 
 ////////////////////////////////////////////////////////////
@@ -111,14 +112,9 @@ bool Chat::Entered() {
     if (inputted && lines[start].TextSize() > 0) {
         if (commands.count(lines[start].getString()) != 0)
             commands[lines[start].getString()]();
-        else {
-            clocks[start]->restart();
-            start = (start + 1) % len;
-            for (int i = 0; i < len; i++)
-                lines[i].setPosition(PosX + 5, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * (len - ((start - i + len) % len)) + 4);
-        }
+        else
+            pushLine();
         lines[start].setString("");
-        std::cout << Last() << '\n';
     }
     inputted = !inputted;
     cursorPos = 0;
@@ -127,15 +123,13 @@ bool Chat::Entered() {
 
 void Chat::addLine(str word) {
     std::swap(lines[start], lines[(start + 1) % len]);
-    clocks[start]->restart();
     lines[start].setString(word);
-    for (int i = 0; i < len; i++)
-        lines[i].setPosition(PosX + 5, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * (len - ((start - i + len) % len)) + 4);
-    start = (start + 1) % len;
+    pushLine();
 }
 
-str Chat::Last() { return lines[(start + len - 1) % len].getString(); }
-
-void Chat::SetCommand(str CommandString, void (*CommandFunction)(void)) {
-    commands[CommandString] = CommandFunction;
+void Chat::pushLine() {
+    clocks[start]->restart();
+    start = (start + 1) % len;
+    for (int i = 0; i < len; i++)
+        lines[i].setPosition(PosX + 5, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * (len - ((start - i + len) % len)) + 4);
 }

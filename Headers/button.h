@@ -89,6 +89,7 @@ bool Button::isActivated(sf::Event& event) {
         event.mouseButton.button == sf::Mouse::Button::Left) {
             Pushed = true;
             rect.setTexture(pushedTexture);
+            return true;
         }
     return false;
 }

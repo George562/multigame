@@ -14,10 +14,7 @@ At the moment the game is not playable. We are at the development stage of the e
 
 # currently available mechanics:
 - walk
-  - w
-  - a
-  - s
-  - d
+  - w a s d
   - Shift (sprint)
 - shoot
   - LMB

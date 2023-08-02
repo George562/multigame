@@ -59,7 +59,8 @@ Portal::Portal() {
 bool Portal::isActivated(Rect rect, sf::Event& event) {
     if (isInterfaceDrawn) {
         if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) || noButton->isActivated(event) || yesButton->isActivated(event)) {
-            isInterfaceDrawn = false;
+            if (event.type == sf::Event::MouseButtonReleased)
+                isInterfaceDrawn = false;
             return !(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape);
         }
     }

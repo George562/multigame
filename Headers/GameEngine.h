@@ -18,6 +18,13 @@ bool MiniMapActivated, EscapeMenuActivated;
 screens::screens screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 
+//////////////////////////////////////////////////////////// DrawableStuff
+vvr wallsRect(0);
+vvb SeenWalls;
+std::vector<sf::Sprite> Sprites(0);
+sf::RectangleShape WallRect;
+sf::CircleShape CircleOfSmallPlayer;  // for drawing players on minimap
+
 //////////////////////////////////////////////////////////// InterfaceStuff
 Bar<float> ManaBar, HpBar;
 Bar<int> AmmoBar;
@@ -35,6 +42,7 @@ str ClientState, IPOfHost, MyIP, PacetData;
 Client MySocket; // this computer socket
 sf::Int32 packetState, ComputerID;
 sf::Mutex mutex;
+bool ClientFuncRun, HostFuncRun;
 
 //////////////////////////////////////////////////////////// Portal
 Portal portal;
@@ -43,26 +51,18 @@ Portal portal;
 Location* CurLocation = nullptr;
 Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
 
-//////////////////////////////////////////////////////////// System stuff
-bool ClientFuncRun, HostFuncRun;
-vvr wallsRect(0);
-vvb SeenWalls;
-std::vector<sf::Sprite> Sprites(0);
-sf::RectangleShape WallRect;
-
-//////////////////////////////////////////////////////////// Players and chat
+//////////////////////////////////////////////////////////// Players
 Player player;
 std::vector<Player> ConnectedPlayers(0);
-Chat chat;
-bool multiplayer;
-sf::CircleShape CircleOfSmallPlayer;  // for drawing players on minimap
 
-//////////////////////////////////////////////////////////// other stuff
-// PlaccedText TextFPS;
+//////////////////////////////////////////////////////////// Chat
+Chat chat;
+
+//////////////////////////////////////////////////////////// Other stuff
 sf::Vector2i MouseBuffer;
 Bullet tempBullet;
 
-//////////////////////////////////////////////////////////// the weapons
+//////////////////////////////////////////////////////////// Weapons
 Pistol pistol;
 Shotgun shotgun;
 Revolver revolver;
@@ -100,7 +100,6 @@ Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
 
 //////////////////////////////////////////////////////////// Buttons
 Button CoopButton("sources/textures/RedPanel", "Online", [](){
-    multiplayer = true;
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     MiniMapView.setCenter(player.getCenter() * float(miniSize / size));
@@ -120,21 +119,19 @@ Button HostButton("sources/textures/GreenPanel", "Host", [](){
 });
 
 Button EscapeButton("sources/textures/RedPanel", "Exit", [](){
-    if (multiplayer) {
-        if (HostFuncRun) {
-            mutex.lock();
-            SendPacket << sf::Int32(pacetStates::disconnect);
-            SendToClients(SendPacket);
-            SendPacket.clear();
-            mutex.unlock();
-            clients.clear();
-            selector.clear();
-            listener.close();
-            HostFuncRun = false;
-            ConnectedPlayers.clear();
-        } else
-            SelfDisconnect();
-    }
+    if (HostFuncRun) {
+        mutex.lock();
+        SendPacket << sf::Int32(pacetStates::disconnect);
+        SendToClients(SendPacket);
+        SendPacket.clear();
+        mutex.unlock();
+        clients.clear();
+        selector.clear();
+        listener.close();
+        HostFuncRun = false;
+        ConnectedPlayers.clear();
+    } else if (ClientFuncRun)
+        SelfDisconnect();
     screen = screens::MainRoom;
     EscapeMenuActivated = false;
     ListOfPlayers.clear();
@@ -142,6 +139,7 @@ Button EscapeButton("sources/textures/RedPanel", "Exit", [](){
     LoadMainMenu();
 });
 
+//////////////////////////////////////////////////////////// functions
 void draw() {
     window.clear(sf::Color::Black);
     drawWalls();
@@ -201,7 +199,7 @@ void drawMiniMap() {
     }
 
     // draw players
-    if (multiplayer) {
+    if (ClientFuncRun || HostFuncRun) {
         for (Player& p: ConnectedPlayers) {
             CircleOfSmallPlayer.setPosition(p.getPosition() * ScaleParam);
             window.draw(CircleOfSmallPlayer);
@@ -329,9 +327,6 @@ void init() {
 
     WallRect.setFillColor(sf::Color(120, 120, 120));
 
-    // TextFPS.text.setPosition(20, 20);
-    // TextFPS.text.setFillColor(sf::Color(255, 255, 255));
-
     listener.setBlocking(false);
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
     std::cout << "IP: " << MyIP << '\n';
@@ -416,12 +411,13 @@ void EventHandler() {
         
             switch (screen) {
                 case screens::MainRoom:
-                    portal.isActivated(player, event);
+                    if (portal.isActivated(player, event)) break;
                     player.update(event, MiniMapActivated);
                     break;
 
                 case screens::Dungeon:
-                    portal.isActivated(player, event);
+                    if (portal.isActivated(player, event)) break;
+                    if (player.CurWeapon != nullptr && !MiniMapActivated) player.CurWeapon->Update(event);
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
                         if (event.key.code == sf::Keyboard::H) {
@@ -513,6 +509,8 @@ void MainLoop() {
     while (window.isOpen()) {
         if (!window.hasFocus()) {
             player.update();
+            if (player.CurWeapon != nullptr)
+                player.CurWeapon->Update(player);
             updateBullets();
 
             sf::Event event;
@@ -533,6 +531,8 @@ void MainLoop() {
             }
             int wasBulletsSize = Bullets.size();
             player.update();
+            if (player.CurWeapon != nullptr)
+                player.CurWeapon->Update(player);
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
                 mutex.lock();
