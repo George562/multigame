@@ -134,8 +134,7 @@ bool Location::WriteToFile(str FileName) {
     return true;
 }
 
-void CreateMapRectByLocation(Location& arr, vvr& wallsRect, std::vector<sf::Sprite>& Sprites) {
-    Sprites.clear();
+void CreateMapRectByLocation(Location& arr, vvr& wallsRect) {
     wallsRect.assign(arr.walls.size(), vr(0));
     for (int i = 0; i < arr.walls.size(); i++)
         for (int j = 0; j < arr[i].size(); j++)
@@ -145,14 +144,21 @@ void CreateMapRectByLocation(Location& arr, vvr& wallsRect, std::vector<sf::Spri
                 else // -
                     wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
             } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
-    // wallsRect[i][j].setRect(-1, -1, -1, -1);
-    // if (arr[i][j] == Tiles::box) {
-    //     sf::Texture* tempTexture = new sf::Texture;
-    //     tempTexture->loadFromFile("sources/Box.png");
-    //     sf::Sprite* tempSprite = new sf::Sprite;
-    //     tempSprite->setTexture(*tempTexture);
-    //     tempSprite->setScale(250 / tempSprite->getGlobalBounds().width, 250 / tempSprite->getGlobalBounds().height);
-    //     tempSprite->setPosition(size * j / 2, size * i / 2);
-    //     Sprites.push_back(*tempSprite);
+    // sf::Texture* tempTexture;
+    // sf::Sprite* tempSprite;
+    // for (Location::LocationObject& obj: arr.objects) {
+    //     if (obj.id == Tiles::box) {
+    //         tempTexture->loadFromFile("sources/textures/Box.png");
+    //         tempSprite->setTexture(*tempTexture);
+    //         tempSprite->setScale(250 / tempSprite->getGlobalBounds().width, 250 / tempSprite->getGlobalBounds().height);
+    //         tempSprite->setPosition(obj.pos);
+    //         DrawableStuff.push_back(tempSprite);
+    //     } else if (obj.id == Tiles::portal) {
+    //         tempTexture->loadFromFile("sources/textures/Box.png");
+    //         tempSprite->setTexture(*tempTexture);
+    //         tempSprite->setScale(250 / tempSprite->getGlobalBounds().width, 250 / tempSprite->getGlobalBounds().height);
+    //         tempSprite->setPosition(obj.pos);
+    //         DrawableStuff.push_back(tempSprite);
+    //     }
     // }
 }

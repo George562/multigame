@@ -46,6 +46,6 @@ At the moment the game is not playable. We are at the development stage of the e
 
 # Attention
 
-The game may not run on your computer due to the lack of some extensions (.dll). If this happens, then report us about problem and we try to solve it.
+The game may not run on your computer due to the lack of some libraries (.dll). If this happens, then report us about problem and we try to solve it.
 
 If you want to recompile the game, then use the Makefile.
