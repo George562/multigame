@@ -102,7 +102,7 @@ Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
 Button CoopButton("sources/textures/RedPanel", "Online", [](){
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    MiniMapView.setCenter(player.getCenter() * float(miniSize / size));
+    MiniMapView.setCenter(player.getCenter() * float(miniSize) / float(size));
     MainMenuMusic.pause();
 });
 
@@ -239,11 +239,14 @@ void LevelGenerate(int n, int m) {
     } while (CountOfEnableTilesOnMap < float(n * m) / 3 || CountOfEnableTilesOnMap > float(n * m) / 1.5);
     std::cout << "total count of generations = " << CounterOfGenerations
               << " Count Of Enable Tiles = " << CountOfEnableTilesOnMap << '\n';
+
+    CurLocation->objects.clear();
+    CurLocation->objects.push_back({Tiles::portal, player.getPosition()});
     
     for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
         for (int j = 0; j < LabyrinthLocation[i].size(); j++)
             LabyrinthData << LabyrinthLocation[i][j];
-    CreateMapRectByLocation(LabyrinthLocation, wallsRect, Sprites);
+    CreateMapRectByLocation(LabyrinthLocation, wallsRect);
     
     SeenWalls.assign(LabyrinthLocation.walls.size(), vb(0));
     for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
@@ -251,28 +254,26 @@ void LevelGenerate(int n, int m) {
     
     MiniMapView.zoom(1 / MiniMapZoom);
     MiniMapZoom = 1;
-
-    CurLocation->objects.push_back({Tiles::portal, portal.getPosition()});
 }
 
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
-    CreateMapRectByLocation(*CurLocation, wallsRect, Sprites);
+    CreateMapRectByLocation(*CurLocation, wallsRect);
     SeenWalls.assign(CurLocation->walls.size(), vb(0));
     for (int i = 0; i < CurLocation->walls.size(); i++)
         SeenWalls[i].assign(CurLocation->walls[i].size(), false);
     
-    player.setCenter(1.f * size, 1.f * size);
+    player.setCenter(3.5f * size, 2.5f * size);
     player.CurWeapon = nullptr;
 
-    portal.setCenter(size * 3, size);
+    portal.setCenter(3.5f * size, 3.5f * size);
     portal.setFunction([](){
         screen = screens::Dungeon;
         Bullets.clear();
         MiniMapActivated = false;
         EscapeMenuActivated = false;
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter(player.getCenter() * float(miniSize / size));
+        MiniMapView.setCenter(player.getCenter() * float(miniSize) / float(size));
         MainMenuMusic.pause();
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
@@ -291,7 +292,7 @@ void LoadMainMenu() {
 
     // Set cameras
     GameView.setCenter(player.getCenter());
-    MiniMapView.setCenter(player.getCenter() * float(miniSize / size));
+    MiniMapView.setCenter(player.getCenter() * float(miniSize) / float(size));
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     MainMenuMusic.play();
@@ -423,7 +424,7 @@ void EventHandler() {
                         if (event.key.code == sf::Keyboard::H) {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomLoaction;
-                            CreateMapRectByLocation(WaitingRoomLoaction, wallsRect, Sprites);
+                            CreateMapRectByLocation(WaitingRoomLoaction, wallsRect);
                         } else if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num7) {
                             if (player.CurWeapon == nullptr) {
                                 InterfaceStuff.push_back(&AmmoBar);
@@ -739,7 +740,7 @@ void funcOfClient() {
                             for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
                                 for (int j = 0; j < LabyrinthLocation[i].size(); j++)
                                     ReceivePacket >> LabyrinthLocation[i][j];
-                            CreateMapRectByLocation(LabyrinthLocation, wallsRect, Sprites);
+                            CreateMapRectByLocation(LabyrinthLocation, wallsRect);
                             std::cout << "Labyrinth receive\n";
                             break;
                         case pacetStates::PlayerPos:
