@@ -6,7 +6,7 @@
 class TextBox : public InteractionRect
 {
 protected:
-    bool readInput = false, shiftPressed = false;
+    bool readInput = false, shiftPressed = false, ctrlPressed = false;
     float initialWidth;
 
     std::string fullString;
@@ -46,9 +46,21 @@ TextBox::TextBox(float _posX, float _posY, int _width, int _height, sf::Font& fo
 
 bool TextBox::isActivated(sf::Event& event)
 {
+    if(event.type == sf::Event::KeyPressed && (event.key.code == sf::Keyboard::LControl || event.key.code == sf::Keyboard::RControl))
+    {
+        ctrlPressed = true;
+        return false;
+    }
+
     if(event.type == sf::Event::KeyPressed && (event.key.code == sf::Keyboard::LShift || event.key.code == sf::Keyboard::RShift))
     {
         shiftPressed = true;
+        return false;
+    }
+
+    if(event.type == sf::Event::KeyReleased && (event.key.code == sf::Keyboard::LControl || event.key.code == sf::Keyboard::RControl))
+    {
+        ctrlPressed = false;
         return false;
     }
     
@@ -80,6 +92,17 @@ bool TextBox::isActivated(sf::Event& event)
 
         if(event.key.code == sf::Keyboard::Slash && !shiftPressed)
             text.setString(text.getString() + '/');
+
+        if(event.key.code == sf::Keyboard::V && ctrlPressed)
+        {
+            if(text.getString().getSize() != 0)
+                text.setString(text.getString().substring(0, text.getString().getSize() - 1));
+
+            text.setString(sf::Clipboard::getString());
+        }
+
+        if(event.key.code == sf::Keyboard::C && ctrlPressed)
+            sf::Clipboard::setString(text.getString());
         
         fullString = (std::string)text.getString();
         width = std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3));
@@ -99,7 +122,7 @@ bool TextBox::isActivated(sf::Event& event)
         else
         {
             text.setString(fullString);
-            width = std::max((int)initialWidth, (int)(text.getGlobalBounds().width + + text.getCharacterSize() / 3));
+            width = std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3));
             drawRect.setSize(sf::Vector2f(width, height));
         }
         drawRect.setFillColor(readInput ? activeColor : inactiveColor);

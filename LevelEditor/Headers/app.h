@@ -118,7 +118,7 @@ void App::init()
     editorRectHeight = wndH - editorRectY - wndW * 3 / 20;
     
     editorRect = InteractionRect(editorRectX, editorRectY, editorRectWidth, editorRectHeight);
-    editorRect.setFillColor(sf::Color(200, 200, 200));
+    editorRect.setFillColor(sf::Color(0, 0, 128));
     editorRect.setOutlineColor(sf::Color::Black);
     editorRect.setOutlineThickness(3);
 
@@ -267,6 +267,9 @@ void App::poll(sf::Event& event)
 
         if(event.type == sf::Event::Closed)
             mainWindow->close();
+
+        if(event.type == sf::Event::Resized)
+            mainWindow->setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
     }
 }
 
@@ -299,6 +302,9 @@ void App::draw()
 
 std::string App::generateMatrix(int n, int m, vvpt& matrix, float posX, float posY, int width, int height)
 {
+    float columnWidth = width / (3 * m + 1), rowWidth = 2 * columnWidth;
+    float rowHeight = height / (3 * n + 1), columnHeight = 2 * rowHeight;
+
     if(!matrix.empty())
     {
         for(int i = 0; i < matrix.size(); i++)
@@ -318,8 +324,16 @@ std::string App::generateMatrix(int n, int m, vvpt& matrix, float posX, float po
     {
         matrix[i].resize(m + (i % 2 != 0));
         for(int j = 0; j < matrix[i].size(); j++)
-            matrix[i][j] = new PushTile(posX + width * j / (m + (i % 2 != 0)), posY + height * i / (2 * n + 1),
-                                        width / (m + (i % 2 != 0)), height / (2 * n + 1));
+        {
+            if(i % 2 == 0)
+                matrix[i][j] = new PushTile(posX + (j + 1) * columnWidth + j * rowWidth, posY + i / 2 * (columnHeight + rowHeight),
+                                            rowWidth, rowHeight);
+            else
+                matrix[i][j] = new PushTile(posX + j * (columnWidth + rowWidth), posY + (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight,
+                                            columnWidth, columnHeight);
+            matrix[i][j]->setOutlineColor(sf::Color::Black);
+            matrix[i][j]->setOutlineThickness(1);
+        }
     }
 
     return "Successfully generated a " + std::to_string(n) + " by " + std::to_string(m) + " cell level";
