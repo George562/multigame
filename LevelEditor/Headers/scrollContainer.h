@@ -21,7 +21,7 @@ private:
 
 public:
     ScrollContainer() {};
-    ScrollContainer(float, float, int, int, int);
+    ScrollContainer(float, float, float, float, int);
     
     void addElement(InteractionRect&);
 
@@ -29,7 +29,7 @@ public:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 };
 
-ScrollContainer::ScrollContainer(float _posX, float _posY, int _width, int _height, int multiplier = 10) : InteractionRect(_posX, _posY, _width, _height)
+ScrollContainer::ScrollContainer(float _posX, float _posY, float _width, float _height, int multiplier = 10) : InteractionRect(_posX, _posY, _width, _height)
 {
     drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(2);
     drawRect.setFillColor(inactiveColor);

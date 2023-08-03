@@ -10,15 +10,15 @@ private:
     bool readPosition = false;
     int lastButton = 0;
 
-    sf::Color activeColor = sf::Color(0, 175, 100);
-    sf::Color inactiveColor = sf::Color::White;
+    sf::Color activeColor = sf::Color::White;
+    sf::Color inactiveColor = sf::Color(100, 100, 100);
 
 public:
     PushTile() {}
-    PushTile(float, float, int, int);
+    PushTile(float, float, float, float);
 
     int getState() { return state; }
-    void setState(int val, sf::Color color = sf::Color(0, 175, 100))
+    void setState(int val, sf::Color color = sf::Color::White)
     {
         state = val;
         if(state != 0)
@@ -30,12 +30,14 @@ public:
     };
 
     void move(float x, float y) override { posX += x; posY += y; drawRect.setPosition(posX, posY); }
+    void setActiveColor(sf::Color color) { activeColor = color; drawRect.setFillColor(state != 0 ? activeColor : inactiveColor); }
+    void setInactiveColor(sf::Color color) { inactiveColor = color; drawRect.setFillColor(state != 0 ? activeColor : inactiveColor); }
 
     bool isActivated(sf::Event&) override;
     void draw(sf::RenderTarget&, sf::RenderStates) const override;
 };
 
-PushTile::PushTile(float _posX, float _posY, int _width, int _height) : InteractionRect(_posX, _posY, _width, _height)
+PushTile::PushTile(float _posX, float _posY, float _width, float _height) : InteractionRect(_posX, _posY, _width, _height)
 {
     drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(1);
     drawRect.setFillColor(inactiveColor);

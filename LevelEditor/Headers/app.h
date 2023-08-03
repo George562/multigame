@@ -11,6 +11,7 @@
 
 #define vvi std::vector<std::vector<int>>
 #define vvpt std::vector<std::vector<PushTile*>>
+#define vvir std::vector<std::vector<InteractionRect*>>
 
 enum mapItem
 {
@@ -52,13 +53,14 @@ private:
     Button saveFileButton, backButton, overWriteButton;
 
     std::vector<InteractionRect*> universalDrawnElements, editorDrawnElements, saveDrawnElements;
+    vvir levelMatrixSquares;
 
     void init();
     void loop();
     void poll(sf::Event&);
     void draw();
-    std::string generateMatrix(int, int, vvpt&, float, float, int, int);
-    std::string saveMap(std::string, std::string, int, int, vvpt&, bool);
+    std::string generateMatrix(int, int, float, float, int, int);
+    std::string saveMap(std::string, std::string, int, int, bool);
 public:
     App(sf::RenderWindow&);
     void start(){ init(); loop(); }
@@ -76,11 +78,12 @@ void App::init()
 {
     levelMatrixHeight = 0, levelMatrixWidth = 0;
     levelMatrix.resize(0);
+    levelMatrixSquares.resize(0);
 
     selectedObject = wall;
 
-    mapItemColor[nothing] = sf::Color::White;
-    mapItemColor[wall] = sf::Color(100, 100, 100);
+    mapItemColor[nothing] = sf::Color(100, 100, 100);
+    mapItemColor[wall] = sf::Color::White;
     mapItemColor[box] = sf::Color(255, 228, 205);
 
     mapItemName[nothing] = "None (eraser)";
@@ -118,9 +121,9 @@ void App::init()
     editorRectHeight = wndH - editorRectY - wndW * 3 / 20;
     
     editorRect = InteractionRect(editorRectX, editorRectY, editorRectWidth, editorRectHeight);
-    editorRect.setFillColor(sf::Color(0, 0, 128));
+    editorRect.setFillColor(sf::Color(0, 0, 100));
     editorRect.setOutlineColor(sf::Color::Black);
-    editorRect.setOutlineThickness(3);
+    editorRect.setOutlineThickness(2);
 
     itemContainer = ScrollContainer(optionsContainer.getX(), optionsContainer.getBottom() + 20,
                                     optionsContainer.getWidth(), editorRect.getHeight() - optionsContainer.getHeight() - 20);
@@ -221,7 +224,7 @@ void App::poll(sf::Event& event)
                 levelWidthBox.isActivated(event);
 
             if(genButton.isActivated(event) && genButton.getY() >= optionsContainer.getY() && genButton.getBottom() <= optionsContainer.getBottom())
-                systemMessageLabel.setText(generateMatrix(levelMatrixHeight, levelMatrixWidth, levelMatrix, editorRectX, editorRectY, editorRectWidth, editorRectHeight));
+                systemMessageLabel.setText(generateMatrix(levelMatrixHeight, levelMatrixWidth, editorRectX, editorRectY, editorRectWidth, editorRectHeight));
 
             if(saveModeButton.isActivated(event) && saveModeButton.getY() >= optionsContainer.getY() && saveModeButton.getBottom() <= optionsContainer.getBottom())
                 mode = saving;
@@ -250,11 +253,11 @@ void App::poll(sf::Event& event)
             filePathBox.isActivated(event);
 
             if(saveFileButton.isActivated(event))
-                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, levelMatrix, false), 
+                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, false), 
                                                 systemMessageLabel.getCharacterSize(), systemMessageRect.getWidth(), systemMessageRect.getHeight()));
 
             if(overWriteButton.isActivated(event))
-                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, levelMatrix, true), 
+                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, true), 
                                                 systemMessageLabel.getCharacterSize(), systemMessageRect.getWidth(), systemMessageRect.getHeight()));
 
             if(backButton.isActivated(event))
@@ -282,9 +285,15 @@ void App::draw()
             editorDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
 
         if(!levelMatrix.empty())
+        {
             for(int i = 0; i < levelMatrix.size(); i++)
                 for(int j = 0; j < levelMatrix[i].size(); j++)
                     levelMatrix[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+
+            for(int i = 0; i < levelMatrixSquares.size(); i++)
+                for(int j = 0; j < levelMatrixSquares[i].size(); j++)
+                    levelMatrixSquares[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+        }
         break;
 
     case saving:
@@ -300,46 +309,67 @@ void App::draw()
         universalDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
 }
 
-std::string App::generateMatrix(int n, int m, vvpt& matrix, float posX, float posY, int width, int height)
+std::string App::generateMatrix(int n, int m, float posX, float posY, int width, int height)
 {
     float columnWidth = width / (3 * m + 1), rowWidth = 2 * columnWidth;
     float rowHeight = height / (3 * n + 1), columnHeight = 2 * rowHeight;
 
-    if(!matrix.empty())
+    if(!levelMatrix.empty())
     {
-        for(int i = 0; i < matrix.size(); i++)
+        for(int i = 0; i < levelMatrix.size(); i++)
         {
-            for(int j = 0; j < matrix[0].size(); j++)
-                matrix[i].pop_back();
-            matrix[i].clear();
+            for(int j = 0; j < levelMatrix[0].size(); j++)
+                levelMatrix[i].pop_back();
+            levelMatrix[i].clear();
         }
-        matrix.resize(0);
+        for(int i = 0; i < levelMatrixSquares.size(); i++)
+        {
+            for(int j = 0; j < levelMatrixSquares[0].size(); j++)
+                levelMatrixSquares[i].pop_back();
+            levelMatrixSquares[i].clear();
+        }
+        levelMatrixSquares.resize(0);
     }
 
     if(n == 0 || m == 0)
         return "Please, input sizes greater than 0!";
 
-    matrix.resize(2 * n + 1);
-    for(int i = 0; i < matrix.size(); i++)
+    levelMatrix.resize(2 * n + 1);
+    levelMatrixSquares.resize(n + 1);
+    for(int i = 0; i < levelMatrix.size(); i++)
     {
-        matrix[i].resize(m + (i % 2 != 0));
-        for(int j = 0; j < matrix[i].size(); j++)
+        levelMatrix[i].resize(m + (i % 2 != 0));
+        for(int j = 0; j < levelMatrix[i].size(); j++)
         {
             if(i % 2 == 0)
-                matrix[i][j] = new PushTile(posX + (j + 1) * columnWidth + j * rowWidth, posY + i / 2 * (columnHeight + rowHeight),
+                levelMatrix[i][j] = new PushTile(posX + (j + 1) * columnWidth + j * rowWidth, posY + i / 2 * (columnHeight + rowHeight),
                                             rowWidth, rowHeight);
             else
-                matrix[i][j] = new PushTile(posX + j * (columnWidth + rowWidth), posY + (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight,
+                levelMatrix[i][j] = new PushTile(posX + j * (columnWidth + rowWidth), posY + (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight,
                                             columnWidth, columnHeight);
-            matrix[i][j]->setOutlineColor(sf::Color::Black);
-            matrix[i][j]->setOutlineThickness(1);
+            
+            levelMatrix[i][j]->setOutlineColor(sf::Color::Black);
+            levelMatrix[i][j]->setOutlineThickness(1);
+        }
+    }
+
+    for(int i = 0; i < levelMatrixSquares.size(); i++)
+    {
+        levelMatrixSquares[i].resize(m + 1);
+        for(int j = 0; j < levelMatrixSquares[i].size(); j++)
+        {
+            levelMatrixSquares[i][j] = new InteractionRect(posX + j * (columnWidth + rowWidth), posY + i * (columnHeight + rowHeight),
+                                            columnWidth, rowHeight);
+            levelMatrixSquares[i][j]->setFillColor(mapItemColor[wall]);
+            levelMatrixSquares[i][j]->setOutlineThickness(1);
+            levelMatrixSquares[i][j]->setOutlineColor(sf::Color::Black);
         }
     }
 
     return "Successfully generated a " + std::to_string(n) + " by " + std::to_string(m) + " cell level";
 }
 
-std::string App::saveMap(std::string path, std::string fileName, int n, int m, vvpt& matrix, bool forceOverwrite)
+std::string App::saveMap(std::string path, std::string fileName, int n, int m, bool forceOverwrite)
 {
     char forbiddenChars[9]{'\\', '/', ':', '\"', '*', '?', '<', '>', '|'};
 
@@ -363,11 +393,11 @@ std::string App::saveMap(std::string path, std::string fileName, int n, int m, v
     vvi stateMatrix;
     bool wallEncountered;
 
-    for(int i = 0; i < matrix.size(); i++)
+    for(int i = 0; i < levelMatrix.size(); i++)
     {
-        stateMatrix.resize(matrix.size() + 1);
-        for(int j = 0; j < matrix[i].size(); j++)
-            stateMatrix[i].push_back(matrix[i][j]->getState());
+        stateMatrix.resize(levelMatrix.size() + 1);
+        for(int j = 0; j < levelMatrix[i].size(); j++)
+            stateMatrix[i].push_back(levelMatrix[i][j]->getState());
     }
 
     // levelFile.open(".\\Levels\\" + fileName + ".txt");

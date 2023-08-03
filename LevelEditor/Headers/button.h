@@ -16,7 +16,7 @@ private:
 
 public:
     Button() {}
-    Button(float, float, int, int, sf::Font&);
+    Button(float, float, float, float, sf::Font&);
 
     int getCharacterSize() { return text.getCharacterSize(); }
 
@@ -37,7 +37,7 @@ public:
     void draw(sf::RenderTarget&, sf::RenderStates) const override;
 };
 
-Button::Button(float _posX, float _posY, int _width, int _height, sf::Font& font) : InteractionRect(_posX, _posY, _width, _height)
+Button::Button(float _posX, float _posY, float _width, float _height, sf::Font& font) : InteractionRect(_posX, _posY, _width, _height)
 {
     drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(2);
     drawRect.setFillColor(inactiveColor);

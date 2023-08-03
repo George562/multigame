@@ -17,7 +17,7 @@ protected:
 
 public:
     TextBox() {}
-    TextBox(float, float, int, int, sf::Font&);
+    TextBox(float, float, float, float, sf::Font&);
 
     virtual std::string getText() { return fullString; }
 
@@ -32,7 +32,7 @@ public:
     void draw(sf::RenderTarget&, sf::RenderStates) const override;
 };
 
-TextBox::TextBox(float _posX, float _posY, int _width, int _height, sf::Font& font) : InteractionRect(_posX, _posY, _width, _height)
+TextBox::TextBox(float _posX, float _posY, float _width, float _height, sf::Font& font) : InteractionRect(_posX, _posY, _width, _height)
 {
     drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(2);
     drawRect.setFillColor(inactiveColor);

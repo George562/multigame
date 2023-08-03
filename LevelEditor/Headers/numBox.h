@@ -9,14 +9,14 @@ private:
 
 public:
     NumBox() {}
-    NumBox(float, float, int, int, sf::Font&, int);
+    NumBox(float, float, float, float, sf::Font&, int);
 
     std::string getText() override { return text.getString(); }
 
     bool isActivated(sf::Event&) override;
 };
 
-NumBox::NumBox(float _posX, float _posY, int _width, int _height, sf::Font& font, int length) : TextBox(_posX, _posY, _width, _height, font)
+NumBox::NumBox(float _posX, float _posY, float _width, float _height, sf::Font& font, int length) : TextBox(_posX, _posY, _width, _height, font)
 {
     numLength = length;
 }

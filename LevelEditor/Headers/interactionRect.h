@@ -5,12 +5,11 @@
 class InteractionRect : public sf::Drawable, public sf::Transformable
 {
 protected:
-    float posX, posY;
-    int width, height;
+    float posX, posY,width, height;
     sf::RectangleShape drawRect;
 public:
     InteractionRect() {}
-    InteractionRect(float _posX, float _posY, int _width, int _height)
+    InteractionRect(float _posX, float _posY, float _width, float _height)
     {
         posX = _posX; posY = _posY;
         width = _width; height = _height;
@@ -23,8 +22,8 @@ public:
     float getY() const { return posY; }
     float getRight() const { return posX + width; }
     float getBottom() const { return posY + height; }
-    int getWidth() const { return width; }
-    int getHeight() const { return height; }
+    float getWidth() const { return width; }
+    float getHeight() const { return height; }
     sf::Vector2f getOrigin() const { return drawRect.getOrigin(); }
 
     void setSize(int _width, int _height) { width = _width; height = _height; drawRect.setSize(sf::Vector2f(width, height)); }
