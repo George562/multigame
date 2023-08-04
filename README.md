@@ -35,10 +35,12 @@ At the moment the game is not playable. We are at the development stage of the e
 - **[Textures](https://github.com/George562/multigame/blob/main/sources/textures)**
 - **[Portal](https://github.com/George562/multigame/blob/main/sources/textures/Portal.png)**
 - **[Player](https://github.com/George562/multigame/blob/main/sources/textures/Player.png)**
+- **[Farmer](https://github.com/George562/multigame/blob/main/sources/textures/Farmer.png)**
 
 <p align="center">
-	<img src="./sources/textures/Portal.png" height="200">
+	<img src="./sources/textures/Portal.png" height="300">
   <img src="./sources/textures/Player.png" width="200">
+  <img src="./sources/textures/Farmer.png" width="200">
 </p>
 
 # Our music
