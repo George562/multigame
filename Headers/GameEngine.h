@@ -351,12 +351,12 @@ void init() {
 
     HpBar.setWidth(360);
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
-    HpBar.value = &(player.Health);
+    HpBar.setValue(player.Health);
     HpBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
     
     ManaBar.setWidth(240);
     ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
-    ManaBar.value = &(player.Mana);
+    ManaBar.setValue(player.Mana);
     ManaBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
 
     AmmoBar.setWidth(160);
@@ -437,7 +437,7 @@ void EventHandler() {
                             else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
                             else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
                             else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
-                            AmmoBar.value = &(player.CurWeapon->ammunition);
+                            AmmoBar.setValue(player.CurWeapon->ammunition);
                             WeaponNameText.setString(player.CurWeapon->NameText);
                         }
                     }
