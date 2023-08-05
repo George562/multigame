@@ -1,6 +1,7 @@
 #include "init.h"
 
 #define STANDART_BAR_HEIGHT 50
+#define STANDART_BAR_WALL_WIDTH 10
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -15,12 +16,13 @@ public:
     bool ShowWall = true, ShowBackground = true, ShowForeground = true, ShowText = true;
 
     Bar() {}
+    void setValue(Scale<T>& v) { value = &v; }
     sf::Vector2f getSize() { return wall.getSize(); }
     void setWidth(float);
     void setSize(float, float);
     sf::Vector2f getPosition() { return wall.getPosition(); }
     void setPosition(float, float);
-    void setColors(sf::Color, sf::Color, sf::Color);
+    void setColors(sf::Color wallColor, sf::Color foregroundColor, sf::Color backgroundColor);
     void Update();
     void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
 };
@@ -32,14 +34,14 @@ public:
 template <typename T>
 void Bar<T>::setWidth(float w) {
     wall.setSize({w, STANDART_BAR_HEIGHT});
-    background.setSize({w - 10, STANDART_BAR_HEIGHT - 10});
-    foreground.setSize({w - 10, STANDART_BAR_HEIGHT - 10});
+    background.setSize({w - STANDART_BAR_WALL_WIDTH, STANDART_BAR_HEIGHT - STANDART_BAR_WALL_WIDTH});
+    foreground.setSize({w - STANDART_BAR_WALL_WIDTH, STANDART_BAR_HEIGHT - STANDART_BAR_WALL_WIDTH});
 }
 template <typename T>
 void Bar<T>::setSize(float w, float h) {
     wall.setSize({w, h});
-    background.setSize({w - 10, h - 10});
-    foreground.setSize({w - 10, h - 10});
+    background.setSize({w - STANDART_BAR_WALL_WIDTH, h - STANDART_BAR_WALL_WIDTH});
+    foreground.setSize({w - STANDART_BAR_WALL_WIDTH, h - STANDART_BAR_WALL_WIDTH});
 }
 
 template <typename T>
@@ -60,7 +62,7 @@ template <typename T>
 void Bar<T>::Update() {
     if (value != nullptr) {
         foreground.setScale(value->filling(), 1);
-        ValueText.setString(std::to_string((int)value->cur) + " / " + std::to_string((int)value->top));
+        ValueText.setString(std::to_string((int)value->cur + " / " + std::to_string((int)value->top));
         ValueText.setCenter(wall.getPosition() + wall.getSize() / 2.f);
     }
 }
