@@ -29,8 +29,12 @@ enum windowMode
 class App
 {
 private:
-    int levelMatrixHeight, levelMatrixWidth, editorRectX, editorRectY, editorRectWidth, editorRectHeight;
-    int scrW, scrH, wndW, wndH;
+    float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight;
+    float wndW, wndH;
+
+    bool wheelPressed = false;
+    float zoomFactor = 1.0f;
+    sf::Vector2f prevPos = sf::Vector2f(0, 0);
     windowMode mode = editing;
 
     mapItem selectedObject;
@@ -38,15 +42,17 @@ private:
     std::map<mapItem, std::string> mapItemName;
 
     sf::RenderWindow *mainWindow;
+    sf::View mainView;
     sf::Font font;
 
     ScrollContainer optionsContainer, itemContainer;
     NumBox levelHeightBox, levelWidthBox;
     Label mapWidthLabel, mapHeightLabel, itemMessageLabel, systemMessageLabel;
     Button genButton, saveModeButton;
-    InteractionRect editorRect, itemMessageRect, systemMessageRect;
+    InteractionRect itemMessageRect, systemMessageRect, editorRect;
     vvpt levelMatrix;
     std::vector<Button*> itemButtonsList;
+    sf::View editorView;
 
     Label fileNameLabel, filePathLabel;
     TextBox filePathBox, fileNameBox;
@@ -58,9 +64,11 @@ private:
     void init();
     void loop();
     void poll(sf::Event&);
+    void interactionViewPoll(sf::Event&);
     void draw();
-    std::string generateMatrix(int, int, float, float, int, int);
+    std::string generateMatrix(int, int);
     std::string saveMap(std::string, std::string, int, int, bool);
+
 public:
     App(sf::RenderWindow&);
     void start(){ init(); loop(); }
@@ -69,6 +77,7 @@ public:
 App::App(sf::RenderWindow& window) 
 {
     mainWindow = &window;
+    mainView = window.getView();
 
     wndW = mainWindow->getSize().x;
     wndH = mainWindow->getSize().y;
@@ -115,15 +124,18 @@ void App::init()
     optionsContainer.addElement(genButton);
     optionsContainer.addElement(saveModeButton);
 
-    editorRectX = optionsContainer.getRight() + 20;
-    editorRectY = optionsContainer.getY();
-    editorRectWidth = wndW - editorRectX - wndW / 10;
-    editorRectHeight = wndH - editorRectY - wndW * 3 / 20;
+    editorViewX = optionsContainer.getRight() + 20;
+    editorViewY = optionsContainer.getY();
+    editorViewWidth = wndW - editorViewX - wndW / 10;
+    editorViewHeight = wndH - editorViewY - wndW * 3 / 20;
     
-    editorRect = InteractionRect(editorRectX, editorRectY, editorRectWidth, editorRectHeight);
+    editorRect = InteractionRect(editorViewX, editorViewY, editorViewWidth, editorViewHeight);
     editorRect.setFillColor(sf::Color(0, 0, 100));
     editorRect.setOutlineColor(sf::Color::Black);
     editorRect.setOutlineThickness(2);
+
+    editorView = sf::View(sf::FloatRect(0, 0, editorViewWidth, editorViewHeight));
+    editorView.setViewport(sf::FloatRect(editorViewX / wndW, editorViewY / wndH, editorViewWidth / wndW, editorViewHeight / wndH));
 
     itemContainer = ScrollContainer(optionsContainer.getX(), optionsContainer.getBottom() + 20,
                                     optionsContainer.getWidth(), editorRect.getHeight() - optionsContainer.getHeight() - 20);
@@ -224,7 +236,7 @@ void App::poll(sf::Event& event)
                 levelWidthBox.isActivated(event);
 
             if(genButton.isActivated(event) && genButton.getY() >= optionsContainer.getY() && genButton.getBottom() <= optionsContainer.getBottom())
-                systemMessageLabel.setText(generateMatrix(levelMatrixHeight, levelMatrixWidth, editorRectX, editorRectY, editorRectWidth, editorRectHeight));
+                systemMessageLabel.setText(generateMatrix(levelMatrixHeight, levelMatrixWidth));
 
             if(saveModeButton.isActivated(event) && saveModeButton.getY() >= optionsContainer.getY() && saveModeButton.getBottom() <= optionsContainer.getBottom())
                 mode = saving;
@@ -242,10 +254,8 @@ void App::poll(sf::Event& event)
                 levelMatrixWidth = std::stoi(levelWidthBox.getText());
             
             if(!levelMatrix.empty())
-                for(int i = 0; i < levelMatrix.size(); i++)
-                    for(int j = 0; j < levelMatrix[i].size(); j++)
-                        if(levelMatrix[i][j]->isActivated(event))
-                            levelMatrix[i][j]->setState(selectedObject, mapItemColor[selectedObject]);
+                interactionViewPoll(event);
+
             break;
         
         case saving:
@@ -272,8 +282,75 @@ void App::poll(sf::Event& event)
             mainWindow->close();
 
         if(event.type == sf::Event::Resized)
-            mainWindow->setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
+            mainWindow->setView(mainView);
     }
+}
+
+void App::interactionViewPoll(sf::Event& event)
+{
+    if(!in(wndW * editorView.getViewport().left, wndH * editorView.getViewport().top,
+           wndW * editorView.getViewport().width, wndH * editorView.getViewport().height, mainWindow->mapPixelToCoords(sf::Mouse::getPosition(*mainWindow), mainView)))
+    {
+        wheelPressed = false;
+        return;
+    }
+
+    sf::Event viewEvent = event;
+    viewEvent.type = event.type;
+
+    if(viewEvent.type == sf::Event::MouseButtonPressed || viewEvent.type == sf::Event::MouseButtonReleased)
+    {
+        viewEvent.mouseButton.button = event.mouseButton.button;
+        viewEvent.mouseButton.x = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y), editorView).x;
+        viewEvent.mouseButton.y = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y), editorView).y;
+    }
+
+    if(viewEvent.type == sf::Event::MouseMoved)
+    {
+        viewEvent.mouseMove.x = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y), editorView).x;
+        viewEvent.mouseMove.y = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y), editorView).y;
+    }
+    if(viewEvent.type == sf::Event::MouseWheelMoved)
+    {
+        viewEvent.mouseWheel.delta = event.mouseWheel.delta;
+        viewEvent.mouseWheel.x = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseWheel.x, event.mouseWheel.y), editorView).x;
+        viewEvent.mouseWheel.y = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseWheel.x, event.mouseWheel.y), editorView).y;
+    }
+    if(viewEvent.type == sf::Event::MouseWheelScrolled)
+    {
+        viewEvent.mouseWheelScroll.delta = event.mouseWheelScroll.delta;
+        viewEvent.mouseWheelScroll.wheel = event.mouseWheelScroll.wheel;
+        viewEvent.mouseWheelScroll.x = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), editorView).x;
+        viewEvent.mouseWheelScroll.y = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), editorView).y;
+    }
+
+    if(viewEvent.type == sf::Event::MouseButtonPressed && viewEvent.mouseButton.button == sf::Mouse::Middle)
+    {
+        wheelPressed = true;
+        prevPos = sf::Vector2f(event.mouseWheel.x, event.mouseWheel.y);
+    }
+
+    if(viewEvent.type == sf::Event::MouseButtonReleased && viewEvent.mouseButton.button == sf::Mouse::Middle)
+        wheelPressed = false;
+
+    if(viewEvent.type == sf::Event::MouseMoved && wheelPressed)
+    {
+        float deltaX = (prevPos.x - event.mouseMove.x) * zoomFactor;
+        float deltaY = (prevPos.y - event.mouseMove.y) * zoomFactor;
+        editorView.move(deltaX, deltaY);
+        prevPos = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
+    }
+
+    if(viewEvent.type == sf::Event::MouseWheelScrolled)
+    {
+        zoomFactor *= viewEvent.mouseWheelScroll.delta < 0 ? 1.1f : 0.9f;
+        editorView.zoom(viewEvent.mouseWheelScroll.delta < 0 ? 1.1f : 0.9f);
+    }
+
+    for(int i = 0; i < levelMatrix.size(); i++)
+        for(int j = 0; j < levelMatrix[i].size(); j++)
+            if(levelMatrix[i][j]->isActivated(viewEvent))
+                levelMatrix[i][j]->setState(selectedObject, mapItemColor[selectedObject]);
 }
 
 void App::draw()
@@ -286,13 +363,15 @@ void App::draw()
 
         if(!levelMatrix.empty())
         {
+            mainWindow->setView(editorView);
             for(int i = 0; i < levelMatrix.size(); i++)
-                for(int j = 0; j < levelMatrix[i].size(); j++)
-                    levelMatrix[i][j]->draw(*mainWindow, sf::RenderStates::Default);
-
+                    for(int j = 0; j < levelMatrix[i].size(); j++)
+                            levelMatrix[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+            
             for(int i = 0; i < levelMatrixSquares.size(); i++)
-                for(int j = 0; j < levelMatrixSquares[i].size(); j++)
-                    levelMatrixSquares[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+                    for(int j = 0; j < levelMatrixSquares[i].size(); j++)
+                            levelMatrixSquares[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+            mainWindow->setView(mainView);
         }
         break;
 
@@ -309,10 +388,10 @@ void App::draw()
         universalDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
 }
 
-std::string App::generateMatrix(int n, int m, float posX, float posY, int width, int height)
+std::string App::generateMatrix(int n, int m)
 {
-    float columnWidth = width / (3 * m + 1), rowWidth = 2 * columnWidth;
-    float rowHeight = height / (3 * n + 1), columnHeight = 2 * rowHeight;
+    float columnWidth = 50, rowWidth = 2 * columnWidth;
+    float rowHeight = 50, columnHeight = 2 * rowHeight;
 
     if(!levelMatrix.empty())
     {
@@ -329,6 +408,10 @@ std::string App::generateMatrix(int n, int m, float posX, float posY, int width,
             levelMatrixSquares[i].clear();
         }
         levelMatrixSquares.resize(0);
+
+        editorView.zoom(1 / zoomFactor);
+        editorView.setCenter(editorViewX, editorViewY);
+        zoomFactor = 1.0f;
     }
 
     if(n == 0 || m == 0)
@@ -342,11 +425,11 @@ std::string App::generateMatrix(int n, int m, float posX, float posY, int width,
         for(int j = 0; j < levelMatrix[i].size(); j++)
         {
             if(i % 2 == 0)
-                levelMatrix[i][j] = new PushTile(posX + (j + 1) * columnWidth + j * rowWidth, posY + i / 2 * (columnHeight + rowHeight),
-                                            rowWidth, rowHeight);
+                levelMatrix[i][j] = new PushTile(editorView.getViewport().left + (j + 1) * columnWidth + j * rowWidth,
+                                                 editorView.getViewport().top + i / 2 * (columnHeight + rowHeight), rowWidth, rowHeight);
             else
-                levelMatrix[i][j] = new PushTile(posX + j * (columnWidth + rowWidth), posY + (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight,
-                                            columnWidth, columnHeight);
+                levelMatrix[i][j] = new PushTile(editorView.getViewport().left + j * (columnWidth + rowWidth), editorView.getViewport().top + 
+                                                 (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight, columnWidth, columnHeight);
             
             levelMatrix[i][j]->setOutlineColor(sf::Color::Black);
             levelMatrix[i][j]->setOutlineThickness(1);
@@ -358,7 +441,7 @@ std::string App::generateMatrix(int n, int m, float posX, float posY, int width,
         levelMatrixSquares[i].resize(m + 1);
         for(int j = 0; j < levelMatrixSquares[i].size(); j++)
         {
-            levelMatrixSquares[i][j] = new InteractionRect(posX + j * (columnWidth + rowWidth), posY + i * (columnHeight + rowHeight),
+            levelMatrixSquares[i][j] = new InteractionRect(j * (columnWidth + rowWidth), i * (columnHeight + rowHeight),
                                             columnWidth, rowHeight);
             levelMatrixSquares[i][j]->setFillColor(mapItemColor[wall]);
             levelMatrixSquares[i][j]->setOutlineThickness(1);
@@ -400,7 +483,6 @@ std::string App::saveMap(std::string path, std::string fileName, int n, int m, b
             stateMatrix[i].push_back(levelMatrix[i][j]->getState());
     }
 
-    // levelFile.open(".\\Levels\\" + fileName + ".txt");
     levelFile.open(filePath + "\\" + fileName + ".txt");
     levelFile << n << ' ' << m << '\n';
     for(int i = 0; i < stateMatrix.size(); i++)

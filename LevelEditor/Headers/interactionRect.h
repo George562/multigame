@@ -5,7 +5,7 @@
 class InteractionRect : public sf::Drawable, public sf::Transformable
 {
 protected:
-    float posX, posY,width, height;
+    float posX, posY, width, height;
     sf::RectangleShape drawRect;
 public:
     InteractionRect() {}
@@ -34,6 +34,8 @@ public:
     void setOutlineThickness(int thickness) { drawRect.setOutlineThickness(thickness); }
 
     virtual void move(float deltaX, float deltaY) { posX += deltaX; posY += deltaY; drawRect.setPosition(posX, posY); }
+    virtual void setPos(float x, float y) { posX = x; posY = y; drawRect.setPosition(posX, posY); }
+    void scale(float coef) { width *= coef; height *= coef; drawRect.setSize(sf::Vector2f(width, height)); }
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const { target.draw(drawRect, states); }
     virtual bool isActivated(sf::Event&) { return false; };
 };

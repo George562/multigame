@@ -29,7 +29,6 @@ public:
         else drawRect.setFillColor(inactiveColor);
     };
 
-    void move(float x, float y) override { posX += x; posY += y; drawRect.setPosition(posX, posY); }
     void setActiveColor(sf::Color color) { activeColor = color; drawRect.setFillColor(state != 0 ? activeColor : inactiveColor); }
     void setInactiveColor(sf::Color color) { inactiveColor = color; drawRect.setFillColor(state != 0 ? activeColor : inactiveColor); }
 
@@ -45,20 +44,21 @@ PushTile::PushTile(float _posX, float _posY, float _width, float _height) : Inte
 
 bool PushTile::isActivated(sf::Event& event)
 {
-    if(event.type == sf::Event::MouseButtonPressed)
+    if(event.type == sf::Event::MouseButtonPressed && event.mouseButton.button != sf::Mouse::Button::Middle)
     {
         readPosition = true;
         lastButton = event.mouseButton.button;
         return in(posX, posY, width, height, event.mouseButton) && lastButton != sf::Mouse::Button::Right;
     }
 
-    if(readPosition && in(posX, posY, width, height, event.mouseMove))
+    if(event.type == sf::Event::MouseMoved && readPosition && in(posX, posY, width, height, event.mouseMove))
     {
         readPosition = false;
         if(lastButton == sf::Mouse::Left)
             return true;
         else if(lastButton == sf::Mouse::Right)
         {
+
             setState(0, inactiveColor);
             return false;
         }
@@ -70,7 +70,9 @@ bool PushTile::isActivated(sf::Event& event)
         if(in(posX, posY, width, height, event.mouseButton))
         {
             if(lastButton == sf::Mouse::Left)
+            {
                 return true;
+            }
             else if(lastButton == sf::Mouse::Right)
             {
                 setState(0, inactiveColor);
