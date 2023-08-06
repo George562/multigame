@@ -437,8 +437,8 @@ void EventHandler() {
                             else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
                             else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
                             else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
-                            AmmoBar.setValue(player.CurWeapon->ammunition);
-                            WeaponNameText.setString(player.CurWeapon->NameText);
+                            AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
+                            WeaponNameText.setString(player.CurWeapon->Name);
                         }
                     }
                     break;
