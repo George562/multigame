@@ -31,6 +31,9 @@ bool NumBox::isActivated(sf::Event& event)
         if(event.key.code >= sf::Keyboard::Num0 && event.key.code <= sf::Keyboard::Num9 && text.getString().getSize() <= numLength - 1)
             text.setString(text.getString() + (char)('0' + event.key.code - 26));
 
+        else if(event.key.code >= sf::Keyboard::Numpad0 && event.key.code <= sf::Keyboard::Numpad9 && text.getString().getSize() <= numLength - 1)
+            text.setString(text.getString() + (char)('0' + event.key.code - sf::Keyboard::Numpad0));
+
         return true;
     }
 

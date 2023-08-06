@@ -32,9 +32,8 @@ private:
     float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight;
     float wndW, wndH;
 
-    bool wheelPressed = false;
     float zoomFactor = 1.0f;
-    sf::Vector2f prevPos = sf::Vector2f(0, 0);
+    sf::Vector2i prevPos = sf::Vector2i(0, 0);
     windowMode mode = editing;
 
     mapItem selectedObject;
@@ -290,56 +289,35 @@ void App::interactionViewPoll(sf::Event& event)
 {
     if(!in(wndW * editorView.getViewport().left, wndH * editorView.getViewport().top,
            wndW * editorView.getViewport().width, wndH * editorView.getViewport().height, mainWindow->mapPixelToCoords(sf::Mouse::getPosition(*mainWindow), mainView)))
-    {
-        wheelPressed = false;
         return;
-    }
 
     sf::Event viewEvent = event;
-    viewEvent.type = event.type;
 
     if(viewEvent.type == sf::Event::MouseButtonPressed || viewEvent.type == sf::Event::MouseButtonReleased)
     {
-        viewEvent.mouseButton.button = event.mouseButton.button;
-        viewEvent.mouseButton.x = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y), editorView).x;
-        viewEvent.mouseButton.y = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y), editorView).y;
+        viewEvent.mouseButton.x = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y), editorView).x;
+        viewEvent.mouseButton.y = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y), editorView).y;
     }
 
     if(viewEvent.type == sf::Event::MouseMoved)
     {
-        viewEvent.mouseMove.x = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y), editorView).x;
-        viewEvent.mouseMove.y = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y), editorView).y;
+        viewEvent.mouseMove.x = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y), editorView).x;
+        viewEvent.mouseMove.y = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y), editorView).y;
     }
     if(viewEvent.type == sf::Event::MouseWheelMoved)
     {
-        viewEvent.mouseWheel.delta = event.mouseWheel.delta;
-        viewEvent.mouseWheel.x = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseWheel.x, event.mouseWheel.y), editorView).x;
-        viewEvent.mouseWheel.y = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseWheel.x, event.mouseWheel.y), editorView).y;
+        viewEvent.mouseWheel.x = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseWheel.x, event.mouseWheel.y), editorView).x;
+        viewEvent.mouseWheel.y = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseWheel.x, event.mouseWheel.y), editorView).y;
     }
     if(viewEvent.type == sf::Event::MouseWheelScrolled)
     {
-        viewEvent.mouseWheelScroll.delta = event.mouseWheelScroll.delta;
-        viewEvent.mouseWheelScroll.wheel = event.mouseWheelScroll.wheel;
-        viewEvent.mouseWheelScroll.x = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), editorView).x;
-        viewEvent.mouseWheelScroll.y = ((sf::RenderTarget*)mainWindow)->mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), editorView).y;
+        viewEvent.mouseWheelScroll.x = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), editorView).x;
+        viewEvent.mouseWheelScroll.y = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), editorView).y;
     }
 
-    if(viewEvent.type == sf::Event::MouseButtonPressed && viewEvent.mouseButton.button == sf::Mouse::Middle)
-    {
-        wheelPressed = true;
-        prevPos = sf::Vector2f(event.mouseWheel.x, event.mouseWheel.y);
-    }
-
-    if(viewEvent.type == sf::Event::MouseButtonReleased && viewEvent.mouseButton.button == sf::Mouse::Middle)
-        wheelPressed = false;
-
-    if(viewEvent.type == sf::Event::MouseMoved && wheelPressed)
-    {
-        float deltaX = (prevPos.x - event.mouseMove.x) * zoomFactor;
-        float deltaY = (prevPos.y - event.mouseMove.y) * zoomFactor;
-        editorView.move(deltaX, deltaY);
-        prevPos = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
-    }
+    if(viewEvent.type == sf::Event::MouseMoved && sf::Mouse::isButtonPressed(sf::Mouse::Middle))
+        editorView.move(-sf::Vector2f(sf::Mouse::getPosition() - prevPos) * zoomFactor);
+    prevPos = sf::Mouse::getPosition();
 
     if(viewEvent.type == sf::Event::MouseWheelScrolled)
     {
@@ -359,25 +337,25 @@ void App::draw()
     {
     case editing:
        for(int i = 0; i < editorDrawnElements.size(); i++)
-            editorDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
+            mainWindow->draw(*(editorDrawnElements[i]));
 
         if(!levelMatrix.empty())
         {
             mainWindow->setView(editorView);
             for(int i = 0; i < levelMatrix.size(); i++)
-                    for(int j = 0; j < levelMatrix[i].size(); j++)
-                            levelMatrix[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+                for(int j = 0; j < levelMatrix[i].size(); j++)
+                    mainWindow->draw(*(levelMatrix[i][j]));
             
             for(int i = 0; i < levelMatrixSquares.size(); i++)
-                    for(int j = 0; j < levelMatrixSquares[i].size(); j++)
-                            levelMatrixSquares[i][j]->draw(*mainWindow, sf::RenderStates::Default);
+                for(int j = 0; j < levelMatrixSquares[i].size(); j++)
+                    mainWindow->draw(*(levelMatrixSquares[i][j]));
             mainWindow->setView(mainView);
         }
         break;
 
     case saving:
         for(int i = 0; i < saveDrawnElements.size(); i++)
-            saveDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
+            mainWindow->draw(*(saveDrawnElements[i]));
         break;
 
     default:
@@ -385,13 +363,14 @@ void App::draw()
     }
 
     for(int i = 0; i < universalDrawnElements.size(); i++)
-        universalDrawnElements[i]->draw(*mainWindow, sf::RenderStates::Default);
+        mainWindow->draw(*(universalDrawnElements[i]));
 }
 
 std::string App::generateMatrix(int n, int m)
 {
-    float columnWidth = 50, rowWidth = 2 * columnWidth;
-    float rowHeight = 50, columnHeight = 2 * rowHeight;
+    float columnWidth = 50, rowWidth = 3 * columnWidth;
+    float rowHeight = 50, columnHeight = 3 * rowHeight;
+    float ResWidth = columnWidth * (m + 1) + rowWidth * m, ResHeight = columnHeight * n + rowHeight * (n + 1);
 
     if(!levelMatrix.empty())
     {
@@ -409,10 +388,12 @@ std::string App::generateMatrix(int n, int m)
         }
         levelMatrixSquares.resize(0);
 
-        editorView.zoom(1 / zoomFactor);
-        editorView.setCenter(editorViewX, editorViewY);
-        zoomFactor = 1.0f;
     }
+
+    editorView.zoom(1 / zoomFactor);
+    editorView.setCenter(ResWidth / 2, ResHeight / 2);
+    zoomFactor = std::max(ResWidth / (editorView.getViewport().width * wndW), ResHeight / (editorView.getViewport().height * wndH));
+    editorView.zoom(zoomFactor);
 
     if(n == 0 || m == 0)
         return "Please, input sizes greater than 0!";

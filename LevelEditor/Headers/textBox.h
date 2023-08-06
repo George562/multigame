@@ -48,27 +48,6 @@ bool TextBox::isActivated(sf::Event& event)
 {
     if(event.type == sf::Event::KeyPressed && readInput)
     {
-        if(event.key.code == sf::Keyboard::Backspace && text.getString().getSize() != 0)
-            text.setString(text.getString().substring(0, text.getString().getSize() - 1));
-
-        if(event.key.code >= sf::Keyboard::A && event.key.code <= sf::Keyboard::Z)
-            text.setString(text.getString() + (char)((event.key.shift ? 'A' : 'a') + event.key.code));
-
-        if(event.key.code >= sf::Keyboard::Num0 && event.key.code <= sf::Keyboard::Num9)
-            text.setString(text.getString() + (char)('0' + event.key.code - sf::Keyboard::Num0));
-
-        if(event.key.code == sf::Keyboard::Hyphen)
-            text.setString(text.getString() + (char)(event.key.shift ? '_' : '-'));
-
-        if(event.key.code == sf::Keyboard::Semicolon)
-            text.setString(text.getString() + (char)(';' - event.key.shift));
-        
-        if(event.key.code == sf::Keyboard::Backslash && !event.key.shift)
-            text.setString(text.getString() + '\\');
-
-        if(event.key.code == sf::Keyboard::Slash && !event.key.shift)
-            text.setString(text.getString() + '/');
-
         if(event.key.code == sf::Keyboard::V && event.key.control)
         {
             if(text.getString().getSize() != 0)
@@ -76,9 +55,32 @@ bool TextBox::isActivated(sf::Event& event)
 
             text.setString(sf::Clipboard::getString());
         }
-
-        if(event.key.code == sf::Keyboard::C && event.key.control)
+        else if(event.key.code == sf::Keyboard::C && event.key.control)
             sf::Clipboard::setString(text.getString());
+
+        else if(event.key.code == sf::Keyboard::Backspace && text.getString().getSize() != 0)
+            text.setString(text.getString().substring(0, text.getString().getSize() - 1));
+
+        else if(event.key.code >= sf::Keyboard::A && event.key.code <= sf::Keyboard::Z)
+            text.setString(text.getString() + (char)((event.key.shift ? 'A' : 'a') + event.key.code));
+
+        else if(event.key.code >= sf::Keyboard::Num0 && event.key.code <= sf::Keyboard::Num9)
+            text.setString(text.getString() + (char)('0' + event.key.code - sf::Keyboard::Num0));
+
+        else if(event.key.code >= sf::Keyboard::Numpad0 && event.key.code <= sf::Keyboard::Numpad9)
+            text.setString(text.getString() + (char)('0' + event.key.code - sf::Keyboard::Numpad0));
+
+        else if(event.key.code == sf::Keyboard::Hyphen)
+            text.setString(text.getString() + (char)(event.key.shift ? '_' : '-'));
+
+        else if(event.key.code == sf::Keyboard::Semicolon)
+            text.setString(text.getString() + (char)(';' - event.key.shift));
+        
+        else if(event.key.code == sf::Keyboard::Backslash && !event.key.shift)
+            text.setString(text.getString() + '\\');
+
+        else if(event.key.code == sf::Keyboard::Slash && !event.key.shift)
+            text.setString(text.getString() + '/');
         
         fullString = (std::string)text.getString();
         width = std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3));
