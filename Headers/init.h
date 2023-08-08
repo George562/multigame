@@ -36,7 +36,7 @@ int scw = sf::VideoMode::getDesktopMode().width; // screen width
 int sch = sf::VideoMode::getDesktopMode().height; // screen height
 
 int size = 540, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
-int START_N = 6, START_M = 6;
+int START_N = 10, START_M = 10;
 float WallMinSize = size / 8, WallMaxSize = size;
 
 sf::Vector2f CameraPos, miniCameraPos;

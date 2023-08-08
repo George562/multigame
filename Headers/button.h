@@ -10,7 +10,7 @@ public:
     sf::Texture texture, pushedTexture;
     sf::Sprite rect;
     PlacedText ButtonText;
-    bool Pushed = false, ShowText = true;
+    bool Pushed = false, ShowText = true, ShowButton = true;
     void (*buttonFunction)(void);
 
     Button() {}
@@ -71,8 +71,10 @@ void Button::setCharacterSize(int size) {
 }
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    target.draw(rect);
-    if (ShowText) target.draw(ButtonText);
+    if (ShowButton) {
+        target.draw(rect);
+        if (ShowText) target.draw(ButtonText);
+    }
 }
 
 bool Button::isActivated(sf::Event& event) {

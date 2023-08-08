@@ -17,6 +17,7 @@ float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated;
 screens::screens screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
+std::vector<Interactible*> InteractibeStuff;
 
 //////////////////////////////////////////////////////////// DrawableStuff
 vvr wallsRect(0);
@@ -29,6 +30,7 @@ sf::CircleShape CircleOfSmallPlayer;  // for drawing players on minimap
 Bar<float> ManaBar, HpBar;
 Bar<int> AmmoBar;
 PlacedText WeaponNameText;
+sf::Sprite XButtonSprite;
 
 //////////////////////////////////////////////////////////// Music
 sf::Music MainMenuMusic;
@@ -81,6 +83,7 @@ void LoadMainMenu();
 void init();
 void EventHandler();
 void MainLoop();
+bool IsSomeOneCanBeActivated();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -305,6 +308,8 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&ManaBar);
     InterfaceStuff.push_back(&HpBar);
     InterfaceStuff.push_back(&chat);
+
+    InteractibeStuff.push_back(&portal);
 }
 
 void init() {
@@ -365,7 +370,11 @@ void init() {
 
     WeaponNameText.setPosition(AmmoBar.getPosition().x, AmmoBar.getPosition().y + AmmoBar.getSize().y);
     WeaponNameText.text.setFillColor(sf::Color(25, 192, 25, 160));
-    
+
+    sf::Texture *XButtonTexture = new sf::Texture; XButtonTexture->loadFromFile("sources/textures/XButton.png");
+    XButtonSprite.setTexture(*XButtonTexture);
+    XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
+
     LoadMainMenu();
 }
 
@@ -391,8 +400,7 @@ void EventHandler() {
                     if (MiniMapActivated) {
                         MiniMapActivated = false;
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                    } else if (portal.isInterfaceDrawn) portal.isInterfaceDrawn = false;
-                    else {
+                    } else {
                         if (screen == screens::MainRoom) {
                             MainMenuMusic.pause();
                             window.close();
@@ -409,15 +417,23 @@ void EventHandler() {
                     else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
                 }
             }
-        
+
+            if (IsSomeOneCanBeActivated()) {
+                if (!in(InterfaceStuff, (sf::Drawable*)&XButtonSprite))
+                    InterfaceStuff.push_back(&XButtonSprite);
+            } else
+                DeleteFromVector(InterfaceStuff, (sf::Drawable*)&XButtonSprite);
+
+            if (portal.CanBeActivated(player))
+                if (portal.isActivated(player, event, InterfaceStuff))
+                    break;
+
             switch (screen) {
                 case screens::MainRoom:
-                    if (portal.isActivated(player, event)) break;
                     player.update(event, MiniMapActivated);
                     break;
 
                 case screens::Dungeon:
-                    if (portal.isActivated(player, event)) break;
                     if (player.CurWeapon != nullptr && !MiniMapActivated) player.CurWeapon->Update(event);
                     player.update(event, MiniMapActivated);
                     if (event.type == sf::Event::KeyPressed) {
@@ -576,6 +592,12 @@ void MainLoop() {
 
         EventHandler();
     }
+}
+
+bool IsSomeOneCanBeActivated() {
+    for (Interactible*& x: InteractibeStuff)
+        if (x->CanBeActivated(player)) return true;
+    return false;
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions

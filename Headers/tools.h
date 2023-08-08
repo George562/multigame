@@ -1,10 +1,19 @@
 #pragma once
 #include "init.h"
 
-// check existing element in vector
 template <typename T>
-bool in(const std::vector<T>& arr, const T& x) {
-    for (const T& y: arr) if (y == x) return true;
+bool in(std::vector<T>& arr, T x) {
+    for (T& y: arr) if (y == x) return true;
+    return false;
+}
+
+template <typename T>
+bool DeleteFromVector(std::vector<T>& arr, T x) {
+    for (size_t i = 0; i < arr.size(); i++)
+        if (arr[i] == x) {
+            arr.erase(arr.begin() + i);
+            return true;
+        }
     return false;
 }
 

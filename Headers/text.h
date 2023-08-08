@@ -7,6 +7,7 @@
 
 class PlacedText : public Rect, public sf::Drawable {
 public:
+    bool ShowText = true;
     sf::Font font;
     sf::Text text;
 
@@ -30,7 +31,9 @@ public:
         text.setString(text.getString().substring(0, pos) + t + text.getString().substring(pos, TextSize()));
     }
 
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { target.draw(text); };
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { 
+        if (ShowText) target.draw(text);
+    };
 };
 
 ////////////////////////////////////////////////////////////

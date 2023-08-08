@@ -7,13 +7,11 @@
 
 class Portal : public Interactible {
 public:
-    Button *yesButton, *noButton;
-    PlacedText questionText;
-
     Portal();
-    bool isInterfaceDrawn = false;
-    void setFunction(void (*func)(void)) { yesButton->buttonFunction = func; }
-    bool isActivated(Rect, sf::Event&);
+    bool IsPlayerOnPortal = false;
+    void setFunction(void (*func)(void)) { function = func; }
+    bool CanBeActivated(Rect&);
+    bool isActivated(Rect&, sf::Event&, std::vector<sf::Drawable*>&);
 
     void setPosition(float x, float y) { PosX = x; PosY = y; sprite.setPosition(PosX, PosY); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
@@ -23,13 +21,6 @@ public:
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         target.draw(sprite, states);
-        if (isInterfaceDrawn) {
-            target.setView(InterfaceView);
-            target.draw(*yesButton);
-            target.draw(*noButton);
-            target.draw(questionText);
-            target.setView(GameView);
-        }
     }
 };
 
@@ -41,34 +32,15 @@ Portal::Portal() {
     texture.loadFromFile("sources/textures/Portal.png");
     sprite.setTexture(texture);
     setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
-
-    yesButton = new Button("sources/textures/BluePanel", "Yes", [](){});
-    yesButton->setSize(200, 100);
-    yesButton->setPosition(scw / 3 - yesButton->Width / 2, 680);
-
-    noButton = new Button("sources/textures/YellowPanel", "No", [](){});
-    noButton->setSize(200, 100);
-    noButton->setPosition(scw * 2 / 3 - noButton->Width / 2, 680);
-
-    questionText.setString("Do you want to go through this portal?");
-    questionText.setCenter(scw / 2, 200);
-
     sprite.setPosition(PosX, PosY);
 }
 
-bool Portal::isActivated(Rect rect, sf::Event& event) {
-    if (isInterfaceDrawn) {
-        if ((event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) || noButton->isActivated(event) || yesButton->isActivated(event)) {
-            if (event.type == sf::Event::MouseButtonReleased)
-                isInterfaceDrawn = false;
-            return !(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape);
-        }
-    }
-    
-    if (intersect(rect) && event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
-        isInterfaceDrawn = true;
+bool Portal::CanBeActivated(Rect& rect) { return intersect(rect); }
+
+bool Portal::isActivated(Rect& rect, sf::Event& event, std::vector<sf::Drawable*>& InterfaceStuff) {
+    if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
+        function();
         return true;
     }
-
     return false;
 }
