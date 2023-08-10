@@ -1,6 +1,6 @@
 # multigame
 
-![Release](https://img.shields.io/badge/Version-v0.0.3-blueviolet)
+![Release](https://img.shields.io/badge/Version-v0.0.4-blueviolet)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-0052cf)
 ![Open Source](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)
 
@@ -29,6 +29,8 @@ At the moment the game is not playable. We are at the development stage of the e
 - Interactible objects (interaction with the X button)
   - portal (step on it and push X)
 - minimap (use Tab for fullscreen minimap, move and zoom it)
+- Enemies
+  - Scientific
 
 
 # Our sprites and arts
@@ -36,11 +38,13 @@ At the moment the game is not playable. We are at the development stage of the e
 - **[Portal](https://github.com/George562/multigame/blob/main/sources/textures/Portal.png)**
 - **[Player](https://github.com/George562/multigame/blob/main/sources/textures/Player.png)**
 - **[Farmer](https://github.com/George562/multigame/blob/main/sources/textures/Farmer.png)**
+- **[Scientific](https://github.com/George562/multigame/blob/main/sources/textures/Scientific.png)**
 
 <p align="center">
 	<img src="./sources/textures/Portal.png" height="300">
   <img src="./sources/textures/Player.png" width="200">
   <img src="./sources/textures/Farmer.png" width="200">
+  <img src="./sources/textures/Scientific.png" width="200">
 </p>
 
 # Our music
