@@ -54,6 +54,10 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, float& PosX, float& PosY, float&
     }
     return res;  // if value of vector == -1 => there was collision
 }
+// {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
+sf::Vector2i WillCollisionWithWalls(vvr& Walls, Rect& rect, sf::Vector2f d) {
+    return WillCollisionWithWalls(Walls, rect.PosX, rect.PosY, rect.Width, rect.Height, d.x, d.y);
+}
 
 void RotateOn(float phi, float& x, float& y) {
     float oldX = x, OldY = y;
@@ -77,6 +81,13 @@ sf::Vector2f RotateAround(float phi, sf::Vector2f& a, float& X, float& Y) {
     newA.x =   (a.x - X) * cos(phi) + (a.y - Y) * sin(phi) + X;
     newA.y = - (a.x - X) * sin(phi) + (a.y - Y) * cos(phi) + Y;
     return newA;
+}
+
+float distance(sf::Vector2f a, sf::Vector2f b) { return std::hypot(a.x - b.x, a.y - b.y); }
+float LenOfVector(sf::Vector2f v) { return std::hypot(v.x, v.y); }
+
+sf::Vector2f operator*(sf::Vector2f& a, sf::Vector2f& b) {
+    return sf::Vector2f{a.x * b.x, a.y * b.y};
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Point& a) {

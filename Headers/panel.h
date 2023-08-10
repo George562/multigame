@@ -8,7 +8,7 @@
 class Panel : public PlacedText {
 public:
     sf::Texture texture;
-    sf::Sprite rect;
+    sf::Sprite sprite;
     std::vector<str> lines;
 
     Panel() : PlacedText() {};
@@ -36,13 +36,13 @@ Panel::Panel(str name, str word = "") : PlacedText() {
     setTexture(name);
     text.setCharacterSize(150);
     text.setFillColor(sf::Color(199, 199, 199));
-    Width = rect.getGlobalBounds().width; Height = rect.getGlobalBounds().height;
+    Width = sprite.getGlobalBounds().width; Height = sprite.getGlobalBounds().height;
     setWord(word);
 }
 
 void Panel::setTexture(str name) {
     texture.loadFromFile(name + ".png");
-    rect.setTexture(texture);
+    sprite.setTexture(texture);
 }
 
 str Panel::getWord() {
@@ -54,12 +54,12 @@ str Panel::getWord() {
 
 void Panel::setPosition(float x, float y) {
     PosX = x; PosY = y;
-    rect.setPosition(x, y);
+    sprite.setPosition(x, y);
     text.setPosition(PosX + 50, PosY + 50);
 }
 
 void Panel::draw(sf::RenderWindow& window) {
-    window.draw(rect);
+    window.draw(sprite);
     if (size() == 1) {
         text.setString(lines[0]);
         window.draw(text);
@@ -79,6 +79,6 @@ void Panel::setTextSize(int size) {
 void  Panel::setSize(float w, float h) {
     text.setScale(w / Width, h / Height);
     text.setPosition(PosX + 50 * w / Width, PosY + 50 * h / Height);
-    rect.setScale(w / Width, h / Height);
+    sprite.setScale(w / Width, h / Height);
     Width = w; Height = h;
 }

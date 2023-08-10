@@ -1,4 +1,5 @@
 #include "tools.h"
+#include "location.h"
 
 #define COMMON_BULLET_RADIUS 7
 
@@ -12,7 +13,7 @@ struct Bullet : public sf::Drawable {
     int penetration;
     float damage;
     float radius = COMMON_BULLET_RADIUS;
-    sf::CircleShape* circle;
+    sf::CircleShape circle;
     bool exlpode = false;
     sf::Time timer;
     Scale<float> ExplosionRadius = {1, 12, 1};
@@ -28,16 +29,15 @@ struct Bullet : public sf::Drawable {
         damage = dmg;
         timer = time;
         type = t;
-        circle = new sf::CircleShape();
         switch (t) {
             case Bullet::Common:
-                circle->setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+                circle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
                 break;
             case Bullet::Bubble:
-                circle->setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+                circle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
                 break;
         }
-        circle->setRadius(radius);
+        circle.setRadius(radius);
         localClock = new sf::Clock();
     }
     
@@ -48,13 +48,16 @@ struct Bullet : public sf::Drawable {
     sf::Vector2f getCenter() { return {PosX + radius / 2, PosY + radius / 2}; }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
-        target.draw(*circle);
+        target.draw(circle, states);
     }
 
-    void move(vvr& wallsRect) {
-        sf::Vector2i res = WillCollisionWithWalls(wallsRect, PosX, PosY, radius, radius, dx, dy);
-        dx *= res.x;
-        dy *= res.y;
+    void move(Location& location) {
+        if (dx != 0 || dy != 0) {
+            sf::Vector2i res = WillCollisionWithWalls(location.wallsRect, PosX, PosY, radius, radius, dx, dy);
+            if (res.x == -1 || res.y == -1) penetration--;
+            dx *= res.x;
+            dy *= res.y;
+        }
         switch (type) {
             case Bullet::Bubble:
                 PosX += dx * (timer - localClock->getElapsedTime()).asSeconds();
@@ -63,10 +66,11 @@ struct Bullet : public sf::Drawable {
                 if (exlpode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
                         ExplosionRadius += 1.f / 5;
-                        circle->setFillColor(circle->getFillColor() - sf::Color(0, 0, 0, 4));
-                        circle->setRadius(radius * ExplosionRadius.cur);
-                        PosX -= radius / 5;
-                        PosY -= radius / 5;
+                        circle.setFillColor(circle.getFillColor() - sf::Color(0, 0, 0, 4));
+                        radius = COMMON_BULLET_RADIUS * ExplosionRadius.cur;
+                        circle.setRadius(radius);
+                        PosX -= COMMON_BULLET_RADIUS / 5;
+                        PosY -= COMMON_BULLET_RADIUS / 5;
                     } else todel = true;
                 }
                 break;
@@ -74,7 +78,7 @@ struct Bullet : public sf::Drawable {
                 PosX += dx;
                 PosY += dy;
         }
-        circle->setPosition(PosX, PosY);
+        circle.setPosition(PosX, PosY);
     }
 };
 
@@ -82,7 +86,7 @@ using vB = std::vector<Bullet>;
 vB Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
-    sf::Color clr = b.circle->getFillColor();
+    sf::Color clr = b.circle.getFillColor();
     return packet << b.PosX << b.PosY << b.dx << b.dy << b.penetration << clr << b.damage << b.timer.asSeconds() << b.type;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
@@ -91,7 +95,7 @@ sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
     packet >> b.PosX >> b.PosY >> b.dx >> b.dy >> b.penetration >> clr >> b.damage >> timer;
     b.timer = sf::seconds(timer);
     sf::Uint8 t; packet >> t; b.type = Bullet::Type(t);
-    b.circle->setFillColor(clr);
-    b.circle->setRadius(b.radius);
+    b.circle.setFillColor(clr);
+    b.circle.setRadius(b.radius);
     return packet;
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "../SFML-2.5.1/include/SFML/Graphics.hpp"
 ////////////////////////////////////////////////////////////
 /// \param bottom smallest value
 /// \param top highest value
@@ -31,4 +32,9 @@ Scale<T>& operator+=(Scale<T>& scale, T x) {
 template <class T>
 Scale<T>& operator-=(Scale<T>& scale, T x) {
     return scale += -x;
+}
+
+void normalize(Scale<sf::Vector2f>& scale) {
+    scale.cur.x = std::max(std::min(scale.top.x, scale.cur.x), scale.bottom.x);
+    scale.cur.y = std::max(std::min(scale.top.y, scale.cur.y), scale.bottom.y);
 }

@@ -24,6 +24,8 @@ public:
 
     void setCharacterSize(int x);
     void setFillColor(sf::Color color) { text.setFillColor(color); }
+    void setOutlineColor(sf::Color color) { text.setOutlineColor(color); }
+    void setOutlineThickness(int thickness) { text.setOutlineThickness(thickness); }
     void setScale(sf::Vector2f);
     void setScale(float, float);
     size_t TextSize() { return text.getString().getSize(); }
@@ -32,7 +34,7 @@ public:
     }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { 
-        if (ShowText) target.draw(text);
+        if (ShowText) target.draw(text, states);
     };
 };
 

@@ -32,14 +32,26 @@ namespace screens {
     };
 };
 
-int scw = sf::VideoMode::getDesktopMode().width; // screen width
-int sch = sf::VideoMode::getDesktopMode().height; // screen height
+namespace pacetStates {
+    enum pacetStates {
+        disconnect,         // client send to host
+        PlayersAmount,      // to connecting client
+        PlayerConnect,      // host sent to clients when someone connected
+        PlayerDisconnect,   // host sent to clients when someone disconnected
+        Labyrinth,          // for LabirintData
+        PlayerPos,          // send from client to host than host sending others clients
+        SetPos,             // for set pos of player, because PlayerPos just say positions of others players
+        ChatEvent,
+        Shooting,
+    };
+};
+
+int scw = 1920; // screen width
+int sch = 1080; // screen height
 
 int size = 540, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
 int START_N = 10, START_M = 10;
 float WallMinSize = size / 8, WallMaxSize = size;
-
-sf::Vector2f CameraPos, miniCameraPos;
 
 sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});

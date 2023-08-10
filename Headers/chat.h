@@ -87,17 +87,17 @@ bool Chat::InputText(sf::Event& event) {
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Escape)
             inputted = false;
-        else if (event.key.code == sf::Keyboard::Enter)
+        if (event.key.code == sf::Keyboard::Enter)
             Entered();
 
         if (event.key.code == sf::Keyboard::BackSpace && cursorPos > 0)
             lines[start].setString(lines[start].getString().substr(0, cursorPos) + lines[start].getString().substr(cursorPos--, lines[start].TextSize()));
-        else if (event.key.code == sf::Keyboard::Delete && cursorPos < lines[start].TextSize())
+        if (event.key.code == sf::Keyboard::Delete && cursorPos < lines[start].TextSize())
             lines[start].setString(lines[start].getString().substr(0, cursorPos) + lines[start].getString().substr(cursorPos + 1, lines[start].TextSize()));
-        else if (event.key.code == sf::Keyboard::Left && cursorPos > 0) cursorPos--;
-        else if (event.key.code == sf::Keyboard::Right && cursorPos < lines[start].TextSize()) cursorPos++;
-        else if (event.key.code == sf::Keyboard::Home) cursorPos = 0;
-        else if (event.key.code == sf::Keyboard::End) cursorPos = lines[start].TextSize();
+        if (event.key.code == sf::Keyboard::Left && cursorPos > 0) cursorPos--;
+        if (event.key.code == sf::Keyboard::Right && cursorPos < lines[start].TextSize()) cursorPos++;
+        if (event.key.code == sf::Keyboard::Home) cursorPos = 0;
+        if (event.key.code == sf::Keyboard::End) cursorPos = lines[start].TextSize();
     }
     if (inputted) {
         PlacedText tempText; tempText.setString(lines[start].getString().substr(0, cursorPos));

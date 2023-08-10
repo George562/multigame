@@ -3,7 +3,7 @@
 #include "client.h"
 #include "chat.h"
 #include "contextMenu.h"
-#include "location.h"
+#include "enemy.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap   = true;
@@ -20,11 +20,11 @@ std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactible*> InteractibeStuff;
 
 //////////////////////////////////////////////////////////// DrawableStuff
-vvr wallsRect(0);
-vvb SeenWalls;
-std::vector<sf::Sprite> Sprites(0);
 sf::RectangleShape WallRect;
-sf::CircleShape CircleOfSmallPlayer;  // for drawing players on minimap
+
+//////////////////////////////////////////////////////////// MiniMapStuff
+sf::CircleShape MMPlayerRect; // MiniMap prefix
+sf::RectangleShape MMPortalRect;
 
 //////////////////////////////////////////////////////////// InterfaceStuff
 Bar<float> ManaBar, HpBar;
@@ -37,8 +37,8 @@ sf::Music MainMenuMusic;
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
-sf::Packet ReceivePacket, SendPacket, LabyrinthData;
-std::vector<Client*> clients(0);
+sf::Packet ReceivePacket, SendPacket;
+std::vector<Client*> clients;
 sf::SocketSelector selector;
 str ClientState, IPOfHost, MyIP, PacetData;
 Client MySocket; // this computer socket
@@ -55,7 +55,7 @@ Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
 
 //////////////////////////////////////////////////////////// Players
 Player player;
-std::vector<Player> ConnectedPlayers(0);
+std::vector<Player> ConnectedPlayers;
 
 //////////////////////////////////////////////////////////// Chat
 Chat chat;
@@ -72,6 +72,19 @@ Rifle rifle;
 Bubblegun bubblegun;
 Armagedon armagedon;
 Chaotic chaotic;
+std::vector<Weapon*> weapons = {
+    &pistol,
+    &shotgun,
+    &revolver,
+    &rifle,
+    &bubblegun,
+    &armagedon,
+    &chaotic
+};
+
+//////////////////////////////////////////////////////////// Enemies
+Scientific BettaEnemy;
+std::vector<Enemy*> Enemies;
 
 //////////////////////////////////////////////////////////// functions
 void draw();
@@ -139,6 +152,9 @@ Button EscapeButton("sources/textures/RedPanel", "Exit", [](){
     EscapeMenuActivated = false;
     ListOfPlayers.clear();
     Bullets.clear();
+    for (int i = 0; i < Enemies.size(); i++)
+        delete Enemies[i];
+    Enemies.clear();
     LoadMainMenu();
 });
 
@@ -157,16 +173,16 @@ void draw() {
 }
 
 void drawWalls() {
-    CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
+    sf::Vector2f CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
     for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
             i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++)
         for (int j = std::max(0, int(CameraPos.x / size) - 1);
                 j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
-            if (wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, (float)scw, (float)sch))
-                SeenWalls[i][j] = true;
-            if ((*CurLocation)[i][j] == Tiles::wall) {
-                WallRect.setPosition(wallsRect[i][j].getPosition());
-                WallRect.setSize(wallsRect[i][j].getSize());
+            if (CurLocation->wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, (float)scw, (float)sch))
+                CurLocation->SeenWalls[i][j] = true;
+            if (CurLocation->walls[i][j] == Tiles::wall) {
+                WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
+                WallRect.setSize(CurLocation->wallsRect[i][j].getSize());
                 window.draw(WallRect);
             }
         }
@@ -179,7 +195,7 @@ void drawMiniMap() {
     sf::VertexArray line(sf::Lines, 2);
     for (int i = 0; i < CurLocation->walls.size(); i++)
         for (int j = 0; j < CurLocation->walls[i].size(); j++)
-            if ((*CurLocation)[i][j] == Tiles::wall && SeenWalls[i][j]) {
+            if (CurLocation->walls[i][j] == Tiles::wall && CurLocation->SeenWalls[i][j]) {
                 if (i % 2 == 1) { // |
                     line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2), sf::Color::White);
                     line[1] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i + 1) / 2), sf::Color::White);
@@ -193,10 +209,10 @@ void drawMiniMap() {
     // draw location objects
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
-            sf::RectangleShape portalRect(portal.getSize() * ScaleParam);
-            portalRect.setPosition(portal.getPosition() * ScaleParam);
-            portalRect.setFillColor(sf::Color(200, 0, 200, 200));
-            window.draw(portalRect);
+            MMPortalRect.setSize(portal.getSize() * ScaleParam);
+            MMPortalRect.setPosition(portal.getPosition() * ScaleParam);
+            MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
+            window.draw(MMPortalRect);
             break;
         }
     }
@@ -204,12 +220,12 @@ void drawMiniMap() {
     // draw players
     if (ClientFuncRun || HostFuncRun) {
         for (Player& p: ConnectedPlayers) {
-            CircleOfSmallPlayer.setPosition(p.getPosition() * ScaleParam);
-            window.draw(CircleOfSmallPlayer);
+            MMPlayerRect.setPosition(p.getPosition() * ScaleParam);
+            window.draw(MMPlayerRect);
         }
     } else {
-        CircleOfSmallPlayer.setPosition(player.getPosition() * ScaleParam);
-        window.draw(CircleOfSmallPlayer);
+        MMPlayerRect.setPosition(player.getPosition() * ScaleParam);
+        window.draw(MMPlayerRect);
     }
     window.setView(GameView);
 }
@@ -217,6 +233,18 @@ void drawMiniMap() {
 void drawIterface() {
     window.setView(InterfaceView);
     for (sf::Drawable* d: InterfaceStuff) window.draw(*d);
+
+    Bar<int> AmmoBar1(AmmoBar);
+    PlacedText WeaponNameText1(WeaponNameText);
+    for (int i = 0; i < weapons.size(); i++) {
+        AmmoBar1.setValue(weapons[i]->AmountOfAmmunition);
+        AmmoBar1.Update();
+        WeaponNameText1.setString(std::to_string(i + 1) + ": " + weapons[i]->Name);
+        AmmoBar1.setPosition(20, sch - 20 - (weapons.size() - i) * (AmmoBar1.getSize().y + 10));
+        WeaponNameText1.setPosition(30 + AmmoBar1.getSize().x, sch - 20 - (weapons.size() - i) * (AmmoBar1.getSize().y + 10) + WeaponNameText1.Height / 2);
+        window.draw(AmmoBar1);
+        window.draw(WeaponNameText1);
+    }
 
     if (EscapeMenuActivated) {
         window.draw(ListOfPlayers);
@@ -226,45 +254,36 @@ void drawIterface() {
 }
 
 void LevelGenerate(int n, int m) {
-    LabyrinthLocation.SetSize(n, m);
-    LabyrinthData.clear();
-    LabyrinthData << sf::Int32(pacetStates::Labyrinth) << n << m;
-
     player.setPosition(sf::Vector2f{(m / 2 + 0.5f) * size, (n / 2 + 0.5f) * size} - player.getSize() / 2.f);
-    LabyrinthLocation.objects.clear();
-    Bullets.clear();
-    
-    int CounterOfGenerations = 0, CountOfEnableTilesOnMap;
-    do {
-        LabyrinthLocation.WallGenerator(0.48);
-        CountOfEnableTilesOnMap = LabyrinthLocation.BuildWayFrom(player.getPosition() / (float)size);
-        CounterOfGenerations++;
-    } while (CountOfEnableTilesOnMap < float(n * m) / 3 || CountOfEnableTilesOnMap > float(n * m) / 1.5);
-    std::cout << "total count of generations = " << CounterOfGenerations
-              << " Count Of Enable Tiles = " << CountOfEnableTilesOnMap << '\n';
 
-    CurLocation->objects.clear();
-    CurLocation->objects.push_back({Tiles::portal, player.getPosition()});
-    
-    for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
-        for (int j = 0; j < LabyrinthLocation[i].size(); j++)
-            LabyrinthData << LabyrinthLocation[i][j];
-    CreateMapRectByLocation(LabyrinthLocation, wallsRect);
-    
-    SeenWalls.assign(LabyrinthLocation.walls.size(), vb(0));
-    for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
-        SeenWalls[i].assign(LabyrinthLocation[i].size(), false);
+    Bullets.clear();
     
     MiniMapView.zoom(1 / MiniMapZoom);
     MiniMapZoom = 1;
+
+    LabyrinthLocation.GenerateLocation(n, m, player.getPosition());
+
+    CurLocation->objects.clear();
+    CurLocation->AddObject({Tiles::portal, player.getPosition()});
+
+    for (int i = 0; i < Enemies.size(); i++)
+        delete Enemies[i];
+    Enemies.clear();
+
+    for (int i = 0; i < 7; i++)
+        Enemies.push_back(new Scientific());
+
+    for (int i = 0; i < Enemies.size(); i++) {
+        Enemies[i]->setTarget(player.getCenter());
+        do {
+            Enemies[i]->setCenter(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
+        } while (!CurLocation->EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
+                 distance(Enemies[i]->getCenter(), player.getCenter()) < size * 2);
+    }
 }
 
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
-    CreateMapRectByLocation(*CurLocation, wallsRect);
-    SeenWalls.assign(CurLocation->walls.size(), vb(0));
-    for (int i = 0; i < CurLocation->walls.size(); i++)
-        SeenWalls[i].assign(CurLocation->walls[i].size(), false);
     
     player.setCenter(3.5f * size, 2.5f * size);
     player.CurWeapon = nullptr;
@@ -273,6 +292,9 @@ void LoadMainMenu() {
     portal.setFunction([](){
         screen = screens::Dungeon;
         Bullets.clear();
+        for (int i = 0; i < Enemies.size(); i++)
+            delete Enemies[i];
+        Enemies.clear();
         MiniMapActivated = false;
         EscapeMenuActivated = false;
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
@@ -280,17 +302,20 @@ void LoadMainMenu() {
         MainMenuMusic.pause();
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
+        portal.setCenter(player.getCenter());
+
+        DrawableStuff.clear();
+        DrawableStuff.push_back(&portal);
+        DrawableStuff.push_back(&player);
+        for (Enemy* &enemy: Enemies)
+            DrawableStuff.push_back(enemy);
 
         InterfaceStuff.clear();
         InterfaceStuff.push_back(&ManaBar);
         InterfaceStuff.push_back(&HpBar);
         InterfaceStuff.push_back(&chat);
-
-        portal.setCenter(player.getCenter());
-        portal.setFunction([](){
-            LevelGenerate(START_N, START_M);
-            portal.setCenter(player.getCenter());
-        });
+        
+        InteractibeStuff.clear();
     });
 
     // Set cameras
@@ -348,8 +373,8 @@ void init() {
     IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,             scw / 8    );
     ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,       scw / 16   );
 
-    CircleOfSmallPlayer.setRadius(9);
-    CircleOfSmallPlayer.setFillColor(sf::Color(0, 180, 0));
+    MMPlayerRect.setRadius(9);
+    MMPlayerRect.setFillColor(sf::Color(0, 180, 0));
 
     player.FirstWeapon  = &pistol;
     player.SecondWeapon = &shotgun;
@@ -400,18 +425,15 @@ void EventHandler() {
                     if (MiniMapActivated) {
                         MiniMapActivated = false;
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-                    } else {
-                        if (screen == screens::MainRoom) {
-                            MainMenuMusic.pause();
-                            window.close();
-                        } else EscapeMenuActivated = true;
                     }
-                } else if (event.key.code == sf::Keyboard::Tab) {
+                }
+                if (event.key.code == sf::Keyboard::Tab) {
                     MiniMapActivated = !MiniMapActivated;
                     if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
                     else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                 }
-            } else if (event.type == sf::Event::MouseWheelMoved) {
+            }
+            if (event.type == sf::Event::MouseWheelMoved) {
                 if (MiniMapActivated) {
                     if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
                     else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
@@ -424,35 +446,45 @@ void EventHandler() {
             } else
                 DeleteFromVector(InterfaceStuff, (sf::Drawable*)&XButtonSprite);
 
-            if (portal.CanBeActivated(player))
-                if (portal.isActivated(player, event, InterfaceStuff))
-                    break;
+            for (Interactible*& x: InteractibeStuff)
+                if (x->CanBeActivated(player))
+                    if (x->isActivated(player, event, InterfaceStuff))
+                        break;
 
             switch (screen) {
                 case screens::MainRoom:
-                    player.update(event, MiniMapActivated);
+                    if (event.type == sf::Event::KeyPressed)
+                        if (event.key.code == sf::Keyboard::Escape) {
+                            MainMenuMusic.pause();
+                            window.close();
+                        }
                     break;
 
                 case screens::Dungeon:
-                    if (player.CurWeapon != nullptr && !MiniMapActivated) player.CurWeapon->Update(event);
-                    player.update(event, MiniMapActivated);
+                    if (player.CurWeapon != nullptr && !MiniMapActivated) {
+                        player.CurWeapon->Update(event);
+                        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R)
+                            player.CurWeapon->Reload(player.Mana);
+                    }
                     if (event.type == sf::Event::KeyPressed) {
+                        if (event.key.code == sf::Keyboard::Escape)
+                            EscapeMenuActivated = true;
                         if (event.key.code == sf::Keyboard::H) {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomLoaction;
-                            CreateMapRectByLocation(WaitingRoomLoaction, wallsRect);
-                        } else if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num7) {
+                        }
+                        if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num7) {
                             if (player.CurWeapon == nullptr) {
                                 InterfaceStuff.push_back(&AmmoBar);
                                 InterfaceStuff.push_back(&WeaponNameText);
                             }
                             if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
-                            else if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
-                            else if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
-                            else if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
-                            else if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                            else if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
-                            else if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
+                            if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
+                            if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
+                            if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
+                            if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
+                            if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
+                            if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
                             AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
                             WeaponNameText.setString(player.CurWeapon->Name);
                         }
@@ -513,21 +545,43 @@ void updateBullets() {
         if (Bullets[i].penetration < 0 || Bullets[i].todel)
             Bullets.erase(Bullets.begin() + i--);
         else {
-            Bullets[i].move(wallsRect);
-            sf::Vector2f difpos = player.getCenter() - Bullets[i].getCenter();
-            if (std::hypot(difpos.x, difpos.y) <= player.radius + Bullets[i].radius) {
+            Bullets[i].move(*CurLocation);
+            if (distance(player.getCenter(), Bullets[i].getCenter()) <= player.radius + Bullets[i].radius) {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
+            }
+            for (Enemy* &enemy: Enemies) {
+                if (distance(enemy->getCenter(), Bullets[i].getCenter()) <= enemy->radius + Bullets[i].radius) {
+                    enemy->getDamage(Bullets[i].damage);
+                    Bullets[i].penetration--;
+                }
             }
         }
 }
 
 void MainLoop() {
     while (window.isOpen()) {
+        if (player.Health.toBottom() == 0) {
+            EscapeButton.buttonFunction();
+        }
+        for (int i = 0; i < Enemies.size(); i++) {
+            if (Enemies[i]->Health.toBottom() == 0) {
+                DeleteFromVector(DrawableStuff, (sf::Drawable*)Enemies[i]);
+                delete Enemies[i];
+                Enemies.erase(Enemies.begin() + i);
+            } else {
+                Enemies[i]->setTarget(player.getCenter());
+                Enemies[i]->move(*CurLocation);
+                Enemies[i]->UpdateState();
+                Enemies[i]->CurWeapon->lock = false;
+                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getCenter());
+                Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
+            }
+        }
+        player.UpdateState();
         if (!window.hasFocus()) {
-            player.update();
-            if (player.CurWeapon != nullptr)
-                player.CurWeapon->Update(player);
+            if (player.CurWeapon != nullptr && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()));
             updateBullets();
 
             sf::Event event;
@@ -543,13 +597,12 @@ void MainLoop() {
             }
         } else {
             if (!chat.inputted) {
-                player.move(wallsRect);
+                player.move(*CurLocation);
                 GameView.setCenter(player.getCenter());
             }
             int wasBulletsSize = Bullets.size();
-            player.update();
-            if (player.CurWeapon != nullptr)
-                player.CurWeapon->Update(player);
+            if (player.CurWeapon != nullptr && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()));
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
                 mutex.lock();
@@ -578,11 +631,17 @@ void MainLoop() {
                 SendPacket.clear();
                 mutex.unlock();
             }
+            
             if (MiniMapActivated) {
                 if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
                     MiniMapView.move(-sf::Vector2f(sf::Mouse::getPosition() - MouseBuffer) * MiniMapZoom);
             }
             MouseBuffer = sf::Mouse::getPosition();
+
+            if (screen == screens::Dungeon) {
+                if (Enemies.size() == 0 && !in(InteractibeStuff, (Interactible*)&portal))
+                    InteractibeStuff.push_back(&portal);
+            }
         }
         ManaBar.Update();
         HpBar.Update();
@@ -639,8 +698,10 @@ void ClientConnect() {
         else std::cout << "SendPacket didn't sended\n";
 
         SendPacket.clear();
-        if (client->send(LabyrinthData) == sf::Socket::Done) std::cout << "Labyrinth walls sended\n";
+        SendPacket << LabyrinthLocation;
+        if (client->send(SendPacket) == sf::Socket::Done) std::cout << "Labyrinth walls sended\n";
         else std::cout << "Labyrinth walls didn't sended\n";
+        SendPacket.clear();
 
         mutex.unlock();
     } else delete client;
@@ -756,13 +817,7 @@ void funcOfClient() {
                             break;
                         case pacetStates::Labyrinth:
                             std::cout << "Labyrinth receiving\n";
-                            ReceivePacket >> LabyrinthLocation.n >> LabyrinthLocation.m;
-                            std::cout << "n = " << LabyrinthLocation.n << " m = " << LabyrinthLocation.m << '\n';
-                            LabyrinthLocation.SetSize(LabyrinthLocation.n, LabyrinthLocation.m);
-                            for (int i = 0; i < LabyrinthLocation.walls.size(); i++)
-                                for (int j = 0; j < LabyrinthLocation[i].size(); j++)
-                                    ReceivePacket >> LabyrinthLocation[i][j];
-                            CreateMapRectByLocation(LabyrinthLocation, wallsRect);
+                            ReceivePacket >> LabyrinthLocation;
                             std::cout << "Labyrinth receive\n";
                             break;
                         case pacetStates::PlayerPos:

@@ -49,6 +49,7 @@ void Bar<T>::setPosition(float x, float y) {
     wall.setPosition(x, y);
     background.setPosition(x + 5, y + 5);
     foreground.setPosition(x + 5, y + 5);
+    Update();
 }
 
 template <typename T>
@@ -69,8 +70,8 @@ void Bar<T>::Update() {
 
 template <typename T>
 void Bar<T>::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    if (ShowWall) target.draw(wall);
-    if (ShowBackground) target.draw(background);
-    if (ShowForeground) target.draw(foreground);
-    if (ShowText) target.draw(ValueText);
+    if (ShowWall) target.draw(wall, states);
+    if (ShowBackground) target.draw(background, states);
+    if (ShowForeground) target.draw(foreground, states);
+    if (ShowText) target.draw(ValueText, states);
 }

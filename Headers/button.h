@@ -8,7 +8,7 @@
 class Button : public Rect, public sf::Drawable {
 public:
     sf::Texture texture, pushedTexture;
-    sf::Sprite rect;
+    sf::Sprite sprite;
     PlacedText ButtonText;
     bool Pushed = false, ShowText = true, ShowButton = true;
     void (*buttonFunction)(void);
@@ -34,7 +34,7 @@ Button::Button(str TextureFile, str word, void (*foo)(void)) {
     ButtonText.setCharacterSize(150);
     ButtonText.setFillColor(sf::Color(199, 199, 199));
     setTexture(TextureFile);
-    setSize(rect.getGlobalBounds().width, rect.getGlobalBounds().height);
+    setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
     setWord(word);
     buttonFunction = foo;
 }
@@ -47,12 +47,12 @@ void Button::setWord(str word) {
 void Button::setTexture(str TextureFile) {
     texture.loadFromFile(TextureFile + ".png");
     pushedTexture.loadFromFile(TextureFile + "Pushed.png");
-    rect.setTexture(texture);
+    sprite.setTexture(texture);
 }
 
 void Button::setPosition(float x, float y) {
     PosX = x; PosY = y;
-    rect.setPosition(x, y);
+    sprite.setPosition(x, y);
     ButtonText.setCenter(getCenter());
 }
 
@@ -60,7 +60,7 @@ void Button::setSize(float w, float h) {
     if (Width != 0 && Height != 0) {
         ButtonText.setScale(w / Width, h / Height);
         ButtonText.setCenter(getCenter());
-        rect.setScale(w / Width, h / Height);
+        sprite.setScale(w / Width, h / Height);
     }
     Width = w; Height = h;
 }
@@ -72,15 +72,15 @@ void Button::setCharacterSize(int size) {
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (ShowButton) {
-        target.draw(rect);
-        if (ShowText) target.draw(ButtonText);
+        target.draw(sprite, states);
+        if (ShowText) target.draw(ButtonText, states);
     }
 }
 
 bool Button::isActivated(sf::Event& event) {
     if (Pushed && event.type == sf::Event::MouseButtonReleased) {
         Pushed = false;
-        rect.setTexture(texture);
+        sprite.setTexture(texture);
         if (OnTheButton(event.mouseButton.x, event.mouseButton.y)) {
             buttonFunction();
             return true;
@@ -90,7 +90,7 @@ bool Button::isActivated(sf::Event& event) {
         OnTheButton(event.mouseButton.x, event.mouseButton.y) && 
         event.mouseButton.button == sf::Mouse::Button::Left) {
             Pushed = true;
-            rect.setTexture(pushedTexture);
+            sprite.setTexture(pushedTexture);
             return true;
         }
     return false;

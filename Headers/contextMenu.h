@@ -29,16 +29,17 @@ ContextMenu::ContextMenu(str textureName, str name, Rect rect = Rect{0, 0, 600, 
 }
 
 void ContextMenu::addElement(str name, str text, void (*func)(void), sf::Vector2f elemPos, sf::Vector2f elemSize) {
-    elements.push_back(*(new Button(name, text, func)));
+    Button *NewButton = new Button(name, text, func);
+    elements.push_back(*NewButton);
     elements[elements.size() - 1].setPosition(elemPos.x, elemPos.y);
     elements[elements.size() - 1].setSize(elemSize);
 }
 
 void ContextMenu::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if(isMenuActive) {
-        target.draw(rect);
+        target.draw(sprite, states);
         for(int i = 0; i < elements.size(); i++)
-            target.draw(elements[i]);
+            target.draw(elements[i], states);
     }
 }
 
