@@ -313,6 +313,10 @@ void LoadMainMenu() {
         InterfaceStuff.push_back(&ManaBar);
         InterfaceStuff.push_back(&HpBar);
         InterfaceStuff.push_back(&chat);
+        if (player.CurWeapon != nullptr) {
+            InterfaceStuff.push_back(&AmmoBar);
+            InterfaceStuff.push_back(&WeaponNameText);
+        }
         
         InteractibeStuff.clear();
     });
@@ -332,6 +336,10 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&ManaBar);
     InterfaceStuff.push_back(&HpBar);
     InterfaceStuff.push_back(&chat);
+    if (player.CurWeapon != nullptr) {
+        InterfaceStuff.push_back(&AmmoBar);
+        InterfaceStuff.push_back(&WeaponNameText);
+    }
 
     InteractibeStuff.push_back(&portal);
 }
@@ -473,7 +481,7 @@ void EventHandler() {
                             CurLocation = &WaitingRoomLoaction;
                         }
                         if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num7) {
-                            if (player.CurWeapon == nullptr) {
+                            if (!in(InterfaceStuff, (sf::Drawable*)&AmmoBar)) {
                                 InterfaceStuff.push_back(&AmmoBar);
                                 InterfaceStuff.push_back(&WeaponNameText);
                             }
