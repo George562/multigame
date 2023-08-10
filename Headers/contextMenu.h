@@ -29,8 +29,7 @@ ContextMenu::ContextMenu(str textureName, str name, Rect rect = Rect{0, 0, 600, 
 }
 
 void ContextMenu::addElement(str name, str text, void (*func)(void), sf::Vector2f elemPos, sf::Vector2f elemSize) {
-    Button *NewButton = new Button(name, text, func);
-    elements.push_back(*NewButton);
+    elements.push_back(*(new Button(name, text, func)));
     elements[elements.size() - 1].setPosition(elemPos.x, elemPos.y);
     elements[elements.size() - 1].setSize(elemSize);
 }

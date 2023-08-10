@@ -45,8 +45,7 @@ public:
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * (rand() % (int)scatter - scatter / 2), d) * BulletVelocity / len;
         sf::Vector2f SpawnPoint(shooter.getCenter() + sf::Vector2f{d.x * shooter.Width, d.y * shooter.Height} * 0.7f / BulletVelocity);
-        Bullet* tempBullet = new Bullet(SpawnPoint, d, 1, damage);
-        Bullets.push_back(*tempBullet);
+        Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage)));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
     }
@@ -89,8 +88,7 @@ public:
         d = RotateOn(-M_PI_RAD * scatter / 2.f, d) * BulletVelocity / len;
         for (int i = 0; i < NumberOfBulletsPerShot; i++, d = RotateOn(M_PI_RAD * scatter / (NumberOfBulletsPerShot - 1.f), d)) {
             sf::Vector2f SpawnPoint(shooter.getCenter() + sf::Vector2f{d.x * shooter.Width, d.y * shooter.Height} * 0.7f / BulletVelocity);
-            Bullet* tempBullet = new Bullet(SpawnPoint, d, 1, damage);
-            Bullets.push_back(*tempBullet);
+            Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage)));
         }
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
@@ -117,8 +115,7 @@ public:
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * (rand() % (int)scatter - scatter / 2), d) * BulletVelocity / len;
         sf::Vector2f SpawnPoint(shooter.getCenter() + sf::Vector2f{d.x * shooter.Width, d.y * shooter.Height} * 0.7f / BulletVelocity);
-        Bullet* tempBullet = new Bullet(SpawnPoint, d, 1, damage, Bullet::Bubble, sf::seconds(3));
-        Bullets.push_back(*tempBullet);
+        Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage, Bullet::Bubble, sf::seconds(3))));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
         if ((--NumberOfBulletsPerShot) == 0) {
@@ -146,8 +143,7 @@ public:
         sf::Vector2f d{0, BulletVelocity};
         d = RotateOn(float(-M_PI * NumberOfBulletsPerShot) / 12, d);
         sf::Vector2f SpawnPoint(shooter.getCenter() + sf::Vector2f{d.x * shooter.Width, d.y * shooter.Height} * 0.7f / BulletVelocity);
-        Bullet* tempBullet = new Bullet(SpawnPoint, d, 1, damage);
-        Bullets.push_back(*tempBullet);
+        Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage)));
         AmountOfAmmunition -= 1;
         NumberOfBulletsPerShot++;
         TimeFromLastShot->restart();
@@ -165,8 +161,7 @@ public:
         sf::Vector2f d{0, BulletVelocity};
         d = RotateOn(float(rand()), d);
         sf::Vector2f SpawnPoint(shooter.getCenter() + sf::Vector2f{d.x * shooter.Width, d.y * shooter.Height} * 0.7f / BulletVelocity);
-        Bullet* tempBullet = new Bullet(SpawnPoint, d, 1, damage);
-        Bullets.push_back(*tempBullet);
+        Bullets.push_back(*(new Bullet(SpawnPoint, d, 1, damage)));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
     }
