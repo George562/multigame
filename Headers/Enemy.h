@@ -12,10 +12,10 @@ public:
 };
 ////////////////////////////////////////////////////////////
 
-// Scientific
-class Scientific : public Enemy {
+// DistortedScientist
+class DistortedScientist : public Enemy {
 public:
-    Scientific() : Enemy("Scientific") {
+    DistortedScientist() : Enemy("Distorted Scientist") {
         Health = {0, 20, 20}; HealthRecovery = 1;
         Mana = {0, 100, 100}; ManaRecovery = 1;
         ManaRecovery = 1;
@@ -27,7 +27,7 @@ public:
         Width = Height = radius * 2;
         CurWeapon = new Pistol();
 
-        SetTexture("sources/textures/Scientific");
+        SetTexture("sources/textures/DistortedScientist");
 
         Name.ShowText = true;
     }

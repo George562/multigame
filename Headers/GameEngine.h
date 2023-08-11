@@ -70,7 +70,7 @@ Shotgun shotgun;
 Revolver revolver;
 Rifle rifle;
 Bubblegun bubblegun;
-Armagedon armagedon;
+Armageddon armageddon;
 Chaotic chaotic;
 std::vector<Weapon*> weapons = {
     &pistol,
@@ -78,7 +78,7 @@ std::vector<Weapon*> weapons = {
     &revolver,
     &rifle,
     &bubblegun,
-    &armagedon,
+    &armageddon,
     &chaotic
 };
 
@@ -270,7 +270,7 @@ void LevelGenerate(int n, int m) {
     Enemies.clear();
 
     for (int i = 0; i < 7; i++)
-        Enemies.push_back(new Scientific());
+        Enemies.push_back(new DistortedScientist());
 
     for (int i = 0; i < Enemies.size(); i++) {
         Enemies[i]->setTarget(player.getCenter());
@@ -490,7 +490,7 @@ void EventHandler() {
                             if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
                             if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
                             if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                            if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armagedon);
+                            if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armageddon);
                             if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
                             AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
                             WeaponNameText.setString(player.CurWeapon->Name);

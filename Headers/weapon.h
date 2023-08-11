@@ -125,10 +125,10 @@ public:
     }
 };
 
-// Armagedon
-class Armagedon : public Weapon {
+// Armageddon
+class Armageddon : public Weapon {
 public:
-    Armagedon() : Weapon(300, 0.1, 1.f / 16, 3) { BulletVelocity = 3; Name = "Armagedon"; }
+    Armageddon() : Weapon(300, 0.1, 1.f / 16, 3) { BulletVelocity = 3; Name = "Armageddon"; }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             NumberOfBulletsPerShot = 0;
