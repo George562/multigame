@@ -91,7 +91,7 @@ void App::init()
     selectedObject = wall;
 
     mapItemColor[nothing] = sf::Color(100, 100, 100);
-    mapItemColor[wall] = sf::Color::White;
+    mapItemColor[wall] = sf::Color(200, 200, 200);
     mapItemColor[box] = sf::Color(255, 228, 205);
 
     mapItemName[nothing] = "None (eraser)";
@@ -321,8 +321,8 @@ void App::interactionViewPoll(sf::Event& event)
 
     if(viewEvent.type == sf::Event::MouseWheelScrolled)
     {
-        zoomFactor *= viewEvent.mouseWheelScroll.delta < 0 ? 1.1f : 0.9f;
-        editorView.zoom(viewEvent.mouseWheelScroll.delta < 0 ? 1.1f : 0.9f);
+        zoomFactor *= viewEvent.mouseWheelScroll.delta < 0 ? 1.1f : (1.f / 1.1f);
+        editorView.zoom(viewEvent.mouseWheelScroll.delta < 0 ? 1.1f : (1.f / 1.1f));
     }
 
     for(int i = 0; i < levelMatrix.size(); i++)

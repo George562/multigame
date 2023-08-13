@@ -77,9 +77,7 @@ std::vector<Weapon*> weapons = {
     &shotgun,
     &revolver,
     &rifle,
-    &bubblegun,
-    &armageddon,
-    &chaotic
+    &bubblegun
 };
 
 //////////////////////////////////////////////////////////// Enemies
@@ -117,7 +115,7 @@ Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
 Button CoopButton("sources/textures/RedPanel", "Online", [](){
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    MiniMapView.setCenter(player.getCenter() * float(miniSize) / float(size));
+    MiniMapView.setCenter(player.getPosition() * float(miniSize) / float(size));
     MainMenuMusic.pause();
 });
 
@@ -253,7 +251,7 @@ void drawIterface() {
 }
 
 void LevelGenerate(int n, int m) {
-    player.setPosition(sf::Vector2f{(m / 2 + 0.5f) * size, (n / 2 + 0.5f) * size} - player.getSize() / 2.f);
+    player.setPosition(sf::Vector2f{(m / 2 + 0.5f) * size, (n / 2 + 0.5f) * size});
 
     Bullets.clear();
     
@@ -273,11 +271,11 @@ void LevelGenerate(int n, int m) {
         Enemies.push_back(new DistortedScientist());
 
     for (int i = 0; i < Enemies.size(); i++) {
-        Enemies[i]->setTarget(player.getCenter());
+        Enemies[i]->setTarget(player.getPosition());
         do {
             Enemies[i]->setCenter(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
         } while (!CurLocation->EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
-                 distance(Enemies[i]->getCenter(), player.getCenter()) < size * 2);
+                 distance(Enemies[i]->getPosition(), player.getPosition()) < size * 2);
     }
 }
 
@@ -297,11 +295,11 @@ void LoadMainMenu() {
         MiniMapActivated = false;
         EscapeMenuActivated = false;
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter(player.getCenter() * float(miniSize) / float(size));
+        MiniMapView.setCenter(player.getPosition() * float(miniSize) / float(size));
         MainMenuMusic.pause();
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
-        portal.setCenter(player.getCenter());
+        portal.setCenter(player.getPosition());
 
         DrawableStuff.clear();
         DrawableStuff.push_back(&portal);
@@ -322,8 +320,8 @@ void LoadMainMenu() {
     });
 
     // Set cameras
-    GameView.setCenter(player.getCenter());
-    MiniMapView.setCenter(player.getCenter() * float(miniSize) / float(size));
+    GameView.setCenter(player.getPosition());
+    MiniMapView.setCenter(player.getPosition() * float(miniSize) / float(size));
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     MainMenuMusic.play();
@@ -480,18 +478,12 @@ void EventHandler() {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomLoaction;
                         }
-                        if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num7) {
+                        if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num5) {
                             if (!in(InterfaceStuff, (sf::Drawable*)&AmmoBar)) {
                                 InterfaceStuff.push_back(&AmmoBar);
                                 InterfaceStuff.push_back(&WeaponNameText);
                             }
-                            if (event.key.code == sf::Keyboard::Num1) player.ChangeWeapon(&pistol);
-                            if (event.key.code == sf::Keyboard::Num2) player.ChangeWeapon(&shotgun);
-                            if (event.key.code == sf::Keyboard::Num3) player.ChangeWeapon(&revolver);
-                            if (event.key.code == sf::Keyboard::Num4) player.ChangeWeapon(&rifle);
-                            if (event.key.code == sf::Keyboard::Num5) player.ChangeWeapon(&bubblegun);
-                            if (event.key.code == sf::Keyboard::Num6) player.ChangeWeapon(&armageddon);
-                            if (event.key.code == sf::Keyboard::Num7) player.ChangeWeapon(&chaotic);
+                            player.ChangeWeapon(weapons[event.key.code - sf::Keyboard::Num1]);
                             AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
                             WeaponNameText.setString(player.CurWeapon->Name);
                         }
@@ -553,12 +545,12 @@ void updateBullets() {
             Bullets.erase(Bullets.begin() + i--);
         else {
             Bullets[i].move(*CurLocation);
-            if (distance(player.getCenter(), Bullets[i].getCenter()) <= player.radius + Bullets[i].radius) {
+            if (distance(player.getPosition(), Bullets[i].getPosition()) <= player.Radius + Bullets[i].Radius) {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
             for (Enemy* &enemy: Enemies) {
-                if (distance(enemy->getCenter(), Bullets[i].getCenter()) <= enemy->radius + Bullets[i].radius) {
+                if (distance(enemy->getPosition(), Bullets[i].getPosition()) <= enemy->Radius + Bullets[i].Radius) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
                 }
@@ -577,11 +569,11 @@ void MainLoop() {
                 delete Enemies[i];
                 Enemies.erase(Enemies.begin() + i);
             } else {
-                Enemies[i]->setTarget(player.getCenter());
+                Enemies[i]->setTarget(player.getPosition());
                 Enemies[i]->move(*CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getCenter());
+                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition());
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
@@ -605,7 +597,7 @@ void MainLoop() {
         } else {
             if (!chat.inputted) {
                 player.move(*CurLocation);
-                GameView.setCenter(player.getCenter());
+                GameView.setCenter(player.getPosition());
             }
             int wasBulletsSize = Bullets.size();
             if (player.CurWeapon != nullptr && sf::Mouse::isButtonPressed(sf::Mouse::Left))
@@ -839,7 +831,7 @@ void funcOfClient() {
                         case pacetStates::SetPos:
                             for (Player& x: ConnectedPlayers) ReceivePacket >> x;
                             player.setPosition(ConnectedPlayers[ComputerID].getPosition());
-                            GameView.setCenter(player.getCenter());
+                            GameView.setCenter(player.getPosition());
                             break;
                         case pacetStates::ChatEvent:
                             ReceivePacket >> PacetData;

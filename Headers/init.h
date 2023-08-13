@@ -12,6 +12,7 @@
 #include <cmath>
 #include "scale.h"
 #include "rect.h"
+#include "circle.h"
 #define M_PI       3.14159265358979323846   // pi
 
 #define ActivationButton sf::Keyboard::X
@@ -56,3 +57,31 @@ float WallMinSize = size / 8, WallMaxSize = size;
 sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
+
+bool Rect::intersect(Circle circle) {
+    if (circle.PosY < PosY) {   // Если сверху
+        if (circle.PosX < PosX)         // Если в левом углу
+            return distance(getPosition(), circle.getPosition()) <= circle.Radius;
+        if (circle.PosX > getRight())   // Если в правом углу
+            return distance(getRightTop(), circle.getPosition()) <= circle.Radius;
+        return PosY - circle.PosY <= circle.Radius; // Если посередине
+    }
+    if (circle.PosY > getBottom()) {    // Если снизу
+        if (circle.PosX < PosX)             // Если в левом углу
+            return distance(getLeftBottom(), circle.getPosition()) <= circle.Radius;
+        if (circle.PosX > getRight())       // Если в правом углу
+            return distance(getRightBottom(), circle.getPosition()) <= circle.Radius;
+        return circle.PosY - getBottom() <= circle.Radius; // Если посередине
+    }
+    
+    if (circle.PosX < PosX)   // Если слева
+        return PosX - circle.PosX <= circle.Radius;
+    if (circle.PosX > getRight())   // Если справа
+        return circle.PosX - getRight() <= circle.Radius;
+ 
+    return true; // внутри
+}
+
+bool Circle::intersect(Rect rect) {
+    return rect.intersect(*this);
+}

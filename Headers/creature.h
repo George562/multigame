@@ -6,7 +6,7 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Creature : public Rect, public sf::Drawable {
+class Creature : public Circle, public sf::Drawable {
 public:
     Scale<float> Health;
     Scale<float> Mana;
@@ -18,13 +18,12 @@ public:
     sf::Vector2f target;
     sf::Texture texture;
     sf::Sprite sprite;
-    float radius;
     Weapon *FirstWeapon, *SecondWeapon, *CurWeapon;
     sf::Time LastCheck;
     sf::Clock* localClock;
     PlacedText Name;
 
-    Creature(str name) : Rect() {
+    Creature(str name) : Circle() {
         Name.setString(name);
         Name.setCharacterSize(25);
         Name.setFillColor(sf::Color::Green);
@@ -42,7 +41,7 @@ public:
     };
     virtual void getDamage(float dmg) { Health -= dmg; }
     virtual void move(Location& location) {
-        sf::Vector2f dist = target - getCenter();
+        sf::Vector2f dist = target - getPosition();
         sf::Vector2f VelocityTarget = {std::max(std::min(MaxVelocity * VelocityBuf, dist.x), -MaxVelocity * VelocityBuf),
                                        std::max(std::min(MaxVelocity * VelocityBuf, dist.y), -MaxVelocity * VelocityBuf)};
         sf::Vector2f Vdist = (VelocityTarget - Velocity);
@@ -63,20 +62,21 @@ public:
             std::cout << "Can't load texture" << name << ".png\n";
         texture.setSmooth(true);
         sprite.setTexture(texture);
-        if (Width == 0 && Height == 0)
-            setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
+        if (Radius == 0)
+            setRadius(sprite.getGlobalBounds().width / 2.f);
         else
-            sprite.setScale(Width / sprite.getGlobalBounds().width, Height / sprite.getGlobalBounds().height);
+            sprite.setScale(Radius * 2.f / sprite.getGlobalBounds().width, Radius * 2.f / sprite.getGlobalBounds().height);
+        sprite.setOrigin(sprite.getLocalBounds().width / 2.f, sprite.getLocalBounds().height / 2.f);
     };
     void ChangeWeapon(Weapon* to) { CurWeapon = to; }
 
     void setPosition(float x, float y) {
         PosX = x; PosY = y;
         sprite.setPosition(PosX, PosY);
-        Name.setPosition(sf::Vector2f{PosX + (Width - Name.Width) / 2.f, PosY - Name.Height});
+        Name.setPosition(sf::Vector2f{PosX + (Radius - Name.Width) / 2.f, PosY - Name.Height});
     }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
-    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(float x, float y) { setPosition(x - Radius / 2, y - Radius / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
     void move(float x, float y) { setPosition(PosX + x, PosY + y); }
     void move(sf::Vector2f v) { setPosition(PosX + v.x, PosY + v.y); }

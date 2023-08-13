@@ -18,45 +18,49 @@ bool DeleteFromVector(std::vector<T>& arr, T x) {
 }
 
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
-sf::Vector2i WillCollisionWithWalls(vvr& Walls, float& PosX, float& PosY, float& Width, float& Height, float& dx, float& dy) {
-    sf::Vector2i res = {-1, -1};
-    int y = int(PosY) / size, x = int(PosX) / size;
+template <typename Object>
+sf::Vector2i WillCollisionWithWalls(vvr& Walls, Object obj, sf::Vector2f Velocity) {
+    int y = int(obj.PosY) / size, x = int(obj.PosX) / size;
     int WallHight = Walls.size(), WallLength = Walls[0].size();
-    float nextX = PosX + dx, nextY = PosY + dy;
+    
+    Object NextY = obj, NextX = obj;
+    NextX.PosX += Velocity.x;
+    NextY.PosY += Velocity.y;
 
-    if (dy < 0) {
-        if ((y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(PosX, nextY, Width, Height)) &&
-            (!Walls[y * 2][x].intersect(PosX, nextY, Width, Height)) &&
-            (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x + 1].intersect(PosX, nextY, Width, Height)) &&
-            (x + 1 >= WallLength || !Walls[y * 2][x + 1].intersect(PosX, nextY, Width, Height)))
+    sf::Vector2i res = {-1, -1};
+    if (Velocity.y < 0) {
+        if ((y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(NextY)) &&
+            (!Walls[y * 2][x].intersect(NextY)) &&
+            (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x + 1].intersect(NextY)) &&
+            (x + 1 >= WallLength || !Walls[y * 2][x + 1].intersect(NextY)) &&
+            (x - 1 < 0 || !Walls[y * 2][x - 1].intersect(NextY)))
             res.y = 1;
     }
-    if (dx < 0) {
-        if ((x - 1 < 0 || !Walls[y * 2][x - 1].intersect(nextX, PosY, Width, Height)) &&
-            (!Walls[y * 2 + 1][x].intersect(nextX, PosY, Width, Height)) &&
-            (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(nextX, PosY, Width, Height)) &&
-            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x].intersect(nextX, PosY, Width, Height)))
+    if (Velocity.x < 0) {
+        if ((x - 1 < 0 || !Walls[y * 2][x - 1].intersect(NextX)) &&
+            (!Walls[y * 2 + 1][x].intersect(NextX)) &&
+            (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(NextX)) &&
+            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x].intersect(NextX)) &&
+            (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(NextX)))
             res.x = 1;
     }
-    if (dy > 0) {
-        if ((y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x].intersect(PosX, nextY, Width, Height)) &&
-            (!Walls[y * 2 + 2][x].intersect(PosX, nextY, Width, Height)) &&
-            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x + 1].intersect(PosX, nextY, Width, Height)) &&
-            (x + 1 >= WallLength || !Walls[y * 2 + 2][x + 1].intersect(PosX, nextY, Width, Height)))
+    if (Velocity.y > 0) {
+        if ((y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x].intersect(NextY)) &&
+            (!Walls[y * 2 + 2][x].intersect(NextY)) &&
+            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x + 1].intersect(NextY)) &&
+            (x + 1 >= WallLength || !Walls[y * 2 + 2][x + 1].intersect(NextY)) &&
+            (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(NextY)))
             res.y = 1;
     }
-    if (dx > 0) {
-        if ((x + 1 >= WallLength || !Walls[y * 2][x + 1].intersect(nextX, PosY, Width, Height)) &&
-            (!Walls[y * 2 + 1][x + 1].intersect(nextX, PosY, Width, Height)) &&
-            (x + 1 >= WallLength || !Walls[y * 2 + 2][x + 1].intersect(nextX, PosY, Width, Height)) &&
-            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x + 1].intersect(nextX, PosY, Width, Height)))
+    if (Velocity.x > 0) {
+        if ((x + 1 >= WallLength || !Walls[y * 2][x + 1].intersect(NextX)) &&
+            (!Walls[y * 2 + 1][x + 1].intersect(NextX)) &&
+            (x + 1 >= WallLength || !Walls[y * 2 + 2][x + 1].intersect(NextX)) &&
+            (y * 2 + 3 >= WallHight || !Walls[y * 2 + 3][x + 1].intersect(NextX)) &&
+            (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x + 1].intersect(NextX)))
             res.x = 1;
     }
     return res;  // if value of vector == -1 => there was collision
-}
-// {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
-sf::Vector2i WillCollisionWithWalls(vvr& Walls, Rect& rect, sf::Vector2f d) {
-    return WillCollisionWithWalls(Walls, rect.PosX, rect.PosY, rect.Width, rect.Height, d.x, d.y);
 }
 
 void RotateOn(float phi, float& x, float& y) {
@@ -83,10 +87,7 @@ sf::Vector2f RotateAround(float phi, sf::Vector2f& a, float& X, float& Y) {
     return newA;
 }
 
-float distance(sf::Vector2f a, sf::Vector2f b) { return std::hypot(a.x - b.x, a.y - b.y); }
-float LenOfVector(sf::Vector2f v) { return std::hypot(v.x, v.y); }
-
-sf::Vector2f operator*(sf::Vector2f& a, sf::Vector2f& b) {
+sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
     return sf::Vector2f{a.x * b.x, a.y * b.y};
 }
 

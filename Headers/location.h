@@ -93,6 +93,7 @@ void Location::WallGenerator(float probability) {
 
     walls[walls.size() - 1].assign(m, Tiles::wall);
     ClearSeenWalls();
+    FillWallsRect();
 }
 
 bool Location::LoadFromFile(str FileName) {
@@ -167,8 +168,6 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
     } while (AmountOfEnableTiles < float(n * m) / 3 || AmountOfEnableTiles > float(n * m) / 1.5);
     std::cout << "total count of generations = " << CounterOfGenerations
               << " Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
-
-    FillWallsRect();
 }
 
 void Location::FillWallsRect() {

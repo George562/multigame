@@ -2,17 +2,17 @@
 #include "location.h"
 
 #define COMMON_BULLET_RADIUS 7
+#define COMMON_BULLET_PENETRATION 0
 
-struct Bullet : public sf::Drawable {
+struct Bullet : public sf::Drawable, public Circle {
     enum Type : sf::Uint8 {
         Common,
         Bubble
     };
 
-    float PosX, PosY, dx, dy;
+    sf::Vector2f Velocity;
     int penetration;
     float damage;
-    float radius = COMMON_BULLET_RADIUS;
     sf::CircleShape circle;
     bool exlpode = false;
     sf::Time timer;
@@ -22,9 +22,10 @@ struct Bullet : public sf::Drawable {
     sf::Clock* localClock;
 
     Bullet() {}
-    Bullet(sf::Vector2f pos, sf::Vector2f v, int penetr, float dmg, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
-        PosX = pos.x; PosY = pos.y; 
-        dx = v.x; dy = v.y;
+    Bullet(sf::Vector2f pos, sf::Vector2f v, float dmg, int penetr = COMMON_BULLET_PENETRATION, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
+        PosX = pos.x; PosY = pos.y;
+        Velocity = v;
+        Radius = COMMON_BULLET_RADIUS;
         penetration = penetr;
         damage = dmg;
         timer = time;
@@ -37,46 +38,36 @@ struct Bullet : public sf::Drawable {
                 circle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
                 break;
         }
-        circle.setRadius(radius);
+        circle.setRadius(Radius);
         localClock = new sf::Clock();
     }
-    
-    Rect getRect() { return {PosX, PosY, dx, dy}; }
-    sf::Vector2f getPosition() { return {PosX, PosY}; }
-    void setPosition(sf::Vector2f &v) { PosX = v.x; PosY = v.y; }
-    void setPosition(float x, float y) { PosX = x; PosY = y; }
-    sf::Vector2f getCenter() { return {PosX + radius / 2, PosY + radius / 2}; }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         target.draw(circle, states);
     }
 
     void move(Location& location) {
-        if (dx != 0 || dy != 0) {
-            sf::Vector2i res = WillCollisionWithWalls(location.wallsRect, PosX, PosY, radius, radius, dx, dy);
+        if (LenOfVector(Velocity) != 0) {
+            sf::Vector2i res = WillCollisionWithWalls(location.wallsRect, (Circle)*this, Velocity);
             if (res.x == -1 || res.y == -1) penetration--;
-            dx *= res.x;
-            dy *= res.y;
+            Velocity = Velocity * (sf::Vector2f)res;
         }
         switch (type) {
             case Bullet::Bubble:
-                PosX += dx * (timer - localClock->getElapsedTime()).asSeconds();
-                PosY += dy * (timer - localClock->getElapsedTime()).asSeconds();
-                if (timer < localClock->getElapsedTime()) { dy = 0; dx = 0; exlpode = true; }
+                Circle::move(Velocity * (timer - localClock->getElapsedTime()).asSeconds());
+                if (timer < localClock->getElapsedTime()) { Velocity = {0.f, 0.f}; exlpode = true; }
                 if (exlpode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
                         ExplosionRadius += 1.f / 5;
                         circle.setFillColor(circle.getFillColor() - sf::Color(0, 0, 0, 4));
-                        radius = COMMON_BULLET_RADIUS * ExplosionRadius.cur;
-                        circle.setRadius(radius);
-                        PosX -= COMMON_BULLET_RADIUS / 5;
-                        PosY -= COMMON_BULLET_RADIUS / 5;
+                        Radius = COMMON_BULLET_RADIUS * ExplosionRadius.cur;
+                        circle.setRadius(Radius);
+                        Circle::move(-COMMON_BULLET_RADIUS / 5, -COMMON_BULLET_RADIUS / 5);
                     } else todel = true;
                 }
                 break;
             case Bullet::Common:
-                PosX += dx;
-                PosY += dy;
+                Circle::move(Velocity);
         }
         circle.setPosition(PosX, PosY);
     }
@@ -87,15 +78,15 @@ vB Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
     sf::Color clr = b.circle.getFillColor();
-    return packet << b.PosX << b.PosY << b.dx << b.dy << b.penetration << clr << b.damage << b.timer.asSeconds() << b.type;
+    return packet << b.PosX << b.PosY << b.Velocity.x << b.Velocity.y << b.penetration << clr << b.damage << b.timer.asSeconds() << b.type;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
     sf::Color clr;
     float timer;
-    packet >> b.PosX >> b.PosY >> b.dx >> b.dy >> b.penetration >> clr >> b.damage >> timer;
+    packet >> b.PosX >> b.PosY >> b.Velocity.x >> b.Velocity.y >> b.penetration >> clr >> b.damage >> timer;
     b.timer = sf::seconds(timer);
     sf::Uint8 t; packet >> t; b.type = Bullet::Type(t);
     b.circle.setFillColor(clr);
-    b.circle.setRadius(b.radius);
+    b.circle.setRadius(b.Radius);
     return packet;
 }

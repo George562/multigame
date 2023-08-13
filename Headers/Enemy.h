@@ -23,8 +23,7 @@ public:
         Money = rand() % 100;
         Velocity = {0, 0}; MaxVelocity = 4;
         Acceleration = 0.3;
-        radius = 60;
-        Width = Height = radius * 2;
+        Radius = 60;
         CurWeapon = new Pistol();
 
         SetTexture("sources/textures/DistortedScientist");
@@ -35,11 +34,11 @@ public:
         VelocityBuf = 1;
 
         if (TheWay.size() == 0)
-            FindTheWay(location, getCenter(), target, TheWay);
-        if (sf::Vector2i(getCenter()) / size == sf::Vector2i(TheWay[TheWay.size() - 1]) / size)
-            FindTheWay(location, getCenter(), target, TheWay);
+            FindTheWay(location, getPosition(), target, TheWay);
+        if (sf::Vector2i(getPosition()) / size == sf::Vector2i(TheWay[TheWay.size() - 1]) / size)
+            FindTheWay(location, getPosition(), target, TheWay);
         
-        sf::Vector2f dist = TheWay[TheWay.size() - 1] - getCenter();
+        sf::Vector2f dist = TheWay[TheWay.size() - 1] - getPosition();
         sf::Vector2f wasTarget = target;
         setTarget(TheWay[TheWay.size() - 1] + sf::Vector2f{float(rand() % 20), float(rand() % 20)});
         Creature::move(location);

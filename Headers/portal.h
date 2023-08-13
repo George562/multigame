@@ -10,8 +10,8 @@ public:
     Portal();
     bool IsPlayerOnPortal = false;
     void setFunction(void (*func)(void)) { function = func; }
-    bool CanBeActivated(Rect&);
-    bool isActivated(Rect&, sf::Event&, std::vector<sf::Drawable*>&);
+    bool CanBeActivated(Circle&);
+    bool isActivated(Circle&, sf::Event&, std::vector<sf::Drawable*>&);
 
     void setPosition(float x, float y) { PosX = x; PosY = y; sprite.setPosition(PosX, PosY); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
@@ -35,9 +35,9 @@ Portal::Portal() {
     sprite.setPosition(PosX, PosY);
 }
 
-bool Portal::CanBeActivated(Rect& rect) { return intersect(rect); }
+bool Portal::CanBeActivated(Circle& rect) { return intersect(rect); }
 
-bool Portal::isActivated(Rect& rect, sf::Event& event, std::vector<sf::Drawable*>& InterfaceStuff) {
+bool Portal::isActivated(Circle& rect, sf::Event& event, std::vector<sf::Drawable*>& InterfaceStuff) {
     if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
         function();
         return true;
