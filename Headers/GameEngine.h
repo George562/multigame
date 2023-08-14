@@ -227,6 +227,7 @@ void drawMiniMap() {
     window.setView(GameView);
 }
 
+sf::Clock ClockFPS;
 void drawIterface() {
     window.setView(InterfaceView);
     for (sf::Drawable* d: InterfaceStuff) window.draw(*d);
@@ -247,6 +248,12 @@ void drawIterface() {
         window.draw(ListOfPlayers);
         window.draw(EscapeButton);
     }
+
+    PlacedText TextFPS;
+    TextFPS.setString(std::to_string(int(1.f / ClockFPS.getElapsedTime().asSeconds())));
+    ClockFPS.restart();
+    window.draw(TextFPS);
+
     window.setView(GameView);
 }
 
