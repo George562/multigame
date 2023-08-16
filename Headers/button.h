@@ -10,17 +10,23 @@ public:
     sf::Texture texture, pushedTexture;
     sf::Sprite sprite;
     PlacedText ButtonText;
-    bool Pushed = false, ShowText = true, ShowButton = true;
+    bool Pushed = false, ShowButton = true;
     void (*buttonFunction)(void);
 
     Button() {}
     Button(str, str, void (*)(void));
-    void setWord(str);
-    void setTexture(str);
+
     void setPosition(float, float);
+    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
+    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
+
     void setSize(float, float);
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
-    void setCharacterSize(int);
+
+    void setWord(str word) { ButtonText.setString(word); ButtonText.setCenter(getCenter()); }
+    void setTexture(str);
+    void setCharacterSize(int size) { ButtonText.setCharacterSize(size); ButtonText.setCenter(getCenter()); }
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
     bool OnTheButton(int& x, int& y)  { return contains(x, y); }
     bool isActivated(sf::Event&);
@@ -37,11 +43,6 @@ Button::Button(str TextureFile, str word, void (*foo)(void)) {
     setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
     setWord(word);
     buttonFunction = foo;
-}
-
-void Button::setWord(str word) {
-    ButtonText.setString(word);
-    ButtonText.setCenter(getCenter());
 }
 
 void Button::setTexture(str TextureFile) {
@@ -65,15 +66,10 @@ void Button::setSize(float w, float h) {
     Width = w; Height = h;
 }
 
-void Button::setCharacterSize(int size) {
-    ButtonText.setCharacterSize(size);
-    setPosition(PosX, PosY);
-}
-
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (ShowButton) {
         target.draw(sprite, states);
-        if (ShowText) target.draw(ButtonText, states);
+        target.draw(ButtonText, states);
     }
 }
 

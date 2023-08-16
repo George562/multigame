@@ -4,8 +4,6 @@
 
 Гоша: create InterfaceObject class
 
-Гоша: create DrawableRect
-
 Гоша/Рома: make GameEvent class correctly
 
 Ваня: create NPC class
@@ -25,6 +23,3 @@ create NPC bricker
 create tower and button to spawn tower
 
 enable infinite map generation by sectorized generation from corner (for infinite mod)
-
-Рекомендации:
-    непонятно какие пушки есть в арсенале
