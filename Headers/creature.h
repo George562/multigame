@@ -37,7 +37,7 @@ public:
     };
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         sprite.setPosition(PosX, PosY);
-        Name.setPosition(sf::Vector2f{PosX - Name.Width / 2.f, PosY - Radius - Name.Height});
+        Name.setPosition(PosX - Name.Width / 2.f, PosY - Radius - Name.Height);
         
         target.draw(sprite, states);
         target.draw(Name, states);

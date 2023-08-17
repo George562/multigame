@@ -30,7 +30,7 @@ At the moment the game is not playable. We are at the development stage of the e
   - portal (step on it and push X)
 - minimap (use Tab for fullscreen minimap, move and zoom it)
 - Enemies
-  - Scientific
+  - DistortedScientist
 
 
 # Our sprites and arts
@@ -38,13 +38,13 @@ At the moment the game is not playable. We are at the development stage of the e
 - **[Portal](https://github.com/George562/multigame/blob/main/sources/textures/Portal.png)**
 - **[Player](https://github.com/George562/multigame/blob/main/sources/textures/Player.png)**
 - **[Farmer](https://github.com/George562/multigame/blob/main/sources/textures/Farmer.png)**
-- **[Scientific](https://github.com/George562/multigame/blob/main/sources/textures/Scientific.png)**
+- **[DistortedScientist](https://github.com/George562/multigame/blob/main/sources/textures/DistortedScientist.png)**
 
 <p align="center">
 	<img src="./sources/textures/Portal.png" height="300">
   <img src="./sources/textures/Player.png" width="200">
   <img src="./sources/textures/Farmer.png" width="200">
-  <img src="./sources/textures/Scientific.png" width="200">
+  <img src="./sources/textures/DistortedScientist.png" width="200">
 </p>
 
 # Our music
