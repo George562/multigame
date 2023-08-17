@@ -36,7 +36,7 @@ public:
     void WallGenerator(float probability);
     bool LoadFromFile(str FileName);
     bool WriteToFile(str FileName);
-    void FindEnableTilesFrom(sf::Vector2f);
+    void FindEnableTilesFrom(sf::Vector2f&);
     void FillWallsRect();
     void AddObject(LocationObject obj) { objects.push_back(obj); }
     void ClearSeenWalls() {
@@ -133,7 +133,7 @@ bool Location::WriteToFile(str FileName) {
     return true;
 }
 
-void Location::FindEnableTilesFrom(sf::Vector2f p) {
+void Location::FindEnableTilesFrom(sf::Vector2f& p) {
     EnableTiles.assign(n, vb(m, false));
     std::queue<Point> q; q.push(Point{int(p.x), int(p.y)});
     Point cur, check;

@@ -50,7 +50,7 @@ namespace pacetStates {
 int scw = 1920; // screen width
 int sch = 1080; // screen height
 
-int size = 540, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
+int size = 480, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
 int START_N = 10, START_M = 10;
 float WallMinSize = size / 8, WallMaxSize = size;
 
@@ -58,7 +58,7 @@ sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
 
-bool Rect::intersect(Circle circle) {
+bool Rect::intersect(Circle& circle) {
     if (circle.PosY < PosY) {   // Если сверху
         if (circle.PosX < PosX)         // Если в левом углу
             return distance(getPosition(), circle.getPosition()) <= circle.Radius;
@@ -82,6 +82,6 @@ bool Rect::intersect(Circle circle) {
     return true; // внутри
 }
 
-bool Circle::intersect(Rect rect) {
+bool Circle::intersect(Rect& rect) {
     return rect.intersect(*this);
 }

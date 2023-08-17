@@ -20,7 +20,8 @@ public:
     str Name;
 
     Weapon() {};
-    Weapon(int MaxAmmo, float ManaCost, float FireRate, float dmg) {
+    Weapon(str name, int MaxAmmo, float ManaCost, float FireRate, float dmg) {
+        Name = name;
         AmountOfAmmunition = {0, MaxAmmo, MaxAmmo};
         this->ManaCost = ManaCost;
         this->FireRate = sf::seconds(FireRate);
@@ -61,13 +62,13 @@ public:
 // Pistol
 class Pistol : public Weapon {
 public:
-    Pistol() : Weapon(9, 1, 1, 2) { BulletVelocity = 10; NumberOfBulletsPerShot = 1;  scatter = 20; Name = "Pistol"; }
+    Pistol() : Weapon("Pistol", 9, 1, 1, 2) { BulletVelocity = 10; NumberOfBulletsPerShot = 1;  scatter = 20; }
 };
 
 // Revolver
 class Revolver : public Weapon {
 public:
-    Revolver() : Weapon(6, 2, 0, 5) { BulletVelocity = 16; NumberOfBulletsPerShot = 1;  scatter = 10; Name = "Revolver"; }
+    Revolver() : Weapon("Revolver", 6, 2, 0, 5) { BulletVelocity = 16; NumberOfBulletsPerShot = 1;  scatter = 10; }
     void Shoot(Circle& shooter, sf::Vector2f direction) {
         Weapon::Shoot(shooter, direction);
         lock = true;
@@ -77,7 +78,7 @@ public:
 // Shotgun
 class Shotgun : public Weapon {
 public:
-    Shotgun() : Weapon(5, 5, 1, 3) { BulletVelocity = 10; NumberOfBulletsPerShot = 10;  scatter = 50; Name = "Shotgun"; }
+    Shotgun() : Weapon("Shotgun", 5, 10, 1, 3) { BulletVelocity = 10; NumberOfBulletsPerShot = 10;  scatter = 50; }
     void Shoot(Circle& shooter, sf::Vector2f direction) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
@@ -99,14 +100,18 @@ public:
 // Rifle
 class Rifle : public Weapon {
 public:
-    Rifle() : Weapon(25, 1, 0.05, 2) { BulletVelocity = 16; NumberOfBulletsPerShot = 10;  scatter = 17; Name = "Rifle"; }
+    Rifle() : Weapon("Rifle", 25, 1.5f, 0.05, 2) { BulletVelocity = 16; NumberOfBulletsPerShot = 10;  scatter = 17; }
 };
 
 // Bubblegun
 class Bubblegun : public Weapon {
 public:
-    sf::Vector2f position;
-    Bubblegun() : Weapon(30, 1, 0.03, 2) { BulletVelocity = 3; NumberOfBulletsPerShot = 10;  scatter = 40; Name = "Bubblegun"; }
+    sf::Vector2f position = {};
+    Bubblegun() : Weapon("Bubblegun", 30, 3, 0.03, 2) { BulletVelocity = 3; NumberOfBulletsPerShot = 10;  scatter = 40; }
+    void Update(sf::Event& event) {
+        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
+            lock = false;
+    };
     void Shoot(Circle& shooter, sf::Vector2f direction) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
@@ -118,7 +123,7 @@ public:
         Bullets.push_back(*(new Bullet(SpawnPoint, d, damage, COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(3))));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
-        if ((--NumberOfBulletsPerShot) == 0) {
+        if (--NumberOfBulletsPerShot == 0) {
             NumberOfBulletsPerShot = 10;
             lock = true;
         }
@@ -128,7 +133,7 @@ public:
 // Armageddon
 class Armageddon : public Weapon {
 public:
-    Armageddon() : Weapon(300, 0.1, 1.f / 16, 3) { BulletVelocity = 3; Name = "Armageddon"; }
+    Armageddon() : Weapon("Armageddon", 300, 0.1, 1.f / 16, 3) { BulletVelocity = 3; }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             NumberOfBulletsPerShot = 0;
@@ -153,7 +158,7 @@ public:
 // Chaotic
 class Chaotic : public Weapon {
 public:
-    Chaotic() : Weapon(300, 0.1, 1.f / 16, 3) { BulletVelocity = 3; Name = "Chaotic"; }
+    Chaotic() : Weapon("Chaotic", 300, 0.1, 1.f / 16, 3) { BulletVelocity = 3; }
     void Shoot(Circle& shooter, sf::Vector2f direction) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;

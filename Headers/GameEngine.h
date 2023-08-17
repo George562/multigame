@@ -227,7 +227,8 @@ void drawMiniMap() {
     window.setView(GameView);
 }
 
-sf::Clock ClockFPS;
+sf::Clock ClockFPS; int FPSCounter;
+PlacedText TextFPS;
 void drawIterface() {
     window.setView(InterfaceView);
     for (sf::Drawable* d: InterfaceStuff) window.draw(*d);
@@ -236,7 +237,6 @@ void drawIterface() {
     PlacedText WeaponNameText1(WeaponNameText);
     for (int i = 0; i < weapons.size(); i++) {
         AmmoBar1.setValue(weapons[i]->AmountOfAmmunition);
-        AmmoBar1.Update();
         WeaponNameText1.setString(std::to_string(i + 1) + ": " + weapons[i]->Name);
         AmmoBar1.setPosition(20, sch - 20 - (weapons.size() - i) * (AmmoBar1.getSize().y + 10));
         WeaponNameText1.setPosition(30 + AmmoBar1.getSize().x, sch - 20 - (weapons.size() - i) * (AmmoBar1.getSize().y + 10) + WeaponNameText1.Height / 2);
@@ -249,9 +249,12 @@ void drawIterface() {
         window.draw(EscapeButton);
     }
 
-    PlacedText TextFPS;
-    TextFPS.setString(std::to_string(int(1.f / ClockFPS.getElapsedTime().asSeconds())));
-    ClockFPS.restart();
+    FPSCounter++;
+    if (ClockFPS.getElapsedTime() >= sf::seconds(1)) {
+        TextFPS.setString(std::to_string(FPSCounter));
+        FPSCounter = 0;
+        ClockFPS.restart();
+    }
     window.draw(TextFPS);
 
     window.setView(GameView);
@@ -274,22 +277,20 @@ void LevelGenerate(int n, int m) {
         delete Enemies[i];
     Enemies.clear();
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 8; i++)
         Enemies.push_back(new DistortedScientist());
 
-    for (int i = 0; i < Enemies.size(); i++) {
-        Enemies[i]->setTarget(player.getPosition());
+    for (int i = 0; i < Enemies.size(); i++)
         do {
-            Enemies[i]->setCenter(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
+            Enemies[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
         } while (!CurLocation->EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
                  distance(Enemies[i]->getPosition(), player.getPosition()) < size * 2);
-    }
 }
 
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
     
-    player.setCenter(3.5f * size, 2.5f * size);
+    player.setPosition(3.5f * size, 2.5f * size);
     player.CurWeapon = nullptr;
 
     portal.setCenter(3.5f * size, 3.5f * size);
@@ -586,7 +587,7 @@ void MainLoop() {
         }
         player.UpdateState();
         if (!window.hasFocus()) {
-            if (player.CurWeapon != nullptr && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+            if (player.CurWeapon != nullptr)
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()));
             updateBullets();
 
@@ -607,7 +608,7 @@ void MainLoop() {
                 GameView.setCenter(player.getPosition());
             }
             int wasBulletsSize = Bullets.size();
-            if (player.CurWeapon != nullptr && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+            if (player.CurWeapon != nullptr)
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()));
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
@@ -649,9 +650,6 @@ void MainLoop() {
                     InteractibeStuff.push_back(&portal);
             }
         }
-        ManaBar.Update();
-        HpBar.Update();
-        AmmoBar.Update();
 
         draw();
 
