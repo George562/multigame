@@ -18,11 +18,13 @@ struct Bullet : public sf::Drawable, public Circle {
     sf::Time timer;
     Scale<float> ExplosionRadius = {1, 12, 1};
     Bullet::Type type;
+    Fraction::Fraction fromWho;
     bool todel = false;
     sf::Clock* localClock;
 
     Bullet() {}
-    Bullet(sf::Vector2f pos, sf::Vector2f v, float dmg, int penetr = COMMON_BULLET_PENETRATION, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
+    Bullet(Fraction::Fraction f, sf::Vector2f pos, sf::Vector2f v, float dmg, int penetr = COMMON_BULLET_PENETRATION, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
+        fromWho = f;
         PosX = pos.x; PosY = pos.y;
         Velocity = v;
         Radius = COMMON_BULLET_RADIUS;

@@ -6,7 +6,7 @@ class Enemy : public Creature {
 public:
     std::vector<sf::Vector2f> TheWay;
 
-    Enemy(str name) : Creature(name) {}
+    Enemy(str name) : Creature(name, Fraction::Enemy) {}
     virtual void move(Location&) {}
     virtual void UpdateState() {}
 };

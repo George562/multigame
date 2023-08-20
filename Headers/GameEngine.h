@@ -553,12 +553,12 @@ void updateBullets() {
             Bullets.erase(Bullets.begin() + i--);
         else {
             Bullets[i].move(*CurLocation);
-            if (distance(player.getPosition(), Bullets[i].getPosition()) <= player.Radius + Bullets[i].Radius) {
+            if (Bullets[i].fromWho != Fraction::Player && player.intersect(Bullets[i])) {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
             for (Enemy* &enemy: Enemies) {
-                if (distance(enemy->getPosition(), Bullets[i].getPosition()) <= enemy->Radius + Bullets[i].Radius) {
+                if (Bullets[i].fromWho != Fraction::Enemy && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
                 }
@@ -581,14 +581,14 @@ void MainLoop() {
                 Enemies[i]->move(*CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition());
+                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition(), Enemies[i]->fraction);
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
         player.UpdateState();
         if (!window.hasFocus()) {
             if (player.CurWeapon != nullptr)
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()));
+                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
             updateBullets();
 
             sf::Event event;
@@ -609,7 +609,7 @@ void MainLoop() {
             }
             int wasBulletsSize = Bullets.size();
             if (player.CurWeapon != nullptr)
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()));
+                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
                 mutex.lock();

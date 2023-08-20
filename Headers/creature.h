@@ -2,12 +2,14 @@
 #include "weapon.h"
 #include "text.h"
 
+
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
 class Creature : public Circle, public sf::Drawable {
 public:
+    Fraction::Fraction fraction;
     Scale<float> Health;
     Scale<float> Mana;
     float ManaRecovery, HealthRecovery;
@@ -23,7 +25,7 @@ public:
     mutable sf::Sprite sprite;
     mutable PlacedText Name;
 
-    Creature(str name) : Circle() {
+    Creature(str name, Fraction::Fraction f) : Circle() {
         Name.setString(name);
         Name.setCharacterSize(25);
         Name.setFillColor(sf::Color::Green);
@@ -31,6 +33,8 @@ public:
         Name.setOutlineColor(sf::Color::Red);
         Name.setFillColor(sf::Color::White);
         Name.ShowText = false;
+
+        fraction = f;
 
         LastCheck = sf::seconds(0);
         localClock = new sf::Clock();

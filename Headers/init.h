@@ -25,8 +25,15 @@ using vvb = std::vector<vb>;
 
 Point dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
+namespace Fraction {
+    enum Fraction : sf::Uint8 {
+        Player,
+        Enemy
+    };
+};
+
 namespace screens {
-    enum screens {  // the types of screen
+    enum screens : sf::Uint8 {  // the types of screen
         MainRoom,
         SetIP,
         Dungeon
@@ -34,7 +41,7 @@ namespace screens {
 };
 
 namespace pacetStates {
-    enum pacetStates {
+    enum pacetStates : sf::Uint8 {
         disconnect,         // client send to host
         PlayersAmount,      // to connecting client
         PlayerConnect,      // host sent to clients when someone connected
