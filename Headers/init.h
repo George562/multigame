@@ -10,6 +10,8 @@
 #include <ctime>
 #include <queue>
 #include <cmath>
+#include <unordered_map>
+#include <unordered_set>
 #include "scale.h"
 #include "rect.h"
 #include "circle.h"
@@ -29,6 +31,10 @@ namespace Fraction {
     enum Fraction : sf::Uint8 {
         Player,
         Enemy
+    };
+    std::unordered_map<Fraction, std::unordered_set<Fraction>> Friendship{
+        {Player, {Player}},
+        {Enemy, {Enemy}}
     };
 };
 

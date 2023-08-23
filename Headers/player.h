@@ -38,12 +38,12 @@ void Player::move(Location& location) {
         {'d', sf::Keyboard::isKeyPressed(sf::Keyboard::D)}
     };
 
-    VelocityBuf = 1;
+    VelocityBuff = 1;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
-        VelocityBuf *= 2;
+        VelocityBuff *= 2;
     
     setTarget(getPosition() + sf::Vector2f{(PressedKeys['a'] || PressedKeys['d']) ? (PressedKeys['d'] ? 1.f : -1.f) : 0.f,
-                                         (PressedKeys['w'] || PressedKeys['s']) ? (PressedKeys['s'] ? 1.f : -1.f) : 0.f} * MaxVelocity * VelocityBuf);
+                                         (PressedKeys['w'] || PressedKeys['s']) ? (PressedKeys['s'] ? 1.f : -1.f) : 0.f} * MaxVelocity * VelocityBuff);
     Creature::move(location);
 }
 

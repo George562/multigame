@@ -24,8 +24,6 @@ At the moment the game is not playable. We are at the development stage of the e
   - 3: Revolver
   - 4: Rifle
   - 5: Bubblegun
-  - 6: Armagedon
-  - 7: Chaotic
 - Interactible objects (interaction with the X button)
   - portal (step on it and push X)
 - minimap (use Tab for fullscreen minimap, move and zoom it)

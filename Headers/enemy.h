@@ -31,14 +31,13 @@ public:
         Name.ShowText = true;
     }
     void move(Location& location) override {
-        VelocityBuf = 1;
+        VelocityBuff = 1;
 
         if (TheWay.size() == 0)
             FindTheWay(location, getPosition(), target, TheWay);
         if (sf::Vector2i(getPosition()) / size == sf::Vector2i(TheWay[TheWay.size() - 1]) / size)
             FindTheWay(location, getPosition(), target, TheWay);
-        
-        sf::Vector2f dist = TheWay[TheWay.size() - 1] - getPosition();
+
         sf::Vector2f wasTarget = target;
         setTarget(TheWay[TheWay.size() - 1] + sf::Vector2f{float(rand() % 20), float(rand() % 20)});
         Creature::move(location);

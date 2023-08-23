@@ -15,7 +15,7 @@ public:
     float ManaRecovery, HealthRecovery;
     Scale<float> Armor; // blocking damage = min(1, damage - armor)
     float Money;
-    sf::Vector2f Velocity; float MaxVelocity, VelocityBuf;
+    sf::Vector2f Velocity; float MaxVelocity, VelocityBuff;
     float Acceleration;
     sf::Vector2f target;
     Weapon *FirstWeapon, *SecondWeapon, *CurWeapon;
@@ -49,8 +49,8 @@ public:
     virtual void getDamage(float dmg) { Health -= dmg; }
     virtual void move(Location& location) {
         sf::Vector2f dist = target - getPosition();
-        sf::Vector2f VelocityTarget = {std::max(std::min(MaxVelocity * VelocityBuf, dist.x), -MaxVelocity * VelocityBuf),
-                                       std::max(std::min(MaxVelocity * VelocityBuf, dist.y), -MaxVelocity * VelocityBuf)};
+        sf::Vector2f VelocityTarget = {std::max(std::min(MaxVelocity * VelocityBuff, dist.x), -MaxVelocity * VelocityBuff),
+                                       std::max(std::min(MaxVelocity * VelocityBuff, dist.y), -MaxVelocity * VelocityBuff)};
         sf::Vector2f Vdist = VelocityTarget - Velocity;
         sf::Vector2f Direction = {std::max(std::min(Acceleration, Vdist.x), -Acceleration),
                                   std::max(std::min(Acceleration, Vdist.y), -Acceleration)};

@@ -553,12 +553,12 @@ void updateBullets() {
             Bullets.erase(Bullets.begin() + i--);
         else {
             Bullets[i].move(*CurLocation);
-            if (Bullets[i].fromWho != Fraction::Player && player.intersect(Bullets[i])) {
+            if (Fraction::Friendship[Bullets[i].fromWho].count(player.fraction) == 0 && player.intersect(Bullets[i])) {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
             for (Enemy* &enemy: Enemies) {
-                if (Bullets[i].fromWho != Fraction::Enemy && enemy->intersect(Bullets[i])) {
+                if (Fraction::Friendship[Bullets[i].fromWho].count(enemy->fraction) == 0 && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
                 }
