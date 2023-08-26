@@ -21,11 +21,9 @@ bool DeleteFromVector(std::vector<T>& arr, T x) {
 template <typename Obj>
 sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f& Velocity) {
     int y = int(obj.PosY) / size, x = int(obj.PosX) / size;
-    
-    obj.PosX += Velocity.x;
-    obj.PosY += Velocity.y;
-
     sf::Vector2i res = {-1, -1};
+    
+    obj.PosY += Velocity.y;
     if (Velocity.y < 0) {
         if ((y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(obj)) &&
             (!Walls[y * 2][x].intersect(obj)) &&
@@ -34,14 +32,6 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f& Velocity
             (x - 1 < 0 || !Walls[y * 2][x - 1].intersect(obj)))
             res.y = 1;
     }
-    if (Velocity.x < 0) {
-        if ((x - 1 < 0 || !Walls[y * 2][x - 1].intersect(obj)) &&
-            (!Walls[y * 2 + 1][x].intersect(obj)) &&
-            (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(obj)) &&
-            (y * 2 + 3 >= Walls.size() || !Walls[y * 2 + 3][x].intersect(obj)) &&
-            (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(obj)))
-            res.x = 1;
-    }
     if (Velocity.y > 0) {
         if ((y * 2 + 3 >= Walls.size() || !Walls[y * 2 + 3][x].intersect(obj)) &&
             (!Walls[y * 2 + 2][x].intersect(obj)) &&
@@ -49,6 +39,16 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f& Velocity
             (x + 1 >= Walls[0].size() || !Walls[y * 2 + 2][x + 1].intersect(obj)) &&
             (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(obj)))
             res.y = 1;
+    }
+    obj.PosY -= Velocity.y;
+    obj.PosX += Velocity.x;
+    if (Velocity.x < 0) {
+        if ((x - 1 < 0 || !Walls[y * 2][x - 1].intersect(obj)) &&
+            (!Walls[y * 2 + 1][x].intersect(obj)) &&
+            (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(obj)) &&
+            (y * 2 + 3 >= Walls.size() || !Walls[y * 2 + 3][x].intersect(obj)) &&
+            (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(obj)))
+            res.x = 1;
     }
     if (Velocity.x > 0) {
         if ((x + 1 >= Walls[0].size() || !Walls[y * 2][x + 1].intersect(obj)) &&
@@ -59,7 +59,6 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f& Velocity
             res.x = 1;
     }
     obj.PosX -= Velocity.x;
-    obj.PosY -= Velocity.y;
     return res;  // if value of vector == -1 => there was collision
 }
 
