@@ -18,15 +18,18 @@ At the moment the game is not playable. We are at the development stage of the e
   - Shift (sprint)
 - shoot
   - LMB
-- weapons (is selected using the corresponding button on the keyboard)
-  - 1: Pistol
-  - 2: Shotgun
-  - 3: Revolver
-  - 4: Rifle
-  - 5: Bubblegun
+- weapons (selected by scrolling wheel)
+  - Pistol
+  - Shotgun
+  - Revolver
+  - Rifle
+  - Bubblegun
 - Interactible objects (interaction with the X button)
   - portal (step on it and push X)
-- minimap (use Tab for fullscreen minimap, move and zoom it)
+- minimap
+  - acrivated by Tab
+  - move and zoom by mouse
+  - can be hold on player by Space
 - Enemies
   - DistortedScientist
 

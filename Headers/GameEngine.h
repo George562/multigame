@@ -8,6 +8,7 @@
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap   = true;
 bool IsDrawInterface = true;
+bool MiniMapHoldOnPlayer = false;
 
 //////////////////////////////////////////////////////////// Stuff for work with system and screen
 sf::ContextSettings settings;
@@ -79,6 +80,7 @@ std::vector<Weapon*> weapons = {
     &rifle,
     &bubblegun
 };
+Scale<int> CurWeapon{0, 4, 0};
 
 //////////////////////////////////////////////////////////// Enemies
 std::vector<Enemy*> Enemies;
@@ -177,7 +179,7 @@ void drawWalls() {
                 j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
             if (CurLocation->wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, (float)scw, (float)sch))
                 CurLocation->SeenWalls[i][j] = true;
-            if (CurLocation->walls[i][j] == Tiles::wall) {
+            if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setSize(CurLocation->wallsRect[i][j].getSize());
                 window.draw(WallRect);
@@ -186,13 +188,17 @@ void drawWalls() {
 }
 
 void drawMiniMap() {
-    // draw walls
     float ScaleParam = float(miniSize) / float(size);
+
+    if (MiniMapHoldOnPlayer)
+        MiniMapView.setCenter(player.getPosition() * ScaleParam);
+
+    // draw walls
     window.setView(MiniMapView);
     sf::VertexArray line(sf::Lines, 2);
     for (int i = 0; i < CurLocation->walls.size(); i++)
         for (int j = 0; j < CurLocation->walls[i].size(); j++)
-            if (CurLocation->walls[i][j] == Tiles::wall && CurLocation->SeenWalls[i][j]) {
+            if (CurLocation->walls[i][j] && CurLocation->SeenWalls[i][j]) {
                 if (i % 2 == 1) { // |
                     line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2), sf::Color::White);
                     line[1] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i + 1) / 2), sf::Color::White);
@@ -237,9 +243,9 @@ void drawIterface() {
     PlacedText WeaponNameText1(WeaponNameText);
     for (int i = 0; i < weapons.size(); i++) {
         AmmoBar1.setValue(weapons[i]->AmountOfAmmunition);
-        WeaponNameText1.setString(std::to_string(i + 1) + ": " + weapons[i]->Name);
+        WeaponNameText1.setString(weapons[i]->Name);
         AmmoBar1.setPosition(20, sch - 20 - (weapons.size() - i) * (AmmoBar1.getSize().y + 10));
-        WeaponNameText1.setPosition(30 + AmmoBar1.getSize().x, sch - 20 - (weapons.size() - i) * (AmmoBar1.getSize().y + 10) + WeaponNameText1.Height / 2);
+        WeaponNameText1.setPosition(35 + AmmoBar1.getSize().x, AmmoBar1.getPosition().y + WeaponNameText1.Height / 4);
         window.draw(AmmoBar1);
         window.draw(WeaponNameText1);
     }
@@ -261,8 +267,6 @@ void drawIterface() {
 }
 
 void LevelGenerate(int n, int m) {
-    player.setPosition(sf::Vector2f{(m / 2 + 0.5f) * size, (n / 2 + 0.5f) * size});
-
     Bullets.clear();
     
     MiniMapView.zoom(1 / MiniMapZoom);
@@ -277,7 +281,7 @@ void LevelGenerate(int n, int m) {
         delete Enemies[i];
     Enemies.clear();
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 1; i++)
         Enemies.push_back(new DistortedScientist());
 
     for (int i = 0; i < Enemies.size(); i++)
@@ -295,18 +299,31 @@ void LoadMainMenu() {
 
     portal.setCenter(3.5f * size, 3.5f * size);
     portal.setFunction([](){
+        player.setPosition(sf::Vector2f{(START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size});
+        CurWeapon.cur = 0;
+        player.ChangeWeapon(weapons[CurWeapon.cur]);
+        AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
+        WeaponNameText.setString(player.CurWeapon->Name);
+
         screen = screens::Dungeon;
+
         Bullets.clear();
+
         for (int i = 0; i < Enemies.size(); i++)
             delete Enemies[i];
         Enemies.clear();
+
         MiniMapActivated = false;
         EscapeMenuActivated = false;
+
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
         MiniMapView.setCenter(player.getPosition() * float(miniSize) / float(size));
+
         MainMenuMusic.pause();
+
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
+
         portal.setCenter(player.getPosition());
 
         DrawableStuff.clear();
@@ -318,11 +335,9 @@ void LoadMainMenu() {
         InterfaceStuff.clear();
         InterfaceStuff.push_back(&ManaBar);
         InterfaceStuff.push_back(&HpBar);
+        InterfaceStuff.push_back(&AmmoBar);
+        InterfaceStuff.push_back(&WeaponNameText);
         InterfaceStuff.push_back(&chat);
-        if (player.CurWeapon != nullptr) {
-            InterfaceStuff.push_back(&AmmoBar);
-            InterfaceStuff.push_back(&WeaponNameText);
-        }
         
         InteractibeStuff.clear();
     });
@@ -342,11 +357,6 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&ManaBar);
     InterfaceStuff.push_back(&HpBar);
     InterfaceStuff.push_back(&chat);
-    if (player.CurWeapon != nullptr) {
-        InterfaceStuff.push_back(&AmmoBar);
-        InterfaceStuff.push_back(&WeaponNameText);
-    }
-
     InteractibeStuff.push_back(&portal);
 }
 
@@ -379,15 +389,16 @@ void init() {
     IPPanel.setTextSize(80);
     ListOfPlayers.setTextSize(60);
 
-    CoopButton.setPosition      (scw - scw / 6 - CoopButton.Width * 3 / 4,      sch * 5 / 8);
-    HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,          sch * 5 / 8);
-    EscapeButton.setPosition    (scw / 2 -       EscapeButton.Width / 2,      sch * 5 / 8);
-    
-    IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,             scw / 8    );
-    ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,       scw / 16   );
+    CoopButton.setPosition      (scw - scw / 6 - CoopButton.Width * 3 / 4, sch * 5 / 8);
+    HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,     sch * 5 / 8);
+    EscapeButton.setPosition    (scw / 2 -       EscapeButton.Width / 2,   sch * 5 / 8);
+
+    IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,        scw / 8    );
+    ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,  scw / 16   );
 
     MMPlayerRect.setRadius(9);
     MMPlayerRect.setFillColor(sf::Color(0, 180, 0));
+    MMPlayerRect.setOrigin(MMPlayerRect.getRadius(), MMPlayerRect.getRadius());
 
     player.FirstWeapon  = &pistol;
     player.SecondWeapon = &shotgun;
@@ -445,6 +456,9 @@ void EventHandler() {
                     if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
                     else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                 }
+                if (event.key.code == sf::Keyboard::Space) {
+                    if (MiniMapActivated) MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
+                }
             }
             if (event.type == sf::Event::MouseWheelMoved) {
                 if (MiniMapActivated) {
@@ -486,12 +500,11 @@ void EventHandler() {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomLoaction;
                         }
-                        if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num5) {
-                            if (!in(InterfaceStuff, (sf::Drawable*)&AmmoBar)) {
-                                InterfaceStuff.push_back(&AmmoBar);
-                                InterfaceStuff.push_back(&WeaponNameText);
-                            }
-                            player.ChangeWeapon(weapons[event.key.code - sf::Keyboard::Num1]);
+                    }
+                    if (event.type == sf::Event::MouseWheelScrolled) {
+                        if (!MiniMapActivated) {
+                            CurWeapon -= (int)event.mouseWheelScroll.delta;
+                            player.ChangeWeapon(weapons[CurWeapon.cur]);
                             AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
                             WeaponNameText.setString(player.CurWeapon->Name);
                         }
