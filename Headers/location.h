@@ -1,13 +1,11 @@
 #pragma once
 #include "init.h"
 
-using TileID = sf::Uint16;
+using ObjectID = sf::Uint16;
 
 namespace Tiles {
-    TileID nothing = 0;
-    TileID wall = 1;
-    TileID box = 2;
-    TileID portal = 3;
+    ObjectID box = 1;
+    ObjectID portal = 2;
 }
 
 ////////////////////////////////////////////////////////////
@@ -16,10 +14,10 @@ namespace Tiles {
 
 class Location {
 public:
-    struct LocationObject { TileID id; sf::Vector2f pos; };
+    struct LocationObject { ObjectID id; sf::Vector2f pos; };
 
     int n, m;
-    std::vector<std::vector<TileID>> walls;
+    vvb walls;
     std::vector<LocationObject> objects;
     vvb EnableTiles;
     size_t AmountOfEnableTiles;
@@ -31,7 +29,6 @@ public:
     Location(int w, int h) { SetSize(w, h); AmountOfEnableTiles = 0; }
     void GenerateLocation(int n, int m, sf::Vector2f RootPoint);
     void SetSize(int w, int h);
-    std::vector<TileID>& operator[](int index) { return walls[index]; }
     void BuildWayFrom(sf::Vector2f);
     void WallGenerator(float probability);
     bool LoadFromFile(str FileName);
@@ -53,20 +50,21 @@ public:
 void Location::SetSize(int NewN, int NewM) {
     n = NewN;
     m = NewM;
-    walls.assign(n * 2 + 1, std::vector<TileID>(0));
-    for (int i = 0; i < walls.size(); i++) walls[i].assign(m + (i % 2), Tiles::nothing);
+    walls.assign(n * 2 + 1, vb(0));
+    for (int i = 0; i < walls.size(); i++) walls[i].assign(m + (i % 2), false);
+    ClearSeenWalls();
 }
 
 void Location::BuildWayFrom(sf::Vector2f p) {
     FindEnableTilesFrom(p);
-    AmountOfEnableTiles = 1;
-    for (int i = 0; i < n; i++) for (int j = 0; j < m; j++) AmountOfEnableTiles += EnableTiles[i][j] ? 1 : 0;
+    AmountOfEnableTiles = 0;
+    for (int i = 0; i < n; i++) for (int j = 0; j < m; j++) AmountOfEnableTiles += (int)EnableTiles[i][j];
     Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
     Point check;
     bool todel;
     for (int i = 0; i < walls.size(); i++)
         for (int j = 0; j < walls[i].size(); j++) {
-            if (walls[i][j] == Tiles::nothing) continue;
+            if (!walls[i][j]) continue;
             
             todel = true;
             check = Point{j, i / 2};
@@ -75,23 +73,57 @@ void Location::BuildWayFrom(sf::Vector2f p) {
             check = (i % 2 == 0) ? Point{j, i / 2 - 1} : Point{j - 1, i / 2};
             if (UsedAreaRect.contains(check.x, check.y) && EnableTiles[check.y][check.x])
                 todel = false;
-            if (todel) walls[i][j] = Tiles::nothing;
+            if (todel) walls[i][j] = false;
         }
 }
 
 void Location::WallGenerator(float probability) {
-    walls[0].assign(m, Tiles::wall);
+    // auto gen = []() {
+    //     thread_local std::mt19937 rng{std::random_device()()};
+    //     thread_local std::uniform_real_distribution<float> distr(0, 100);
+    //     return distr(rng);
+    // };
+    // if (walls.size() == 0) return;
+
+    // walls[0].assign(m, true);
+    // walls[walls.size() - 1].assign(m, true);
+
+    // sf::Thread* thr[7];
+    // int from = 1, to = walls.size() / 8;
+    // for (int i = 0; i < 7;) {
+    //     thr[i] = new sf::Thread([&, to, from] {
+    //         for (int i = from; i < to; i++) {
+    //             for (int j = 0; j < walls[i].size(); j++)
+    //                 walls[i][j] = (gen() / 100 < probability);
+    //             if (i % 2 == 1)
+    //                 walls[i][0] = walls[i][m] = true;
+    //         }
+    //     });
+    //     thr[i++]->launch();
+    //     from = i * walls.size() / 8; to = (i + 1) * walls.size() / 8;
+    // }
+    // for (int i = from; i < to - 1; i++) {
+    //     for (int j = 0; j < walls[i].size(); j++)
+    //         walls[i][j] = (gen() / 100 < probability);
+    //     if (i % 2 == 1)
+    //         walls[i][0] = walls[i][m] = true;
+    // }
+    // ClearSeenWalls();
+    // for (int i = 0; i < 7; i++)
+    //     thr[i]->wait();
+    // FillWallsRect();
+    walls[0].assign(m, true);
 
     for (int i = 1; i < walls.size() - 1; i++) {
         for (int j = 0; j < walls[i].size(); j++)
-            walls[i][j] = (float(rand() % 100) / 100 < probability) ? Tiles::wall : Tiles::nothing;
+            walls[i][j] = (float(rand() % 100) / 100 < probability);
         if (i % 2 == 1) {
-            walls[i][0] = Tiles::wall;
-            walls[i][m] = Tiles::wall;
+            walls[i][0] = true;
+            walls[i][m] = true;
         }
     }
 
-    walls[walls.size() - 1].assign(m, Tiles::wall);
+    walls[walls.size() - 1].assign(m, true);
     ClearSeenWalls();
     FillWallsRect();
 }
@@ -102,8 +134,10 @@ bool Location::LoadFromFile(str FileName) {
     file >> n >> m;
     SetSize(n, m);
     for (int i = 0; i < walls.size(); i++)
-        for (int j = 0; j < walls[i].size(); j++)
-            file >> walls[i][j];
+        for (int j = 0, t; j < walls[i].size(); j++) {
+            file >> t;
+            walls[i][j] = t;
+        }
     
     if (!file.eof()) {
         int k; file >> k;
@@ -143,16 +177,16 @@ void Location::FindEnableTilesFrom(sf::Vector2f& p) {
         if (EnableTiles[cur.y][cur.x]) continue;
         EnableTiles[cur.y][cur.x] = true;
         check = cur + dirs[0]; // {1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && walls[check.y * 2 + 1][check.x] == Tiles::nothing)
+        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x])
             q.push(check);
         check = cur + dirs[2]; // {-1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && walls[check.y * 2 + 1][check.x + 1] == Tiles::nothing)
+        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x + 1])
             q.push(check);
         check = cur + dirs[1]; // {0, 1}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && walls[check.y * 2][check.x] == Tiles::nothing)
+        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2][check.x])
             q.push(check);
         check = cur + dirs[3]; // {0, -1}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && walls[check.y * 2 + 2][check.x] == Tiles::nothing)
+        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 2][check.x])
             q.push(check);
     }
 }
@@ -161,20 +195,21 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
     SetSize(n, m);
     objects.clear();
     int CounterOfGenerations = 0;
+    sf::Clock timer;
     do {
         WallGenerator(0.48);
         BuildWayFrom(RootPoint / (float)size);
         CounterOfGenerations++;
-    } while (AmountOfEnableTiles < float(n * m) / 3 || AmountOfEnableTiles > float(n * m) / 1.5);
-    std::cout << "total count of generations = " << CounterOfGenerations
-              << " Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
+    } while (AmountOfEnableTiles < float(n * m) * 0.3f || AmountOfEnableTiles > float(n * m) * 0.7f);
+    std::cout << "Location was generated in " << timer.getElapsedTime().asSeconds() << " seconds with total number of generations = "
+              << CounterOfGenerations << "; Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
 }
 
 void Location::FillWallsRect() {
     wallsRect.assign(walls.size(), vr(0));
     for (int i = 0; i < walls.size(); i++)
         for (int j = 0; j < walls[i].size(); j++)
-            if (walls[i][j] == Tiles::wall) {
+            if (walls[i][j]) {
                 if (i % 2 == 1) // |
                     wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
                 else // -
@@ -186,9 +221,11 @@ sf::Packet& operator>>(sf::Packet& packet, Location& loc) {
     packet >> loc.n >> loc.m;
     std::cout << "n = " << loc.n << " m = " << loc.m << '\n';
     loc.SetSize(loc.n, loc.m);
-    for (std::vector<TileID>& line: loc.walls)
-        for (TileID& tile: line)
-            packet >> tile;
+    for (int i = 0; i < loc.walls.size(); i++)
+        for (int j = 0, t; j < loc.walls[i].size(); j++) {
+            packet >> t;
+            loc.walls[i][j] = t;
+        }
 
     sf::Uint32 objSize; packet >> objSize;
     loc.objects.resize(objSize);
@@ -202,9 +239,9 @@ sf::Packet& operator>>(sf::Packet& packet, Location& loc) {
 
 sf::Packet& operator<<(sf::Packet& packet, Location& loc) {
     packet << sf::Int32(pacetStates::Labyrinth) << loc.n << loc.m;
-    for (std::vector<TileID>& line: loc.walls)
-        for (TileID& tile: line)
-            packet << tile;
+    for (int i = 0; i < loc.walls.size(); i++)
+        for (int j = 0; j < loc.walls[i].size(); j++)
+            packet << loc.walls[i][j];
     packet << sf::Uint32(loc.objects.size());
     for (int i = 0; i < loc.objects.size(); i++)
         packet << loc.objects[i].id << loc.objects[i].pos.x << loc.objects[i].pos.y;
@@ -223,22 +260,22 @@ void FindTheWay(Location& where, sf::Vector2f from, sf::Vector2f to, std::vector
         used[cur.y][cur.x] = true;
         if (sf::Vector2i(to / (float)size) == cur) break;
         check = cur + dirs[0]; // {1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && where.walls[check.y * 2 + 1][check.x] == Tiles::nothing) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where.walls[check.y * 2 + 1][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[2]; // {-1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && where.walls[check.y * 2 + 1][check.x + 1] == Tiles::nothing) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where.walls[check.y * 2 + 1][check.x + 1]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[1]; // {0, 1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && where.walls[check.y * 2][check.x] == Tiles::nothing) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where.walls[check.y * 2][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[3]; // {0, -1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && where.walls[check.y * 2 + 2][check.x] == Tiles::nothing) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where.walls[check.y * 2 + 2][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
