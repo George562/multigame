@@ -58,7 +58,6 @@ bool PushTile::isActivated(sf::Event& event)
             return true;
         else if(lastButton == sf::Mouse::Right)
         {
-
             setState(0, inactiveColor);
             return false;
         }

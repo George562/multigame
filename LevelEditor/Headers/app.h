@@ -7,9 +7,11 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <map>
 #include <utility>
 
 #define vvi std::vector<std::vector<int>>
+#define mmivpt std::map<mapItem, std::vector<PushTile*>>
 #define vvpt std::vector<std::vector<PushTile*>>
 #define vvir std::vector<std::vector<InteractionRect*>>
 
@@ -17,7 +19,8 @@ enum mapItem
 {
     nothing,
     wall,
-    box
+    box,
+    portal
 };
 
 enum windowMode
@@ -29,12 +32,14 @@ enum windowMode
 class App
 {
 private:
-    float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight;
+    float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight, itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight;
     float wndW, wndH;
+    float tileWidth = 50, tileHeight = 50;
 
     float zoomFactor = 1.0f;
     sf::Vector2i prevPos = sf::Vector2i(0, 0);
     windowMode mode = editing;
+    bool isMapItemSelected = false;
 
     mapItem selectedObject;
     std::map<mapItem, sf::Color> mapItemColor;
@@ -46,9 +51,12 @@ private:
 
     ScrollContainer optionsContainer, itemContainer;
     NumBox levelHeightBox, levelWidthBox;
-    Label mapWidthLabel, mapHeightLabel, itemMessageLabel, systemMessageLabel;
+    Label mapWidthLabel, mapHeightLabel, itemMessageLabel, systemMessageLabel, itemOptionLabelX, itemOptionLabelY;
     Button genButton, saveModeButton;
-    InteractionRect itemMessageRect, systemMessageRect, editorRect;
+    InteractionRect itemMessageRect, systemMessageRect, editorRect, itemOptionRect;
+    TextBox itemOptionXBox, itemOptionYBox;
+    std::pair<mapItem, PushTile*> selectedMapItem;
+    mmivpt mapItemDict;
     vvpt levelMatrix;
     std::vector<Button*> itemButtonsList;
     sf::View editorView;
@@ -63,6 +71,7 @@ private:
     void init();
     void loop();
     void poll(sf::Event&);
+    sf::Event convertToViewEvent(sf::Event&, sf::View);
     void interactionViewPoll(sf::Event&);
     void draw();
     std::string generateMatrix(int, int);
@@ -93,10 +102,12 @@ void App::init()
     mapItemColor[nothing] = sf::Color(100, 100, 100);
     mapItemColor[wall] = sf::Color(200, 200, 200);
     mapItemColor[box] = sf::Color(255, 228, 205);
+    mapItemColor[portal] = sf::Color(150, 0, 200);
 
     mapItemName[nothing] = "None (eraser)";
     mapItemName[wall] = "Wall";
     mapItemName[box] = "Box";
+    mapItemName[portal] = "Portal";
 
     font.loadFromFile("Resources/Fonts/consola.ttf");
 
@@ -123,6 +134,7 @@ void App::init()
     optionsContainer.addElement(genButton);
     optionsContainer.addElement(saveModeButton);
 
+
     editorViewX = optionsContainer.getRight() + 20;
     editorViewY = optionsContainer.getY();
     editorViewWidth = wndW - editorViewX - wndW / 10;
@@ -136,12 +148,33 @@ void App::init()
     editorView = sf::View(sf::FloatRect(0, 0, editorViewWidth, editorViewHeight));
     editorView.setViewport(sf::FloatRect(editorViewX / wndW, editorViewY / wndH, editorViewWidth / wndW, editorViewHeight / wndH));
 
+
+    itemOptionX = editorRect.getRight() - editorRect.getWidth() / 2;
+    itemOptionY = editorRect.getY();
+    itemOptionWidth = editorRect.getWidth() / 2;
+    itemOptionHeight = editorRect.getHeight() / 5;
+    
+    itemOptionRect = InteractionRect(itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight);
+    itemOptionRect.setFillColor(sf::Color::White);
+    itemOptionRect.setOutlineColor(sf::Color::Black);
+    itemOptionRect.setOutlineThickness(2);
+
+    itemOptionLabelX = Label(itemOptionRect.getX() + 20, itemOptionRect.getY() + 20, itemOptionRect.getHeight() / 2, font);
+    itemOptionLabelX.setText("X:");
+    itemOptionXBox = TextBox(itemOptionLabelX.getX() + 60, itemOptionRect.getY() + 20, itemOptionRect.getWidth() / 4, itemOptionRect.getHeight() / 4, font);
+
+    itemOptionLabelY = Label(itemOptionXBox.getX() + 20, itemOptionRect.getY() + 20, itemOptionRect.getHeight() / 2, font);
+    itemOptionLabelY.setText("Y:");
+    itemOptionYBox = TextBox(itemOptionLabelY.getX() + 60, itemOptionRect.getY() + 20, itemOptionRect.getWidth() / 4, itemOptionRect.getHeight() / 4, font);
+
+
     itemContainer = ScrollContainer(optionsContainer.getX(), optionsContainer.getBottom() + 20,
                                     optionsContainer.getWidth(), editorRect.getHeight() - optionsContainer.getHeight() - 20);
 
     itemButtonsList.push_back(new Button(itemContainer.getX() + 24, itemContainer.getY() + 10, 200, 50, font));
     itemButtonsList[0]->setText(mapItemName[(mapItem)0]);
     itemButtonsList[0]->setInactiveColor(mapItemColor[(mapItem)0]);
+
     for(int i = 1; i < mapItemName.size(); i++)
     {
         itemButtonsList.push_back(new Button(itemButtonsList[0]->getX(), itemButtonsList[i - 1]->getBottom() + 10, 200, 50, font));
@@ -251,8 +284,18 @@ void App::poll(sf::Event& event)
                 levelMatrixHeight = std::stoi(levelHeightBox.getText());
             if(!levelWidthBox.getText().empty())
                 levelMatrixWidth = std::stoi(levelWidthBox.getText());
-            
-            if(!levelMatrix.empty())
+
+            if(isMapItemSelected)
+            {
+                if(itemOptionXBox.isActivated(event) && !itemOptionXBox.getText().empty())
+                    selectedMapItem.second->setPos(std::stof(itemOptionXBox.getText()), selectedMapItem.second->getY());
+
+                if(itemOptionYBox.isActivated(event) && !itemOptionYBox.getText().empty())
+                    selectedMapItem.second->setPos(selectedMapItem.second->getX(), std::stof(itemOptionYBox.getText()));
+            }
+
+            if(!levelMatrix.empty() && 
+                (!isMapItemSelected || !in(itemOptionRect.getX(), itemOptionRect.getY(), itemOptionRect.getWidth(), itemOptionRect.getHeight(), event.mouseButton)))
                 interactionViewPoll(event);
 
             break;
@@ -285,11 +328,11 @@ void App::poll(sf::Event& event)
     }
 }
 
-void App::interactionViewPoll(sf::Event& event)
+sf::Event App::convertToViewEvent(sf::Event& event, sf::View view)
 {
-    if(!in(wndW * editorView.getViewport().left, wndH * editorView.getViewport().top,
+    if(!in(wndW * view.getViewport().left, wndH * editorView.getViewport().top,
            wndW * editorView.getViewport().width, wndH * editorView.getViewport().height, mainWindow->mapPixelToCoords(sf::Mouse::getPosition(*mainWindow), mainView)))
-        return;
+        return sf::Event();
 
     sf::Event viewEvent = event;
 
@@ -315,6 +358,13 @@ void App::interactionViewPoll(sf::Event& event)
         viewEvent.mouseWheelScroll.y = mainWindow->mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), editorView).y;
     }
 
+    return viewEvent;
+}
+
+void App::interactionViewPoll(sf::Event& event)
+{
+    sf::Event viewEvent = convertToViewEvent(event, editorView);
+
     if(viewEvent.type == sf::Event::MouseMoved && sf::Mouse::isButtonPressed(sf::Mouse::Middle))
         editorView.move(-sf::Vector2f(sf::Mouse::getPosition() - prevPos) * zoomFactor);
     prevPos = sf::Mouse::getPosition();
@@ -325,23 +375,70 @@ void App::interactionViewPoll(sf::Event& event)
         editorView.zoom(viewEvent.mouseWheelScroll.delta < 0 ? 1.1f : (1.f / 1.1f));
     }
 
+    if(viewEvent.type == sf::Event::MouseButtonPressed)
+    {
+        isMapItemSelected = false;
+        selectedMapItem.first = nothing;
+        selectedMapItem.second = nullptr;
+
+        for(int item = 2; item < mapItemName.size(); item++)
+        {
+            for(int i = 0; i < mapItemDict[(mapItem)item].size(); i++)
+            if(in(mapItemDict[(mapItem)item][i]->getX(), mapItemDict[(mapItem)item][i]->getY(),
+                  mapItemDict[(mapItem)item][i]->getWidth(), mapItemDict[(mapItem)item][i]->getHeight(), viewEvent.mouseButton))
+            {
+                selectedMapItem = std::make_pair((mapItem)item, mapItemDict[(mapItem)item][i]);
+                break;
+            }
+        }
+
+        if(viewEvent.mouseButton.button == sf::Mouse::Left)
+        {
+            if(selectedMapItem.second == nullptr && selectedObject != wall && selectedObject != nothing)
+            {
+                mapItemDict[selectedObject].push_back(new PushTile(viewEvent.mouseButton.x, viewEvent.mouseButton.y, tileWidth, tileHeight));
+                mapItemDict[selectedObject][mapItemDict[selectedObject].size() - 1]->setState(selectedObject, mapItemColor[selectedObject]);
+                systemMessageLabel.setText("Added a \"" + mapItemName[selectedObject] + "\" object");
+            }
+            else if(selectedMapItem.second != nullptr)
+            {
+                itemOptionXBox.setText(std::to_string((int)selectedMapItem.second->getX()));
+                itemOptionYBox.setText(std::to_string((int)selectedMapItem.second->getY()));
+                isMapItemSelected = true;
+                systemMessageLabel.setText("Selected a \"" + mapItemName[selectedMapItem.first] + "\" object at\n[X: " +
+                std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
+            }
+        }
+
+        if(selectedMapItem.second != nullptr && viewEvent.mouseButton.button == sf::Mouse::Right)
+        {
+            int tmpCoordX = selectedMapItem.second->getX(), tmpCoordY = selectedMapItem.second->getY();
+            mapItemDict[selectedMapItem.first].erase(std::find(mapItemDict[selectedMapItem.first].begin(), mapItemDict[selectedMapItem.first].end(), selectedMapItem.second));
+            systemMessageLabel.setText("Successfully erased a \"" + mapItemName[selectedMapItem.first] +
+                                       "\" object at\n[X: " + std::to_string(tmpCoordX) + ", Y: " + std::to_string(tmpCoordY) + "]");
+        }
+    }
+
     for(int i = 0; i < levelMatrix.size(); i++)
         for(int j = 0; j < levelMatrix[i].size(); j++)
-            if(levelMatrix[i][j]->isActivated(viewEvent))
+            if(levelMatrix[i][j]->isActivated(viewEvent) && (selectedObject == wall || selectedObject == nothing))
                 levelMatrix[i][j]->setState(selectedObject, mapItemColor[selectedObject]);
 }
 
 void App::draw()
 {
+
     switch (mode)
     {
     case editing:
-       for(int i = 0; i < editorDrawnElements.size(); i++)
+
+        for(int i = 0; i < editorDrawnElements.size(); i++)
             mainWindow->draw(*(editorDrawnElements[i]));
 
         if(!levelMatrix.empty())
         {
             mainWindow->setView(editorView);
+
             for(int i = 0; i < levelMatrix.size(); i++)
                 for(int j = 0; j < levelMatrix[i].size(); j++)
                     mainWindow->draw(*(levelMatrix[i][j]));
@@ -349,8 +446,14 @@ void App::draw()
             for(int i = 0; i < levelMatrixSquares.size(); i++)
                 for(int j = 0; j < levelMatrixSquares[i].size(); j++)
                     mainWindow->draw(*(levelMatrixSquares[i][j]));
+
+            for(int item = 2; item < mapItemName.size(); item++)
+                for(int i = 0; i < mapItemDict[(mapItem)item].size(); i++)
+                    mainWindow->draw(*mapItemDict[(mapItem)item][i]);
+
             mainWindow->setView(mainView);
         }
+
         break;
 
     case saving:
@@ -364,6 +467,15 @@ void App::draw()
 
     for(int i = 0; i < universalDrawnElements.size(); i++)
         mainWindow->draw(*(universalDrawnElements[i]));
+    
+    if(isMapItemSelected)
+    {
+        mainWindow->draw(itemOptionRect);
+        mainWindow->draw(itemOptionLabelX);
+        mainWindow->draw(itemOptionXBox);
+        mainWindow->draw(itemOptionLabelY);
+        mainWindow->draw(itemOptionYBox);
+    }
 }
 
 std::string App::generateMatrix(int n, int m)
@@ -387,7 +499,6 @@ std::string App::generateMatrix(int n, int m)
             levelMatrixSquares[i].clear();
         }
         levelMatrixSquares.resize(0);
-
     }
 
     editorView.zoom(1 / zoomFactor);
@@ -406,14 +517,9 @@ std::string App::generateMatrix(int n, int m)
         for(int j = 0; j < levelMatrix[i].size(); j++)
         {
             if(i % 2 == 0)
-                levelMatrix[i][j] = new PushTile(editorView.getViewport().left + (j + 1) * columnWidth + j * rowWidth,
-                                                 editorView.getViewport().top + i / 2 * (columnHeight + rowHeight), rowWidth, rowHeight);
+                levelMatrix[i][j] = new PushTile((j + 1) * columnWidth + j * rowWidth, i / 2 * (columnHeight + rowHeight), rowWidth, rowHeight);
             else
-                levelMatrix[i][j] = new PushTile(editorView.getViewport().left + j * (columnWidth + rowWidth), editorView.getViewport().top + 
-                                                 (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight, columnWidth, columnHeight);
-            
-            levelMatrix[i][j]->setOutlineColor(sf::Color::Black);
-            levelMatrix[i][j]->setOutlineThickness(1);
+                levelMatrix[i][j] = new PushTile(j * (columnWidth + rowWidth), (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight, columnWidth, columnHeight);
         }
     }
 
@@ -480,6 +586,15 @@ std::string App::saveMap(std::string path, std::string fileName, int n, int m, b
         if(i < stateMatrix.size() - 1)
             levelFile << "\n";
     }
+    int totalItemCount = 0;
+    for(int item = 2; item < mapItemName.size(); item++)
+        totalItemCount += mapItemDict[(mapItem)item].size();
+    levelFile << totalItemCount << "\n";
+    for(int item = 2; item < mapItemName.size(); item++)
+        if(mapItemDict[(mapItem)item].size() != 0)
+            for(PushTile* tile : mapItemDict[(mapItem)item])
+                levelFile << item << ' ' << tile->getX() << ' ' << tile->getY() << "\n";
+    
     levelFile.close();
 
     return "Map saved as " + fileName + ".txt at \"" + filePath + "\"";
