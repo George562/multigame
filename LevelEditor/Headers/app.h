@@ -40,6 +40,7 @@ private:
     sf::Vector2i prevPos = sf::Vector2i(0, 0);
     windowMode mode = editing;
     bool isMapItemSelected = false;
+    bool isItemHeld = false;
 
     mapItem selectedObject;
     std::map<mapItem, sf::Color> mapItemColor;
@@ -51,7 +52,7 @@ private:
 
     ScrollContainer optionsContainer, itemContainer;
     NumBox levelHeightBox, levelWidthBox;
-    Label mapWidthLabel, mapHeightLabel, itemMessageLabel, systemMessageLabel, itemOptionLabelX, itemOptionLabelY;
+    Label mapWidthLabel, mapHeightLabel, itemMessageLabel, systemMessageLabel, itemOptionLabelX, itemOptionLabelY, itemEnterHintLabel;
     Button genButton, saveModeButton;
     InteractionRect itemMessageRect, systemMessageRect, editorRect, itemOptionRect;
     TextBox itemOptionXBox, itemOptionYBox;
@@ -65,7 +66,7 @@ private:
     TextBox filePathBox, fileNameBox;
     Button saveFileButton, backButton, overWriteButton;
 
-    std::vector<InteractionRect*> universalDrawnElements, editorDrawnElements, saveDrawnElements;
+    std::vector<InteractionRect*> universalDrawnElements, editorDrawnElements, saveDrawnElements, editorItemPropertyElements;
     vvir levelMatrixSquares;
 
     void init();
@@ -149,23 +150,27 @@ void App::init()
     editorView.setViewport(sf::FloatRect(editorViewX / wndW, editorViewY / wndH, editorViewWidth / wndW, editorViewHeight / wndH));
 
 
-    itemOptionX = editorRect.getRight() - editorRect.getWidth() / 2;
-    itemOptionY = editorRect.getY();
     itemOptionWidth = editorRect.getWidth() / 2;
     itemOptionHeight = editorRect.getHeight() / 5;
+    itemOptionX = editorRect.getRight() - itemOptionWidth;
+    itemOptionY = editorRect.getY();
     
     itemOptionRect = InteractionRect(itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight);
     itemOptionRect.setFillColor(sf::Color::White);
     itemOptionRect.setOutlineColor(sf::Color::Black);
     itemOptionRect.setOutlineThickness(2);
 
-    itemOptionLabelX = Label(itemOptionRect.getX() + 20, itemOptionRect.getY() + 20, itemOptionRect.getHeight() / 2, font);
+    itemOptionLabelX = Label(itemOptionRect.getX() + 10, itemOptionRect.getY() + 10, itemOptionHeight / 3, font);
     itemOptionLabelX.setText("X:");
-    itemOptionXBox = TextBox(itemOptionLabelX.getX() + 60, itemOptionRect.getY() + 20, itemOptionRect.getWidth() / 4, itemOptionRect.getHeight() / 4, font);
+    itemOptionXBox = TextBox(itemOptionLabelX.getRight() + 10, itemOptionLabelX.getY() + 5,
+                             itemOptionRect.getWidth() / 4, itemOptionHeight / 3, font);
 
-    itemOptionLabelY = Label(itemOptionXBox.getX() + 20, itemOptionRect.getY() + 20, itemOptionRect.getHeight() / 2, font);
+    itemOptionLabelY = Label(itemOptionXBox.getRight() + 30, itemOptionRect.getY() + 10, itemOptionHeight / 3, font);
     itemOptionLabelY.setText("Y:");
-    itemOptionYBox = TextBox(itemOptionLabelY.getX() + 60, itemOptionRect.getY() + 20, itemOptionRect.getWidth() / 4, itemOptionRect.getHeight() / 4, font);
+    itemOptionYBox = TextBox(itemOptionLabelY.getRight() + 10, itemOptionLabelY.getY() + 5,
+                             itemOptionRect.getWidth() / 4, itemOptionHeight / 3, font);
+    itemEnterHintLabel = Label(itemOptionRect.getX() + 10, itemOptionYBox.getBottom() + 10, itemOptionHeight / 7, font);
+    itemEnterHintLabel.setText("Press \"Enter\" to set the\nobject's coordinates");
 
 
     itemContainer = ScrollContainer(optionsContainer.getX(), optionsContainer.getBottom() + 20,
@@ -202,6 +207,13 @@ void App::init()
     editorDrawnElements.push_back(&editorRect);
     editorDrawnElements.push_back(&itemMessageRect);
     editorDrawnElements.push_back(&itemMessageLabel);
+
+    editorItemPropertyElements.push_back(&itemOptionRect);
+    editorItemPropertyElements.push_back(&itemOptionLabelX);
+    editorItemPropertyElements.push_back(&itemOptionXBox);
+    editorItemPropertyElements.push_back(&itemOptionLabelY);
+    editorItemPropertyElements.push_back(&itemOptionYBox);
+    editorItemPropertyElements.push_back(&itemEnterHintLabel);
 
     universalDrawnElements.push_back(&systemMessageRect);
     universalDrawnElements.push_back(&systemMessageLabel);
@@ -287,11 +299,8 @@ void App::poll(sf::Event& event)
 
             if(isMapItemSelected)
             {
-                if(itemOptionXBox.isActivated(event) && !itemOptionXBox.getText().empty())
-                    selectedMapItem.second->setPos(std::stof(itemOptionXBox.getText()), selectedMapItem.second->getY());
-
-                if(itemOptionYBox.isActivated(event) && !itemOptionYBox.getText().empty())
-                    selectedMapItem.second->setPos(selectedMapItem.second->getX(), std::stof(itemOptionYBox.getText()));
+                itemOptionXBox.isActivated(event);
+                itemOptionYBox.isActivated(event);
             }
 
             if(!levelMatrix.empty() && 
@@ -377,9 +386,12 @@ void App::interactionViewPoll(sf::Event& event)
 
     if(viewEvent.type == sf::Event::MouseButtonPressed)
     {
-        isMapItemSelected = false;
-        selectedMapItem.first = nothing;
-        selectedMapItem.second = nullptr;
+        if(viewEvent.mouseButton.button == sf::Mouse::Button::Left || viewEvent.mouseButton.button == sf::Mouse::Button::Right)
+        {
+            isMapItemSelected = false;
+            selectedMapItem.first = nothing;
+            selectedMapItem.second = nullptr;
+        }
 
         for(int item = 2; item < mapItemName.size(); item++)
         {
@@ -405,6 +417,7 @@ void App::interactionViewPoll(sf::Event& event)
                 itemOptionXBox.setText(std::to_string((int)selectedMapItem.second->getX()));
                 itemOptionYBox.setText(std::to_string((int)selectedMapItem.second->getY()));
                 isMapItemSelected = true;
+                isItemHeld = true;
                 systemMessageLabel.setText("Selected a \"" + mapItemName[selectedMapItem.first] + "\" object at\n[X: " +
                 std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
             }
@@ -418,6 +431,36 @@ void App::interactionViewPoll(sf::Event& event)
                                        "\" object at\n[X: " + std::to_string(tmpCoordX) + ", Y: " + std::to_string(tmpCoordY) + "]");
         }
     }
+
+    if(selectedMapItem.second != nullptr && viewEvent.type == sf::Event::KeyPressed && viewEvent.key.code == sf::Keyboard::Key::Enter)
+    {
+        try
+        {
+            if(!itemOptionXBox.getText().empty() && !itemOptionYBox.getText().empty())
+            {
+                selectedMapItem.second->setPos(std::stof(itemOptionXBox.getText()), std::stof(itemOptionYBox.getText()));
+                systemMessageLabel.setText("Successfully moved a \"" + mapItemName[selectedMapItem.first] +
+                                        "\" object to\n[X: " + std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
+            }
+            else systemMessageLabel.setText("Failed to move a \"" + mapItemName[selectedMapItem.first] + " object.\nOne of the coordinates weren't filled in.");
+        }
+        catch(const std::invalid_argument e)
+        {
+            systemMessageLabel.setText("Failed to move a \"" + mapItemName[selectedMapItem.first] + " object.\nPlease, input the coordinates as integers.");
+        }
+    }
+
+    if(isItemHeld && viewEvent.type == sf::Event::MouseMoved)
+    {
+        selectedMapItem.second->setPos(viewEvent.mouseMove.x, viewEvent.mouseMove.y);
+        itemOptionXBox.setText(std::to_string((int)selectedMapItem.second->getX()));
+        itemOptionYBox.setText(std::to_string((int)selectedMapItem.second->getY()));
+        systemMessageLabel.setText("Successfully moved a \"" + mapItemName[selectedMapItem.first] +
+                                    "\" object to\n[X: " + std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
+    }
+
+    if(viewEvent.type == sf::Event::MouseButtonReleased && viewEvent.mouseButton.button == sf::Mouse::Left)
+        isItemHeld = false;
 
     for(int i = 0; i < levelMatrix.size(); i++)
         for(int j = 0; j < levelMatrix[i].size(); j++)
@@ -469,13 +512,8 @@ void App::draw()
         mainWindow->draw(*(universalDrawnElements[i]));
     
     if(isMapItemSelected)
-    {
-        mainWindow->draw(itemOptionRect);
-        mainWindow->draw(itemOptionLabelX);
-        mainWindow->draw(itemOptionXBox);
-        mainWindow->draw(itemOptionLabelY);
-        mainWindow->draw(itemOptionYBox);
-    }
+        for(int i = 0; i < editorItemPropertyElements.size(); i++)
+            mainWindow->draw(*(editorItemPropertyElements[i]));
 }
 
 std::string App::generateMatrix(int n, int m)

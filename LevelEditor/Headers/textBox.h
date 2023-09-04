@@ -20,7 +20,7 @@ public:
     TextBox(float, float, float, float, sf::Font&);
 
     virtual std::string getText() { return fullString; }
-    virtual void setText(std::string text) { this->text.setString(text); }
+    virtual void setText(std::string newText) { text.setString(newText); fullString = newText; }
 
     void move(float x, float y) override
     { 
