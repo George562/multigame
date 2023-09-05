@@ -34,7 +34,7 @@ class App
 private:
     float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight, itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight;
     float wndW, wndH;
-    float tileWidth = 50, tileHeight = 50;
+    float tileWidth = 50, tileHeight = 50, columnHeight = 380, rowWidth = 380, columnWidth = 50, rowHeight = 50;
 
     float zoomFactor = 1.0f;
     sf::Vector2i prevPos = sf::Vector2i(0, 0);
@@ -518,8 +518,6 @@ void App::draw()
 
 std::string App::generateMatrix(int n, int m)
 {
-    float columnWidth = 50, rowWidth = 3 * columnWidth;
-    float rowHeight = 50, columnHeight = 3 * rowHeight;
     float ResWidth = columnWidth * (m + 1) + rowWidth * m, ResHeight = columnHeight * n + rowHeight * (n + 1);
 
     if(!levelMatrix.empty())
@@ -631,7 +629,7 @@ std::string App::saveMap(std::string path, std::string fileName, int n, int m, b
     for(int item = 2; item < mapItemName.size(); item++)
         if(mapItemDict[(mapItem)item].size() != 0)
             for(PushTile* tile : mapItemDict[(mapItem)item])
-                levelFile << item << ' ' << tile->getX() << ' ' << tile->getY() << "\n";
+                levelFile << item - 1 << ' ' << tile->getX() << ' ' << tile->getY() << "\n";
     
     levelFile.close();
 

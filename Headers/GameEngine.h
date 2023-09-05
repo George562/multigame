@@ -377,7 +377,7 @@ void init() {
 
     // Load locations
     WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
-    MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
+    MainMenuLocation.LoadFromFile("sources/locations/debugLocation.txt");
 
     WallRect.setFillColor(sf::Color(120, 120, 120));
 
