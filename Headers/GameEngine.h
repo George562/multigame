@@ -120,7 +120,7 @@ Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
 Button CoopButton("sources/textures/RedPanel", "Online", [](){
     MiniMapActivated = false;
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    MiniMapView.setCenter(player.getPosition() * float(miniSize) / float(size));
+    MiniMapView.setCenter(player.getPosition() * ScaleParam);
     MainMenuMusic.pause();
 });
 
@@ -319,7 +319,7 @@ void LoadMainMenu() {
         EscapeMenuActivated = false;
 
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter(player.getPosition() * float(miniSize) / float(size));
+        MiniMapView.setCenter(player.getPosition() * ScaleParam);
 
         MainMenuMusic.pause();
 
@@ -346,7 +346,7 @@ void LoadMainMenu() {
 
     // Set cameras
     GameView.setCenter(player.getPosition());
-    MiniMapView.setCenter(player.getPosition() * float(miniSize) / float(size));
+    MiniMapView.setCenter(player.getPosition() * ScaleParam);
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     MainMenuMusic.play();
