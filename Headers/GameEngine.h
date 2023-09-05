@@ -25,7 +25,7 @@ sf::RectangleShape WallRect;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerRect; // MiniMap prefix
-sf::RectangleShape MMPortalRect;
+sf::RectangleShape MMPortalRect, MMBoxRect;
 
 //////////////////////////////////////////////////////////// InterfaceStuff
 Bar<float> ManaBar, HpBar;
@@ -49,6 +49,9 @@ bool ClientFuncRun, HostFuncRun;
 
 //////////////////////////////////////////////////////////// Portal
 Portal portal;
+
+//////////////////////////////////////////////////////////// Box
+sf::Sprite BoxRect;
 
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
@@ -188,8 +191,6 @@ void drawWalls() {
 }
 
 void drawMiniMap() {
-    float ScaleParam = float(miniSize) / float(size);
-
     if (MiniMapHoldOnPlayer)
         MiniMapView.setCenter(player.getPosition() * ScaleParam);
 
@@ -212,11 +213,12 @@ void drawMiniMap() {
     // draw location objects
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
-            MMPortalRect.setSize(portal.getSize() * ScaleParam);
             MMPortalRect.setPosition(portal.getPosition() * ScaleParam);
-            MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
             window.draw(MMPortalRect);
-            break;
+        }
+        if (CurLocation->objects[i].id == Tiles::box) {
+            MMBoxRect.setPosition(CurLocation->objects[i].pos * ScaleParam);
+            window.draw(MMBoxRect);
         }
     }
 
@@ -351,6 +353,7 @@ void LoadMainMenu() {
 
     DrawableStuff.clear();
     DrawableStuff.push_back(&portal);
+    DrawableStuff.push_back(&BoxRect);
     DrawableStuff.push_back(&player);
     
     InterfaceStuff.clear();
@@ -424,6 +427,16 @@ void init() {
     XButtonSprite.setTexture(*XButtonTexture);
     XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
 
+    sf::Texture *BoxTexture = new sf::Texture; BoxTexture->loadFromFile("sources/textures/Box.png");
+    BoxRect.setTexture(*BoxTexture);
+    BoxRect.setPosition(size, size);
+    
+    MMPortalRect.setSize(portal.getSize() * ScaleParam);
+    MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
+    
+    MMBoxRect.setSize(sf::Vector2f{BoxRect.getGlobalBounds().width, BoxRect.getGlobalBounds().height} * ScaleParam);
+    MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
+    
     LoadMainMenu();
 }
 
