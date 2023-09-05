@@ -34,7 +34,7 @@ class App
 private:
     float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight, itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight;
     float wndW, wndH;
-    float tileWidth = 50, tileHeight = 50, columnHeight = 380, rowWidth = 380, columnWidth = 50, rowHeight = 50;
+    float tileWidth = 50, tileHeight = 50, columnHeight = 360, rowWidth = 360, columnWidth = 60, rowHeight = 60;
 
     float zoomFactor = 1.0f;
     sf::Vector2i prevPos = sf::Vector2i(0, 0);

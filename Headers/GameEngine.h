@@ -429,7 +429,7 @@ void init() {
 
     sf::Texture *BoxTexture = new sf::Texture; BoxTexture->loadFromFile("sources/textures/Box.png");
     BoxRect.setTexture(*BoxTexture);
-    BoxRect.setPosition(size, size);
+    BoxRect.setPosition(30, 30);
     
     MMPortalRect.setSize(portal.getSize() * ScaleParam);
     MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
