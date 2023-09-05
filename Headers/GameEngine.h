@@ -165,6 +165,17 @@ void draw() {
     window.clear(sf::Color::Black);
     drawWalls();
 
+    for (int i = 0; i < CurLocation->objects.size(); i++) {
+        if (CurLocation->objects[i].id == Tiles::portal) {
+            portal.setPosition(CurLocation->objects[i].pos);
+            window.draw(portal);
+        }
+        if (CurLocation->objects[i].id == Tiles::box) {
+            BoxRect.setPosition(CurLocation->objects[i].pos);
+            window.draw(BoxRect);
+        }
+    }
+
     for (sf::Drawable* d: DrawableStuff) window.draw(*d);
 
     for (int i = 0; i < Bullets.size(); i++) window.draw(Bullets[i]);
@@ -213,7 +224,7 @@ void drawMiniMap() {
     // draw location objects
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
-            MMPortalRect.setPosition(portal.getPosition() * ScaleParam);
+            MMPortalRect.setPosition(CurLocation->objects[i].pos * ScaleParam);
             window.draw(MMPortalRect);
         }
         if (CurLocation->objects[i].id == Tiles::box) {
@@ -277,7 +288,7 @@ void LevelGenerate(int n, int m) {
     LabyrinthLocation.GenerateLocation(n, m, player.getPosition());
 
     CurLocation->objects.clear();
-    CurLocation->AddObject({Tiles::portal, player.getPosition()});
+    CurLocation->AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
 
     for (int i = 0; i < Enemies.size(); i++)
         delete Enemies[i];
@@ -326,10 +337,7 @@ void LoadMainMenu() {
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
 
-        portal.setCenter(player.getPosition());
-
         DrawableStuff.clear();
-        DrawableStuff.push_back(&portal);
         DrawableStuff.push_back(&player);
         for (Enemy* &enemy: Enemies)
             DrawableStuff.push_back(enemy);
@@ -352,8 +360,6 @@ void LoadMainMenu() {
     MainMenuMusic.play();
 
     DrawableStuff.clear();
-    DrawableStuff.push_back(&portal);
-    DrawableStuff.push_back(&BoxRect);
     DrawableStuff.push_back(&player);
     
     InterfaceStuff.clear();
@@ -380,7 +386,8 @@ void init() {
 
     // Load locations
     WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
-    MainMenuLocation.LoadFromFile("sources/locations/debugLocation.txt");
+    // MainMenuLocation.LoadFromFile("sources/locations/debugLocation.txt");
+    MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
 
     WallRect.setFillColor(sf::Color(120, 120, 120));
 
