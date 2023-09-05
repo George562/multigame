@@ -7,6 +7,7 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <vector>
 #include <map>
 #include <utility>
 
@@ -35,6 +36,8 @@ private:
     float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight, itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight;
     float wndW, wndH;
     float tileWidth = 60, tileHeight = 60, columnHeight = 360, rowWidth = 360, columnWidth = 60, rowHeight = 60;
+    std::vector<int> arrowMoveAmount;
+    int arrowMoveAmountIndex = 0;
 
     float zoomFactor = 1.0f;
     sf::Vector2i prevPos = sf::Vector2i(0, 0);
@@ -97,6 +100,10 @@ void App::init()
     levelMatrixHeight = 0, levelMatrixWidth = 0;
     levelMatrix.resize(0);
     levelMatrixSquares.resize(0);
+    arrowMoveAmount.push_back(1);
+    arrowMoveAmount.push_back(5);
+    arrowMoveAmount.push_back(50);
+    arrowMoveAmount.push_back(200);
 
     selectedObject = wall;
 
@@ -307,6 +314,19 @@ void App::poll(sf::Event& event)
                 (!isMapItemSelected || !in(itemOptionRect.getX(), itemOptionRect.getY(), itemOptionRect.getWidth(), itemOptionRect.getHeight(), event.mouseButton)))
                 interactionViewPoll(event);
 
+            if(event.type == sf::Event::KeyPressed)
+            {
+                arrowMoveAmountIndex += event.key.code == sf::Keyboard::Key::Add;
+                arrowMoveAmountIndex -= event.key.code == sf::Keyboard::Key::Subtract;
+                if(arrowMoveAmountIndex >= (int)(arrowMoveAmount.size()))
+                    arrowMoveAmountIndex = 0;
+                if(arrowMoveAmountIndex < 0)
+                    arrowMoveAmountIndex = (int)(arrowMoveAmount.size()) - 1;
+                if(event.key.code == sf::Keyboard::Key::Add || event.key.code == sf::Keyboard::Key::Subtract)
+                    systemMessageLabel.setText("Changed arrow move amount to " + 
+                                            std::to_string(arrowMoveAmount[arrowMoveAmountIndex]) + " pixels.");
+            }
+
             break;
         
         case saving:
@@ -432,21 +452,37 @@ void App::interactionViewPoll(sf::Event& event)
         }
     }
 
-    if(selectedMapItem.second != nullptr && viewEvent.type == sf::Event::KeyPressed && viewEvent.key.code == sf::Keyboard::Key::Enter)
+    if(selectedMapItem.second != nullptr && viewEvent.type == sf::Event::KeyPressed)
     {
-        try
+        if(viewEvent.key.code == sf::Keyboard::Key::Enter)
         {
-            if(!itemOptionXBox.getText().empty() && !itemOptionYBox.getText().empty())
+            try
             {
-                selectedMapItem.second->setPos(std::stof(itemOptionXBox.getText()), std::stof(itemOptionYBox.getText()));
-                systemMessageLabel.setText("Successfully moved a \"" + mapItemName[selectedMapItem.first] +
-                                        "\" object to\n[X: " + std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
+                if(!itemOptionXBox.getText().empty() && !itemOptionYBox.getText().empty())
+                {
+                    selectedMapItem.second->setPos(std::stof(itemOptionXBox.getText()), std::stof(itemOptionYBox.getText()));
+                    systemMessageLabel.setText("Successfully moved a \"" + mapItemName[selectedMapItem.first] +
+                                            "\" object to\n[X: " + std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
+                }
+                else systemMessageLabel.setText("Failed to move a \"" + mapItemName[selectedMapItem.first] + " object.\nOne of the coordinates weren't filled in.");
             }
-            else systemMessageLabel.setText("Failed to move a \"" + mapItemName[selectedMapItem.first] + " object.\nOne of the coordinates weren't filled in.");
+            catch(const std::invalid_argument e)
+            {
+                systemMessageLabel.setText("Failed to move a \"" + mapItemName[selectedMapItem.first] + " object.\nPlease, input the coordinates as integers.");
+            }
         }
-        catch(const std::invalid_argument e)
+        bool moveUp = viewEvent.key.code == sf::Keyboard::Key::Up;
+        bool moveDown = viewEvent.key.code == sf::Keyboard::Key::Down;
+        bool moveLeft = viewEvent.key.code == sf::Keyboard::Key::Left;
+        bool moveRight = viewEvent.key.code == sf::Keyboard::Key::Right;
+        if(moveUp || moveDown || moveLeft || moveRight)
         {
-            systemMessageLabel.setText("Failed to move a \"" + mapItemName[selectedMapItem.first] + " object.\nPlease, input the coordinates as integers.");
+            selectedMapItem.second->move((moveRight - moveLeft) * arrowMoveAmount[arrowMoveAmountIndex], 
+                                         (moveDown - moveUp) * arrowMoveAmount[arrowMoveAmountIndex]);
+            itemOptionXBox.setText(std::to_string((int)selectedMapItem.second->getX()));
+            itemOptionYBox.setText(std::to_string((int)selectedMapItem.second->getY()));
+            systemMessageLabel.setText("Successfully moved a \"" + mapItemName[selectedMapItem.first] +
+                                            "\" object to\n[X: " + std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
         }
     }
 
