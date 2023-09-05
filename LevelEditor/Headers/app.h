@@ -34,7 +34,7 @@ class App
 private:
     float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight, itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight;
     float wndW, wndH;
-    float tileWidth = 50, tileHeight = 50, columnHeight = 360, rowWidth = 360, columnWidth = 60, rowHeight = 60;
+    float tileWidth = 60, tileHeight = 60, columnHeight = 360, rowWidth = 360, columnWidth = 60, rowHeight = 60;
 
     float zoomFactor = 1.0f;
     sf::Vector2i prevPos = sf::Vector2i(0, 0);
@@ -629,7 +629,8 @@ std::string App::saveMap(std::string path, std::string fileName, int n, int m, b
     for(int item = 2; item < mapItemName.size(); item++)
         if(mapItemDict[(mapItem)item].size() != 0)
             for(PushTile* tile : mapItemDict[(mapItem)item])
-                levelFile << item - 1 << ' ' << tile->getX() << ' ' << tile->getY() << "\n";
+                levelFile << item - 1 << ' ' << tile->getX() - tileWidth / 2 << ' ' 
+                << tile->getY() - tileWidth / 2 << "\n";
     
     levelFile.close();
 
