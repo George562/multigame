@@ -281,7 +281,7 @@ void drawIterface() {
 
 void LevelGenerate(int n, int m) {
     Bullets.clear();
-    
+
     MiniMapView.zoom(1 / MiniMapZoom);
     MiniMapZoom = 1;
 
@@ -294,7 +294,7 @@ void LevelGenerate(int n, int m) {
         delete Enemies[i];
     Enemies.clear();
 
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 120; i++)
         Enemies.push_back(new DistortedScientist());
 
     for (int i = 0; i < Enemies.size(); i++)
@@ -308,6 +308,7 @@ void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
     
     player.setPosition(3.5f * size, 2.5f * size);
+    FindAllWaysTo(*CurLocation, player.getPosition(), TheWayToPlayer);
     player.CurWeapon = nullptr;
 
     portal.setCenter(3.5f * size, 3.5f * size);
@@ -336,6 +337,7 @@ void LoadMainMenu() {
 
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
+        FindAllWaysTo(*CurLocation, player.getPosition(), TheWayToPlayer);
 
         DrawableStuff.clear();
         DrawableStuff.push_back(&player);
@@ -639,6 +641,7 @@ void MainLoop() {
             if (!chat.inputted) {
                 player.move(*CurLocation);
                 GameView.setCenter(player.getPosition());
+                FindAllWaysTo(*CurLocation, player.getPosition(), TheWayToPlayer);
             }
             int wasBulletsSize = Bullets.size();
             if (player.CurWeapon != nullptr)
