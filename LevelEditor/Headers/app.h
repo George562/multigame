@@ -35,7 +35,7 @@ class App
 private:
     float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight, itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight;
     float wndW, wndH;
-    float tileWidth = 60, tileHeight = 60, columnHeight = 360, rowWidth = 360, columnWidth = 60, rowHeight = 60;
+    float tileWidth = 60, tileHeight = 60, columnHeight = 480, rowWidth = 480, columnWidth = 60, rowHeight = 60;
     std::vector<int> arrowMoveAmount;
     int arrowMoveAmountIndex = 0;
 
@@ -428,7 +428,10 @@ void App::interactionViewPoll(sf::Event& event)
         {
             if(selectedMapItem.second == nullptr && selectedObject != wall && selectedObject != nothing)
             {
-                mapItemDict[selectedObject].push_back(new PushTile(viewEvent.mouseButton.x, viewEvent.mouseButton.y, tileWidth, tileHeight));
+                sf::Image sprite;
+                sprite.loadFromFile("~/../../sources/textures/" + mapItemName[selectedObject] + ".png");
+                mapItemDict[selectedObject].push_back(new PushTile(viewEvent.mouseButton.x, viewEvent.mouseButton.y,
+                    sprite.getSize().x, sprite.getSize().y));
                 mapItemDict[selectedObject][mapItemDict[selectedObject].size() - 1]->setState(selectedObject, mapItemColor[selectedObject]);
                 systemMessageLabel.setText("Added a \"" + mapItemName[selectedObject] + "\" object");
             }
@@ -589,9 +592,17 @@ std::string App::generateMatrix(int n, int m)
         for(int j = 0; j < levelMatrix[i].size(); j++)
         {
             if(i % 2 == 0)
-                levelMatrix[i][j] = new PushTile((j + 1) * columnWidth + j * rowWidth, i / 2 * (columnHeight + rowHeight), rowWidth, rowHeight);
+                levelMatrix[i][j] = new PushTile(
+                    (j + 1) * columnWidth + j * rowWidth - columnWidth / 2 * (2 * j + 1),
+                    i / 2 * (columnHeight + rowHeight) - rowHeight / 2 * i,
+                    rowWidth,
+                    rowHeight);
             else
-                levelMatrix[i][j] = new PushTile(j * (columnWidth + rowWidth), (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight, columnWidth, columnHeight);
+                levelMatrix[i][j] = new PushTile(
+                    j * (columnWidth + rowWidth) - columnWidth * j,
+                    (i + 1) / 2 * rowHeight + (i - 1) / 2 * columnHeight - rowHeight / 2 * i,
+                    columnWidth,
+                    columnHeight);
         }
     }
 
@@ -600,8 +611,11 @@ std::string App::generateMatrix(int n, int m)
         levelMatrixSquares[i].resize(m + 1);
         for(int j = 0; j < levelMatrixSquares[i].size(); j++)
         {
-            levelMatrixSquares[i][j] = new InteractionRect(j * (columnWidth + rowWidth), i * (columnHeight + rowHeight),
-                                            columnWidth, rowHeight);
+            levelMatrixSquares[i][j] = new InteractionRect(
+                j * (columnWidth + rowWidth) - tileWidth * j,
+                i * (columnHeight + rowHeight) - tileHeight * i,
+                columnWidth,
+                rowHeight);
             levelMatrixSquares[i][j]->setFillColor(mapItemColor[wall]);
             levelMatrixSquares[i][j]->setOutlineThickness(1);
             levelMatrixSquares[i][j]->setOutlineColor(sf::Color::Black);
@@ -665,8 +679,9 @@ std::string App::saveMap(std::string path, std::string fileName, int n, int m, b
     for(int item = 2; item < mapItemName.size(); item++)
         if(mapItemDict[(mapItem)item].size() != 0)
             for(PushTile* tile : mapItemDict[(mapItem)item])
-                levelFile << item - 1 << ' ' << tile->getX() - tileWidth / 2 << ' ' 
-                << tile->getY() - tileWidth / 2 << "\n";
+                levelFile << item - 1 << ' ' << 
+                tile->getX() - 30 - columnWidth * ((int)tile->getX() / (int)rowWidth)<< ' ' 
+                << tile->getY() - 30 - rowHeight * ((int)tile->getY() / (int)columnHeight) << "\n";
     
     levelFile.close();
 
