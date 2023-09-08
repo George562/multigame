@@ -291,3 +291,52 @@ void FindTheWay(Location& where, sf::Vector2f from, sf::Vector2f to, std::vector
         theWay.push_back(((sf::Vector2f)place[cur.y][cur.x] + sf::Vector2f{0.5f, 0.5f}) * (float)size);
     if (theWay.size() > 1) theWay.pop_back();
 }
+
+void FindAllWaysTo(Location& location, sf::Vector2f to, std::vector<std::vector<sf::Vector2f>>& theWays) {
+    if (theWays.size() != location.n && (theWays.size() == 0 || theWays[0].size() != location.m)) {
+        theWays.assign(location.n, std::vector<sf::Vector2f>(location.m, to));
+    }
+    std::queue<Point> q; q.push(Point{int(to.x / size), int(to.y / size)});
+    Point cur, check;
+    Rect UsedAreaRect{0, 0, float(location.m - 1), float(location.n - 1)};
+    vvb used(location.n, vb(location.m, false));
+    while (!q.empty()) {
+        cur = q.front(); q.pop();
+        if (used[cur.y][cur.x]) continue;
+        used[cur.y][cur.x] = true;
+        check = cur + dirs[0]; // {1, 0}
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location.walls[check.y * 2 + 1][check.x]) {
+            q.push(check);
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
+        }
+        check = cur + dirs[2]; // {-1, 0}
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location.walls[check.y * 2 + 1][check.x + 1]) {
+            q.push(check);
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
+        }
+        check = cur + dirs[1]; // {0, 1}
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location.walls[check.y * 2][check.x]) {
+            q.push(check);
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
+        }
+        check = cur + dirs[3]; // {0, -1}
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location.walls[check.y * 2 + 2][check.x]) {
+            q.push(check);
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
+        }
+    }
+    check = (sf::Vector2i)to / size; theWays[check.y][check.x] = to;
+
+    check = (sf::Vector2i)to / size + dirs[0]; // {1, 0}
+    if (check.x < location.m && !location.walls[check.y * 2 + 1][check.x])
+        theWays[check.y][check.x] = to;
+    check = (sf::Vector2i)to / size + dirs[2]; // {-1, 0}
+    if (check.x >= 0 && !location.walls[check.y * 2 + 1][check.x + 1])
+        theWays[check.y][check.x] = to;
+    check = (sf::Vector2i)to / size + dirs[1]; // {0, 1}
+    if (check.y  < location.n && !location.walls[check.y * 2][check.x])
+        theWays[check.y][check.x] = to;
+    check = (sf::Vector2i)to / size + dirs[3]; // {0, -1}
+    if (check.y >= 0 && !location.walls[check.y * 2 + 2][check.x])
+        theWays[check.y][check.x] = to;
+}

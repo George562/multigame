@@ -1,11 +1,11 @@
 #include "creature.h"
 
+std::vector<std::vector<sf::Vector2f>> TheWayToPlayer;
+
 ////////////////////////////////////////////////////////////
 // Enemy
 class Enemy : public Creature {
 public:
-    std::vector<sf::Vector2f> TheWay;
-
     Enemy(str name) : Creature(name, Fraction::Enemy) {}
     virtual void move(Location&) {}
     virtual void UpdateState() {}
@@ -33,15 +33,13 @@ public:
     void move(Location& location) override {
         VelocityBuff = 1;
 
-        // if (TheWay.size() == 0)
-        //     FindTheWay(location, getPosition(), target, TheWay);
-        // if (sf::Vector2i(getPosition()) / size == sf::Vector2i(TheWay[TheWay.size() - 1]) / size)
-            FindTheWay(location, getPosition(), target, TheWay);
-
-        sf::Vector2f wasTarget = target;
-        setTarget(TheWay.back() + sf::Vector2f{float(rand() % 20), float(rand() % 20)});
+        // if (TheWayToPlayer.size() != 0) {
+        //     std::cout << TheWayToPlayer.size() << ' ' << int(PosY) / size << ' ' << TheWayToPlayer[0].size() << ' ' << int(PosX) / size << '\n';
+        //     std::cout << TheWayToPlayer[int(PosY) / size][int(PosX) / size].x << ' ' << TheWayToPlayer[int(PosY) / size][int(PosX) / size].x << '\n';
+        // }
+        setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
+        // setTarget({PosX, PosY});
         Creature::move(location);
-        setTarget(wasTarget);
     }
     void UpdateState() override {
 
