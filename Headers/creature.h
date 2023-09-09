@@ -24,6 +24,7 @@ public:
     sf::Texture texture;
     mutable sf::Sprite sprite;
     mutable PlacedText Name;
+    Animation *animationSprite = nullptr;
 
     Creature(str name, Fraction::Fraction f) : Circle() {
         Name.setString(name);
@@ -40,10 +41,14 @@ public:
         localClock = new sf::Clock();
     };
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
-        sprite.setPosition(PosX, PosY);
+        if (animationSprite != nullptr) {
+            animationSprite->setPosition(getPosition() - animationSprite->getsize() / 2.f);
+            target.draw(*animationSprite, states);
+        } else {
+            sprite.setPosition(PosX, PosY);
+            target.draw(sprite, states);
+        }
         Name.setPosition(PosX - Name.Width / 2.f, PosY - Radius - Name.Height);
-        
-        target.draw(sprite, states);
         target.draw(Name, states);
     };
     virtual void getDamage(float dmg) { Health -= dmg; }

@@ -16,6 +16,7 @@
 #include "scale.h"
 #include "rect.h"
 #include "circle.h"
+#include "animation.h"
 #define M_PI       3.14159265358979323846   // pi
 
 #define ActivationButton sf::Keyboard::X

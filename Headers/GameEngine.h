@@ -4,7 +4,6 @@
 #include "chat.h"
 #include "contextMenu.h"
 #include "enemy.h"
-#include "animation.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap   = true;
@@ -38,7 +37,7 @@ sf::Sprite XButtonSprite;
 sf::Music MainMenuMusic;
 
 //////////////////////////////////////////////////////////// Animation
-Animation animation("sources/textures/scottpilgrim.png", );
+Animation animation("sources/textures/scottpilgrim.png", 8, {108, 140}, sf::seconds(1));
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
@@ -257,6 +256,7 @@ void drawIterface() {
     for (sf::Drawable* d: InterfaceStuff) window.draw(*d);
 
     Bar<int> AmmoBar1(AmmoBar);
+    AmmoBar1.setWidth(AmmoBar.getSize().x - 50);
     PlacedText WeaponNameText1(WeaponNameText);
     for (int i = 0; i < weapons.size(); i++) {
         AmmoBar1.setValue(weapons[i]->AmountOfAmmunition);
@@ -298,8 +298,10 @@ void LevelGenerate(int n, int m) {
         delete Enemies[i];
     Enemies.clear();
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 5; i++)
         Enemies.push_back(new DistortedScientist());
+    for (int i = 0; i < 5; i++)
+        Enemies.push_back(new ScottPiligrim());
 
     for (int i = 0; i < Enemies.size(); i++)
         do {
@@ -365,6 +367,7 @@ void LoadMainMenu() {
 
     DrawableStuff.clear();
     DrawableStuff.push_back(&player);
+    DrawableStuff.push_back(&animation);
     
     InterfaceStuff.clear();
     InterfaceStuff.push_back(&ManaBar);
@@ -394,6 +397,9 @@ void init() {
     MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
 
     WallRect.setFillColor(sf::Color(120, 120, 120));
+
+    animation.setPosition({800, 800});
+    animation.play();
 
     listener.setBlocking(false);
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
@@ -449,6 +455,10 @@ void init() {
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
     
     LoadMainMenu();
+
+    chat.SetCommand("play", []{ animation.play(); });
+    chat.SetCommand("stop", []{ animation.stop(); });
+    chat.SetCommand("pause", []{ animation.pause(); });
 }
 
 void EventHandler() {
