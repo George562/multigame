@@ -27,23 +27,22 @@ Player::Player() : Creature("Player", Fraction::Player) {
     Velocity = {0, 0}; MaxVelocity = 6;
     Acceleration = 0.6;
 
-    SetTexture("sources/textures/Player");
+    SetAnimation("sources/textures/Player.png", 1, {485, 485}, sf::seconds(1));
 }
 
 void Player::move(Location& location) {
-    std::map<char, bool> PressedKeys = {
-        {'w', sf::Keyboard::isKeyPressed(sf::Keyboard::W)},
-        {'a', sf::Keyboard::isKeyPressed(sf::Keyboard::A)},
-        {'s', sf::Keyboard::isKeyPressed(sf::Keyboard::S)},
-        {'d', sf::Keyboard::isKeyPressed(sf::Keyboard::D)}
+    std::vector<float> PressedKeys = {
+        sf::Keyboard::isKeyPressed(sf::Keyboard::W) ? 1.f : 0.f,
+        sf::Keyboard::isKeyPressed(sf::Keyboard::A) ? 1.f : 0.f,
+        sf::Keyboard::isKeyPressed(sf::Keyboard::S) ? 1.f : 0.f,
+        sf::Keyboard::isKeyPressed(sf::Keyboard::D) ? 1.f : 0.f
     };
 
     VelocityBuff = 1;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
         VelocityBuff *= 2;
     
-    setTarget(getPosition() + sf::Vector2f{(PressedKeys['a'] || PressedKeys['d']) ? (PressedKeys['d'] ? 1.f : -1.f) : 0.f,
-                                         (PressedKeys['w'] || PressedKeys['s']) ? (PressedKeys['s'] ? 1.f : -1.f) : 0.f} * MaxVelocity * VelocityBuff);
+    setTarget(getPosition() + sf::Vector2f{PressedKeys[3] - PressedKeys[1], PressedKeys[2] - PressedKeys[0]} * MaxVelocity * VelocityBuff);
     Creature::move(location);
 }
 

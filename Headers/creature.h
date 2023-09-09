@@ -21,8 +21,6 @@ public:
     Weapon *FirstWeapon, *SecondWeapon, *CurWeapon;
     sf::Time LastCheck;
     sf::Clock* localClock;
-    sf::Texture texture;
-    mutable sf::Sprite sprite;
     mutable PlacedText Name;
     Animation *animationSprite = nullptr;
 
@@ -42,11 +40,8 @@ public:
     };
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animationSprite != nullptr) {
-            animationSprite->setPosition(getPosition() - animationSprite->getsize() / 2.f);
+            animationSprite->setPosition(getPosition());
             target.draw(*animationSprite, states);
-        } else {
-            sprite.setPosition(PosX, PosY);
-            target.draw(sprite, states);
         }
         Name.setPosition(PosX - Name.Width / 2.f, PosY - Radius - Name.Height);
         target.draw(Name, states);
@@ -70,16 +65,14 @@ public:
         PosY += Velocity.y;
     };
     virtual void UpdateState() {};
-    void SetTexture(str name) {
-        if (!texture.loadFromFile(name + ".png"))
-            std::cout << "Can't load texture" << name << ".png\n";
-        texture.setSmooth(true);
-        sprite.setTexture(texture);
-        if (Radius == 0)
-            setRadius(sprite.getGlobalBounds().width / 2.f);
-        else
-            sprite.setScale(Radius * 2.f / sprite.getGlobalBounds().width, Radius * 2.f / sprite.getGlobalBounds().height);
-        sprite.setOrigin(sprite.getLocalBounds().width / 2.f, sprite.getLocalBounds().height / 2.f);
+    void SetAnimation(std::string TexturFileName, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
+        if (animationSprite != nullptr) {
+            delete animationSprite;
+        }
+        animationSprite = new Animation(TexturFileName, FrameAmount, frameSize, duration);
+        animationSprite->setSize({Radius * 2.f, Radius * 2.f});
+        animationSprite->setOrigin(animationSprite->getLocalSize() / 2.f);
+        animationSprite->play();
     };
     void ChangeWeapon(Weapon* to) { CurWeapon = to; }
 

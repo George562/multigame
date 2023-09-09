@@ -24,7 +24,7 @@ public:
         Radius = 60;
         CurWeapon = new Pistol();
 
-        SetTexture("sources/textures/DistortedScientist");
+        SetAnimation("sources/textures/DistortedScientist.png", 1, {650, 635}, sf::seconds(1));
 
         Name.ShowText = true;
     }
@@ -55,8 +55,7 @@ public:
         Radius = 60;
         CurWeapon = new Shotgun();
 
-        animationSprite = new Animation("sources/textures/scottpilgrim.png", 8, {108, 140}, sf::seconds(1));
-        animationSprite->play();
+        SetAnimation("sources/textures/scottpilgrim.png", 8, {108, 140}, sf::seconds(1));
 
         Name.ShowText = true;
     }
