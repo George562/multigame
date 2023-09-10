@@ -5,7 +5,7 @@
 class InteractionRect : public sf::Drawable, public sf::Transformable
 {
 protected:
-    float posX, posY, width, height;
+    float posX, posY, width, height, defaultWidth, defaultHeight;
     sf::RectangleShape drawRect;
 public:
     InteractionRect() {}
@@ -13,6 +13,7 @@ public:
     {
         posX = _posX; posY = _posY;
         width = _width; height = _height;
+        defaultWidth = _width; defaultHeight = _height;
 
         drawRect = sf::RectangleShape(sf::Vector2f(width, height));
         drawRect.setPosition(posX, posY);
@@ -24,6 +25,7 @@ public:
     float getBottom() const { return posY + height; }
     float getWidth() const { return width; }
     float getHeight() const { return height; }
+    sf::Color getFillColor() const { return drawRect.getFillColor(); }
     sf::Vector2f getOrigin() const { return drawRect.getOrigin(); }
 
     void setSize(int _width, int _height) { width = _width; height = _height; drawRect.setSize(sf::Vector2f(width, height)); }
@@ -35,7 +37,10 @@ public:
 
     virtual void move(float deltaX, float deltaY) { posX += deltaX; posY += deltaY; drawRect.setPosition(posX, posY); }
     virtual void setPos(float x, float y) { posX = x; posY = y; drawRect.setPosition(posX, posY); }
-    void scale(float coef) { width *= coef; height *= coef; drawRect.setSize(sf::Vector2f(width, height)); }
+    virtual void scale(float coef) { width *= coef; height *= coef; drawRect.setSize(sf::Vector2f(width, height)); }
+    virtual void scale(float coef1, float coef2) { width *= coef1; height *= coef2; drawRect.setSize(sf::Vector2f(width, height)); }
+    virtual void setScale(float coef) { width = defaultWidth * coef; height = defaultHeight * coef; drawRect.setSize(sf::Vector2f(width, height)); }
+    virtual void setScale(float coefW, float coefH) { width = defaultWidth * coefW; height = defaultHeight * coefH; drawRect.setSize(sf::Vector2f(width, height)); }
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const { target.draw(drawRect, states); }
     virtual bool isActivated(sf::Event&) { return false; };
 };

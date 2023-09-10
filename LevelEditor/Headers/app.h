@@ -46,6 +46,7 @@ private:
     bool isItemHeld = false;
 
     mapItem selectedObject;
+
     std::map<mapItem, sf::Color> mapItemColor;
     std::map<mapItem, std::string> mapItemName;
 
@@ -59,6 +60,7 @@ private:
     Button genButton, saveModeButton;
     InteractionRect itemMessageRect, systemMessageRect, editorRect, itemOptionRect;
     TextBox itemOptionXBox, itemOptionYBox;
+    PushTile* hoveredMapItem;
     std::pair<mapItem, PushTile*> selectedMapItem;
     mmivpt mapItemDict;
     vvpt levelMatrix;
@@ -97,6 +99,8 @@ App::App(sf::RenderWindow& window)
 
 void App::init()
 {
+    mainWindow->setView(mainView);
+
     levelMatrixHeight = 0, levelMatrixWidth = 0;
     levelMatrix.resize(0);
     levelMatrixSquares.resize(0);
@@ -274,6 +278,7 @@ void App::poll(sf::Event& event)
 {
     while (mainWindow->pollEvent(event))
     {
+        sf::Event mainEvent = convertToViewEvent(event, mainWindow->getView());
         switch (mode)
         {
         case editing:
@@ -312,7 +317,7 @@ void App::poll(sf::Event& event)
 
             if(!levelMatrix.empty() && 
                 (!isMapItemSelected || !in(itemOptionRect.getX(), itemOptionRect.getY(), itemOptionRect.getWidth(), itemOptionRect.getHeight(), event.mouseButton)))
-                interactionViewPoll(event);
+                    interactionViewPoll(event);
 
             if(event.type == sf::Event::KeyPressed)
             {
@@ -326,7 +331,6 @@ void App::poll(sf::Event& event)
                     systemMessageLabel.setText("Changed arrow move amount to " + 
                                             std::to_string(arrowMoveAmount[arrowMoveAmountIndex]) + " pixels.");
             }
-
             break;
         
         case saving:
@@ -353,7 +357,14 @@ void App::poll(sf::Event& event)
             mainWindow->close();
 
         if(event.type == sf::Event::Resized)
+        {
+            mainView.setViewport(sf::FloatRect(0, 0, wndW / event.size.width, wndH / event.size.height));
+            editorView.setViewport(sf::FloatRect((optionsContainer.getRight() + 20) / event.size.width,
+                                                 optionsContainer.getY() / event.size.height,
+                                                 editorViewWidth / event.size.width,
+                                                 editorViewHeight / event.size.height));
             mainWindow->setView(mainView);
+        }
     }
 }
 
@@ -408,6 +419,8 @@ void App::interactionViewPoll(sf::Event& event)
     {
         if(viewEvent.mouseButton.button == sf::Mouse::Button::Left || viewEvent.mouseButton.button == sf::Mouse::Button::Right)
         {
+            if(selectedMapItem.second != nullptr)
+                selectedMapItem.second->setFillColor(mapItemColor[selectedMapItem.first]);
             isMapItemSelected = false;
             selectedMapItem.first = nothing;
             selectedMapItem.second = nullptr;
@@ -441,6 +454,7 @@ void App::interactionViewPoll(sf::Event& event)
                 itemOptionYBox.setText(std::to_string((int)selectedMapItem.second->getY()));
                 isMapItemSelected = true;
                 isItemHeld = true;
+                selectedMapItem.second->setFillColor(sf::Color::White);
                 systemMessageLabel.setText("Selected a \"" + mapItemName[selectedMapItem.first] + "\" object at\n[X: " +
                 std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
             }
