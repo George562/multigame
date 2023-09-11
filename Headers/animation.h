@@ -14,6 +14,7 @@ public:
     int frameAmount;
     sf::Vector2f frameSize;
     bool isPlaying;
+    int animationLevel;
 
     Animation(std::string TexturFileName, int FrameAmount, sf::Vector2f frameSize, sf::Time duration);
     void setTexture(std::string name);
@@ -45,6 +46,7 @@ Animation::Animation(std::string TexturFileName, int FrameAmount, sf::Vector2f f
     this->localClock = new sf::Clock;
     this->isPlaying = false;
     this->curTime = sf::Time::Zero;
+    animationLevel = 0;
 }
 
 void Animation::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -52,7 +54,7 @@ void Animation::draw(sf::RenderTarget& target, sf::RenderStates states) const {
         curTime = (curTime + localClock->getElapsedTime()) % duration;
         localClock->restart();
     }
-    sprite.setTextureRect({(int)frameSize.x * int((curTime / duration) * frameAmount), 0,
+    sprite.setTextureRect({(int)frameSize.x * int((curTime / duration) * frameAmount), animationLevel * (int)frameSize.y,
                            (int)frameSize.x, (int)frameSize.y});
     states.transform *= getTransform();
     target.draw(sprite, states);

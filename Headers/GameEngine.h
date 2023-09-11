@@ -294,20 +294,23 @@ void LevelGenerate(int n, int m) {
     CurLocation->objects.clear();
     CurLocation->AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
 
-    for (int i = 0; i < Enemies.size(); i++)
+    for (int i = 0; i < Enemies.size(); i++) {
         delete Enemies[i];
+    }
     Enemies.clear();
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 5; i++) {
         Enemies.push_back(new DistortedScientist());
-    for (int i = 0; i < 5; i++)
         Enemies.push_back(new ScottPiligrim());
+        Enemies.push_back(new RamonaFlowers());
+    }
 
-    for (int i = 0; i < Enemies.size(); i++)
+    for (int i = 0; i < Enemies.size(); i++) {
         do {
             Enemies[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
         } while (!CurLocation->EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
                  distance(Enemies[i]->getPosition(), player.getPosition()) < size * 2);
+    }
 }
 
 void LoadMainMenu() {
@@ -387,7 +390,7 @@ void init() {
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
 
     // Load music
-    MainMenuMusic.openFromFile("sources/music/RestAreaMusic.wav");
+    MainMenuMusic.openFromFile("sources/music/MainMenuMusic.wav");
     MainMenuMusic.setLoop(true);
     MainMenuMusic.setVolume(20);
 
