@@ -57,7 +57,7 @@ public:
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
 
-        SetAnimation("sources/textures/scottpilgrim.png", 8, {108, 140}, sf::seconds(1));
+        SetAnimation("sources/textures/scottpilgrim_multiple.png", 8, {108, 140}, sf::seconds(1));
 
         Name.ShowText = true;
     }
@@ -65,6 +65,7 @@ public:
         VelocityBuff = 1;
 
         setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
+        animationSprite->animationLevel = target.x - PosX < 0;
         Creature::move(location);
     }
     void UpdateState() override {

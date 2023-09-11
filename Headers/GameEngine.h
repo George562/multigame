@@ -35,6 +35,7 @@ sf::Sprite XButtonSprite;
 
 //////////////////////////////////////////////////////////// Music
 sf::Music MainMenuMusic;
+sf::Music FightMusic1, FightMusic2;
 
 //////////////////////////////////////////////////////////// Animation
 Animation animation("sources/textures/scottpilgrim.png", 8, {108, 140}, sf::seconds(1));
@@ -341,6 +342,9 @@ void LoadMainMenu() {
         MiniMapView.setCenter(player.getPosition() * ScaleParam);
 
         MainMenuMusic.pause();
+        if (FightMusic1.getStatus() != sf::Music::Playing && FightMusic2.getStatus() != sf::Music::Playing) {
+            FightMusic1.play();
+        }
 
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
@@ -366,6 +370,8 @@ void LoadMainMenu() {
     MiniMapView.setCenter(player.getPosition() * ScaleParam);
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
+    FightMusic1.stop();
+    FightMusic2.stop();
     MainMenuMusic.play();
 
     DrawableStuff.clear();
@@ -393,6 +399,12 @@ void init() {
     MainMenuMusic.openFromFile("sources/music/MainMenuMusic.wav");
     MainMenuMusic.setLoop(true);
     MainMenuMusic.setVolume(20);
+
+    FightMusic1.openFromFile("sources/music/FightMusic1.wav");
+    FightMusic1.setVolume(20);
+
+    FightMusic2.openFromFile("sources/music/FightMusic2.wav");
+    FightMusic2.setVolume(20);
 
     // Load locations
     WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
@@ -636,6 +648,14 @@ void MainLoop() {
             }
         }
         player.UpdateState();
+        if (screen == screens::Dungeon) {
+            if (FightMusic1.getDuration() - FightMusic1.getPlayingOffset() < sf::seconds(0.3f)) {
+                FightMusic2.play();
+            }
+            if (FightMusic2.getDuration() - FightMusic2.getPlayingOffset() < sf::seconds(0.3f)) {
+                FightMusic1.play();
+            }
+        }
         if (!window.hasFocus()) {
             if (player.CurWeapon != nullptr)
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
