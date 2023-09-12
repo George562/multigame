@@ -27,7 +27,6 @@ public:
     Creature(str name, Fraction::Fraction f) : Circle() {
         Name.setString(name);
         Name.setCharacterSize(25);
-        Name.setFillColor(sf::Color::Green);
         Name.setOutlineThickness(2);
         Name.setOutlineColor(sf::Color::Red);
         Name.setFillColor(sf::Color::White);
