@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap   = true;
 bool IsDrawInterface = true;
-bool MiniMapHoldOnPlayer = false;
+bool MiniMapHoldOnPlayer = true;
 
 //////////////////////////////////////////////////////////// Stuff for work with system and screen
 sf::ContextSettings settings;
@@ -415,6 +415,8 @@ void init() {
 
     animation.setPosition({800, 800});
     animation.play();
+
+    CurWeapon.looped = true;
 
     listener.setBlocking(false);
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();

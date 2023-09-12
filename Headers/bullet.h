@@ -14,7 +14,7 @@ struct Bullet : public sf::Drawable, public Circle {
     int penetration;
     float damage;
     sf::CircleShape circle;
-    bool exlpode = false;
+    bool explode = false;
     sf::Time timer;
     Scale<float> ExplosionRadius = {1, 12, 1};
     Bullet::Type type;
@@ -41,6 +41,7 @@ struct Bullet : public sf::Drawable, public Circle {
                 break;
         }
         circle.setRadius(Radius);
+        circle.setOrigin(Radius, Radius);
         localClock = new sf::Clock();
     }
 
@@ -60,13 +61,15 @@ struct Bullet : public sf::Drawable, public Circle {
             case Bullet::Bubble:
                 PosX += Velocity.x * (timer - localClock->getElapsedTime()).asSeconds();
                 PosY += Velocity.y * (timer - localClock->getElapsedTime()).asSeconds();
-                if (timer < localClock->getElapsedTime()) {
+                if (!explode && timer < localClock->getElapsedTime()) {
                     Velocity = {0.f, 0.f};
-                    exlpode = true;
+                    explode = true;
+                    localClock->restart();
                 }
-                if (exlpode && !todel) {
+                if (explode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
-                        ExplosionRadius += 1.f / 5;
+                        ExplosionRadius += localClock->getElapsedTime().asSeconds() * 8.f;
+                        localClock->restart();
                         circle.setFillColor(circle.getFillColor() - sf::Color(0, 0, 0, 4));
                         Radius = COMMON_BULLET_RADIUS * ExplosionRadius.cur;
                         circle.setRadius(Radius);

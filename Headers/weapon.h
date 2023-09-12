@@ -107,7 +107,7 @@ public:
 class Bubblegun : public Weapon {
 public:
     sf::Vector2f position = {};
-    Bubblegun() : Weapon("Bubblegun", 30, 3, 0.03, 2) { BulletVelocity = 3; NumberOfBulletsPerShot = 10;  scatter = 40; }
+    Bubblegun() : Weapon("Bubblegun", 30, 3, 0.03, 2) { BulletVelocity = 9; NumberOfBulletsPerShot = 10;  scatter = 40; }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
             lock = false;
@@ -120,7 +120,7 @@ public:
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * (rand() % (int)scatter - scatter / 2), d) * BulletVelocity / len;
         sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
-        Bullets.push_back(*(new Bullet(f, SpawnPoint, d, damage, COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(3))));
+        Bullets.push_back(*(new Bullet(f, SpawnPoint, d, damage, COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(1))));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
         if (--NumberOfBulletsPerShot == 0) {
