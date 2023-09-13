@@ -177,7 +177,7 @@ void draw() {
     }
 
     for (sf::Drawable* d: DrawableStuff) {
-        if (d == (sf::Drawable*)&player) {
+        if (d == static_cast<sf::Drawable*>(&player) ){
             window.draw(*d, playerStates);
         } else {
             window.draw(*d, sf::RenderStates::Default);
@@ -523,10 +523,10 @@ void EventHandler() {
             }
 
             if (IsSomeOneCanBeActivated()) {
-                if (!in(InterfaceStuff, (sf::Drawable*)&XButtonSprite))
+                if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite)))
                     InterfaceStuff.push_back(&XButtonSprite);
             } else
-                DeleteFromVector(InterfaceStuff, (sf::Drawable*)&XButtonSprite);
+                DeleteFromVector(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite));
 
             for (Interactible*& x: InteractibeStuff)
                 if (x->CanBeActivated(player))
@@ -642,7 +642,7 @@ void MainLoop() {
         }
         for (int i = 0; i < Enemies.size(); i++) {
             if (Enemies[i]->Health.toBottom() == 0) {
-                DeleteFromVector(DrawableStuff, (sf::Drawable*)Enemies[i]);
+                DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
                 delete Enemies[i];
                 Enemies.erase(Enemies.begin() + i);
             } else {
