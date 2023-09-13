@@ -168,11 +168,11 @@ void draw() {
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
             portal.setPosition(CurLocation->objects[i].pos);
-            window.draw(portal);
+            window.draw(portal, playerStates);
         }
         if (CurLocation->objects[i].id == Tiles::box) {
             BoxRect.setPosition(CurLocation->objects[i].pos);
-            window.draw(BoxRect);
+            window.draw(BoxRect, playerStates);
         }
     }
 
@@ -180,11 +180,11 @@ void draw() {
         if (d == static_cast<sf::Drawable*>(&player) ){
             window.draw(*d, playerStates);
         } else {
-            window.draw(*d, sf::RenderStates::Default);
+            window.draw(*d, playerStates);
         }
     }
 
-    for (int i = 0; i < Bullets.size(); i++) window.draw(Bullets[i]);
+    for (int i = 0; i < Bullets.size(); i++) window.draw(Bullets[i], playerStates);
 
     if (IsDrawMinimap)      drawMiniMap();
     if (IsDrawInterface)    drawIterface();
@@ -202,7 +202,7 @@ void drawWalls() {
             if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setSize(CurLocation->wallsRect[i][j].getSize());
-                window.draw(WallRect);
+                window.draw(WallRect, playerStates);
             }
         }
 }
@@ -637,6 +637,8 @@ void updateBullets() {
 void MainLoop() {
     while (window.isOpen()) {
         playerShader.setUniform("lightFactor", 2.f * player.Mana.toBottom() / player.Mana.top);
+        playerShader.setParameter("u_resolution", (float)scw, (float)sch);
+        playerShader.setParameter("u_mouse", (float)sf::Mouse::getPosition().x, (float)sf::Mouse::getPosition().y);
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }
