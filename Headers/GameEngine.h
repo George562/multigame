@@ -65,6 +65,9 @@ Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
 Player player;
 std::vector<Player> ConnectedPlayers;
 
+sf::Shader playerShader;
+sf::RenderStates playerStates(&playerShader);
+
 //////////////////////////////////////////////////////////// Chat
 Chat chat;
 
@@ -173,7 +176,13 @@ void draw() {
         }
     }
 
-    for (sf::Drawable* d: DrawableStuff) window.draw(*d);
+    for (sf::Drawable* d: DrawableStuff) {
+        if (d == (sf::Drawable*)&player) {
+            window.draw(*d, playerStates);
+        } else {
+            window.draw(*d, sf::RenderStates::Default);
+        }
+    }
 
     for (int i = 0; i < Bullets.size(); i++) window.draw(Bullets[i]);
 
@@ -404,6 +413,9 @@ void init() {
     // MainMenuLocation.LoadFromFile("sources/locations/debugLocation.txt");
     MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
 
+    playerShader.loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
+    playerShader.setUniform("overlay", player.animationSprite->sprite.getTexture());
+
     WallRect.setFillColor(sf::Color(120, 120, 120));
 
     animation.setPosition({800, 800});
@@ -624,6 +636,7 @@ void updateBullets() {
 
 void MainLoop() {
     while (window.isOpen()) {
+        playerShader.setUniform("lightFactor", 2.f * player.Mana.toBottom() / player.Mana.top);
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }
