@@ -40,6 +40,7 @@ private:
     int arrowMoveAmountIndex = 0;
 
     float zoomFactor = 1.0f;
+
     sf::Vector2i prevPos = sf::Vector2i(0, 0);
     windowMode mode = editing;
     bool isMapItemSelected = false;
@@ -71,6 +72,7 @@ private:
     TextBox filePathBox, fileNameBox;
     Button saveFileButton, backButton, overWriteButton;
 
+    std::vector<ScrollContainer*> scrollContainersList;
     std::vector<InteractionRect*> universalDrawnElements, editorDrawnElements, saveDrawnElements, editorItemPropertyElements;
     vvir levelMatrixSquares;
 
@@ -124,18 +126,19 @@ void App::init()
     font.loadFromFile("Resources/Fonts/consola.ttf");
 
     // [Editor window elements]. All you need for actual level editing
-    optionsContainer = ScrollContainer((float)wndW / 20, (float)wndH / 20, wndW / 4, wndH * 7 / 20);
+    sf::FloatRect scrollViewport = sf::FloatRect(1 / 20.0f, 1 / 20.0f, 1 / 4.0f, 7 / 20.0f);
+    optionsContainer = ScrollContainer((float)wndW / 20, (float)wndH / 20, wndW / 4, wndH * 7 / 20, scrollViewport);
 
-    levelHeightBox = NumBox(optionsContainer.getX() + optionsContainer.getWidth() * 3 / 5, optionsContainer.getY() + 10, 60, 50, font, 2);
+    levelHeightBox = NumBox(optionsContainer.getRect()->getX() + optionsContainer.getRect()->getWidth() * 3 / 5, optionsContainer.getRect()->getY() + 10, 60, 50, font, 2);
     levelWidthBox = NumBox(levelHeightBox.getX(), levelHeightBox.getBottom() + 20, 60, 50, font, 2);
 
-    mapHeightLabel = Label(optionsContainer.getX() + 24, levelHeightBox.getY() + 10, 20, font);
+    mapHeightLabel = Label(optionsContainer.getRect()->getX() + 24, levelHeightBox.getY() + 10, 20, font);
     mapHeightLabel.setText("Map height");
 
-    mapWidthLabel = Label(optionsContainer.getX() + 24, levelWidthBox.getY() + 10, 20, font);
+    mapWidthLabel = Label(optionsContainer.getRect()->getX() + 24, levelWidthBox.getY() + 10, 20, font);
     mapWidthLabel.setText("Map width");
 
-    genButton = Button(optionsContainer.getX() + optionsContainer.getWidth() * 2 / 10, levelWidthBox.getBottom() + 15, 150, 100, font);
+    genButton = Button(optionsContainer.getRect()->getX() + optionsContainer.getRect()->getWidth() * 2 / 10, levelWidthBox.getBottom() + 15, 150, 100, font);
     genButton.setText("Generate\nMatrix");
 
     saveModeButton = Button(genButton.getX(), genButton.getBottom() + 20, 150, 100, font);
@@ -147,10 +150,10 @@ void App::init()
     optionsContainer.addElement(saveModeButton);
 
 
-    editorViewX = optionsContainer.getRight() + 20;
-    editorViewY = optionsContainer.getY();
+    editorViewX = optionsContainer.getRect()->getRight() + 20;
+    editorViewY = optionsContainer.getRect()->getY();
     editorViewWidth = wndW - editorViewX - wndW / 10;
-    editorViewHeight = wndH - editorViewY - wndW * 3 / 20;
+    editorViewHeight = wndH - editorViewY - wndH * 3 / 20;
     
     editorRect = InteractionRect(editorViewX, editorViewY, editorViewWidth, editorViewHeight);
     editorRect.setFillColor(sf::Color(0, 0, 100));
@@ -184,10 +187,17 @@ void App::init()
     itemEnterHintLabel.setText("Press \"Enter\" to set the\nobject's coordinates");
 
 
-    itemContainer = ScrollContainer(optionsContainer.getX(), optionsContainer.getBottom() + 20,
-                                    optionsContainer.getWidth(), editorRect.getHeight() - optionsContainer.getHeight() - 20);
+    sf::FloatRect itemScrollViewport(optionsContainer.getRect()->getX() / wndW,
+                                     (optionsContainer.getRect()->getBottom() + 20) / wndH,
+                                     optionsContainer.getRect()->getWidth() / wndW,
+                                     (editorRect.getHeight() - optionsContainer.getRect()->getHeight() - 20) / wndH);
+    itemContainer = ScrollContainer(optionsContainer.getRect()->getX(),
+                                    optionsContainer.getRect()->getBottom() + 20,
+                                    optionsContainer.getRect()->getWidth(),
+                                    editorRect.getHeight() - optionsContainer.getRect()->getHeight() - 20,
+                                    itemScrollViewport);
 
-    itemButtonsList.push_back(new Button(itemContainer.getX() + 24, itemContainer.getY() + 10, 200, 50, font));
+    itemButtonsList.push_back(new Button(itemContainer.getRect()->getX() + 24, itemContainer.getRect()->getY() + 10, 200, 50, font));
     itemButtonsList[0]->setText(mapItemName[(mapItem)0]);
     itemButtonsList[0]->setInactiveColor(mapItemColor[(mapItem)0]);
 
@@ -201,7 +211,7 @@ void App::init()
     for(int i = 0; i < itemButtonsList.size(); i++)
         itemContainer.addElement(*itemButtonsList[i]);
 
-    itemMessageRect = InteractionRect(itemContainer.getX(), itemContainer.getBottom() + 10, wndW * 4 / 10, wndH / 10);
+    itemMessageRect = InteractionRect(itemContainer.getRect()->getX(), itemContainer.getRect()->getBottom() + 10, wndW * 4 / 10, wndH / 10);
     itemMessageRect.setOutlineThickness(1); itemMessageRect.setOutlineColor(sf::Color::Black);
 
     systemMessageRect = InteractionRect(itemMessageRect.getRight() + 20, itemMessageRect.getY(), wndW - itemMessageRect.getRight() - 20 - wndW / 10, wndH / 10);
@@ -213,8 +223,9 @@ void App::init()
     systemMessageLabel = Label(systemMessageRect.getX() + 10, systemMessageRect.getY() + 10, 15, font);
     systemMessageLabel.setText("System related messages will be displayed here");
 
-    editorDrawnElements.push_back(&optionsContainer);
-    editorDrawnElements.push_back(&itemContainer);
+    scrollContainersList.push_back(&optionsContainer);
+    scrollContainersList.push_back(&itemContainer);
+
     editorDrawnElements.push_back(&editorRect);
     editorDrawnElements.push_back(&itemMessageRect);
     editorDrawnElements.push_back(&itemMessageLabel);
@@ -285,16 +296,16 @@ void App::poll(sf::Event& event)
             optionsContainer.isActivated(event);
             itemContainer.isActivated(event);
 
-            if(levelHeightBox.getY() >= optionsContainer.getY() && levelHeightBox.getBottom() <= optionsContainer.getBottom())
+            if(levelHeightBox.getY() >= optionsContainer.getRect()->getY() && levelHeightBox.getBottom() <= optionsContainer.getRect()->getBottom())
                 levelHeightBox.isActivated(event);
 
-            if(levelWidthBox.getY() >= optionsContainer.getY() && levelWidthBox.getBottom() <= optionsContainer.getBottom())
+            if(levelWidthBox.getY() >= optionsContainer.getRect()->getY() && levelWidthBox.getBottom() <= optionsContainer.getRect()->getBottom())
                 levelWidthBox.isActivated(event);
 
-            if(genButton.isActivated(event) && genButton.getY() >= optionsContainer.getY() && genButton.getBottom() <= optionsContainer.getBottom())
+            if(genButton.isActivated(event) && genButton.getY() >= optionsContainer.getRect()->getY() && genButton.getBottom() <= optionsContainer.getRect()->getBottom())
                 systemMessageLabel.setText(generateMatrix(levelMatrixHeight, levelMatrixWidth));
 
-            if(saveModeButton.isActivated(event) && saveModeButton.getY() >= optionsContainer.getY() && saveModeButton.getBottom() <= optionsContainer.getBottom())
+            if(saveModeButton.isActivated(event) && saveModeButton.getY() >= optionsContainer.getRect()->getY() && saveModeButton.getBottom() <= optionsContainer.getRect()->getBottom())
                 mode = saving;
 
             for(int i = 0; i < itemButtonsList.size(); i++)
@@ -317,7 +328,10 @@ void App::poll(sf::Event& event)
 
             if(!levelMatrix.empty() && 
                 (!isMapItemSelected || !in(itemOptionRect.getX(), itemOptionRect.getY(), itemOptionRect.getWidth(), itemOptionRect.getHeight(), event.mouseButton)))
-                    interactionViewPoll(event);
+                    {
+                        sf::Event newEvent = convertToViewEvent(event, mainView);
+                        interactionViewPoll(event);
+                    }
 
             if(event.type == sf::Event::KeyPressed)
             {
@@ -359,10 +373,21 @@ void App::poll(sf::Event& event)
         if(event.type == sf::Event::Resized)
         {
             mainView.setViewport(sf::FloatRect(0, 0, wndW / event.size.width, wndH / event.size.height));
-            editorView.setViewport(sf::FloatRect((optionsContainer.getRight() + 20) / event.size.width,
-                                                 optionsContainer.getY() / event.size.height,
-                                                 editorViewWidth / event.size.width,
-                                                 editorViewHeight / event.size.height));
+            editorView.setViewport(sf::FloatRect(editorViewX / (float)event.size.width,
+                                                 editorViewY / (float)event.size.height,
+                                                 editorViewWidth / (float)event.size.width,
+                                                 editorViewHeight / (float)event.size.height));
+            for(int i = 0; i < scrollContainersList.size(); i++)
+            {
+                float viewRectX = scrollContainersList[i]->getRect()->getX();
+                float viewRectY = scrollContainersList[i]->getRect()->getY();
+                float viewWidth = scrollContainersList[i]->getRect()->getWidth();
+                float viewHeight = scrollContainersList[i]->getRect()->getHeight();
+                scrollContainersList[i]->setViewport(sf::FloatRect(viewRectX / (float)event.size.width,
+                                                                   viewRectY / (float)event.size.height,
+                                                                   viewWidth / (float)event.size.width,
+                                                                   viewHeight / (float)event.size.height));
+            }
             mainWindow->setView(mainView);
         }
     }
@@ -370,8 +395,8 @@ void App::poll(sf::Event& event)
 
 sf::Event App::convertToViewEvent(sf::Event& event, sf::View view)
 {
-    if(!in(wndW * view.getViewport().left, wndH * editorView.getViewport().top,
-           wndW * editorView.getViewport().width, wndH * editorView.getViewport().height, mainWindow->mapPixelToCoords(sf::Mouse::getPosition(*mainWindow), mainView)))
+    if(!in(editorRect.getX(), editorRect.getY(), editorRect.getWidth(), editorRect.getHeight(),
+           sf::Mouse::getPosition(*mainWindow)))
         return sf::Event();
 
     sf::Event viewEvent = event;
@@ -523,7 +548,6 @@ void App::interactionViewPoll(sf::Event& event)
 
 void App::draw()
 {
-
     switch (mode)
     {
     case editing:
@@ -549,7 +573,6 @@ void App::draw()
 
             mainWindow->setView(mainView);
         }
-
         break;
 
     case saving:
@@ -564,6 +587,9 @@ void App::draw()
     for(int i = 0; i < universalDrawnElements.size(); i++)
         mainWindow->draw(*(universalDrawnElements[i]));
     
+    for(int i = 0; i < scrollContainersList.size(); i++)
+        scrollContainersList[i]->draw(*mainWindow, sf::RenderStates::Default);
+        
     if(isMapItemSelected)
         for(int i = 0; i < editorItemPropertyElements.size(); i++)
             mainWindow->draw(*(editorItemPropertyElements[i]));

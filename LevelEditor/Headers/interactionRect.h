@@ -2,7 +2,7 @@
 #include "../../SFML-2.5.1/include/SFML/Graphics.hpp"
 #include <iostream>
 
-class InteractionRect : public sf::Drawable, public sf::Transformable
+class InteractionRect : public sf::Drawable
 {
 protected:
     float posX, posY, width, height, defaultWidth, defaultHeight;

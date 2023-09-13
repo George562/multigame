@@ -4,16 +4,18 @@
 #include "mouseTools.h"
 #include "numBox.h"
 
-class ScrollContainer : public InteractionRect
+class ScrollContainer
 {
 private:
     bool readInput = false;
     int scrollMultiplier, elementsScrollMultiplier, scrollValue;
     float minScrollY, maxScrollY;
 
+    sf::View scrollView;
+    sf::FloatRect scrollViewport;
     sf::Color inactiveColor = sf::Color(220, 220, 220);
     sf::Color activeColor = sf::Color::White;
-    InteractionRect scrollRect, scrollBoundRect;
+    InteractionRect backRect, scrollRect, scrollBoundRect;
 
     std::vector<InteractionRect*> elements;
 
@@ -21,28 +23,38 @@ private:
 
 public:
     ScrollContainer() {};
-    ScrollContainer(float, float, float, float, int);
+    ScrollContainer(float, float, float, float, sf::FloatRect, int);
     
     void addElement(InteractionRect&);
+    InteractionRect* getRect() { return &backRect; }
+    sf::View* getView() { return &scrollView; }
+    sf::FloatRect getViewport() { return scrollViewport; }
 
-    bool isActivated(sf::Event&) override;
-    void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+    void setViewport(sf::FloatRect newViewport) { scrollViewport = newViewport; scrollView.setViewport(newViewport); }
+    bool isActivated(sf::Event&);
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
 
-ScrollContainer::ScrollContainer(float _posX, float _posY, float _width, float _height, int multiplier = 10) : InteractionRect(_posX, _posY, _width, _height)
+ScrollContainer::ScrollContainer(float _posX, float _posY, float _width, float _height, 
+                                 sf::FloatRect viewport, int multiplier = 10)
 {
-    drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(2);
-    drawRect.setFillColor(inactiveColor);
+    backRect = InteractionRect(_posX, _posY, _width, _height);
+    backRect.setOutlineColor(sf::Color::Black); backRect.setOutlineThickness(2);
+    backRect.setFillColor(inactiveColor);
 
     scrollMultiplier = elementsScrollMultiplier = multiplier;
     scrollValue = 0;
-    minScrollY = posY; maxScrollY = getBottom();
+    minScrollY = _posY; maxScrollY = _posY + _height;
 
-    scrollRect = InteractionRect(posX + 4, posY + 4, 10, height - 8);
+    scrollRect = InteractionRect(_posX + 4, _posY + 4, 10, _height - 8);
     scrollRect.setFillColor(sf::Color::Black);
 
-    scrollBoundRect = InteractionRect(posX, posY, 18, height);
+    scrollBoundRect = InteractionRect(_posX, _posY, 18, _height);
     scrollBoundRect.setFillColor(sf::Color(170, 170, 170));
+
+    scrollViewport = viewport;
+    scrollView = sf::View(sf::FloatRect(_posX, _posY, _width, _height));
+    scrollView.setViewport(viewport);
 }
 
 void ScrollContainer::updateScrollbar(InteractionRect& element)
@@ -50,10 +62,10 @@ void ScrollContainer::updateScrollbar(InteractionRect& element)
     if(element.getBottom() > maxScrollY)
         maxScrollY = element.getBottom() + 10;
 
-    if(maxScrollY > getBottom())
+    if(maxScrollY > backRect.getBottom())
     {
-        scrollRect.setSize(scrollRect.getWidth(), height * height / maxScrollY);
-        elementsScrollMultiplier = scrollMultiplier * height / scrollRect.getHeight();
+        scrollRect.setSize(scrollRect.getWidth(), backRect.getHeight() * backRect.getHeight() / maxScrollY);
+        elementsScrollMultiplier = scrollMultiplier * backRect.getHeight() / scrollRect.getHeight();
     }
 }
 
@@ -67,8 +79,8 @@ bool ScrollContainer::isActivated(sf::Event& event)
 {
     if(event.type == sf::Event::MouseWheelScrolled && readInput)
     {
-        if(scrollRect.getY() - scrollMultiplier * event.mouseWheelScroll.delta >= posY &&
-           scrollRect.getBottom() - scrollMultiplier * event.mouseWheelScroll.delta <= getBottom() - 4)
+        if(scrollRect.getY() - scrollMultiplier * event.mouseWheelScroll.delta >= backRect.getY() &&
+           scrollRect.getBottom() - scrollMultiplier * event.mouseWheelScroll.delta <= backRect.getBottom() - 4)
         {
             scrollRect.move(0, -scrollMultiplier * event.mouseWheelScroll.delta);
             for(InteractionRect *ir : elements)
@@ -80,12 +92,13 @@ bool ScrollContainer::isActivated(sf::Event& event)
 
     if(event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left)
     {
-        readInput = in(posX, posY, width, height, event.mouseButton);
+        readInput = in(backRect.getX(), backRect.getY(), backRect.getWidth(), backRect.getHeight(),
+                       event.mouseButton);
         bool elementInput = false;
         for(InteractionRect *ir : elements)
             elementInput |= in(ir->getX(), ir->getY(), ir->getWidth(), ir->getHeight(), event.mouseButton);
         readInput = readInput & !elementInput;
-        drawRect.setFillColor(readInput ? activeColor : inactiveColor);
+        backRect.setFillColor(readInput ? activeColor : inactiveColor);
         return readInput;
     }
 
@@ -94,11 +107,15 @@ bool ScrollContainer::isActivated(sf::Event& event)
 
 void ScrollContainer::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-    target.draw(drawRect);
+    sf::View tmpView = target.getView();
+    
+    backRect.draw(target, states);
+    target.setView(scrollView);
+    
     scrollBoundRect.draw(target, states);
     scrollRect.draw(target, states);
 
     for(InteractionRect *ir : elements)
-        if(ir->getY() >= posY && ir->getBottom() <= getBottom())
-            ir->draw(target, states);
+        ir->draw(target, states);
+    target.setView(tmpView);
 }
