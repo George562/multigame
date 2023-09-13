@@ -1,0 +1,25 @@
+#pragma once
+#include "../SFML-2.5.1/include/SFML/Graphics.hpp"
+#include "rect.h"
+
+////////////////////////////////////////////////////////////
+// Class
+////////////////////////////////////////////////////////////
+
+class Puddle : public Rect, public sf::Drawable {
+public:
+    //Effect effect;
+
+    Puddle();
+
+    void GiveEffect(Creature& creature);
+};
+
+////////////////////////////////////////////////////////////
+// Realization
+////////////////////////////////////////////////////////////
+
+void Puddle::GiveEffect(Creature& creature) {
+    //Effect effect();
+    //creature.GetEffect(effect);
+}
