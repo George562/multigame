@@ -35,7 +35,7 @@ public:
 ////////////////////////////////////////////////////////////
 
 Chat::Chat() : inputted(false), start(0), len(11) {
-    PosX = 150; PosY = sch - SPACE_BETWEEN_LINES_IN_PIXELS * (len + 2);
+    PosX = 250; PosY = sch - SPACE_BETWEEN_LINES_IN_PIXELS * (len + 2);
     Width = scw - PosX * 2; Height = 35;
 
     for (int i = 0; i < len; i++) {

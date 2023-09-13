@@ -85,9 +85,11 @@ void Animation::setTexture(std::string name) {
 void Animation::setSize(sf::Vector2f size) {
     setScale(size.x / sprite.getTextureRect().width, size.y / sprite.getTextureRect().height);
 }
+
 sf::Vector2f Animation::getGlobalSize() const {
     return { sprite.getLocalBounds().width * getScale().x, sprite.getLocalBounds().height * getScale().y };
 }
+
 sf::Vector2f Animation::getLocalSize() const {
     return  {sprite.getLocalBounds().width, sprite.getLocalBounds().height };
 }

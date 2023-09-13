@@ -14,7 +14,7 @@ struct Bullet : public sf::Drawable, public Circle {
     int penetration;
     float damage;
     sf::CircleShape circle;
-    bool exlpode = false;
+    bool explode = false;
     sf::Time timer;
     Scale<float> ExplosionRadius = {1, 12, 1};
     Bullet::Type type;
@@ -41,6 +41,7 @@ struct Bullet : public sf::Drawable, public Circle {
                 break;
         }
         circle.setRadius(Radius);
+        circle.setOrigin(Radius, Radius);
         localClock = new sf::Clock();
     }
 
@@ -51,17 +52,24 @@ struct Bullet : public sf::Drawable, public Circle {
     void move(Location& location) {
         if (LenOfVector(Velocity) != 0) {
             sf::Vector2i res = WillCollisionWithWalls(location.wallsRect, *this, Velocity);
-            if (res.x == -1 || res.y == -1) penetration--;
+            if (res.x == -1 || res.y == -1) {
+                penetration--;
+            }
             Velocity = Velocity * (sf::Vector2f)res;
         }
         switch (type) {
             case Bullet::Bubble:
                 PosX += Velocity.x * (timer - localClock->getElapsedTime()).asSeconds();
                 PosY += Velocity.y * (timer - localClock->getElapsedTime()).asSeconds();
-                if (timer < localClock->getElapsedTime()) { Velocity = {0.f, 0.f}; exlpode = true; }
-                if (exlpode && !todel) {
+                if (!explode && timer < localClock->getElapsedTime()) {
+                    Velocity = {0.f, 0.f};
+                    explode = true;
+                    localClock->restart();
+                }
+                if (explode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
-                        ExplosionRadius += 1.f / 5;
+                        ExplosionRadius += localClock->getElapsedTime().asSeconds() * 8.f;
+                        localClock->restart();
                         circle.setFillColor(circle.getFillColor() - sf::Color(0, 0, 0, 4));
                         Radius = COMMON_BULLET_RADIUS * ExplosionRadius.cur;
                         circle.setRadius(Radius);

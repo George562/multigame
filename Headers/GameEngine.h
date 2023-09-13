@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap   = true;
 bool IsDrawInterface = true;
-bool MiniMapHoldOnPlayer = false;
+bool MiniMapHoldOnPlayer = true;
 
 //////////////////////////////////////////////////////////// Stuff for work with system and screen
 sf::ContextSettings settings;
@@ -24,7 +24,7 @@ std::vector<Interactible*> InteractibeStuff;
 sf::RectangleShape WallRect;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
-sf::CircleShape MMPlayerRect; // MiniMap prefix
+sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
 sf::RectangleShape MMPortalRect, MMBoxRect;
 
 //////////////////////////////////////////////////////////// InterfaceStuff
@@ -121,13 +121,6 @@ Panel  IPPanel          ("sources/textures/YellowPanel", "IP:");
 Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
 
 //////////////////////////////////////////////////////////// Buttons
-Button CoopButton("sources/textures/RedPanel", "Online", [](){
-    MiniMapActivated = false;
-    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-    MiniMapView.setCenter(player.getPosition() * ScaleParam);
-    MainMenuMusic.pause();
-});
-
 Button HostButton("sources/textures/GreenPanel", "Host", [](){
     listener.listen(53000);
     selector.add(listener);
@@ -240,12 +233,12 @@ void drawMiniMap() {
     // draw players
     if (ClientFuncRun || HostFuncRun) {
         for (Player& p: ConnectedPlayers) {
-            MMPlayerRect.setPosition(p.getPosition() * ScaleParam);
-            window.draw(MMPlayerRect);
+            MMPlayerCircle.setPosition(p.getPosition() * ScaleParam);
+            window.draw(MMPlayerCircle);
         }
     } else {
-        MMPlayerRect.setPosition(player.getPosition() * ScaleParam);
-        window.draw(MMPlayerRect);
+        MMPlayerCircle.setPosition(player.getPosition() * ScaleParam);
+        window.draw(MMPlayerCircle);
     }
     window.setView(GameView);
 }
@@ -416,6 +409,8 @@ void init() {
     animation.setPosition({800, 800});
     animation.play();
 
+    CurWeapon.looped = true;
+
     listener.setBlocking(false);
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
     std::cout << "IP: " << MyIP << '\n';
@@ -424,16 +419,15 @@ void init() {
     IPPanel.setTextSize(80);
     ListOfPlayers.setTextSize(60);
 
-    CoopButton.setPosition      (scw - scw / 6 - CoopButton.Width * 3 / 4, sch * 5 / 8);
     HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,     sch * 5 / 8);
     EscapeButton.setPosition    (scw / 2 -       EscapeButton.Width / 2,   sch * 5 / 8);
 
     IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,        scw / 8    );
     ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,  scw / 16   );
 
-    MMPlayerRect.setRadius(9);
-    MMPlayerRect.setFillColor(sf::Color(0, 180, 0));
-    MMPlayerRect.setOrigin(MMPlayerRect.getRadius(), MMPlayerRect.getRadius());
+    MMPlayerCircle.setRadius(9);
+    MMPlayerCircle.setFillColor(sf::Color(0, 180, 0));
+    MMPlayerCircle.setOrigin(MMPlayerCircle.getRadius(), MMPlayerCircle.getRadius());
 
     player.FirstWeapon  = &pistol;
     player.SecondWeapon = &shotgun;

@@ -8,6 +8,7 @@
 template <class T>
 struct Scale {
     T bottom, top, cur;
+    bool looped = false;
     T fromTop() { return top - cur; }
     T toBottom() { return cur - bottom; }
     float filling() { return float(cur - bottom) / float(top - bottom); };
@@ -19,7 +20,15 @@ struct Scale {
 
 template <class T>
 void normalize(Scale<T>& scale) {
-    scale.cur = std::max(std::min(scale.top, scale.cur), scale.bottom);
+    if (!scale.looped) {
+        scale.cur = std::max(std::min(scale.top, scale.cur), scale.bottom);
+    } else {
+        if (scale.cur > scale.top) {
+            scale.cur = scale.cur - (scale.top - scale.bottom + 1);
+        } else if (scale.cur < scale.bottom) {
+            scale.cur = scale.cur + (scale.top - scale.bottom + 1);
+        }
+    }
 }
 
 template <class T>
