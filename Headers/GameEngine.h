@@ -414,7 +414,7 @@ void init() {
     MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
 
     playerShader.loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
-    playerShader.setUniform("overlay", player.animationSprite->sprite.getTexture());
+    playerShader.setUniform("current", sf::Shader::CurrentTexture);
 
     WallRect.setFillColor(sf::Color(120, 120, 120));
 
