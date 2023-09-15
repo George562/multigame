@@ -9,7 +9,7 @@ uniform mat4 matrix;
 uniform sampler2D overlay;
 uniform sampler2D current;
 
-uniform vec2 u_resolution;  // Canvas size (width,height)
+uniform vec2 u_resolution;  // Canvas size (width, height)
 uniform vec2 u_mouse;       // mouse position in screen pixels
 uniform float u_time;       // Time in seconds since load
 
@@ -21,5 +21,5 @@ void main()
     vec3 halfVector = normalize(lightPosition + eyePosition);
     float intensity = dot(normalize(normal), normalize(halfVector));
     vec4 pixel = texture2D(overlay, gl_TexCoord[0].xy);
-    gl_FragColor = gl_Color * pixel * intensity;
+    gl_FragColor = gl_Color * vec4(pixel.x * intensity, pixel.y * intensity, pixel.z * intensity, pixel.w);
 }

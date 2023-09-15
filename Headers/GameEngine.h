@@ -417,8 +417,7 @@ void init() {
     playerShader.setUniform("current", sf::Shader::CurrentTexture);
     playerShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
 
-    sf::Texture* WallTexture = new sf::Texture;
-    WallTexture->loadFromFile("sources/textures/wall.png");
+    sf::Texture* WallTexture = new sf::Texture; WallTexture->loadFromFile("sources/textures/wall.png");
     WallRect.setTexture(*WallTexture);
 
     animation.setPosition({800, 800});
