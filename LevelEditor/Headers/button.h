@@ -23,15 +23,8 @@ public:
     void setText(std::string str) { text.setString(str); fitText(); centerText(); }
     void centerText();
     void fitText();
-    void setPressColor(sf::Color color) { pressColor = color; drawRect.setFillColor(pressed ? pressColor : inactiveColor); }
-    void setInactiveColor(sf::Color color) { inactiveColor = color; drawRect.setFillColor(pressed ? pressColor : inactiveColor); }
-
-    void move(float x, float y) override 
-    { 
-        posX += x; posY += y; 
-        drawRect.setPosition(posX, posY); 
-        text.setPosition(text.getPosition().x + x, text.getPosition().y + y);
-    }
+    void setPressColor(sf::Color color) { pressColor = color; setFillColor(pressed ? pressColor : inactiveColor); }
+    void setInactiveColor(sf::Color color) { inactiveColor = color; setFillColor(pressed ? pressColor : inactiveColor); }
 
     bool isActivated(sf::Event&) override;
     void draw(sf::RenderTarget&, sf::RenderStates) const override;
@@ -39,11 +32,10 @@ public:
 
 Button::Button(float _posX, float _posY, float _width, float _height, sf::Font& font) : InteractionRect(_posX, _posY, _width, _height)
 {
-    drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(2);
-    drawRect.setFillColor(inactiveColor);
+    setOutlineColor(sf::Color::Black); setOutlineThickness(2);
+    setFillColor(inactiveColor);
 
     text = sf::Text("", font, std::min(width * 8 / 10, height * 8 / 10));
-    text.setPosition(drawRect.getPosition());
     text.setFillColor(sf::Color::Black);
     centerText();
 }
@@ -52,16 +44,16 @@ bool Button::isActivated(sf::Event& event)
 {
     if(event.type == sf::Event::MouseButtonPressed)
     {
-        pressed = in(posX, posY, width, height, event.mouseButton);
-        drawRect.setFillColor(pressed ? pressColor : inactiveColor);
+        pressed = in(*this, event.mouseButton);
+        setFillColor(pressed ? pressColor : inactiveColor);
         return false;
     }
     
     if(event.type == sf::Event::MouseButtonReleased && pressed)
     {
         pressed = false;
-        drawRect.setFillColor(inactiveColor);
-        return in(posX, posY, width, height, event.mouseButton);
+        setFillColor(inactiveColor);
+        return in(*this, event.mouseButton);
     }
 
     return false;
@@ -72,7 +64,7 @@ void Button::centerText()
     if(text.getString().isEmpty())
         return;
 
-    text.setPosition(posX + width / 2.f, posY + height / 2.f);
+    text.setPosition(width / 2.f, height / 2.f);
     text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.f, text.getLocalBounds().top + text.getLocalBounds().height / 2.f);
 }
 
@@ -96,6 +88,7 @@ void Button::fitText()
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-    target.draw(drawRect);
-    target.draw(text);
+    states.transform *= getTransform();
+    target.draw(drawRect, states);
+    target.draw(text, states);
 }

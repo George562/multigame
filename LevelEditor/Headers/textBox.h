@@ -22,24 +22,17 @@ public:
     virtual std::string getText() { return fullString; }
     virtual void setText(std::string newText) { text.setString(newText); fullString = newText; }
 
-    void move(float x, float y) override
-    { 
-        posX += x; posY += y; 
-        drawRect.setPosition(posX, posY);
-        text.setPosition(text.getPosition().x + x, text.getPosition().y + y);
-    }
-
     bool isActivated(sf::Event&) override;
     void draw(sf::RenderTarget&, sf::RenderStates) const override;
 };
 
 TextBox::TextBox(float _posX, float _posY, float _width, float _height, sf::Font& font) : InteractionRect(_posX, _posY, _width, _height)
 {
-    drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(2);
-    drawRect.setFillColor(inactiveColor);
+    setOutlineColor(sf::Color::Black); setOutlineThickness(2);
+    setFillColor(inactiveColor);
 
     text = sf::Text("", font, std::min(width * 9 / 10, height * 9 / 10));
-    text.setPosition(drawRect.getPosition() + sf::Vector2f(5, 0));
+    text.move(5, 0);
     text.setFillColor(sf::Color::Black);
 
     initialWidth = width;
@@ -84,27 +77,24 @@ bool TextBox::isActivated(sf::Event& event)
             text.setString(text.getString() + '/');
         
         fullString = (std::string)text.getString();
-        width = std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3));
-        drawRect.setSize(sf::Vector2f(width, height));
+        setSize(std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3)), height);
         return true;
     }
 
     if(event.type == sf::Event::MouseButtonPressed)
     {
-        readInput = in(posX, posY, width, height, event.mouseButton);
+        readInput = in(*this, event.mouseButton);
         if(!readInput)
         {
-            width = initialWidth;
-            drawRect.setSize(sf::Vector2f(width, height));
+            setSize(initialWidth, height);
             text.setString(text.getString().substring(0, initialWidth / (text.getCharacterSize() * 2 / 3)));
         }
         else
         {
             text.setString(fullString);
-            width = std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3));
-            drawRect.setSize(sf::Vector2f(width, height));
+            setSize(std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3)), height);
         }
-        drawRect.setFillColor(readInput ? activeColor : inactiveColor);
+        setFillColor(readInput ? activeColor : inactiveColor);
         return true;
     }
 
@@ -113,6 +103,7 @@ bool TextBox::isActivated(sf::Event& event)
 
 void TextBox::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-    target.draw(drawRect);
-    target.draw(text);
+    states.transform *= getTransform();
+    target.draw(drawRect, states);
+    target.draw(text, states);
 }

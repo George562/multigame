@@ -92,11 +92,10 @@ bool ScrollContainer::isActivated(sf::Event& event)
 
     if(event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left)
     {
-        readInput = in(backRect.getX(), backRect.getY(), backRect.getWidth(), backRect.getHeight(),
-                       event.mouseButton);
+        readInput = in(backRect, event.mouseButton);
         bool elementInput = false;
         for(InteractionRect *ir : elements)
-            elementInput |= in(ir->getX(), ir->getY(), ir->getWidth(), ir->getHeight(), event.mouseButton);
+            elementInput |= in(*ir, event.mouseButton);
         readInput = readInput & !elementInput;
         backRect.setFillColor(readInput ? activeColor : inactiveColor);
         return readInput;
@@ -109,13 +108,13 @@ void ScrollContainer::draw(sf::RenderTarget& target, sf::RenderStates states) co
 {
     sf::View tmpView = target.getView();
     
-    backRect.draw(target, states);
+    target.draw(backRect);
     target.setView(scrollView);
     
-    scrollBoundRect.draw(target, states);
-    scrollRect.draw(target, states);
+    target.draw(scrollBoundRect);
+    target.draw(scrollRect);
 
     for(InteractionRect *ir : elements)
-        ir->draw(target, states);
+        target.draw(*ir);
     target.setView(tmpView);
 }

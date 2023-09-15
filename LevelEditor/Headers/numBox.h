@@ -39,7 +39,7 @@ bool NumBox::isActivated(sf::Event& event)
 
     if(event.type == sf::Event::MouseButtonPressed)
     {
-        readInput = in(posX, posY, width, height, event.mouseButton);
+        readInput = in(*this, event.mouseButton);
         drawRect.setFillColor(readInput ? activeColor : inactiveColor);
         return true;
     }

@@ -327,7 +327,7 @@ void App::poll(sf::Event& event)
             }
 
             if(!levelMatrix.empty() && 
-                (!isMapItemSelected || !in(itemOptionRect.getX(), itemOptionRect.getY(), itemOptionRect.getWidth(), itemOptionRect.getHeight(), event.mouseButton)))
+                (!isMapItemSelected || !in(itemOptionRect, event.mouseButton)))
                     {
                         sf::Event newEvent = convertToViewEvent(event, mainView);
                         interactionViewPoll(event);
@@ -395,8 +395,7 @@ void App::poll(sf::Event& event)
 
 sf::Event App::convertToViewEvent(sf::Event& event, sf::View view)
 {
-    if(!in(editorRect.getX(), editorRect.getY(), editorRect.getWidth(), editorRect.getHeight(),
-           sf::Mouse::getPosition(*mainWindow)))
+    if(!in(editorRect, sf::Mouse::getPosition(*mainWindow)))
         return sf::Event();
 
     sf::Event viewEvent = event;
@@ -454,8 +453,7 @@ void App::interactionViewPoll(sf::Event& event)
         for(int item = 2; item < mapItemName.size(); item++)
         {
             for(int i = 0; i < mapItemDict[(mapItem)item].size(); i++)
-            if(in(mapItemDict[(mapItem)item][i]->getX(), mapItemDict[(mapItem)item][i]->getY(),
-                  mapItemDict[(mapItem)item][i]->getWidth(), mapItemDict[(mapItem)item][i]->getHeight(), viewEvent.mouseButton))
+            if(in(*mapItemDict[(mapItem)item][i], viewEvent.mouseButton))
             {
                 selectedMapItem = std::make_pair((mapItem)item, mapItemDict[(mapItem)item][i]);
                 break;
@@ -502,7 +500,7 @@ void App::interactionViewPoll(sf::Event& event)
             {
                 if(!itemOptionXBox.getText().empty() && !itemOptionYBox.getText().empty())
                 {
-                    selectedMapItem.second->setPos(std::stof(itemOptionXBox.getText()), std::stof(itemOptionYBox.getText()));
+                    selectedMapItem.second->setPosition(std::stof(itemOptionXBox.getText()), std::stof(itemOptionYBox.getText()));
                     systemMessageLabel.setText("Successfully moved a \"" + mapItemName[selectedMapItem.first] +
                                             "\" object to\n[X: " + std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
                 }
@@ -530,7 +528,7 @@ void App::interactionViewPoll(sf::Event& event)
 
     if(isItemHeld && viewEvent.type == sf::Event::MouseMoved)
     {
-        selectedMapItem.second->setPos(viewEvent.mouseMove.x, viewEvent.mouseMove.y);
+        selectedMapItem.second->setPosition(viewEvent.mouseMove.x, viewEvent.mouseMove.y);
         itemOptionXBox.setText(std::to_string((int)selectedMapItem.second->getX()));
         itemOptionYBox.setText(std::to_string((int)selectedMapItem.second->getY()));
         systemMessageLabel.setText("Successfully moved a \"" + mapItemName[selectedMapItem.first] +

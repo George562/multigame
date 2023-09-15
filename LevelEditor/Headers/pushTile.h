@@ -24,13 +24,13 @@ public:
         if(state != 0)
         {
             activeColor = color;
-            drawRect.setFillColor(activeColor);
+            setFillColor(activeColor);
         }
-        else drawRect.setFillColor(inactiveColor);
+        else setFillColor(inactiveColor);
     };
 
-    void setActiveColor(sf::Color color) { activeColor = color; drawRect.setFillColor(state != 0 ? activeColor : inactiveColor); }
-    void setInactiveColor(sf::Color color) { inactiveColor = color; drawRect.setFillColor(state != 0 ? activeColor : inactiveColor); }
+    void setActiveColor(sf::Color color) { activeColor = color; setFillColor(state != 0 ? activeColor : inactiveColor); }
+    void setInactiveColor(sf::Color color) { inactiveColor = color; setFillColor(state != 0 ? activeColor : inactiveColor); }
 
     bool isActivated(sf::Event&) override;
     void draw(sf::RenderTarget&, sf::RenderStates) const override;
@@ -38,8 +38,8 @@ public:
 
 PushTile::PushTile(float _posX, float _posY, float _width, float _height) : InteractionRect(_posX, _posY, _width, _height)
 {
-    drawRect.setOutlineColor(sf::Color::Black); drawRect.setOutlineThickness(1);
-    drawRect.setFillColor(inactiveColor);
+    setOutlineColor(sf::Color::Black); setOutlineThickness(1);
+    setFillColor(inactiveColor);
 }
 
 bool PushTile::isActivated(sf::Event& event)
@@ -48,10 +48,10 @@ bool PushTile::isActivated(sf::Event& event)
     {
         readPosition = true;
         lastButton = event.mouseButton.button;
-        return in(posX, posY, width, height, event.mouseButton) && lastButton != sf::Mouse::Button::Right;
+        return in(*this, event.mouseButton) && lastButton != sf::Mouse::Button::Right;
     }
 
-    if(event.type == sf::Event::MouseMoved && readPosition && in(posX, posY, width, height, event.mouseMove))
+    if(event.type == sf::Event::MouseMoved && readPosition && in(*this, event.mouseMove))
     {
         readPosition = false;
         if(lastButton == sf::Mouse::Left)
@@ -66,7 +66,7 @@ bool PushTile::isActivated(sf::Event& event)
     if(readPosition && event.type == sf::Event::MouseButtonReleased)
     {
         readPosition = false;
-        if(in(posX, posY, width, height, event.mouseButton))
+        if(in(*this, event.mouseButton))
         {
             if(lastButton == sf::Mouse::Left)
             {
@@ -85,5 +85,6 @@ bool PushTile::isActivated(sf::Event& event)
 
 void PushTile::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-    target.draw(drawRect);
+    states.transform *= getTransform();
+    target.draw(drawRect, states);
 }
