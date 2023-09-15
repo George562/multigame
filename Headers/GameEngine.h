@@ -21,7 +21,7 @@ std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactible*> InteractibeStuff;
 
 //////////////////////////////////////////////////////////// DrawableStuff
-sf::RectangleShape WallRect;
+sf::Sprite WallRect;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
@@ -197,11 +197,11 @@ void drawWalls() {
             i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++)
         for (int j = std::max(0, int(CameraPos.x / size) - 1);
                 j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
-            if (CurLocation->wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, (float)scw, (float)sch))
+            if (CurLocation->wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, static_cast<float>(scw), static_cast<float>(sch)))
                 CurLocation->SeenWalls[i][j] = true;
             if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
-                WallRect.setSize(CurLocation->wallsRect[i][j].getSize());
+                WallRect.setTextureRect({sf::Vector2i{0, 0}, static_cast<sf::Vector2i>(CurLocation->wallsRect[i][j].getSize())});
                 window.draw(WallRect, playerStates);
             }
         }
@@ -415,8 +415,11 @@ void init() {
 
     playerShader.loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
     playerShader.setUniform("current", sf::Shader::CurrentTexture);
+    playerShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
 
-    WallRect.setFillColor(sf::Color(120, 120, 120));
+    sf::Texture* WallTexture = new sf::Texture;
+    WallTexture->loadFromFile("sources/textures/wall.png");
+    WallRect.setTexture(*WallTexture);
 
     animation.setPosition({800, 800});
     animation.play();
@@ -636,9 +639,7 @@ void updateBullets() {
 
 void MainLoop() {
     while (window.isOpen()) {
-        playerShader.setUniform("lightFactor", 2.f * player.Mana.toBottom() / player.Mana.top);
-        playerShader.setParameter("u_resolution", (float)scw, (float)sch);
-        playerShader.setParameter("u_mouse", (float)sf::Mouse::getPosition().x, (float)sf::Mouse::getPosition().y);
+        playerShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }
