@@ -1,7 +1,3 @@
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 uniform float offset;
 uniform vec3 point;
 uniform vec4 color;
@@ -13,13 +9,17 @@ uniform vec2 u_resolution;  // Canvas size (width, height)
 uniform vec2 u_mouse;       // mouse position in screen pixels
 uniform float u_time;       // Time in seconds since load
 
+uniform vec2 u_playerPosition;
+uniform float u_playerRadius;
+
 void main()
 {
-    vec3 normal = vec3(gl_FragCoord.xy - u_resolution.xy / 2.0, 1.0);
-    vec3 lightPosition = vec3((u_mouse.x - u_resolution.x / 2.0), -(u_mouse.y - u_resolution.y / 2.0), 2.0);
-    vec3 eyePosition = vec3(u_resolution.xy / 2.0, 0.0);
-    vec3 halfVector = normalize(lightPosition + eyePosition);
-    float intensity = dot(normalize(normal), halfVector);
     vec4 pixel = texture2D(overlay, gl_TexCoord[0].xy);
-    gl_FragColor = gl_Color * vec4(pixel.x * intensity, pixel.y * intensity, pixel.z * intensity, pixel.w);
+
+    vec2 normal = gl_FragCoord.xy - u_playerPosition.xy;
+    vec2 lightPosition = vec2((u_mouse.x - u_playerPosition.x), -(u_mouse.y - u_playerPosition.y));
+    float intensity = smoothstep(0.0, 1.0, dot(normalize(normal), normalize(lightPosition)));
+    intensity += smoothstep(0.5, 0.0, length(gl_FragCoord.xy - u_playerPosition) / u_playerRadius - 1.0);
+    intensity = max(0.0, min(1.0, intensity));
+    gl_FragColor = gl_Color * vec4(pixel.xyz * intensity, pixel.w);
 }

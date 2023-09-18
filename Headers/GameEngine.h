@@ -65,8 +65,8 @@ Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
 Player player;
 std::vector<Player> ConnectedPlayers;
 
-sf::Shader playerShader;
-sf::RenderStates playerStates(&playerShader);
+sf::Shader MapShader;
+sf::RenderStates MapStates(&MapShader);
 
 //////////////////////////////////////////////////////////// Chat
 Chat chat;
@@ -168,23 +168,23 @@ void draw() {
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
             portal.setPosition(CurLocation->objects[i].pos);
-            window.draw(portal, playerStates);
+            window.draw(portal, MapStates);
         }
         if (CurLocation->objects[i].id == Tiles::box) {
             BoxRect.setPosition(CurLocation->objects[i].pos);
-            window.draw(BoxRect, playerStates);
+            window.draw(BoxRect, MapStates);
         }
     }
 
     for (sf::Drawable* d: DrawableStuff) {
         if (d == static_cast<sf::Drawable*>(&player) ){
-            window.draw(*d, playerStates);
+            window.draw(*d, MapStates);
         } else {
-            window.draw(*d, playerStates);
+            window.draw(*d, MapStates);
         }
     }
 
-    for (int i = 0; i < Bullets.size(); i++) window.draw(Bullets[i], playerStates);
+    for (int i = 0; i < Bullets.size(); i++) window.draw(Bullets[i]);
 
     if (IsDrawMinimap)      drawMiniMap();
     if (IsDrawInterface)    drawIterface();
@@ -202,7 +202,7 @@ void drawWalls() {
             if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setTextureRect({sf::Vector2i{0, 0}, static_cast<sf::Vector2i>(CurLocation->wallsRect[i][j].getSize())});
-                window.draw(WallRect, playerStates);
+                window.draw(WallRect, MapStates);
             }
         }
 }
@@ -396,6 +396,7 @@ void init() {
     window.setView(GameView);
     
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+    GameClock = new sf::Clock;
 
     // Load music
     MainMenuMusic.openFromFile("sources/music/MainMenuMusic.wav");
@@ -413,9 +414,10 @@ void init() {
     // MainMenuLocation.LoadFromFile("sources/locations/debugLocation.txt");
     MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
 
-    playerShader.loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
-    playerShader.setUniform("current", sf::Shader::CurrentTexture);
-    playerShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
+    MapShader.loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
+    MapShader.setUniform("current", sf::Shader::CurrentTexture);
+    MapShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
+    MapShader.setUniform("u_playerRadius", player.Radius);
 
     sf::Texture* WallTexture = new sf::Texture; WallTexture->loadFromFile("sources/textures/wall.png");
     WallRect.setTexture(*WallTexture);
@@ -638,7 +640,9 @@ void updateBullets() {
 
 void MainLoop() {
     while (window.isOpen()) {
-        playerShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+        MapShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+        MapShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+        MapShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }

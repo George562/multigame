@@ -12,14 +12,14 @@ public:
 
     Puddle();
 
-    void GiveEffect(Creature& creature);
+    // void GiveEffect(Creature& creature);
 };
 
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
 
-void Puddle::GiveEffect(Creature& creature) {
+// void Puddle::GiveEffect(Creature& creature) {
     //Effect effect();
     //creature.GetEffect(effect);
-}
+// }

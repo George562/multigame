@@ -74,6 +74,8 @@ sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
 
+sf::Clock* GameClock;
+
 bool Rect::intersect(Circle& circle) {
     if (circle.PosY < PosY) {   // Если сверху
         if (circle.PosX < PosX)         // Если в левом углу
