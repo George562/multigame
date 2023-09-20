@@ -16,10 +16,13 @@ void main()
 {
     vec4 pixel = texture2D(overlay, gl_TexCoord[0].xy);
 
-    vec2 normal = gl_FragCoord.xy - u_playerPosition.xy;
-    vec2 lightPosition = vec2((u_mouse.x - u_playerPosition.x), -(u_mouse.y - u_playerPosition.y));
-    float intensity = smoothstep(0.0, 1.0, dot(normalize(normal), normalize(lightPosition)));
-    intensity += smoothstep(0.5, 0.0, length(gl_FragCoord.xy - u_playerPosition) / u_playerRadius - 1.0);
+    vec2 playerPosition = vec2(u_playerPosition.x, u_resolution.y - u_playerPosition.y);
+    vec2 mouse = vec2(u_mouse.x, u_resolution.y - u_mouse.y);
+
+    vec2 normal = gl_FragCoord.xy - playerPosition;
+    vec2 lightPosition = mouse - playerPosition;
+    float intensity = smoothstep(0.65, 0.85, dot(normalize(normal), normalize(lightPosition)));
+    intensity += smoothstep(0.5, 0.0, length(normal) / u_playerRadius - 1.0);
     intensity = max(0.0, min(1.0, intensity));
     gl_FragColor = gl_Color * vec4(pixel.xyz * intensity, pixel.w);
 }

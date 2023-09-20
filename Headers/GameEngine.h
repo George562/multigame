@@ -688,7 +688,7 @@ void MainLoop() {
         } else {
             if (!chat.inputted) {
                 player.move(*CurLocation);
-                GameView.setCenter(player.getPosition());
+                GameView.setCenter(player.getPosition() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i{scw, sch} / 2) / 8));
                 FindAllWaysTo(*CurLocation, player.getPosition(), TheWayToPlayer);
             }
             int wasBulletsSize = Bullets.size();
