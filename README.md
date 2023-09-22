@@ -13,7 +13,7 @@ You can suggest various features in VK messages: https://vk.com/majong562
 At the moment the game is not playable. We are at the development stage of the engine. In the future, game mechanics and a plot that are already being written will be added. The game is conceived in the roguelike style. Our team has artists, so all the sprites for the game will be their own.
 
 <p align="center">
-	<img src="./sources/mainMenuExample.png" height="300">
+	<img src="./sources/mainMenuExample.png">
 </p>
 
 # currently available mechanics:
