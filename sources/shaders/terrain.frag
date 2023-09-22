@@ -22,7 +22,7 @@ void main()
     vec2 normal = gl_FragCoord.xy - playerPosition;
     vec2 lightPosition = mouse - playerPosition;
     float intensity = smoothstep(0.65, 0.85, dot(normalize(normal), normalize(lightPosition)));
-    intensity += smoothstep(0.5, 0.0, length(normal) / u_playerRadius - 1.0);
+    intensity += smoothstep(1.6, -0.2, length(normal) / u_playerRadius - 1.0);
     intensity = max(0.0, min(1.0, intensity));
     gl_FragColor = gl_Color * vec4(pixel.xyz * intensity, pixel.w);
 }
