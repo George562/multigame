@@ -47,6 +47,20 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
+void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
+    SetSize(n, m);
+    objects.clear();
+    int CounterOfGenerations = 0;
+    sf::Clock timer;
+    do {
+        WallGenerator(0.48);
+        BuildWayFrom(RootPoint / (float)size);
+        CounterOfGenerations++;
+    } while (AmountOfEnableTiles < float(n * m) * 0.3f || AmountOfEnableTiles > float(n * m) * 0.7f);
+    std::cout << "Location was generated in " << timer.getElapsedTime().asSeconds() << " seconds with total number of generations = "
+              << CounterOfGenerations << "; Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
+}
+
 void Location::SetSize(int NewN, int NewM) {
     n = NewN;
     m = NewM;
@@ -189,20 +203,6 @@ void Location::FindEnableTilesFrom(sf::Vector2f& p) {
         if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 2][check.x])
             q.push(check);
     }
-}
-
-void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
-    SetSize(n, m);
-    objects.clear();
-    int CounterOfGenerations = 0;
-    sf::Clock timer;
-    do {
-        WallGenerator(0.48);
-        BuildWayFrom(RootPoint / (float)size);
-        CounterOfGenerations++;
-    } while (AmountOfEnableTiles < float(n * m) * 0.3f || AmountOfEnableTiles > float(n * m) * 0.7f);
-    std::cout << "Location was generated in " << timer.getElapsedTime().asSeconds() << " seconds with total number of generations = "
-              << CounterOfGenerations << "; Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
 }
 
 void Location::FillWallsRect() {

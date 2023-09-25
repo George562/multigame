@@ -1,7 +1,7 @@
 #include "creature.h"
 
-#define MAX_MANA 75
-#define MAX_HEALTH 10
+#define MAX_MANA 75.f
+#define MAX_HEALTH 10.f
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -19,13 +19,13 @@ public:
 ////////////////////////////////////////////////////////////
 
 Player::Player() : Creature("Player", Fraction::Player) {
-    Health = {0, MAX_HEALTH, MAX_HEALTH}; HealthRecovery = 10;
-    Mana = {0, MAX_MANA, MAX_MANA}; ManaRecovery = 10.5;
-    Armor = {0, 0, 0};
-    Money = 0;
-    Radius = 60;
-    Velocity = {0, 0}; MaxVelocity = 6;
-    Acceleration = 0.6;
+    Health = {0.f, MAX_HEALTH, MAX_HEALTH}; HealthRecovery = 10.f;
+    Mana = {0.f, MAX_MANA, MAX_MANA}; ManaRecovery = 10.5f;
+    Armor = {0.f, 0.f, 0.f};
+    Money = 0.f;
+    Radius = 60.f;
+    Velocity = {0.f, 0.f}; MaxVelocity = 6.f;
+    Acceleration = 0.6f;
 
     SetAnimation("sources/textures/Player.png", 1, {485, 485}, sf::seconds(1));
 }
@@ -47,9 +47,9 @@ void Player::move(Location& location) {
 }
 
 void Player::UpdateState() {
-    Mana += ManaRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-    Health += HealthRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-    LastCheck = localClock->getElapsedTime();
+    Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+    Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+    LastStateCheck = localClock->getElapsedTime();
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Player& a) { return packet << a.PosX << a.PosY; }

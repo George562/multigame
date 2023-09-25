@@ -19,7 +19,7 @@ bool DeleteFromVector(std::vector<T>& arr, T x) {
 
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
 template <typename Obj>
-sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f& Velocity) {
+sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f Velocity) {
     int y = int(obj.PosY) / size, x = int(obj.PosX) / size;
     sf::Vector2i res = {-1, -1};
     

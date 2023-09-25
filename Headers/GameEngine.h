@@ -390,7 +390,6 @@ void LoadMainMenu() {
 void init() {
     setlocale(LC_ALL, "rus");
 
-    window.setFramerateLimit(60);
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
     window.setView(GameView);

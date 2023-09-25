@@ -19,8 +19,8 @@ public:
         ManaRecovery = 1;
         Armor = {0, 100, 100};
         Money = rand() % 100;
-        Velocity = {0, 0}; MaxVelocity = 4;
-        Acceleration = 0.25;
+        Velocity = {0, 0}; MaxVelocity = 4.f;
+        Acceleration = MaxVelocity / 0.6f;
         Radius = 60;
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
@@ -36,9 +36,9 @@ public:
         Creature::move(location);
     }
     void UpdateState() override {
-        Mana += ManaRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-        Health += HealthRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-        LastCheck = localClock->getElapsedTime();
+        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        LastStateCheck = localClock->getElapsedTime();
     }
 };
 
@@ -51,8 +51,8 @@ public:
         ManaRecovery = 1;
         Armor = {0, 100, 100};
         Money = rand() % 100;
-        Velocity = {0, 0}; MaxVelocity = 4;
-        Acceleration = 0.3;
+        Velocity = {0, 0}; MaxVelocity = 4.f;
+        Acceleration = MaxVelocity / 0.6f;
         Radius = 60;
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
@@ -69,9 +69,9 @@ public:
         Creature::move(location);
     }
     void UpdateState() override {
-        Mana += ManaRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-        Health += HealthRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-        LastCheck = localClock->getElapsedTime();
+        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        LastStateCheck = localClock->getElapsedTime();
     }
 };
 
@@ -84,8 +84,8 @@ public:
         ManaRecovery = 1;
         Armor = {0, 100, 100};
         Money = rand() % 100;
-        Velocity = {0, 0}; MaxVelocity = 4;
-        Acceleration = 0.3;
+        Velocity = {0, 0}; MaxVelocity = 4.f;
+        Acceleration = MaxVelocity / 0.6f;
         Radius = 60;
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
@@ -102,8 +102,8 @@ public:
         Creature::move(location);
     }
     void UpdateState() override {
-        Mana += ManaRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-        Health += HealthRecovery * (localClock->getElapsedTime() - LastCheck).asSeconds();
-        LastCheck = localClock->getElapsedTime();
+        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        LastStateCheck = localClock->getElapsedTime();
     }
 };

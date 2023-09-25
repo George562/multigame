@@ -19,7 +19,7 @@ public:
     float Acceleration;
     sf::Vector2f target;
     Weapon *FirstWeapon, *SecondWeapon, *CurWeapon;
-    sf::Time LastCheck;
+    sf::Time LastStateCheck, LastMoveCheck;
     sf::Clock* localClock;
     mutable PlacedText Name;
     Animation *animationSprite = nullptr;
@@ -34,7 +34,8 @@ public:
 
         fraction = f;
 
-        LastCheck = sf::seconds(0);
+        LastStateCheck = sf::seconds(0);
+        LastMoveCheck = sf::seconds(0);
         localClock = new sf::Clock();
     };
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
@@ -47,21 +48,23 @@ public:
     };
     virtual void getDamage(float dmg) { Health -= dmg; }
     virtual void move(Location& location) {
+        float ElapsedTimeAsSecond = (localClock->getElapsedTime() - LastMoveCheck).asSeconds() * 60.f;
         sf::Vector2f dist = target - getPosition();
         sf::Vector2f VelocityTarget = {std::max(std::min(MaxVelocity * VelocityBuff, dist.x), -MaxVelocity * VelocityBuff),
                                        std::max(std::min(MaxVelocity * VelocityBuff, dist.y), -MaxVelocity * VelocityBuff)};
         sf::Vector2f Vdist = VelocityTarget - Velocity;
         sf::Vector2f Direction = {std::max(std::min(Acceleration, Vdist.x), -Acceleration),
                                   std::max(std::min(Acceleration, Vdist.y), -Acceleration)};
-        Velocity += Direction;
+        Velocity += Direction * ElapsedTimeAsSecond;
 
-        sf::Vector2i tempv = WillCollisionWithWalls(location.wallsRect, *this, Velocity);
+        sf::Vector2i tempv = WillCollisionWithWalls(location.wallsRect, *this, Velocity * ElapsedTimeAsSecond);
 
         if (tempv.x == -1) Velocity.x = 0;
         if (tempv.y == -1) Velocity.y = 0;
 
-        PosX += Velocity.x;
-        PosY += Velocity.y;
+        PosX += Velocity.x * ElapsedTimeAsSecond;
+        PosY += Velocity.y * ElapsedTimeAsSecond;
+        LastMoveCheck = localClock->getElapsedTime();
     };
     virtual void UpdateState() {};
     void SetAnimation(std::string TexturFileName, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
