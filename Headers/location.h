@@ -26,15 +26,15 @@ public:
     vvb SeenWalls;
 
     Location() { AmountOfEnableTiles = 0; }
-    Location(int w, int h) { SetSize(w, h); AmountOfEnableTiles = 0; }
-    void GenerateLocation(int n, int m, sf::Vector2f RootPoint);
+    Location(int w, int h) { SetSize(w, h); }
     void SetSize(int w, int h);
+    void GenerateLocation(int n, int m, sf::Vector2f RootPoint);
     void BuildWayFrom(sf::Vector2f);
     void WallGenerator(float probability);
-    bool LoadFromFile(str FileName);
-    bool WriteToFile(str FileName);
     void FindEnableTilesFrom(sf::Vector2f&);
     void FillWallsRect();
+    bool LoadFromFile(str FileName);
+    bool WriteToFile(str FileName);
     void AddObject(LocationObject obj) { objects.push_back(obj); }
     void ClearSeenWalls() {
         SeenWalls.assign(walls.size(), vb(0));
@@ -46,6 +46,16 @@ public:
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
+
+void Location::SetSize(int NewN, int NewM) {
+    n = NewN;
+    m = NewM;
+    walls.assign(n * 2 + 1, vb(0));
+    for (int i = 0; i < walls.size(); i++) walls[i].assign(m + (i % 2), false);
+    EnableTiles.assign(n, vb(m, false));
+    AmountOfEnableTiles = 0;
+    ClearSeenWalls();
+}
 
 void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
     SetSize(n, m);
@@ -61,18 +71,8 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
               << CounterOfGenerations << "; Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
 }
 
-void Location::SetSize(int NewN, int NewM) {
-    n = NewN;
-    m = NewM;
-    walls.assign(n * 2 + 1, vb(0));
-    for (int i = 0; i < walls.size(); i++) walls[i].assign(m + (i % 2), false);
-    ClearSeenWalls();
-}
-
 void Location::BuildWayFrom(sf::Vector2f p) {
     FindEnableTilesFrom(p);
-    AmountOfEnableTiles = 0;
-    for (int i = 0; i < n; i++) for (int j = 0; j < m; j++) AmountOfEnableTiles += (int)EnableTiles[i][j];
     Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
     Point check;
     bool todel;
@@ -142,6 +142,44 @@ void Location::WallGenerator(float probability) {
     FillWallsRect();
 }
 
+void Location::FindEnableTilesFrom(sf::Vector2f& p) {
+    EnableTiles.assign(n, vb(m, false));
+    AmountOfEnableTiles = 0;
+    std::queue<Point> q; q.push(Point{int(p.x), int(p.y)});
+    Point cur, check;
+    Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
+    while (!q.empty()) {
+        cur = q.front(); q.pop();
+        if (EnableTiles[cur.y][cur.x]) continue;
+        EnableTiles[cur.y][cur.x] = true;
+        AmountOfEnableTiles++;
+        check = cur + dirs[0]; // {1, 0}
+        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x])
+            q.push(check);
+        check = cur + dirs[2]; // {-1, 0}
+        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x + 1])
+            q.push(check);
+        check = cur + dirs[1]; // {0, 1}
+        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2][check.x])
+            q.push(check);
+        check = cur + dirs[3]; // {0, -1}
+        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 2][check.x])
+            q.push(check);
+    }
+}
+
+void Location::FillWallsRect() {
+    wallsRect.assign(walls.size(), vr(0));
+    for (int i = 0; i < walls.size(); i++)
+        for (int j = 0; j < walls[i].size(); j++)
+            if (walls[i][j]) {
+                if (i % 2 == 1) // |
+                    wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
+                else // -
+                    wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
+            } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
+}
+
 bool Location::LoadFromFile(str FileName) {
     std::ifstream file(FileName);
     if (!file.is_open()) return false;
@@ -181,42 +219,6 @@ bool Location::WriteToFile(str FileName) {
     return true;
 }
 
-void Location::FindEnableTilesFrom(sf::Vector2f& p) {
-    EnableTiles.assign(n, vb(m, false));
-    std::queue<Point> q; q.push(Point{int(p.x), int(p.y)});
-    Point cur, check;
-    Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
-    while (!q.empty()) {
-        cur = q.front(); q.pop();
-        if (EnableTiles[cur.y][cur.x]) continue;
-        EnableTiles[cur.y][cur.x] = true;
-        check = cur + dirs[0]; // {1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x])
-            q.push(check);
-        check = cur + dirs[2]; // {-1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x + 1])
-            q.push(check);
-        check = cur + dirs[1]; // {0, 1}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2][check.x])
-            q.push(check);
-        check = cur + dirs[3]; // {0, -1}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 2][check.x])
-            q.push(check);
-    }
-}
-
-void Location::FillWallsRect() {
-    wallsRect.assign(walls.size(), vr(0));
-    for (int i = 0; i < walls.size(); i++)
-        for (int j = 0; j < walls[i].size(); j++)
-            if (walls[i][j]) {
-                if (i % 2 == 1) // |
-                    wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
-                else // -
-                    wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
-            } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
-}
-
 sf::Packet& operator>>(sf::Packet& packet, Location& loc) {
     packet >> loc.n >> loc.m;
     std::cout << "n = " << loc.n << " m = " << loc.m << '\n';
@@ -248,34 +250,34 @@ sf::Packet& operator<<(sf::Packet& packet, Location& loc) {
     return packet;
 }
 
-void FindTheWay(Location& where, sf::Vector2f from, sf::Vector2f to, std::vector<sf::Vector2f>& theWay) {
-    std::vector<std::vector<sf::Vector2i>> place(where.n, std::vector<sf::Vector2i>(where.m, {-1, -1}));
+void FindTheWay(Location* where, sf::Vector2f from, sf::Vector2f to, std::vector<sf::Vector2f>& theWay) {
+    std::vector<std::vector<sf::Vector2i>> place(where->n, std::vector<sf::Vector2i>(where->m, {-1, -1}));
     std::queue<Point> q; q.push(Point{int(from.x / size), int(from.y / size)});
     Point cur, check;
-    Rect UsedAreaRect{0, 0, float(where.m - 1), float(where.n - 1)};
-    vvb used(where.n, vb(where.m, false));
+    Rect UsedAreaRect{0, 0, float(where->m - 1), float(where->n - 1)};
+    vvb used(where->n, vb(where->m, false));
     while (!q.empty()) {
         cur = q.front(); q.pop();
         if (used[cur.y][cur.x]) continue;
         used[cur.y][cur.x] = true;
         if (sf::Vector2i(to / (float)size) == cur) break;
         check = cur + dirs[0]; // {1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where.walls[check.y * 2 + 1][check.x]) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where->walls[check.y * 2 + 1][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[2]; // {-1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where.walls[check.y * 2 + 1][check.x + 1]) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where->walls[check.y * 2 + 1][check.x + 1]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[1]; // {0, 1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where.walls[check.y * 2][check.x]) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where->walls[check.y * 2][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[3]; // {0, -1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where.walls[check.y * 2 + 2][check.x]) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where->walls[check.y * 2 + 2][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
@@ -292,35 +294,35 @@ void FindTheWay(Location& where, sf::Vector2f from, sf::Vector2f to, std::vector
     if (theWay.size() > 1) theWay.pop_back();
 }
 
-void FindAllWaysTo(Location& location, sf::Vector2f to, std::vector<std::vector<sf::Vector2f>>& theWays) {
-    if (theWays.size() != location.n && (theWays.size() == 0 || theWays[0].size() != location.m)) {
-        theWays.assign(location.n, std::vector<sf::Vector2f>(location.m, to));
+void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<sf::Vector2f>>& theWays) {
+    if (theWays.size() != location->n && (theWays.size() == 0 || theWays[0].size() != location->m)) {
+        theWays.assign(location->n, std::vector<sf::Vector2f>(location->m, to));
     }
     std::queue<Point> q; q.push(Point{int(to.x / size), int(to.y / size)});
     Point cur, check;
-    Rect UsedAreaRect{0, 0, float(location.m - 1), float(location.n - 1)};
-    vvb used(location.n, vb(location.m, false));
+    Rect UsedAreaRect{0, 0, float(location->m - 1), float(location->n - 1)};
+    vvb used(location->n, vb(location->m, false));
     while (!q.empty()) {
         cur = q.front(); q.pop();
         if (used[cur.y][cur.x]) continue;
         used[cur.y][cur.x] = true;
         check = cur + dirs[0]; // {1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location.walls[check.y * 2 + 1][check.x]) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x]) {
             q.push(check);
             theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
         }
         check = cur + dirs[2]; // {-1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location.walls[check.y * 2 + 1][check.x + 1]) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x + 1]) {
             q.push(check);
             theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
         }
         check = cur + dirs[1]; // {0, 1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location.walls[check.y * 2][check.x]) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2][check.x]) {
             q.push(check);
             theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
         }
         check = cur + dirs[3]; // {0, -1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location.walls[check.y * 2 + 2][check.x]) {
+        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 2][check.x]) {
             q.push(check);
             theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
         }
@@ -328,15 +330,15 @@ void FindAllWaysTo(Location& location, sf::Vector2f to, std::vector<std::vector<
     check = (sf::Vector2i)to / size; theWays[check.y][check.x] = to;
 
     check = (sf::Vector2i)to / size + dirs[0]; // {1, 0}
-    if (check.x < location.m && !location.walls[check.y * 2 + 1][check.x])
+    if (check.x < location->m && !location->walls[check.y * 2 + 1][check.x])
         theWays[check.y][check.x] = to;
     check = (sf::Vector2i)to / size + dirs[2]; // {-1, 0}
-    if (check.x >= 0 && !location.walls[check.y * 2 + 1][check.x + 1])
+    if (check.x >= 0 && !location->walls[check.y * 2 + 1][check.x + 1])
         theWays[check.y][check.x] = to;
     check = (sf::Vector2i)to / size + dirs[1]; // {0, 1}
-    if (check.y  < location.n && !location.walls[check.y * 2][check.x])
+    if (check.y  < location->n && !location->walls[check.y * 2][check.x])
         theWays[check.y][check.x] = to;
     check = (sf::Vector2i)to / size + dirs[3]; // {0, -1}
-    if (check.y >= 0 && !location.walls[check.y * 2 + 2][check.x])
+    if (check.y >= 0 && !location->walls[check.y * 2 + 2][check.x])
         theWays[check.y][check.x] = to;
 }

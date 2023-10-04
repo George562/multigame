@@ -22,6 +22,7 @@ std::vector<Interactible*> InteractibeStuff;
 
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect;
+std::vector<std::vector<sf::Sprite>> FloorRects;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
@@ -106,6 +107,7 @@ void init();
 void EventHandler();
 void MainLoop();
 bool IsSomeOneCanBeActivated();
+void FillFloorRects();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -128,8 +130,6 @@ Button HostButton("sources/textures/GreenPanel", "Host", [](){
     listener.listen(53000);
     selector.add(listener);
     ListOfPlayers.setWord(MyIP);
-    Bullets.clear();
-    LevelGenerate(START_N, START_M);
     ComputerID = 0;
     ConnectedPlayers.push_back(*(new Player()));
     HostFuncRun = true;
@@ -162,7 +162,17 @@ Button EscapeButton("sources/textures/RedPanel", "Exit", [](){
 
 //////////////////////////////////////////////////////////// functions
 void draw() {
+    window.setView(GameView);
     window.clear(sf::Color::Black);
+
+    for (int i = 0; i < FloorRects.size(); i++) {
+        for (int j = 0; j < FloorRects[0].size(); j++) {
+            if (CurLocation->EnableTiles[i][j]) {
+                window.draw(FloorRects[i][j], MapStates);
+            }
+        }
+    }
+
     drawWalls();
 
     for (int i = 0; i < CurLocation->objects.size(); i++) {
@@ -294,8 +304,7 @@ void LevelGenerate(int n, int m) {
 
     LabyrinthLocation.GenerateLocation(n, m, player.getPosition());
 
-    CurLocation->objects.clear();
-    CurLocation->AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
+    LabyrinthLocation.AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
 
     for (int i = 0; i < Enemies.size(); i++) {
         delete Enemies[i];
@@ -311,17 +320,23 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < Enemies.size(); i++) {
         do {
             Enemies[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
-        } while (!CurLocation->EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
-                 distance(Enemies[i]->getPosition(), player.getPosition()) < size * 2);
+        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
+                 distance(Enemies[i]->getPosition(), player.getPosition()) < size * 3);
     }
+
+    FillFloorRects();
 }
 
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
     
     player.setPosition(3.5f * size, 2.5f * size);
-    FindAllWaysTo(*CurLocation, player.getPosition(), TheWayToPlayer);
+    FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
     player.CurWeapon = nullptr;
+
+    sf::Vector2f PlayerPos = player.getPosition() / (float)size;
+    CurLocation->FindEnableTilesFrom(PlayerPos);
+    FillFloorRects();
 
     portal.setFunction([](){
         player.setPosition(sf::Vector2f{(START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size});
@@ -330,12 +345,6 @@ void LoadMainMenu() {
         WeaponNameText.setString(player.CurWeapon->Name);
 
         screen = screens::Dungeon;
-
-        Bullets.clear();
-
-        for (int i = 0; i < Enemies.size(); i++)
-            delete Enemies[i];
-        Enemies.clear();
 
         MiniMapActivated = false;
         EscapeMenuActivated = false;
@@ -350,7 +359,7 @@ void LoadMainMenu() {
 
         CurLocation = &LabyrinthLocation;
         LevelGenerate(START_N, START_M);
-        FindAllWaysTo(*CurLocation, player.getPosition(), TheWayToPlayer);
+        FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
 
         DrawableStuff.clear();
         DrawableStuff.push_back(&player);
@@ -620,10 +629,10 @@ void EventHandler() {
 
 void updateBullets() {
     for (int i = 0; i < Bullets.size(); i++)
-        if (Bullets[i].penetration < 0 || Bullets[i].todel)
+        if (Bullets[i].penetration < 0 || Bullets[i].todel) {
             Bullets.erase(Bullets.begin() + i--);
-        else {
-            Bullets[i].move(*CurLocation);
+        } else {
+            Bullets[i].move(CurLocation);
             if (Fraction::Friendship[Bullets[i].fromWho].count(player.fraction) == 0 && player.intersect(Bullets[i])) {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
@@ -652,7 +661,7 @@ void MainLoop() {
                 Enemies.erase(Enemies.begin() + i);
             } else {
                 Enemies[i]->setTarget(player.getPosition());
-                Enemies[i]->move(*CurLocation);
+                Enemies[i]->move(CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
                 Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition(), Enemies[i]->fraction);
@@ -686,9 +695,9 @@ void MainLoop() {
             }
         } else {
             if (!chat.inputted) {
-                player.move(*CurLocation);
+                player.move(CurLocation);
                 GameView.setCenter(player.getPosition() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i{scw, sch} / 2) / 8));
-                FindAllWaysTo(*CurLocation, player.getPosition(), TheWayToPlayer);
+                FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
             }
             int wasBulletsSize = Bullets.size();
             if (player.CurWeapon != nullptr)
@@ -744,6 +753,36 @@ bool IsSomeOneCanBeActivated() {
     for (Interactible*& x: InteractibeStuff)
         if (x->CanBeActivated(player)) return true;
     return false;
+}
+
+void FillFloorRects() {
+    sf::Image img, res;
+    img.loadFromFile("sources/floor3x.png");
+    auto CreateOneFLoor = [&img](sf::Image& res){
+        for (int y = 0; y < 5; y++) {
+            for (int x = 0; x < 5; x++) {
+                int r = rand() % 5;
+                for (int i = 0; i < 96; i++) {
+                    for (int j = 0; j < 96; j++) {
+                        res.setPixel(j + x * 96, i + y * 96, img.getPixel(j + r * 96, i));
+                    }
+                }
+            }
+        }
+    };
+    res.create(480, 480);
+    sf::Texture* txtr;
+    FloorRects.assign(CurLocation->n, std::vector<sf::Sprite>(CurLocation->m));
+    for (int i = 0; i < FloorRects.size(); i++) {
+        for (int j = 0; j < FloorRects[0].size(); j++) {
+            if (CurLocation->EnableTiles[i][j]) {
+                CreateOneFLoor(res);
+                txtr = new sf::Texture; txtr->loadFromImage(res);
+                FloorRects[i][j].setTexture(*txtr, true);
+                FloorRects[i][j].setPosition(size * j, size * i);
+            }
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions

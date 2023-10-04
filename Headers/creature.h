@@ -51,7 +51,7 @@ public:
     virtual void getDamage(float dmg) { Health -= dmg; }
 
     virtual void move(Location* location) {
-        float ElapsedTimeAsSecond = (localClock->getElapsedTime() - LastMoveCheck).asSeconds() * 60.f;
+        float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), 0.0167f) * 60.f;
         sf::Vector2f dist = target - getPosition();
         sf::Vector2f VelocityTarget = {std::max(std::min(MaxVelocity * VelocityBuff, dist.x), -MaxVelocity * VelocityBuff),
                                        std::max(std::min(MaxVelocity * VelocityBuff, dist.y), -MaxVelocity * VelocityBuff)};
