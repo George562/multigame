@@ -7,3 +7,4 @@ setupScript.iss
 versions/
 *.exe
 *.ico
+*.srctrl*

@@ -29,7 +29,7 @@ public:
 
         Name.ShowText = true;
     }
-    void move(Location& location) override {
+    void move(Location* location) override {
         VelocityBuff = 1;
 
         setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
@@ -61,7 +61,7 @@ public:
 
         Name.ShowText = true;
     }
-    void move(Location& location) override {
+    void move(Location* location) override {
         VelocityBuff = 1;
 
         setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
@@ -94,7 +94,7 @@ public:
 
         Name.ShowText = true;
     }
-    void move(Location& location) override {
+    void move(Location* location) override {
         VelocityBuff = 1;
 
         setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);

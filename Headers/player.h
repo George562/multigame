@@ -10,7 +10,7 @@
 class Player : public Creature {
 public:
     Player();
-    void move(Location&) override;
+    void move(Location*) override;
     void UpdateState() override;
 };
 
@@ -30,7 +30,7 @@ Player::Player() : Creature("Player", Fraction::Player) {
     SetAnimation("sources/textures/Player.png", 1, {485, 485}, sf::seconds(1));
 }
 
-void Player::move(Location& location) {
+void Player::move(Location* location) {
     std::vector<float> PressedKeys = {
         sf::Keyboard::isKeyPressed(sf::Keyboard::W) ? 1.f : 0.f,
         sf::Keyboard::isKeyPressed(sf::Keyboard::A) ? 1.f : 0.f,

@@ -38,6 +38,7 @@ public:
         LastMoveCheck = sf::seconds(0);
         localClock = new sf::Clock();
     };
+
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animationSprite != nullptr) {
             animationSprite->setPosition(getPosition());
@@ -46,8 +47,10 @@ public:
         Name.setPosition(PosX - Name.Width / 2.f, PosY - Radius - Name.Height);
         target.draw(Name, states);
     };
+
     virtual void getDamage(float dmg) { Health -= dmg; }
-    virtual void move(Location& location) {
+
+    virtual void move(Location* location) {
         float ElapsedTimeAsSecond = (localClock->getElapsedTime() - LastMoveCheck).asSeconds() * 60.f;
         sf::Vector2f dist = target - getPosition();
         sf::Vector2f VelocityTarget = {std::max(std::min(MaxVelocity * VelocityBuff, dist.x), -MaxVelocity * VelocityBuff),
@@ -57,7 +60,7 @@ public:
                                   std::max(std::min(Acceleration, Vdist.y), -Acceleration)};
         Velocity += Direction * ElapsedTimeAsSecond;
 
-        sf::Vector2i tempv = WillCollisionWithWalls(location.wallsRect, *this, Velocity * ElapsedTimeAsSecond);
+        sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, *this, Velocity * ElapsedTimeAsSecond);
 
         if (tempv.x == -1) Velocity.x = 0;
         if (tempv.y == -1) Velocity.y = 0;
@@ -66,16 +69,19 @@ public:
         PosY += Velocity.y * ElapsedTimeAsSecond;
         LastMoveCheck = localClock->getElapsedTime();
     };
+
     virtual void UpdateState() {};
-    void SetAnimation(std::string TexturFileName, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
+
+    void SetAnimation(std::string TextureFileName, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
         if (animationSprite != nullptr) {
             delete animationSprite;
         }
-        animationSprite = new Animation(TexturFileName, FrameAmount, frameSize, duration);
+        animationSprite = new Animation(TextureFileName, FrameAmount, frameSize, duration);
         animationSprite->setSize({Radius * 2.f, Radius * 2.f});
         animationSprite->setOrigin(animationSprite->getLocalSize() / 2.f);
         animationSprite->play();
     };
+
     void ChangeWeapon(Weapon* to) { CurWeapon = to; }
 
     virtual void setTarget(sf::Vector2f target) { this->target = target; }

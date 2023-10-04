@@ -49,9 +49,9 @@ struct Bullet : public sf::Drawable, public Circle {
         target.draw(circle, states);
     }
 
-    void move(Location& location) {
+    void move(Location* location) {
         if (LenOfVector(Velocity) != 0) {
-            sf::Vector2i res = WillCollisionWithWalls(location.wallsRect, *this, Velocity);
+            sf::Vector2i res = WillCollisionWithWalls(location->wallsRect, *this, Velocity);
             if (res.x == -1 || res.y == -1) {
                 penetration--;
             }
@@ -68,8 +68,7 @@ struct Bullet : public sf::Drawable, public Circle {
                 }
                 if (explode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
-                        ExplosionRadius += localClock->getElapsedTime().asSeconds() * 8.f;
-                        localClock->restart();
+                        ExplosionRadius += localClock->restart().asSeconds() * 8.f;
                         circle.setFillColor(circle.getFillColor() - sf::Color(0, 0, 0, 4));
                         Radius = COMMON_BULLET_RADIUS * ExplosionRadius.cur;
                         circle.setRadius(Radius);

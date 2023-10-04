@@ -51,8 +51,7 @@ Animation::Animation(std::string TexturFileName, int FrameAmount, sf::Vector2f f
 
 void Animation::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (isPlaying) {
-        curTime = (curTime + localClock->getElapsedTime()) % duration;
-        localClock->restart();
+        curTime = (curTime + localClock->restart()) % duration;
     }
     sprite.setTextureRect({(int)frameSize.x * int((curTime / duration) * frameAmount), animationLevel * (int)frameSize.y,
                            (int)frameSize.x, (int)frameSize.y});
