@@ -120,6 +120,7 @@ void funcOfClient();
 //////////////////////////////////////////////////////////// Threads
 sf::Thread HostTread(funcOfHost);
 sf::Thread ClientTread(funcOfClient);
+sf::Thread FillFloorRectsThread(FillFloorRects);
 
 //////////////////////////////////////////////////////////// Pannels
 Panel  IPPanel          ("sources/textures/YellowPanel", "IP:");
@@ -304,6 +305,8 @@ void LevelGenerate(int n, int m) {
 
     LabyrinthLocation.GenerateLocation(n, m, player.getPosition());
 
+    FillFloorRectsThread.launch();
+
     LabyrinthLocation.AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
 
     for (int i = 0; i < Enemies.size(); i++) {
@@ -323,8 +326,7 @@ void LevelGenerate(int n, int m) {
         } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
                  distance(Enemies[i]->getPosition(), player.getPosition()) < size * 3);
     }
-
-    FillFloorRects();
+    FillFloorRectsThread.wait();
 }
 
 void LoadMainMenu() {
@@ -336,7 +338,7 @@ void LoadMainMenu() {
 
     sf::Vector2f PlayerPos = player.getPosition() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
-    FillFloorRects();
+    FillFloorRectsThread.launch();
 
     portal.setFunction([](){
         player.setPosition(sf::Vector2f{(START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size});
@@ -394,6 +396,22 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&HpBar);
     InterfaceStuff.push_back(&chat);
     InteractibeStuff.push_back(&portal);
+
+    FillFloorRectsThread.wait();
+}
+
+
+void CreateImage() {
+    sf::Image img, res;
+    img.loadFromFile("sources/floor3x.png");
+    res.create(96 * 100, 96 * 100);
+    for (int y = 0; y < 100; y++) {
+        for (int x = 0; x < 100; x++) {
+            int r = rand() % 5;
+            res.copy(img, x * 96, y * 96, {r * 96, 0, 96, 96});
+        }
+    }
+    res.saveToFile("sources/res.png");
 }
 
 void init() {
@@ -486,7 +504,7 @@ void init() {
     
     MMBoxRect.setSize(sf::Vector2f{BoxRect.getGlobalBounds().width, BoxRect.getGlobalBounds().height} * ScaleParam);
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
-    
+
     LoadMainMenu();
 
     chat.SetCommand("play", []{ animation.play(); });
@@ -762,16 +780,17 @@ void FillFloorRects() {
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 5; x++) {
                 int r = rand() % 5;
-                for (int i = 0; i < 96; i++) {
-                    for (int j = 0; j < 96; j++) {
-                        res.setPixel(j + x * 96, i + y * 96, img.getPixel(j + r * 96, i));
-                    }
-                }
+                res.copy(img, x * 96, y * 96, {r * 96, 0, 96, 96});
             }
         }
     };
     res.create(480, 480);
     sf::Texture* txtr;
+    for (int i = 0; i < FloorRects.size(); i++) {
+        for (int j = 0; j < FloorRects[0].size(); j++) {
+            delete FloorRects[i][j].getTexture();
+        }
+    }
     FloorRects.assign(CurLocation->n, std::vector<sf::Sprite>(CurLocation->m));
     for (int i = 0; i < FloorRects.size(); i++) {
         for (int j = 0; j < FloorRects[0].size(); j++) {
