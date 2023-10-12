@@ -705,13 +705,11 @@ void MainLoop() {
             EscapeButton.buttonFunction();
         }
         for (int i = 0; i < Enemies.size(); i++) {
-            if (Enemies[i]->Health.toBottom() <= 0) {
-                // NEW
+            if (Enemies[i]->Health.toBottom() == 0) {
                 std::unordered_map<ItemID, Item> targetDrops = Enemies[i]->inventory.dropableItems;
                 if(Enemies[i]->dropInventory)
                     for(std::unordered_map<ItemID, Item>::iterator it = targetDrops.begin();
-                        it != targetDrops.end(); it++)
-                    {
+                        it != targetDrops.end(); it++) {
                         Item* droppedItem = new Item(it->second);
                         droppedItem->isInInventory = false;
                         sf::Vector2f enemyPos = Enemies[i]->getPosition();
@@ -721,7 +719,6 @@ void MainLoop() {
                         DrawableStuff.push_back(droppedItem);
                     }
 
-                // NEW
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
                 delete Enemies[i];
                 Enemies.erase(Enemies.begin() + i);
