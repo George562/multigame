@@ -1,3 +1,4 @@
+#pragma once
 #include "init.h"
 
 #define STANDART_BAR_HEIGHT 50

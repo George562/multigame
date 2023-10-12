@@ -1,26 +1,37 @@
+#pragma once
 #include <map>
 #include <string>
 
-enum ItemType
+enum ItemID
 {
     none,
-    // DEBUG
     gunParts,
     repairKit,
     keyCard,
-    protectiveSuit
+    protectiveSuit,
+    regenDrug
 };
 
-enum PickupItemType
+enum PickupItemID
 {
-    none,
-    medkit,
-    stimPack
+    nonePickup,
+    genericPickup,
+    medkitPickup,
+    regenDrugPickup
 };
 
-static std::map<PickupItemType, std::string> pickupItemTextureName
-{
+std::map<ItemID, std::string> itemTextureName{
     {none, ""},
-    {medkit, "medkitPickup"},
-    {stimPack, "stimPack"}
+    {gunParts, "gunPartsItem"},
+    {repairKit, "repairKitItem"},
+    {keyCard, "keyCardItem"},
+    {protectiveSuit, "protectiveSuitItem"},
+    {regenDrug, "regenDrugItem"}
+};
+
+std::map<PickupItemID, std::string> pickupItemTextureName{
+    {nonePickup, ""},
+    {genericPickup, "genericPickup"},
+    {medkitPickup, "medkitPickup"},
+    {regenDrugPickup, "regenDrugPickup"}
 };

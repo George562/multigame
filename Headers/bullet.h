@@ -1,3 +1,4 @@
+#pragma once
 #include "tools.h"
 #include "location.h"
 

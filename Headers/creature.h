@@ -1,6 +1,7 @@
 #pragma once
 #include "weapon.h"
 #include "text.h"
+#include "inventory.h"
 
 
 ////////////////////////////////////////////////////////////
@@ -23,6 +24,11 @@ public:
     sf::Clock* localClock;
     mutable PlacedText Name;
     Animation *animationSprite = nullptr;
+
+    // NEW
+    bool dropInventory = true;
+    Inventory inventory;
+    // NEW
 
     Creature(str name, Fraction::Fraction f) : Circle() {
         Name.setString(name);
@@ -85,8 +91,18 @@ public:
     void ChangeWeapon(Weapon* to) { CurWeapon = to; }
 
     virtual void setTarget(sf::Vector2f target) { this->target = target; }
+
+    void AddItem(Item* item);
 };
 
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
+
+void Creature::AddItem(Item* item)
+{
+    inventory.dropableItems[item->id] = inventory.dropableItems[item->id] + *item;
+    inventory.safeItems[item->id] = inventory.safeItems[item->id] + *item;
+    inventory.equipItems[item->id] = inventory.equipItems[item->id] + *item;
+    inventory.keyItems[item->id] = inventory.keyItems[item->id] + *item;
+}

@@ -1,3 +1,4 @@
+#pragma once
 #include "creature.h"
 
 std::vector<std::vector<sf::Vector2f>> TheWayToPlayer;

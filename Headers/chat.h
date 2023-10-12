@@ -1,3 +1,4 @@
+#pragma once
 #include "text.h"
 
 #define SPACE_BETWEEN_LINES_IN_PIXELS 35

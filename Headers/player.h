@@ -1,3 +1,4 @@
+#pragma once
 #include "creature.h"
 
 #define MAX_MANA 75.f

@@ -1,11 +1,23 @@
-#include <itemHelper.h>
-#include <item.h>
+#pragma once
 #include <unordered_map>
+#include "item.h"
 
 class Inventory
 {
 public:
-    std::unordered_map<ItemType, Item> items;
-    std::unordered_map<ItemType, Item> keyItems;
-    std::unordered_map<ItemType, Item> equipItems;
+    int slotAmount = -1; // -1 means unlimited (for enemies only).
+
+    std::unordered_map<ItemID, Item> dropableItems; // All items that can be dropped.
+                                                   // Mostly materials from enemies or pickups.
+
+    std::unordered_map<ItemID, Item> safeItems; // Cannot be dropped by dying, but can be removed 
+                                                // if the player wishes to.
+
+    std::unordered_map<ItemID, Item> keyItems; // Items for quests, story progression etc. 
+                                               // So it is mostly items that cannot be removed by any normal means.
+                                               // Due to this, they will not occupy general inventory slots.
+
+    std::unordered_map<ItemID, Item> equipItems; // Stuff like armor, accessories etc.
+
+    float money = 0;
 };

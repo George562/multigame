@@ -4,6 +4,7 @@
 #include "chat.h"
 #include "contextMenu.h"
 #include "enemy.h"
+#include "item.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap   = true;
@@ -20,6 +21,10 @@ screens::screens screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactible*> InteractibeStuff;
 
+// NEW
+std::vector<Item*> PickupStuff;
+// NEW
+
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect;
 std::vector<std::vector<sf::Sprite>> FloorRects;
@@ -32,6 +37,7 @@ sf::RectangleShape MMPortalRect, MMBoxRect;
 Bar<float> ManaBar, HpBar;
 Bar<int> AmmoBar;
 PlacedText WeaponNameText;
+PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
 //////////////////////////////////////////////////////////// Music
@@ -272,6 +278,10 @@ void drawIterface() {
     Bar<int> AmmoBar1(AmmoBar);
     AmmoBar1.setWidth(AmmoBar.getSize().x - 50);
     PlacedText WeaponNameText1(WeaponNameText);
+    
+    if(player.CurWeapon != nullptr && player.CurWeapon->AmountOfAmmunition.toBottom() <= 0)
+        window.draw(ReloadWeaponText);
+
     for (int i = 0; i < weapons.size(); i++) {
         AmmoBar1.setValue(weapons[i]->AmountOfAmmunition);
         WeaponNameText1.setString(weapons[i]->Name);
@@ -376,6 +386,10 @@ void LoadMainMenu() {
         InterfaceStuff.push_back(&chat);
         
         InteractibeStuff.clear();
+        
+        // NEW
+        PickupStuff.clear();
+        // NEW
     });
 
     // Set cameras
@@ -491,6 +505,9 @@ void init() {
     WeaponNameText.setPosition(AmmoBar.getPosition().x, AmmoBar.getPosition().y + AmmoBar.getSize().y);
     WeaponNameText.text.setFillColor(sf::Color(25, 192, 25, 160));
 
+    ReloadWeaponText.text.setFillColor(sf::Color(255, 20, 20));
+    ReloadWeaponText.setCharacterSize(100);
+
     sf::Texture *XButtonTexture = new sf::Texture; XButtonTexture->loadFromFile("sources/textures/XButton.png");
     XButtonSprite.setTexture(*XButtonTexture);
     XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
@@ -563,6 +580,17 @@ void EventHandler() {
                     if (x->isActivated(player, event, InterfaceStuff))
                         break;
 
+            // NEW
+            for (Item*& x: PickupStuff)
+                if (x->isActivated(player, event, InterfaceStuff))
+                {
+                    player.AddItem(new Item(*x));
+                    DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(x));
+                    DeleteFromVector(PickupStuff, x);
+                    break;
+                }
+            // NEW
+
             switch (screen) {
                 case screens::MainRoom:
                     if (event.type == sf::Event::KeyPressed)
@@ -592,6 +620,10 @@ void EventHandler() {
                             player.ChangeWeapon(weapons[CurWeapon.cur]);
                             AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
                             WeaponNameText.setString(player.CurWeapon->Name);
+            
+                            std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
+                            ReloadWeaponText.setString(reloadStr);
+                            ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
                         }
                     }
                     break;
@@ -673,7 +705,23 @@ void MainLoop() {
             EscapeButton.buttonFunction();
         }
         for (int i = 0; i < Enemies.size(); i++) {
-            if (Enemies[i]->Health.toBottom() == 0) {
+            if (Enemies[i]->Health.toBottom() <= 0) {
+                // NEW
+                std::unordered_map<ItemID, Item> targetDrops = Enemies[i]->inventory.dropableItems;
+                if(Enemies[i]->dropInventory)
+                    for(std::unordered_map<ItemID, Item>::iterator it = targetDrops.begin();
+                        it != targetDrops.end(); it++)
+                    {
+                        Item* droppedItem = new Item(it->second);
+                        droppedItem->isInInventory = false;
+                        sf::Vector2f enemyPos = Enemies[i]->getPosition();
+                        droppedItem->setPosition(enemyPos);
+                        
+                        PickupStuff.push_back(droppedItem);
+                        DrawableStuff.push_back(droppedItem);
+                    }
+
+                // NEW
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
                 delete Enemies[i];
                 Enemies.erase(Enemies.begin() + i);
