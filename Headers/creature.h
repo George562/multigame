@@ -99,10 +99,9 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-void Creature::AddItem(Item* item)
-{
-    inventory.dropableItems[item->id] = inventory.dropableItems[item->id] + *item;
-    inventory.safeItems[item->id] = inventory.safeItems[item->id] + *item;
-    inventory.equipItems[item->id] = inventory.equipItems[item->id] + *item;
-    inventory.keyItems[item->id] = inventory.keyItems[item->id] + *item;
+void Creature::AddItem(Item* item) {
+    inventory.addToDropable(item);
+    inventory.addToEquip(item);
+    inventory.addToKey(item);
+    inventory.addToSafe(item);
 }

@@ -28,6 +28,8 @@ public:
 
         SetAnimation("sources/textures/DistortedScientist.png", 1, {650, 635}, sf::seconds(1));
 
+        inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
+
         Name.ShowText = true;
     }
     void move(Location* location) override {
@@ -59,6 +61,8 @@ public:
         CurWeapon->damage = 0;
 
         SetAnimation("sources/textures/scottpilgrim_multiple.png", 8, {108, 140}, sf::seconds(1));
+
+        inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
         Name.ShowText = true;
     }
@@ -92,6 +96,8 @@ public:
         CurWeapon->damage = 0;
 
         SetAnimation("sources/textures/ramonaflowers_multiple.png", 8, {125, 157}, sf::seconds(1));
+
+        inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
         Name.ShowText = true;
     }

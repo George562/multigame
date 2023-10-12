@@ -21,9 +21,7 @@ screens::screens screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactible*> InteractibeStuff;
 
-// NEW
 std::vector<Item*> PickupStuff;
-// NEW
 
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect;
@@ -279,7 +277,7 @@ void drawIterface() {
     AmmoBar1.setWidth(AmmoBar.getSize().x - 50);
     PlacedText WeaponNameText1(WeaponNameText);
     
-    if(player.CurWeapon != nullptr && player.CurWeapon->AmountOfAmmunition.toBottom() <= 0)
+    if (player.CurWeapon != nullptr && player.CurWeapon->AmountOfAmmunition.toBottom() <= 0)
         window.draw(ReloadWeaponText);
 
     for (int i = 0; i < weapons.size(); i++) {
@@ -386,10 +384,10 @@ void LoadMainMenu() {
         InterfaceStuff.push_back(&chat);
         
         InteractibeStuff.clear();
-        
-        // NEW
+
+        for (Item* &item: PickupStuff)
+            delete item;
         PickupStuff.clear();
-        // NEW
     });
 
     // Set cameras
@@ -572,25 +570,28 @@ void EventHandler() {
             if (IsSomeOneCanBeActivated()) {
                 if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite)))
                     InterfaceStuff.push_back(&XButtonSprite);
-            } else
+            } else {
                 DeleteFromVector(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite));
+            }
 
-            for (Interactible*& x: InteractibeStuff)
-                if (x->CanBeActivated(player))
-                    if (x->isActivated(player, event, InterfaceStuff))
+            for (Interactible*& x: InteractibeStuff) {
+                if (x->CanBeActivated(player)) {
+                    if (x->isActivated(player, event, InterfaceStuff)) {
                         break;
-
-            // NEW
-            for (Item*& x: PickupStuff)
-                if (x->isActivated(player, event, InterfaceStuff))
-                {
-                    player.AddItem(new Item(*x));
-                    DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(x));
-                    DeleteFromVector(PickupStuff, x);
-                    break;
+                    }
                 }
-            // NEW
-
+            }
+            
+            for (int i = 0; i < PickupStuff.size(); i++) {
+                if (PickupStuff[i]->CanBeActivated(player)) {
+                    if (PickupStuff[i]->isActivated(player, event, InterfaceStuff)) {
+                        player.AddItem(PickupStuff[i]);
+                        DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
+                        PickupStuff.erase(PickupStuff.begin() + i--);
+                    }
+                }
+            }
+            
             switch (screen) {
                 case screens::MainRoom:
                     if (event.type == sf::Event::KeyPressed)
@@ -706,22 +707,20 @@ void MainLoop() {
         }
         for (int i = 0; i < Enemies.size(); i++) {
             if (Enemies[i]->Health.toBottom() == 0) {
-                std::unordered_map<ItemID, Item> targetDrops = Enemies[i]->inventory.dropableItems;
-                if(Enemies[i]->dropInventory)
-                    for(std::unordered_map<ItemID, Item>::iterator it = targetDrops.begin();
-                        it != targetDrops.end(); it++) {
-                        Item* droppedItem = new Item(it->second);
-                        droppedItem->isInInventory = false;
-                        sf::Vector2f enemyPos = Enemies[i]->getPosition();
-                        droppedItem->setPosition(enemyPos);
+                if (Enemies[i]->dropInventory) {
+                    for (std::unordered_map<ItemID, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
+                        it != Enemies[i]->inventory.dropableItems.end(); it++) {
+                        it->second->dropTo(Enemies[i]->getPosition());
                         
-                        PickupStuff.push_back(droppedItem);
-                        DrawableStuff.push_back(droppedItem);
+                        PickupStuff.push_back(it->second);
+                        DrawableStuff.push_back(it->second);
                     }
+                }
+                Enemies[i]->inventory.dropableItems.clear();
 
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
                 delete Enemies[i];
-                Enemies.erase(Enemies.begin() + i);
+                Enemies.erase(Enemies.begin() + i--);
             } else {
                 Enemies[i]->setTarget(player.getPosition());
                 Enemies[i]->move(CurLocation);

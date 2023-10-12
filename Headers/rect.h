@@ -16,25 +16,25 @@ struct Rect {
     // Get and set position
     sf::Vector2f getPosition() const { return {PosX, PosY}; }
     void setPosition(float x, float y) { PosX = x; PosY = y; }
-    void setPosition(sf::Vector2f& v) { setPosition(v.x, v.y); }
+    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
     // Set position of rect center
     void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
-    void setCenter(sf::Vector2f& v) { setCenter(v.x, v.y); }
+    void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
     sf::Vector2f getCenter() const { return {PosX + Width / 2, PosY + Height / 2}; }
 
     // Move the rect relatively to its current position
     void move(float x, float y) { setPosition(PosX + x, PosY + y); }
-    void move(sf::Vector2f& v) { setPosition(PosX + v.x, PosY + v.y); }
+    void move(sf::Vector2f v) { setPosition(PosX + v.x, PosY + v.y); }
 
     // Get and set size
     sf::Vector2f getSize() const { return {Width, Height}; }
     void setSize(float w, float h) { Width = w; Height = h; }
-    void setSize(sf::Vector2f& v) { setSize(v.x, v.y); }
+    void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
 
     // Set position and size
     void setRect(float x, float y, float w, float h) { PosX = x; PosY = y; Width = w; Height = h; }
-    void setRect(Rect& rect) { PosX = rect.PosX; PosY = rect.PosY; Width = rect.Width; Height = rect.Height; }
+    void setRect(Rect rect) { PosX = rect.PosX; PosY = rect.PosY; Width = rect.Width; Height = rect.Height; }
 
     // Check the intersection between two rectangles
     bool intersect(float x, float y, float w, float h) const {

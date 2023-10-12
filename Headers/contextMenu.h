@@ -36,15 +36,15 @@ void ContextMenu::addElement(str name, str text, void (*func)(void), sf::Vector2
 }
 
 void ContextMenu::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    if(isMenuActive) {
+    if (isMenuActive) {
         target.draw(sprite, states);
-        for(int i = 0; i < elements.size(); i++)
+        for (int i = 0; i < elements.size(); i++)
             target.draw(elements[i], states);
     }
 }
 
 void ContextMenu::update(sf::Event& event) {
-    if(isMenuActive)
-        for(int i = 0; i < elements.size(); i++)
+    if (isMenuActive)
+        for (int i = 0; i < elements.size(); i++)
             elements[i].isActivated(event);
 }

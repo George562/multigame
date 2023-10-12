@@ -4,24 +4,16 @@
 
 enum ItemID
 {
-    none,
     gunParts,
     repairKit,
     keyCard,
     protectiveSuit,
+    generic,
+    medkit,
     regenDrug
 };
 
-enum PickupItemID
-{
-    nonePickup,
-    genericPickup,
-    medkitPickup,
-    regenDrugPickup
-};
-
-std::map<ItemID, std::string> itemTextureName{
-    {none, ""},
+std::map<ItemID, std::string> itemTextureName {
     {gunParts, "gunPartsItem"},
     {repairKit, "repairKitItem"},
     {keyCard, "keyCardItem"},
@@ -29,9 +21,8 @@ std::map<ItemID, std::string> itemTextureName{
     {regenDrug, "regenDrugItem"}
 };
 
-std::map<PickupItemID, std::string> pickupItemTextureName{
-    {nonePickup, ""},
-    {genericPickup, "genericPickup"},
-    {medkitPickup, "medkitPickup"},
-    {regenDrugPickup, "regenDrugPickup"}
+std::map<ItemID, std::string> pickupItemTextureName {
+    {generic, "genericPickup"},
+    {medkit, "medkitPickup"},
+    {regenDrug, "regenDrugPickup"}
 };
