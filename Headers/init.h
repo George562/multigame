@@ -75,6 +75,50 @@ sf::View MiniMapView({0, 0, (float)scw, (float)sch});
 
 sf::Clock* GameClock;
 
+//////////////////////////////////////////////////////////// Tetures
+sf::Texture ScottpilgrimTexture,
+            RamonaFlowersTexture,
+            PlayerTexture,
+            PortalTexture,
+            WallTexture,
+            DistortedScientistTexture,
+            XButtonTexture,
+            BoxTexture
+            ;
+
+//////////////////////////////////////////////////////////// Panel Tetures
+sf::Texture GreenPanelTexture,
+            GreenPanelPushedTexture,
+            RedPanelTexture,
+            RedPanelPushedTexture,
+            BluePanelTexture,
+            BluePanelPushedTexture,
+            YellowPanelTexture,
+            YellowPanelPushedTexture,
+            SteelFrameTexture
+            ;
+
+void loadTextures() {
+    ScottpilgrimTexture       .loadFromFile("sources/textures/scottpilgrim_multiple.png");
+    RamonaFlowersTexture      .loadFromFile("sources/textures/ramonaflowers_multiple.png");
+    PlayerTexture             .loadFromFile("sources/textures/Player.png");
+    PortalTexture             .loadFromFile("sources/textures/Portal.png");
+    WallTexture               .loadFromFile("sources/textures/wall.png");
+    DistortedScientistTexture .loadFromFile("sources/textures/DistortedScientist.png");
+    XButtonTexture            .loadFromFile("sources/textures/XButton.png");
+    BoxTexture                .loadFromFile("sources/textures/Box.png");
+    
+    GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
+    GreenPanelPushedTexture  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
+    RedPanelTexture          .loadFromFile("sources/textures/Panels/RedPanel.png");
+    RedPanelPushedTexture    .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
+    BluePanelTexture         .loadFromFile("sources/textures/Panels/BluePanel.png");
+    BluePanelPushedTexture   .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
+    YellowPanelTexture       .loadFromFile("sources/textures/Panels/YellowPanel.png");
+    YellowPanelPushedTexture .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
+    SteelFrameTexture        .loadFromFile("sources/textures/Panels/SteelFrame.png");
+}
+
 bool Rect::intersect(Circle& circle) {
     if (circle.PosY < PosY) {   // Если сверху
         if (circle.PosX < PosX)         // Если в левом углу

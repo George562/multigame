@@ -6,8 +6,7 @@
 ////////////////////////////////////////////////////////////
 
 class Animation : public sf::Drawable, public sf::Transformable {
-public:
-    sf::Texture texture;
+private:
     mutable sf::Sprite sprite;
     sf::Clock* localClock;
     sf::Time duration;
@@ -17,8 +16,10 @@ public:
     bool isPlaying;
     int animationLevel;
 
-    Animation(std::string TexturFileName, int FrameAmount, sf::Vector2f frameSize, sf::Time duration);
-    void setTexture(std::string name);
+public:
+    Animation();
+    Animation(sf::Texture& texture, int FrameAmount, sf::Vector2f frameSize, sf::Time duration);
+    void setTexture(sf::Texture& name);
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const;
 
     void play();
@@ -29,25 +30,26 @@ public:
     sf::Vector2f getSize() const;
     sf::Vector2f getGlobalSize() const;
     sf::Vector2f getLocalSize() const;
-
+    void setAnimationLevel(int);
 };
 
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
 
-Animation::Animation(std::string TexturFileName, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
-    this->texture.loadFromFile(TexturFileName);
-    this->texture.setSmooth(true);
-    this->frameAmount = FrameAmount;
-    this->frameSize = frameSize;
-    this->duration = duration;
-    this->sprite.setTexture(this->texture);
-    this->sprite.setTextureRect({0, 0, (int)frameSize.x, (int)frameSize.y});
+Animation::Animation() {
     this->localClock = new sf::Clock;
     this->isPlaying = false;
     this->curTime = sf::Time::Zero;
     animationLevel = 0;
+}
+
+Animation::Animation(sf::Texture& texture, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) : Animation() {
+    this->frameAmount = FrameAmount;
+    this->frameSize = frameSize;
+    this->duration = duration;
+    this->sprite.setTexture(texture);
+    this->sprite.setTextureRect({0, 0, (int)frameSize.x, (int)frameSize.y});
 }
 
 void Animation::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -74,12 +76,8 @@ void Animation::stop() {
     curTime = sf::Time::Zero;
 }
 
-void Animation::setTexture(std::string name) {
-    if (!texture.loadFromFile(name)) {
-        std::cout << "Can't load texture" << name << '\n';
-    } else {
-        sprite.setTexture(texture);
-    }
+void Animation::setTexture(sf::Texture& texture) {
+    sprite.setTexture(texture);
 }
 
 void Animation::setSize(sf::Vector2f size) {
@@ -92,4 +90,8 @@ sf::Vector2f Animation::getGlobalSize() const {
 
 sf::Vector2f Animation::getLocalSize() const {
     return  {sprite.getLocalBounds().width, sprite.getLocalBounds().height };
+}
+
+void Animation::setAnimationLevel(int level) {
+    animationLevel = level;
 }

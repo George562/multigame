@@ -28,7 +28,7 @@ Player::Player() : Creature("Player", Fraction::Player) {
     Velocity = {0.f, 0.f}; MaxVelocity = 6.f;
     Acceleration = 0.6f;
 
-    SetAnimation("sources/textures/Player.png", 1, {485, 485}, sf::seconds(1));
+    SetAnimation(PlayerTexture, 1, {485, 485}, sf::seconds(1));
 }
 
 void Player::move(Location* location) {

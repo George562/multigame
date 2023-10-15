@@ -39,7 +39,7 @@ public:
     bool isKeyItem = false;
     bool isInInventory = true;
     
-    sf::Texture pickupTexture;
+    sf::Texture texture, pickupTexture;
 
     Item() {}
     Item(ItemID, int, bool = true, bool = true, bool = true, bool = false, bool = false);
@@ -66,13 +66,14 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
 
     texture.loadFromFile("sources/textures/" + itemTextureName[id] + ".png");
     pickupTexture.loadFromFile("sources/textures/" + pickupItemTextureName[id] + ".png");
-    sprite.setTexture(texture);
-    setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
+    animation->setTexture(texture);
+    SetAnimation(texture, 1, static_cast<sf::Vector2f>(texture.getSize()), sf::seconds(1));
+    setSize(static_cast<sf::Vector2f>(texture.getSize()));
 }
 
 void Item::setPosition(sf::Vector2f v) {
     PosX = v.x; PosY = v.y;
-    sprite.setPosition(v);
+    animation->setPosition(v);
 }
 
 bool Item::CanBeActivated(Circle& player) {

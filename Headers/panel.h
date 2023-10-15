@@ -7,13 +7,12 @@
 
 class Panel : public PlacedText {
 public:
-    sf::Texture texture;
     sf::Sprite sprite;
     std::vector<str> lines;
 
     Panel() : PlacedText() {};
-    Panel(str, str);
-    void setTexture(str);
+    Panel(sf::Texture&, str);
+    void setTexture(sf::Texture&);
     void addWord(str word)          { lines.push_back(word); }
     void removeWord(int index)      { lines.erase(lines.begin() + index); }
     void setWord(str word)          { lines.clear(); lines.push_back(word); }
@@ -32,16 +31,15 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Panel::Panel(str name, str word = "") : PlacedText() {
-    setTexture(name);
+Panel::Panel(sf::Texture& texture, str word = "") : PlacedText() {
+    setTexture(texture);
     text.setCharacterSize(150);
     text.setFillColor(sf::Color(199, 199, 199));
     Width = sprite.getGlobalBounds().width; Height = sprite.getGlobalBounds().height;
     setWord(word);
 }
 
-void Panel::setTexture(str name) {
-    texture.loadFromFile(name + ".png");
+void Panel::setTexture(sf::Texture& texture) {
     sprite.setTexture(texture);
 }
 

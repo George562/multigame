@@ -42,7 +42,7 @@ sf::Music MainMenuMusic;
 sf::Music FightMusic1, FightMusic2;
 
 //////////////////////////////////////////////////////////// Animation
-Animation animation("sources/textures/scottpilgrim.png", 8, {108, 140}, sf::seconds(1));
+Animation animation(ScottpilgrimTexture, 8, {108, 140}, sf::seconds(1));
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
@@ -126,11 +126,11 @@ sf::Thread ClientTread(funcOfClient);
 sf::Thread FillFloorRectsThread(FillFloorRects);
 
 //////////////////////////////////////////////////////////// Pannels
-Panel  IPPanel          ("sources/textures/Panels/YellowPanel", "IP:");
-Panel  ListOfPlayers    ("sources/textures/Panels/SteelFrame"        );
+Panel  IPPanel       (YellowPanelTexture, "IP:");
+Panel  ListOfPlayers (SteelFrameTexture        );
 
 //////////////////////////////////////////////////////////// Buttons
-Button HostButton("sources/textures/Panels/GreenPanel", "Host", [](){
+Button HostButton(GreenPanelTexture, GreenPanelPushedTexture, "Host", [](){
     listener.listen(53000);
     selector.add(listener);
     ListOfPlayers.setWord(MyIP);
@@ -140,7 +140,7 @@ Button HostButton("sources/textures/Panels/GreenPanel", "Host", [](){
     HostTread.launch();
 });
 
-Button EscapeButton("sources/textures/Panels/RedPanel", "Exit", [](){
+Button EscapeButton(RedPanelTexture, RedPanelPushedTexture, "Exit", [](){
     if (HostFuncRun) {
         mutex.lock();
         SendPacket << sf::Int32(pacetStates::disconnect);
@@ -456,8 +456,9 @@ void init() {
     MapShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
     MapShader.setUniform("u_playerRadius", player.Radius);
 
-    sf::Texture* WallTexture = new sf::Texture; WallTexture->loadFromFile("sources/textures/wall.png");
-    WallRect.setTexture(*WallTexture);
+    loadTextures();
+
+    WallRect.setTexture(WallTexture);
 
     animation.setPosition({800, 800});
     animation.play();
@@ -505,12 +506,10 @@ void init() {
     ReloadWeaponText.text.setFillColor(sf::Color(255, 20, 20));
     ReloadWeaponText.setCharacterSize(100);
 
-    sf::Texture *XButtonTexture = new sf::Texture; XButtonTexture->loadFromFile("sources/textures/XButton.png");
-    XButtonSprite.setTexture(*XButtonTexture);
+    XButtonSprite.setTexture(XButtonTexture);
     XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
 
-    sf::Texture *BoxTexture = new sf::Texture; BoxTexture->loadFromFile("sources/textures/Box.png");
-    BoxRect.setTexture(*BoxTexture);
+    BoxRect.setTexture(BoxTexture);
     BoxRect.setPosition(30, 30);
     
     MMPortalRect.setSize(portal.getSize() * ScaleParam);
@@ -520,6 +519,8 @@ void init() {
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
 
     LoadMainMenu();
+
+    PickupStuff.push_back(new Item(ItemID::regenDrug, 1));
 
     chat.SetCommand("play", []{ animation.play(); });
     chat.SetCommand("stop", []{ animation.stop(); });

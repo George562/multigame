@@ -21,7 +21,7 @@ public:
     sf::Time LastStateCheck, LastMoveCheck;
     sf::Clock* localClock;
     mutable PlacedText Name;
-    Animation *animationSprite = nullptr;
+    Animation *animation = nullptr;
 
     // NEW
     bool dropInventory = true;
@@ -44,9 +44,9 @@ public:
     };
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
-        if (animationSprite != nullptr) {
-            animationSprite->setPosition(getPosition());
-            target.draw(*animationSprite, states);
+        if (animation != nullptr) {
+            animation->setPosition(getPosition());
+            target.draw(*animation, states);
         }
         Name.setPosition(PosX - Name.Width / 2.f, PosY - Radius - Name.Height);
         target.draw(Name, states);
@@ -76,14 +76,14 @@ public:
 
     virtual void UpdateState() {};
 
-    void SetAnimation(std::string TextureFileName, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
-        if (animationSprite != nullptr) {
-            delete animationSprite;
+    void SetAnimation(sf::Texture& texture, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
+        if (animation != nullptr) {
+            delete animation;
         }
-        animationSprite = new Animation(TextureFileName, FrameAmount, frameSize, duration);
-        animationSprite->setSize({Radius * 2.f, Radius * 2.f});
-        animationSprite->setOrigin(animationSprite->getLocalSize() / 2.f);
-        animationSprite->play();
+        animation = new Animation(texture, FrameAmount, frameSize, duration);
+        animation->setSize({Radius * 2.f, Radius * 2.f});
+        animation->setOrigin(animation->getLocalSize() / 2.f);
+        animation->play();
     };
 
     void ChangeWeapon(Weapon* to) { CurWeapon = to; }

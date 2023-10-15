@@ -7,8 +7,7 @@
 
 class Interactible : public Rect, public sf::Drawable {
 public:
-    sf::Texture texture;
-    sf::Sprite sprite;
+    Animation* animation;
     void (*function)(void);
 
     Interactible() {}
@@ -16,8 +15,15 @@ public:
     virtual bool isActivated(Circle&, sf::Event&) { return false; }
     virtual bool CanBeActivated(Circle&) { return false; }
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
-        target.draw(sprite, states);
+        target.draw(*animation, states);
     }
+    void SetAnimation(sf::Texture& texture, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
+        if (animation != nullptr) {
+            delete animation;
+        }
+        animation = new Animation(texture, FrameAmount, frameSize, duration);
+        animation->play();
+    };
 };
 
 ////////////////////////////////////////////////////////////

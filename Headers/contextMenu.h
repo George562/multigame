@@ -12,8 +12,8 @@ public:
     bool isMenuActive = false;
 
     ContextMenu() : Panel() {}
-    ContextMenu(str, str, Rect);
-    void addElement(str, str, void (*)(void), sf::Vector2f, sf::Vector2f);
+    ContextMenu(sf::Texture&, str, Rect);
+    void addElement(sf::Texture&, sf::Texture&, str, void (*)(void), sf::Vector2f, sf::Vector2f);
     void removeElement(int index) { elements.erase(elements.begin() + index); }
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
     void update(sf::Event&);
@@ -23,14 +23,14 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-ContextMenu::ContextMenu(str textureName, str name, Rect rect = Rect{0, 0, 600, 600}) : Panel(textureName, name) {
+ContextMenu::ContextMenu(sf::Texture& texture, str name, Rect rect = Rect{0, 0, 600, 600}) : Panel(texture, name) {
     elements.resize(0);
     setPosition(rect.PosX, rect.PosY);
     setSize(rect.Width, rect.Height);
 }
 
-void ContextMenu::addElement(str name, str text, void (*func)(void), sf::Vector2f elemPos, sf::Vector2f elemSize) {
-    elements.push_back(*(new Button(name, text, func)));
+void ContextMenu::addElement(sf::Texture& texture, sf::Texture& pushedTexture, str text, void (*func)(void), sf::Vector2f elemPos, sf::Vector2f elemSize) {
+    elements.push_back(*(new Button(texture, pushedTexture, text, func)));
     elements[elements.size() - 1].setPosition(elemPos.x, elemPos.y);
     elements[elements.size() - 1].setSize(elemSize);
 }
