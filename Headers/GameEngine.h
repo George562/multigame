@@ -1,10 +1,9 @@
-#include "portal.h"
-#include "player.h"
-#include "client.h"
 #include "chat.h"
 #include "contextMenu.h"
+#include "portal.h"
 #include "enemy.h"
-#include "item.h"
+#include "player.h"
+#include "client.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap   = true;

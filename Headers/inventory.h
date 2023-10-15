@@ -1,9 +1,7 @@
 #pragma once
-#include <unordered_map>
 #include "item.h"
 
-class Inventory
-{
+class Inventory {
 public:
     int slotAmount = -1; // -1 means unlimited (for enemies only).
 

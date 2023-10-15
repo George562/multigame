@@ -1,5 +1,5 @@
 #pragma once
-#include "init.h"
+#include "text.h"
 
 #define STANDART_BAR_HEIGHT 50
 #define STANDART_BAR_WALL_WIDTH 10
