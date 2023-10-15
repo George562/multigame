@@ -127,11 +127,11 @@ sf::Thread ClientTread(funcOfClient);
 sf::Thread FillFloorRectsThread(FillFloorRects);
 
 //////////////////////////////////////////////////////////// Pannels
-Panel  IPPanel          ("sources/textures/YellowPanel", "IP:");
-Panel  ListOfPlayers    ("sources/textures/SteelFrame"        );
+Panel  IPPanel          ("sources/textures/Panels/YellowPanel", "IP:");
+Panel  ListOfPlayers    ("sources/textures/Panels/SteelFrame"        );
 
 //////////////////////////////////////////////////////////// Buttons
-Button HostButton("sources/textures/GreenPanel", "Host", [](){
+Button HostButton("sources/textures/Panels/GreenPanel", "Host", [](){
     listener.listen(53000);
     selector.add(listener);
     ListOfPlayers.setWord(MyIP);
@@ -141,7 +141,7 @@ Button HostButton("sources/textures/GreenPanel", "Host", [](){
     HostTread.launch();
 });
 
-Button EscapeButton("sources/textures/RedPanel", "Exit", [](){
+Button EscapeButton("sources/textures/Panels/RedPanel", "Exit", [](){
     if (HostFuncRun) {
         mutex.lock();
         SendPacket << sf::Int32(pacetStates::disconnect);
