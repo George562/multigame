@@ -575,7 +575,7 @@ void EventHandler() {
 
             for (Interactible*& x: InteractibeStuff) {
                 if (x->CanBeActivated(player)) {
-                    if (x->isActivated(player, event, InterfaceStuff)) {
+                    if (x->isActivated(player, event)) {
                         break;
                     }
                 }
@@ -583,9 +583,10 @@ void EventHandler() {
             
             for (int i = 0; i < PickupStuff.size(); i++) {
                 if (PickupStuff[i]->CanBeActivated(player)) {
-                    if (PickupStuff[i]->isActivated(player, event, InterfaceStuff)) {
+                    if (PickupStuff[i]->isActivated(player, event)) {
                         player.AddItem(PickupStuff[i]);
                         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
+                        delete PickupStuff[i];
                         PickupStuff.erase(PickupStuff.begin() + i--);
                     }
                 }
@@ -707,7 +708,7 @@ void MainLoop() {
         for (int i = 0; i < Enemies.size(); i++) {
             if (Enemies[i]->Health.toBottom() == 0) {
                 if (Enemies[i]->dropInventory) {
-                    for (std::unordered_map<ItemID, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
+                    for (std::map<ItemID, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
                         it != Enemies[i]->inventory.dropableItems.end(); it++) {
                         it->second->dropTo(Enemies[i]->getPosition());
                         

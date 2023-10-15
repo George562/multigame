@@ -43,10 +43,9 @@ public:
 
     Item() {}
     Item(ItemID, int, bool = true, bool = true, bool = true, bool = false, bool = false);
-    Item operator +(Item);
 
     void setPosition(sf::Vector2f);
-    bool isActivated(Circle&, sf::Event&, std::vector<sf::Drawable*>&) override;
+    bool isActivated(Circle&, sf::Event&) override;
     bool CanBeActivated(Circle&) override;
     void dropTo(sf::Vector2f);
 };
@@ -71,13 +70,6 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
 }
 
-Item Item::operator +(Item sumItem) {
-    if (id == sumItem.id && isKeyItem == sumItem.isKeyItem) {
-        return Item(id, amount + sumItem.amount, isDropable, isEquippable, isKeyItem, isInInventory);
-    }
-    return *this;
-}
-
 void Item::setPosition(sf::Vector2f v) {
     PosX = v.x; PosY = v.y;
     sprite.setPosition(v);
@@ -89,7 +81,7 @@ bool Item::CanBeActivated(Circle& player) {
     return false;
 }
 
-bool Item::isActivated(Circle& player, sf::Event& event, std::vector<sf::Drawable*>& InterfaceStuff) {
+bool Item::isActivated(Circle& player, sf::Event& event) {
     if (pickupable && !isInInventory)
         return intersect(player);
     return false;
@@ -100,8 +92,8 @@ void Item::dropTo(sf::Vector2f pos) {
     isInInventory = false;
 }
 
-void operator +=(Item sumTo, Item sumItem) {
-    if (sumTo.id == sumItem.id && sumTo.isKeyItem == sumItem.isKeyItem) {
+void operator +=(Item& sumTo, Item& sumItem) {
+    if (sumTo.id == sumItem.id) {
         sumTo.amount += sumItem.amount;
     }
 }

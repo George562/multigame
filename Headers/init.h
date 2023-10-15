@@ -6,12 +6,11 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <set>
 #include <string>
 #include <ctime>
 #include <queue>
 #include <cmath>
-#include <unordered_map>
-#include <unordered_set>
 #include <random>
 #include "scale.h"
 #include "rect.h"
@@ -34,7 +33,7 @@ namespace Fraction {
         Player,
         Enemy
     };
-    std::unordered_map<Fraction, std::unordered_set<Fraction>> Friendship{
+    std::map<Fraction, std::set<Fraction>> Friendship{
         {Player, {Player}},
         {Enemy, {Enemy}}
     };

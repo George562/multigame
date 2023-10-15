@@ -1,6 +1,5 @@
 #pragma once
 #include "interactible.h"
-#include "button.h"
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -12,7 +11,7 @@ public:
     bool IsPlayerOnPortal = false;
     void setFunction(void (*func)(void)) { function = func; }
     bool CanBeActivated(Circle&);
-    bool isActivated(Circle&, sf::Event&, std::vector<sf::Drawable*>&);
+    bool isActivated(Circle&, sf::Event&);
 
     void setPosition(float x, float y) { PosX = x; PosY = y; sprite.setPosition(PosX, PosY); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
@@ -38,7 +37,7 @@ Portal::Portal() {
 
 bool Portal::CanBeActivated(Circle& rect) { return intersect(rect); }
 
-bool Portal::isActivated(Circle& rect, sf::Event& event, std::vector<sf::Drawable*>& InterfaceStuff) {
+bool Portal::isActivated(Circle& rect, sf::Event& event) {
     if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
         function();
         return true;
