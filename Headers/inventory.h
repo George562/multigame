@@ -20,6 +20,8 @@ public:
     std::unordered_map<ItemID, Item*> equipItems; // Stuff like armor, accessories etc.
 
     void addToDropable(Item* item) {
+        if (!item->isDropable)
+            return;
         if (dropableItems[item->id]) {
             *(dropableItems[item->id]) += *item;
         } else {
@@ -28,6 +30,8 @@ public:
     }
 
     void addToSafe(Item* item) {
+        if (item->isDropable)
+            return;
         if (dropableItems[item->id]) {
             *(dropableItems[item->id]) += *item;
         } else {
@@ -36,6 +40,8 @@ public:
     }
 
     void addToKey(Item* item) {
+        if (!item->isKeyItem)
+            return;
         if (dropableItems[item->id]) {
             *(dropableItems[item->id]) += *item;
         } else {
@@ -44,6 +50,8 @@ public:
     }
 
     void addToEquip(Item* item) {
+        if (!item->isEquippable)
+            return;
         if (dropableItems[item->id]) {
             *(dropableItems[item->id]) += *item;
         } else {

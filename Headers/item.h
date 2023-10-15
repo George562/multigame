@@ -14,7 +14,6 @@ public:
     bool isDropable = true;
     bool isEquippable = false;
     bool isKeyItem = false;
-
     bool isInInventory = true;
     
     sf::Texture pickupTexture;
@@ -80,6 +79,6 @@ void Item::dropTo(sf::Vector2f pos) {
 
 void operator +=(Item sumTo, Item sumItem) {
     if (sumTo.id == sumItem.id && sumTo.isKeyItem == sumItem.isKeyItem) {
-        sumTo.amount += 1;
+        sumTo.amount += sumItem.amount;
     }
 }
