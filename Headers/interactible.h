@@ -7,7 +7,7 @@
 
 class Interactible : public Rect, public sf::Drawable {
 public:
-    Animation* animation;
+    Animation* animation = nullptr;
     void (*function)(void);
 
     Interactible() {}

@@ -78,10 +78,10 @@ sf::Clock* GameClock;
 //////////////////////////////////////////////////////////// Tetures
 sf::Texture ScottpilgrimTexture,
             RamonaFlowersTexture,
+            DistortedScientistTexture,
             PlayerTexture,
             PortalTexture,
             WallTexture,
-            DistortedScientistTexture,
             XButtonTexture,
             BoxTexture
             ;
@@ -101,10 +101,10 @@ sf::Texture GreenPanelTexture,
 void loadTextures() {
     ScottpilgrimTexture       .loadFromFile("sources/textures/scottpilgrim_multiple.png");
     RamonaFlowersTexture      .loadFromFile("sources/textures/ramonaflowers_multiple.png");
+    DistortedScientistTexture .loadFromFile("sources/textures/DistortedScientist.png");
     PlayerTexture             .loadFromFile("sources/textures/Player.png");
     PortalTexture             .loadFromFile("sources/textures/Portal.png");
     WallTexture               .loadFromFile("sources/textures/wall.png");
-    DistortedScientistTexture .loadFromFile("sources/textures/DistortedScientist.png");
     XButtonTexture            .loadFromFile("sources/textures/XButton.png");
     BoxTexture                .loadFromFile("sources/textures/Box.png");
     

@@ -10,8 +10,7 @@ public:
     sf::Sprite sprite;
     std::vector<str> lines;
 
-    Panel() : PlacedText() {};
-    Panel(sf::Texture&, str);
+    Panel(str = "");
     void setTexture(sf::Texture&);
     void addWord(str word)          { lines.push_back(word); }
     void removeWord(int index)      { lines.erase(lines.begin() + index); }
@@ -31,16 +30,15 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Panel::Panel(sf::Texture& texture, str word = "") : PlacedText() {
-    setTexture(texture);
+Panel::Panel(str word) : PlacedText() {
     text.setCharacterSize(150);
     text.setFillColor(sf::Color(199, 199, 199));
-    Width = sprite.getGlobalBounds().width; Height = sprite.getGlobalBounds().height;
     setWord(word);
 }
 
 void Panel::setTexture(sf::Texture& texture) {
     sprite.setTexture(texture);
+    Width = texture.getSize().x; Height = texture.getSize().y;
 }
 
 str Panel::getWord() {

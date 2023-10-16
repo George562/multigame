@@ -11,19 +11,32 @@ enum ItemID {
     regenDrug
 };
 
-std::map<ItemID, std::string> itemTextureName {
-    {gunParts, "gunPartsItem"},
-    {repairKit, "repairKitItem"},
-    {keyCard, "keyCardItem"},
-    {protectiveSuit, "protectiveSuitItem"},
-    {regenDrug, "regenDrugItem"}
+//////////////////////////////////////////////////////////// Item Tetures
+std::map<ItemID, sf::Texture*> itemTextureName {
+    {gunParts, new sf::Texture},
+    {repairKit, new sf::Texture},
+    {keyCard, new sf::Texture},
+    {protectiveSuit, new sf::Texture},
+    {regenDrug, new sf::Texture}
 };
 
-std::map<ItemID, std::string> pickupItemTextureName {
-    {generic, "genericPickup"},
-    {medkit, "medkitPickup"},
-    {regenDrug, "regenDrugPickup"}
+std::map<ItemID, sf::Texture*> pickupItemTextureName {
+    {generic, new sf::Texture},
+    {medkit, new sf::Texture},
+    {regenDrug, new sf::Texture}
 };
+
+void loadItemTextures() {
+    // itemTextureName[gunParts]       ->loadFromFile("sources/textures/gunPartsItem.png");
+    // itemTextureName[repairKit]      ->loadFromFile("sources/textures/repairKitItem.png");
+    // itemTextureName[keyCard]        ->loadFromFile("sources/textures/keyCardItem.png");
+    // itemTextureName[protectiveSuit] ->loadFromFile("sources/textures/protectiveSuitItem.png");
+    itemTextureName[regenDrug]      ->loadFromFile("sources/textures/regenDrugItem.png");
+
+    // pickupItemTextureName[generic]   ->loadFromFile("sources/textures/genericPickup.png");
+    // pickupItemTextureName[medkit]    ->loadFromFile("sources/textures/medkitPickup.png");
+    pickupItemTextureName[regenDrug] ->loadFromFile("sources/textures/regenDrugPickup.png");
+}
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -38,10 +51,9 @@ public:
     bool isEquippable = false;
     bool isKeyItem = false;
     bool isInInventory = true;
-    
-    sf::Texture texture, pickupTexture;
 
-    Item() {}
+    sf::Texture* texture, *pickupTexture;
+
     Item(ItemID, int, bool = true, bool = true, bool = true, bool = false, bool = false);
 
     void setPosition(sf::Vector2f);
@@ -64,11 +76,13 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
 
-    texture.loadFromFile("sources/textures/" + itemTextureName[id] + ".png");
-    pickupTexture.loadFromFile("sources/textures/" + pickupItemTextureName[id] + ".png");
-    animation->setTexture(texture);
-    SetAnimation(texture, 1, static_cast<sf::Vector2f>(texture.getSize()), sf::seconds(1));
-    setSize(static_cast<sf::Vector2f>(texture.getSize()));
+    texture = new sf::Texture(); pickupTexture = new sf::Texture();
+
+    texture = itemTextureName[id];
+    pickupTexture = pickupItemTextureName[id];
+
+    SetAnimation(*texture, 1, static_cast<sf::Vector2f>(texture->getSize()), sf::seconds(1));
+    setSize(animation->getGlobalSize());
 }
 
 void Item::setPosition(sf::Vector2f v) {
@@ -89,6 +103,7 @@ bool Item::isActivated(Circle& player, sf::Event& event) {
 }
 
 void Item::dropTo(sf::Vector2f pos) {
+    SetAnimation(*pickupTexture, 1, static_cast<sf::Vector2f>(pickupTexture->getSize()), sf::seconds(1));
     setPosition(pos);
     isInInventory = false;
 }

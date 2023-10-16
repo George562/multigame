@@ -14,7 +14,7 @@ public:
     void (*buttonFunction)(void);
 
     Button() {}
-    Button(sf::Texture&, sf::Texture&, str, void (*)(void));
+    Button(str, void (*)(void));
 
     void setPosition(float, float);
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
@@ -36,11 +36,9 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Button::Button(sf::Texture& texture, sf::Texture& pushedTexture, str word, void (*foo)(void)) {
+Button::Button(str word, void (*foo)(void)) {
     ButtonText.setCharacterSize(150);
     ButtonText.setFillColor(sf::Color(199, 199, 199));
-    setTexture(texture, pushedTexture);
-    setSize(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
     setWord(word);
     buttonFunction = foo;
 }
@@ -49,6 +47,7 @@ void Button::setTexture(sf::Texture& texture, sf::Texture& pushedTexture) {
     this->texture = &texture;
     this->pushedTexture = &pushedTexture;
     sprite.setTexture(texture);
+    setSize(texture.getSize().x, texture.getSize().y);
 }
 
 void Button::setPosition(float x, float y) {

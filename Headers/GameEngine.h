@@ -126,11 +126,11 @@ sf::Thread ClientTread(funcOfClient);
 sf::Thread FillFloorRectsThread(FillFloorRects);
 
 //////////////////////////////////////////////////////////// Pannels
-Panel  IPPanel       (YellowPanelTexture, "IP:");
-Panel  ListOfPlayers (SteelFrameTexture        );
+Panel IPPanel("IP:");
+Panel ListOfPlayers;
 
 //////////////////////////////////////////////////////////// Buttons
-Button HostButton(GreenPanelTexture, GreenPanelPushedTexture, "Host", [](){
+Button HostButton("Host", [](){
     listener.listen(53000);
     selector.add(listener);
     ListOfPlayers.setWord(MyIP);
@@ -140,7 +140,7 @@ Button HostButton(GreenPanelTexture, GreenPanelPushedTexture, "Host", [](){
     HostTread.launch();
 });
 
-Button EscapeButton(RedPanelTexture, RedPanelPushedTexture, "Exit", [](){
+Button EscapeButton("Exit", [](){
     if (HostFuncRun) {
         mutex.lock();
         SendPacket << sf::Int32(pacetStates::disconnect);
@@ -408,6 +408,10 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&chat);
     InteractibeStuff.push_back(&portal);
 
+    PickupStuff.push_back(new Item(ItemID::regenDrug, 1));
+    DrawableStuff.push_back(PickupStuff[0]);
+    PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f{100, 100});
+
     FillFloorRectsThread.wait();
 }
 
@@ -457,6 +461,13 @@ void init() {
     MapShader.setUniform("u_playerRadius", player.Radius);
 
     loadTextures();
+    loadItemTextures();
+
+    IPPanel.setTexture(YellowPanelTexture);
+    ListOfPlayers.setTexture(SteelFrameTexture);
+    
+    EscapeButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
+    HostButton.setTexture(GreenPanelTexture, GreenPanelPushedTexture);
 
     WallRect.setTexture(WallTexture);
 
@@ -519,8 +530,6 @@ void init() {
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
 
     LoadMainMenu();
-
-    PickupStuff.push_back(new Item(ItemID::regenDrug, 1));
 
     chat.SetCommand("play", []{ animation.play(); });
     chat.SetCommand("stop", []{ animation.stop(); });
