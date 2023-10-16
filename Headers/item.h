@@ -76,8 +76,6 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
 
-    texture = new sf::Texture(); pickupTexture = new sf::Texture();
-
     texture = itemTextureName[id];
     pickupTexture = pickupItemTextureName[id];
 
