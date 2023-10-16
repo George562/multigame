@@ -25,6 +25,7 @@ std::vector<Item*> PickupStuff;
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect;
 std::vector<std::vector<sf::Sprite>> FloorRects;
+sf::CircleShape circleShape;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
@@ -198,7 +199,13 @@ void draw() {
         }
     }
 
-    for (int i = 0; i < Bullets.size(); i++) window.draw(Bullets[i]);
+    for (int i = 0; i < Bullets.size(); i++) {
+        circleShape.setFillColor(Bullets[i].color);
+        circleShape.setRadius(Bullets[i].Radius);
+        circleShape.setPosition(Bullets[i].getPosition());
+        circleShape.setOrigin(Bullets[i].Radius, Bullets[i].Radius);
+        window.draw(circleShape);
+    }
 
     if (IsDrawMinimap)      drawMiniMap();
     if (IsDrawInterface)    drawIterface();
@@ -431,6 +438,29 @@ void CreateImage() {
 
 void init() {
     setlocale(LC_ALL, "rus");
+
+    std::cout << "size of Animation       = " << sizeof(Animation) << '\n';
+    std::cout << "size of Button          = " << sizeof(Button) << '\n';
+    std::cout << "size of Panel           = " << sizeof(Panel) << '\n';
+    std::cout << "size of sf::Clock       = " << sizeof(sf::Clock) << '\n';
+    std::cout << "size of chat            = " << sizeof(chat) << '\n';
+    std::cout << "size of Inventory       = " << sizeof(Inventory) << '\n';
+    std::cout << "size of Item            = " << sizeof(Item) << '\n';
+    std::cout << "size of Location        = " << sizeof(Location) << '\n';
+    std::cout << "size of Player          = " << sizeof(Player) << '\n';
+    std::cout << "size of Enemy           = " << sizeof(Enemy) << '\n';
+    std::cout << "size of Scale<float>    = " << sizeof(Scale<float>) << '\n';
+    std::cout << "size of sf::Texture     = " << sizeof(sf::Texture) << '\n';
+    std::cout << "size of PlacedText      = " << sizeof(PlacedText) << '\n';
+    std::cout << "size of Weapon          = " << sizeof(Weapon) << '\n';
+    std::cout << "size of Portal          = " << sizeof(Portal) << '\n';
+    std::cout << "size of Interactible    = " << sizeof(Interactible) << '\n';
+    std::cout << "size of Creature        = " << sizeof(Creature) << '\n';
+    std::cout << "size of Bullet          = " << sizeof(Bullet) << '\n';
+    std::cout << "size of Circle          = " << sizeof(Circle) << '\n';
+    std::cout << "size of Rect            = " << sizeof(Rect) << '\n';
+    std::cout << "size of sf::Drawable    = " << sizeof(sf::Drawable) << '\n';
+    std::cout << "size of sf::CircleShape = " << sizeof(sf::CircleShape) << '\n';
 
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
