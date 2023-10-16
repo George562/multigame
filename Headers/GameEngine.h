@@ -447,8 +447,6 @@ void init() {
     std::cout << "size of Inventory       = " << sizeof(Inventory) << '\n';
     std::cout << "size of Item            = " << sizeof(Item) << '\n';
     std::cout << "size of Location        = " << sizeof(Location) << '\n';
-    std::cout << "size of Player          = " << sizeof(Player) << '\n';
-    std::cout << "size of Enemy           = " << sizeof(Enemy) << '\n';
     std::cout << "size of Scale<float>    = " << sizeof(Scale<float>) << '\n';
     std::cout << "size of sf::Texture     = " << sizeof(sf::Texture) << '\n';
     std::cout << "size of PlacedText      = " << sizeof(PlacedText) << '\n';
@@ -461,6 +459,9 @@ void init() {
     std::cout << "size of Rect            = " << sizeof(Rect) << '\n';
     std::cout << "size of sf::Drawable    = " << sizeof(sf::Drawable) << '\n';
     std::cout << "size of sf::CircleShape = " << sizeof(sf::CircleShape) << '\n';
+    std::cout << "size of sf::Sprite      = " << sizeof(sf::Sprite) << '\n';
+    std::cout << "size of sf::Text        = " << sizeof(sf::Text) << '\n';
+    std::cout << "size of sf::Font        = " << sizeof(sf::Font) << '\n';
 
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
@@ -492,6 +493,7 @@ void init() {
 
     loadTextures();
     loadItemTextures();
+    loadFonts();
 
     IPPanel.setTexture(YellowPanelTexture);
     ListOfPlayers.setTexture(SteelFrameTexture);

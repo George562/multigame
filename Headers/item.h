@@ -1,7 +1,7 @@
 #pragma once
 #include "interactible.h"
 
-enum ItemID {
+enum ItemID : sf::Uint8 {
     gunParts,
     repairKit,
     keyCard,

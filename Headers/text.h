@@ -8,7 +8,6 @@
 class PlacedText : public Rect, public sf::Drawable {
 public:
     bool ShowText = true;
-    sf::Font font;
     sf::Text text;
 
     PlacedText();
@@ -43,8 +42,7 @@ public:
 ////////////////////////////////////////////////////////////
 
 PlacedText::PlacedText() {
-    font.loadFromFile("sources/ljk_Inky Thin Pixels.otf");
-    text.setFont(font);
+    text.setFont(ljk_InkyFont);
 }
 
 void PlacedText::setPosition(float x, float y) {

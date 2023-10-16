@@ -83,11 +83,9 @@ sf::Texture ScottpilgrimTexture,
             PortalTexture,
             WallTexture,
             XButtonTexture,
-            BoxTexture
-            ;
-
+            BoxTexture,
 //////////////////////////////////////////////////////////// Panel Tetures
-sf::Texture GreenPanelTexture,
+            GreenPanelTexture,
             GreenPanelPushedTexture,
             RedPanelTexture,
             RedPanelPushedTexture,
@@ -107,7 +105,7 @@ void loadTextures() {
     WallTexture               .loadFromFile("sources/textures/wall.png");
     XButtonTexture            .loadFromFile("sources/textures/XButton.png");
     BoxTexture                .loadFromFile("sources/textures/Box.png");
-    
+
     GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
     GreenPanelPushedTexture  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
     RedPanelTexture          .loadFromFile("sources/textures/Panels/RedPanel.png");
@@ -117,6 +115,13 @@ void loadTextures() {
     YellowPanelTexture       .loadFromFile("sources/textures/Panels/YellowPanel.png");
     YellowPanelPushedTexture .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
     SteelFrameTexture        .loadFromFile("sources/textures/Panels/SteelFrame.png");
+}
+
+//////////////////////////////////////////////////////////// Fonts
+sf::Font ljk_InkyFont;
+
+void loadFonts() {
+    ljk_InkyFont.loadFromFile("sources/ljk_Inky Thin Pixels.otf");
 }
 
 bool Rect::intersect(Circle& circle) {

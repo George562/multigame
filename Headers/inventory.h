@@ -3,6 +3,7 @@
 
 class Inventory {
 public:
+    float money = 0;
     int slotAmount = -1; // -1 means unlimited (for enemies only).
 
     std::map<ItemID, Item*> dropableItems; // All items that can be dropped.
@@ -52,7 +53,4 @@ public:
         }
         *(equipItems[item->id]) += *item;
     }
-
-
-    float money = 0;
 };

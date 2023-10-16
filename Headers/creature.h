@@ -23,10 +23,8 @@ public:
     mutable PlacedText Name;
     Animation *animation = nullptr;
 
-    // NEW
     bool dropInventory = true;
     Inventory inventory;
-    // NEW
 
     Creature(str name, Fraction::Fraction f) : Circle() {
         Name.setString(name);
