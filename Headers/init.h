@@ -125,27 +125,30 @@ void loadFonts() {
 }
 
 bool Rect::intersect(Circle& circle) {
-    if (circle.PosY < PosY) {   // Если сверху
-        if (circle.PosX < PosX)         // Если в левом углу
-            return distance(getPosition(), circle.getPosition()) <= circle.Radius;
-        if (circle.PosX > getRight())   // Если в правом углу
-            return distance(getRightTop(), circle.getPosition()) <= circle.Radius;
-        return PosY - circle.PosY <= circle.Radius; // Если посередине
-    }
-    if (circle.PosY > getBottom()) {    // Если снизу
-        if (circle.PosX < PosX)             // Если в левом углу
-            return distance(getLeftBottom(), circle.getPosition()) <= circle.Radius;
-        if (circle.PosX > getRight())       // Если в правом углу
-            return distance(getRightBottom(), circle.getPosition()) <= circle.Radius;
-        return circle.PosY - getBottom() <= circle.Radius; // Если посередине
-    }
+    return LenOfVector(sf::Vector2f{std::max(std::abs(circle.PosX - (PosX + Width  / 2)) - Width / 2,  0.f),
+                                    std::max(std::abs(circle.PosY - (PosY + Height / 2)) - Height / 2, 0.f)}) <= circle.Radius;
+    // explanation: https://www.youtube.com/watch?v=62-pRVZuS5c&ab_channel=InigoQuilez
+    // if (circle.PosY < PosY) {   // Если сверху
+    //     if (circle.PosX < PosX)         // Если в левом углу
+    //         return distance(getPosition(), circle.getPosition()) <= circle.Radius;
+    //     if (circle.PosX > getRight())   // Если в правом углу
+    //         return distance(getRightTop(), circle.getPosition()) <= circle.Radius;
+    //     return PosY - circle.PosY <= circle.Radius; // Если посередине
+    // }
+    // if (circle.PosY > getBottom()) {    // Если снизу
+    //     if (circle.PosX < PosX)             // Если в левом углу
+    //         return distance(getLeftBottom(), circle.getPosition()) <= circle.Radius;
+    //     if (circle.PosX > getRight())       // Если в правом углу
+    //         return distance(getRightBottom(), circle.getPosition()) <= circle.Radius;
+    //     return circle.PosY - getBottom() <= circle.Radius; // Если посередине
+    // }
     
-    if (circle.PosX < PosX)   // Если слева
-        return PosX - circle.PosX <= circle.Radius;
-    if (circle.PosX > getRight())   // Если справа
-        return circle.PosX - getRight() <= circle.Radius;
+    // if (circle.PosX < PosX)   // Если слева
+    //     return PosX - circle.PosX <= circle.Radius;
+    // if (circle.PosX > getRight())   // Если справа
+    //     return circle.PosX - getRight() <= circle.Radius;
  
-    return true; // внутри
+    // return true; // внутри
 }
 
 bool Circle::intersect(Rect& rect) {
