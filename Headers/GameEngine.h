@@ -102,6 +102,7 @@ std::vector<Enemy*> Enemies;
 
 //////////////////////////////////////////////////////////// functions
 void draw();
+void drawFloor();
 void drawWalls();
 void drawMiniMap();
 void drawIterface();
@@ -170,16 +171,7 @@ void draw() {
     window.setView(GameView);
     window.clear(sf::Color::Black);
 
-    for (int i = 0; i < FloorTextureRects.size(); i++) {
-        for (int j = 0; j < FloorTextureRects[0].size(); j++) {
-            if (CurLocation->EnableTiles[i][j]) {
-                FLoorTileSprite.setTexture(FloorTextureRects[i][j], true);
-                FLoorTileSprite.setPosition(size * j, size * i);
-                window.draw(FLoorTileSprite, MapStates);
-            }
-        }
-    }
-
+    drawFloor();
     drawWalls();
 
     for (int i = 0; i < CurLocation->objects.size(); i++) {
@@ -212,6 +204,18 @@ void draw() {
     if (IsDrawMinimap)      drawMiniMap();
     if (IsDrawInterface)    drawIterface();
     window.display();
+}
+
+void drawFloor() {
+    for (int i = 0; i < FloorTextureRects.size(); i++) {
+        for (int j = 0; j < FloorTextureRects[0].size(); j++) {
+            if (CurLocation->EnableTiles[i][j]) {
+                FLoorTileSprite.setTexture(FloorTextureRects[i][j], true);
+                FLoorTileSprite.setPosition(size * j, size * i);
+                window.draw(FLoorTileSprite, MapStates);
+            }
+        }
+    }
 }
 
 void drawWalls() {
