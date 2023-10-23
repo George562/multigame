@@ -23,8 +23,8 @@ std::vector<Interactible*> InteractibeStuff;
 std::vector<Item*> PickupStuff;
 
 //////////////////////////////////////////////////////////// DrawableStuff
-sf::Sprite WallRect;
-std::vector<std::vector<sf::Sprite>> FloorRects;
+sf::Sprite WallRect, FLoorTileSprite;
+std::vector<std::vector<sf::Texture>> FloorTextureRects;
 sf::CircleShape circleShape;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
@@ -170,10 +170,12 @@ void draw() {
     window.setView(GameView);
     window.clear(sf::Color::Black);
 
-    for (int i = 0; i < FloorRects.size(); i++) {
-        for (int j = 0; j < FloorRects[0].size(); j++) {
+    for (int i = 0; i < FloorTextureRects.size(); i++) {
+        for (int j = 0; j < FloorTextureRects[0].size(); j++) {
             if (CurLocation->EnableTiles[i][j]) {
-                window.draw(FloorRects[i][j], MapStates);
+                FLoorTileSprite.setTexture(FloorTextureRects[i][j], true);
+                FLoorTileSprite.setPosition(size * j, size * i);
+                window.draw(FLoorTileSprite, MapStates);
             }
         }
     }
@@ -688,7 +690,7 @@ void EventHandler() {
                             IPPanel.setWord("IP:" + IPOfHost);
                         }
                     }
-                    if (event.type == sf::Event::KeyPressed)
+                    if (event.type == sf::Event::KeyPressed) {
                         if (event.key.code == sf::Keyboard::Enter) {
                             IPPanel.setWord("Connecting...");
                             draw();
@@ -723,6 +725,7 @@ void EventHandler() {
                             IPOfHost.pop_back();
                             IPPanel.setWord("IP:" + IPOfHost);
                         }
+                    }
                     break;
                 }
         }
@@ -869,31 +872,23 @@ bool IsSomeOneCanBeActivated() {
 }
 
 void FillFloorRects() {
-    sf::Image img, res;
-    img.loadFromFile("sources/floor3x.png");
-    auto CreateOneFLoor = [&img](sf::Image& res){
+    sf::Image res, src;
+    src.loadFromFile("sources/floor3x.png");
+    auto CreateOneFLoor = [&src](sf::Image& res){
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 5; x++) {
                 int r = rand() % 5;
-                res.copy(img, x * 96, y * 96, {r * 96, 0, 96, 96});
+                res.copy(src, x * 96, y * 96, {r * 96, 0, 96, 96});
             }
         }
     };
     res.create(480, 480);
-    sf::Texture* txtr;
-    for (int i = 0; i < FloorRects.size(); i++) {
-        for (int j = 0; j < FloorRects[0].size(); j++) {
-            delete FloorRects[i][j].getTexture();
-        }
-    }
-    FloorRects.assign(CurLocation->n, std::vector<sf::Sprite>(CurLocation->m));
-    for (int i = 0; i < FloorRects.size(); i++) {
-        for (int j = 0; j < FloorRects[0].size(); j++) {
+    FloorTextureRects.assign(CurLocation->n, std::vector<sf::Texture>(CurLocation->m));
+    for (int i = 0; i < FloorTextureRects.size(); i++) {
+        for (int j = 0; j < FloorTextureRects[0].size(); j++) {
             if (CurLocation->EnableTiles[i][j]) {
                 CreateOneFLoor(res);
-                txtr = new sf::Texture; txtr->loadFromImage(res);
-                FloorRects[i][j].setTexture(*txtr, true);
-                FloorRects[i][j].setPosition(size * j, size * i);
+                FloorTextureRects[i][j].loadFromImage(res);
             }
         }
     }

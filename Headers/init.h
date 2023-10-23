@@ -61,11 +61,11 @@ namespace pacetStates {
     };
 };
 
-int scw = 1920; // screen width
-int sch = 1080; // screen height
+constexpr int scw = 1920; // screen width
+constexpr int sch = 1080; // screen height
 
-int size = 480, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
-float ScaleParam = float(miniSize) / float(size);
+constexpr int size = 480, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
+constexpr float ScaleParam = float(miniSize) / float(size);
 int START_N = 15, START_M = 15;
 float WallMinSize = size / 8, WallMaxSize = size;
 
@@ -84,6 +84,7 @@ sf::Texture ScottpilgrimTexture,
             WallTexture,
             XButtonTexture,
             BoxTexture,
+            floor3xTexture,
 //////////////////////////////////////////////////////////// Panel Tetures
             GreenPanelTexture,
             GreenPanelPushedTexture,
@@ -105,6 +106,7 @@ void loadTextures() {
     WallTexture               .loadFromFile("sources/textures/wall.png");
     XButtonTexture            .loadFromFile("sources/textures/XButton.png");
     BoxTexture                .loadFromFile("sources/textures/Box.png");
+    floor3xTexture            .loadFromFile("sources/floor3x.png");
 
     GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
     GreenPanelPushedTexture  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
