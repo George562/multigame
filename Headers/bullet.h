@@ -5,22 +5,27 @@
 #define COMMON_BULLET_RADIUS 7
 #define COMMON_BULLET_PENETRATION 0
 
+////////////////////////////////////////////////////////////
+// Class
+////////////////////////////////////////////////////////////
+
+#pragma pack(push, 1)
 struct Bullet : public Circle {
     enum Type : sf::Uint8 {
         Common,
         Bubble
     };
-
-    sf::Vector2f Velocity;
-    int penetration;
-    float damage;
-    bool explode = false;
-    sf::Time timer;
-    Scale<float> ExplosionRadius = {1, 12, 1};
     Bullet::Type type;
-    Fraction::Fraction fromWho;
+
+    bool explode = false;
     bool todel = false;
+    float damage;
+    int penetration;
+    sf::Vector2f Velocity;
+    Scale<float> ExplosionRadius = {1, 12, 1};
+    Fraction::Fraction fromWho;
     sf::Clock* localClock;
+    sf::Time timer;
     sf::Color color;
 
     Bullet() {}
@@ -75,6 +80,7 @@ struct Bullet : public Circle {
         }
     }
 };
+#pragma pack(pop)
 
 using vB = std::vector<Bullet>;
 vB Bullets(0);

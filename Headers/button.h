@@ -5,6 +5,7 @@
 // Class
 ////////////////////////////////////////////////////////////
 
+#pragma pack(push, 1)
 class Button : public Rect, public sf::Drawable {
 public:
     sf::Texture* texture, *pushedTexture;
@@ -31,6 +32,7 @@ public:
     bool OnTheButton(int& x, int& y)  { return contains(x, y); }
     bool isActivated(sf::Event&);
 };
+#pragma pack(pop)
 
 ////////////////////////////////////////////////////////////
 // Realization

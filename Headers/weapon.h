@@ -6,19 +6,19 @@
 
 ////////////////////////////////////////////////////////////
 // Weapon
+#pragma pack(push, 1)
 class Weapon {
 public:
+    str Name;
     Scale<int> AmountOfAmmunition;
-    float ManaCost;
-    sf::Time FireRate;
     sf::Clock* TimeFromLastShot;
+    sf::Time FireRate;
+    int NumberOfBulletsPerShot;
+    float ManaCost;
     float damage;
     float BulletVelocity;
-    int NumberOfBulletsPerShot;
     float scatter; // at degree
     bool lock; // Bullets is like a stream and "lock" is blocking it stream
-    
-    str Name;
 
     Weapon() {};
     Weapon(str name, int MaxAmmo, float ManaCost, float FireRate, float dmg) {
@@ -58,6 +58,7 @@ public:
         AmountOfAmmunition += x;
     };
 };
+#pragma pack(pop)
 ////////////////////////////////////////////////////////////
 
 // Pistol
@@ -107,7 +108,6 @@ public:
 // Bubblegun
 class Bubblegun : public Weapon {
 public:
-    sf::Vector2f position = {};
     Bubblegun() : Weapon("Bubblegun", 30, 3, 0.03, 2) { BulletVelocity = 9; NumberOfBulletsPerShot = 10;  scatter = 40; }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)

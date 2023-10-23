@@ -42,6 +42,7 @@ void loadItemTextures() {
 // Class
 ////////////////////////////////////////////////////////////
 
+#pragma pack(push, 1)
 class Item : public Interactible {
 public:
     ItemID id;
@@ -61,6 +62,7 @@ public:
     bool CanBeActivated(Circle&) override;
     void dropTo(sf::Vector2f);
 };
+#pragma pack(pop)
 
 ////////////////////////////////////////////////////////////
 // Realization

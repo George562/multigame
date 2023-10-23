@@ -1,5 +1,6 @@
 #pragma once
 #include "../SFML-2.5.1/include/SFML/Graphics.hpp"
+
 ////////////////////////////////////////////////////////////
 /// \param bottom smallest value
 /// \param top highest value

@@ -442,13 +442,11 @@ void init() {
     std::cout << "size of Animation       = " << sizeof(Animation) << '\n';
     std::cout << "size of Button          = " << sizeof(Button) << '\n';
     std::cout << "size of Panel           = " << sizeof(Panel) << '\n';
-    std::cout << "size of sf::Clock       = " << sizeof(sf::Clock) << '\n';
-    std::cout << "size of chat            = " << sizeof(chat) << '\n';
+    std::cout << "size of Chat            = " << sizeof(Chat) << '\n';
     std::cout << "size of Inventory       = " << sizeof(Inventory) << '\n';
     std::cout << "size of Item            = " << sizeof(Item) << '\n';
     std::cout << "size of Location        = " << sizeof(Location) << '\n';
-    std::cout << "size of Scale<float>    = " << sizeof(Scale<float>) << '\n';
-    std::cout << "size of sf::Texture     = " << sizeof(sf::Texture) << '\n';
+    std::cout << "size of Scale<float>    = " << sizeof(Scale<int>) << '\n';
     std::cout << "size of PlacedText      = " << sizeof(PlacedText) << '\n';
     std::cout << "size of Weapon          = " << sizeof(Weapon) << '\n';
     std::cout << "size of Portal          = " << sizeof(Portal) << '\n';
@@ -457,11 +455,22 @@ void init() {
     std::cout << "size of Bullet          = " << sizeof(Bullet) << '\n';
     std::cout << "size of Circle          = " << sizeof(Circle) << '\n';
     std::cout << "size of Rect            = " << sizeof(Rect) << '\n';
+    std::cout << "size of sf::Clock       = " << sizeof(sf::Clock) << '\n';
     std::cout << "size of sf::Drawable    = " << sizeof(sf::Drawable) << '\n';
     std::cout << "size of sf::CircleShape = " << sizeof(sf::CircleShape) << '\n';
     std::cout << "size of sf::Sprite      = " << sizeof(sf::Sprite) << '\n';
     std::cout << "size of sf::Text        = " << sizeof(sf::Text) << '\n';
     std::cout << "size of sf::Font        = " << sizeof(sf::Font) << '\n';
+    std::cout << "size of sf::Time        = " << sizeof(sf::Time) << '\n';
+    std::cout << "size of sf::String      = " << sizeof(sf::String) << '\n';
+    std::cout << "size of sf::Texture     = " << sizeof(sf::Texture) << '\n';
+    std::cout << "size of sf::Vector2f    = " << sizeof(sf::Vector2f) << '\n';
+    std::cout << "size of sf::Color       = " << sizeof(sf::Color) << '\n';
+    std::cout << "size of float           = " << sizeof(float) << '\n';
+    std::cout << "size of int             = " << sizeof(int) << '\n';
+    std::cout << "size of bool            = " << sizeof(bool) << '\n';
+    std::cout << "size of str             = " << sizeof(str) << '\n';
+    std::cout << "size of Bullet::Type    = " << sizeof(Bullet::Type) << '\n';
 
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;

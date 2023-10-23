@@ -6,6 +6,7 @@
 // Class
 ////////////////////////////////////////////////////////////
 
+#pragma pack(push, 1)
 class Creature : public Circle, public sf::Drawable {
 public:
     Fraction::Fraction fraction;
@@ -21,9 +22,9 @@ public:
     sf::Time LastStateCheck, LastMoveCheck;
     sf::Clock* localClock;
     mutable PlacedText Name;
-    Animation *animation = nullptr;
+    Animation *animation;
 
-    bool dropInventory = true;
+    bool dropInventory;
     Inventory inventory;
 
     Creature(str name, Fraction::Fraction f) : Circle() {
@@ -39,6 +40,8 @@ public:
         LastStateCheck = sf::seconds(0);
         LastMoveCheck = sf::seconds(0);
         localClock = new sf::Clock();
+        animation = nullptr;
+        dropInventory = true;
     };
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
@@ -90,6 +93,7 @@ public:
 
     void AddItem(Item* item);
 };
+#pragma pack(pop)
 
 ////////////////////////////////////////////////////////////
 // Realization

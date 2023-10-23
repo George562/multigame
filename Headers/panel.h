@@ -5,6 +5,7 @@
 // Class
 ////////////////////////////////////////////////////////////
 
+#pragma pack(push, 1)
 class Panel : public PlacedText {
 public:
     sf::Sprite sprite;
@@ -25,6 +26,7 @@ public:
     void setSize(sf::Vector2f v)    { setSize(v.x, v.y); }
     void setSize(float, float);
 };
+#pragma pack(pop)
 
 ////////////////////////////////////////////////////////////
 // Realization

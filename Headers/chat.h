@@ -8,17 +8,18 @@
 // Class
 ////////////////////////////////////////////////////////////
 
+#pragma pack(push, 1)
 class Chat : public Rect, public sf::Drawable {
 public:
-    bool inputted;
     std::vector<sf::Clock*> clocks;
+    std::map<str, void (*)(void)> commands;
     PlacedText lines[11];
     int start, len;
     size_t cursorPos;
     sf::RectangleShape rect, cursor;
-    std::map<str, void (*)(void)> commands;
-    bool ChatEnable;
     sf::Clock* localClock;
+    bool inputted;
+    bool ChatEnable;
 
     Chat();
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
@@ -30,6 +31,7 @@ public:
 
     void SetCommand(str CommandString, void (*CommandFunction)(void)) { commands[CommandString] = CommandFunction; }
 };
+#pragma pack(pop)
 
 ////////////////////////////////////////////////////////////
 // Realization

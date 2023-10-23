@@ -5,10 +5,11 @@
 // Class
 ////////////////////////////////////////////////////////////
 
+#pragma pack(push, 1)
 class PlacedText : public Rect, public sf::Drawable {
 public:
-    bool ShowText = true;
     sf::Text text;
+    bool ShowText = true;
 
     PlacedText();
 
@@ -36,6 +37,7 @@ public:
         if (ShowText) target.draw(text, states);
     };
 };
+#pragma pack(pop)
 
 ////////////////////////////////////////////////////////////
 // Realization

@@ -5,16 +5,17 @@
 // Class
 ////////////////////////////////////////////////////////////
 
+#pragma pack(push, 1)
 class Animation : public sf::Drawable, public sf::Transformable {
 private:
     mutable sf::Sprite sprite;
     sf::Clock* localClock;
     sf::Time duration;
     mutable sf::Time curTime;
-    int frameAmount;
     sf::Vector2f frameSize;
-    bool isPlaying;
+    int frameAmount;
     int animationLevel;
+    bool isPlaying;
 
 public:
     Animation();
@@ -26,12 +27,13 @@ public:
     void pause();
     void stop();
 
+    void setAnimationLevel(int);
     void setSize(sf::Vector2f size);
     sf::Vector2f getSize() const;
     sf::Vector2f getGlobalSize() const;
     sf::Vector2f getLocalSize() const;
-    void setAnimationLevel(int);
 };
+#pragma pack(pop)
 
 ////////////////////////////////////////////////////////////
 // Realization
