@@ -24,7 +24,9 @@ public:
 ////////////////////////////////////////////////////////////
 
 Portal::Portal() {
-    SetAnimation(PortalTexture, 1, {135, 270}, sf::seconds(1));
+    // SetAnimation(PortalAnimation2Texture, 1, {135, 270}, sf::seconds(1));
+    SetAnimation(PortalAnimation2Texture, 9, {340, 640}, sf::seconds(1));
+    animation->setSize(sf::Vector2f{170.f, 320.f});
 }
 
 bool Portal::CanBeActivated(Circle& rect) {

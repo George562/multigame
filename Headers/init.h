@@ -81,6 +81,7 @@ sf::Texture ScottpilgrimTexture,
             DistortedScientistTexture,
             PlayerTexture,
             PortalTexture,
+            PortalAnimation2Texture,
             WallTexture,
             XButtonTexture,
             BoxTexture,
@@ -103,6 +104,7 @@ void loadTextures() {
     DistortedScientistTexture .loadFromFile("sources/textures/DistortedScientist.png");
     PlayerTexture             .loadFromFile("sources/textures/Player.png");
     PortalTexture             .loadFromFile("sources/textures/Portal.png");
+    PortalAnimation2Texture   .loadFromFile("sources/PortalAnimation2.png");
     WallTexture               .loadFromFile("sources/textures/wall.png");
     XButtonTexture            .loadFromFile("sources/textures/XButton.png");
     BoxTexture                .loadFromFile("sources/textures/Box.png");
