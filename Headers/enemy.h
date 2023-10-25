@@ -32,16 +32,12 @@ public:
 
         Name.ShowText = true;
     }
+
     void move(Location* location) override {
         VelocityBuff = 1;
 
         setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
         Creature::move(location);
-    }
-    void UpdateState() override {
-        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        LastStateCheck = localClock->getElapsedTime();
     }
 };
 
@@ -66,17 +62,13 @@ public:
 
         Name.ShowText = true;
     }
+
     void move(Location* location) override {
         VelocityBuff = 1;
 
         setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
         animation->setAnimationLevel(target.x - PosX < 0);
         Creature::move(location);
-    }
-    void UpdateState() override {
-        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        LastStateCheck = localClock->getElapsedTime();
     }
 };
 
@@ -101,16 +93,12 @@ public:
 
         Name.ShowText = true;
     }
+    
     void move(Location* location) override {
         VelocityBuff = 1;
 
         setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
         animation->setAnimationLevel(target.x - PosX < 0);
         Creature::move(location);
-    }
-    void UpdateState() override {
-        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        LastStateCheck = localClock->getElapsedTime();
     }
 };

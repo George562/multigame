@@ -22,7 +22,7 @@ struct Scale {
 template <class T>
 void normalize(Scale<T>& scale) {
     if (!scale.looped) {
-        scale.cur = std::max(std::min(scale.top, scale.cur), scale.bottom);
+        scale.cur = std::clamp(scale.cur, scale.bottom, scale.top);
     } else {
         if (scale.cur > scale.top) {
             scale.cur = scale.cur - (scale.top - scale.bottom + 1);
@@ -45,6 +45,6 @@ Scale<T>& operator-=(Scale<T>& scale, T x) {
 }
 
 void normalize(Scale<sf::Vector2f>& scale) {
-    scale.cur.x = std::max(std::min(scale.top.x, scale.cur.x), scale.bottom.x);
-    scale.cur.y = std::max(std::min(scale.top.y, scale.cur.y), scale.bottom.y);
+    scale.cur.x = std::clamp(scale.cur.x, scale.bottom.x, scale.top.x);
+    scale.cur.y = std::clamp(scale.cur.y, scale.bottom.y, scale.top.y);
 }

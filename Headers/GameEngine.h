@@ -6,8 +6,8 @@
 #include "client.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
-bool IsDrawMinimap   = true;
-bool IsDrawInterface = true;
+bool IsDrawMinimap       = true;
+bool IsDrawInterface     = true;
 bool MiniMapHoldOnPlayer = true;
 
 //////////////////////////////////////////////////////////// Stuff for work with system and screen
@@ -154,14 +154,16 @@ Button EscapeButton("Exit", [](){
         listener.close();
         HostFuncRun = false;
         ConnectedPlayers.clear();
-    } else if (ClientFuncRun)
+    } else if (ClientFuncRun) {
         SelfDisconnect();
+    }
     screen = screens::MainRoom;
     EscapeMenuActivated = false;
     ListOfPlayers.clear();
     Bullets.clear();
-    for (int i = 0; i < Enemies.size(); i++)
+    for (int i = 0; i < Enemies.size(); i++) {
         delete Enemies[i];
+    }
     Enemies.clear();
     LoadMainMenu();
 });
@@ -201,8 +203,12 @@ void draw() {
         window.draw(circleShape);
     }
 
-    if (IsDrawMinimap)      drawMiniMap();
-    if (IsDrawInterface)    drawIterface();
+    if (IsDrawMinimap) {
+        drawMiniMap();
+    }
+    if (IsDrawInterface) {
+        drawIterface();
+    }
     window.display();
 }
 
@@ -221,28 +227,31 @@ void drawFloor() {
 void drawWalls() {
     sf::Vector2f CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
     for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
-            i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++)
+            i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++) {
         for (int j = std::max(0, int(CameraPos.x / size) - 1);
                 j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
-            if (CurLocation->wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, static_cast<float>(scw), static_cast<float>(sch)))
+            if (CurLocation->wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, static_cast<float>(scw), static_cast<float>(sch))) {
                 CurLocation->SeenWalls[i][j] = true;
+            }
             if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setTextureRect({sf::Vector2i{0, 0}, static_cast<sf::Vector2i>(CurLocation->wallsRect[i][j].getSize())});
                 window.draw(WallRect, MapStates);
             }
         }
+    }
 }
 
 void drawMiniMap() {
-    if (MiniMapHoldOnPlayer)
+    if (MiniMapHoldOnPlayer) {
         MiniMapView.setCenter(player.getPosition() * ScaleParam);
+    }
 
     // draw walls
     window.setView(MiniMapView);
     sf::VertexArray line(sf::Lines, 2);
-    for (int i = 0; i < CurLocation->walls.size(); i++)
-        for (int j = 0; j < CurLocation->walls[i].size(); j++)
+    for (int i = 0; i < CurLocation->walls.size(); i++) {
+        for (int j = 0; j < CurLocation->walls[i].size(); j++) {
             if (CurLocation->walls[i][j] && CurLocation->SeenWalls[i][j]) {
                 if (i % 2 == 1) { // |
                     line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2), sf::Color::White);
@@ -253,6 +262,8 @@ void drawMiniMap() {
                 }
                 window.draw(line);
             }
+        }
+    }
     
     // draw location objects
     for (int i = 0; i < CurLocation->objects.size(); i++) {
@@ -283,22 +294,28 @@ sf::Clock ClockFPS; int FPSCounter;
 PlacedText TextFPS;
 void drawIterface() {
     window.setView(InterfaceView);
-    for (sf::Drawable* d: InterfaceStuff) window.draw(*d);
+    for (sf::Drawable* d: InterfaceStuff) {
+        window.draw(*d);
+    }
 
-    Bar<int> AmmoBar1(AmmoBar);
-    AmmoBar1.setWidth(AmmoBar.getSize().x - 50);
-    PlacedText WeaponNameText1(WeaponNameText);
-    
-    if (player.CurWeapon != nullptr && player.CurWeapon->AmountOfAmmunition.toBottom() <= 0)
+    if (player.CurWeapon != nullptr && player.CurWeapon->AmountOfAmmunition.toBottom() <= 0) {
         window.draw(ReloadWeaponText);
+    }
 
     for (int i = 0; i < weapons.size(); i++) {
-        AmmoBar1.setValue(weapons[i]->AmountOfAmmunition);
-        WeaponNameText1.setString(weapons[i]->Name);
-        AmmoBar1.setPosition(20, sch - 20 - (weapons.size() - i) * (AmmoBar1.getSize().y + 10));
-        WeaponNameText1.setPosition(35 + AmmoBar1.getSize().x, AmmoBar1.getPosition().y + WeaponNameText1.Height / 4);
-        window.draw(AmmoBar1);
-        window.draw(WeaponNameText1);
+        if (weapons[i] == player.CurWeapon) {
+            WeaponNameText.setFillColor(sf::Color::White);
+            WeaponNameText.setOutlineThickness(3);
+        } else {
+            WeaponNameText.setFillColor(sf::Color(25, 192, 25, 160));
+            WeaponNameText.setOutlineThickness(1);
+        }
+        AmmoBar.setValue(weapons[i]->AmountOfAmmunition);
+        AmmoBar.setPosition(20, sch - 20 - (weapons.size() - i) * (AmmoBar.getSize().y + 10));
+        WeaponNameText.setString(weapons[i]->Name);
+        WeaponNameText.setPosition(35 + AmmoBar.getSize().x, AmmoBar.getPosition().y + WeaponNameText.Height / 4);
+        window.draw(AmmoBar);
+        window.draw(WeaponNameText);
     }
 
     if (EscapeMenuActivated) {
@@ -363,8 +380,6 @@ void LoadMainMenu() {
     portal.setFunction([](){
         player.setPosition(sf::Vector2f{(START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size});
         player.ChangeWeapon(weapons[CurWeapon.cur]);
-        AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
-        WeaponNameText.setString(player.CurWeapon->Name);
 
         screen = screens::Dungeon;
 
@@ -385,8 +400,9 @@ void LoadMainMenu() {
 
         DrawableStuff.clear();
         DrawableStuff.push_back(&player);
-        for (Enemy* &enemy: Enemies)
+        for (Enemy* &enemy: Enemies) {
             DrawableStuff.push_back(enemy);
+        }
 
         InterfaceStuff.clear();
         InterfaceStuff.push_back(&ManaBar);
@@ -397,8 +413,9 @@ void LoadMainMenu() {
         
         InteractibeStuff.clear();
 
-        for (Item* &item: PickupStuff)
+        for (Item* &item: PickupStuff) {
             delete item;
+        }
         PickupStuff.clear();
     });
 
@@ -435,8 +452,7 @@ void CreateImage() {
     res.create(96 * 100, 96 * 100);
     for (int y = 0; y < 100; y++) {
         for (int x = 0; x < 100; x++) {
-            int r = rand() % 5;
-            res.copy(img, x * 96, y * 96, {r * 96, 0, 96, 96});
+            res.copy(img, x * 96, y * 96, {(rand() % 5) * 96, 0, 96, 96});
         }
     }
     res.saveToFile("sources/res.png");
@@ -555,11 +571,10 @@ void init() {
     ManaBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
 
     AmmoBar.setWidth(160);
-    AmmoBar.setPosition(scw - AmmoBar.getSize().x - 10, 120);
     AmmoBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(128, 128, 128, 160), sf::Color(32, 32, 32, 160));
 
-    WeaponNameText.setPosition(AmmoBar.getPosition().x, AmmoBar.getPosition().y + AmmoBar.getSize().y);
-    WeaponNameText.text.setFillColor(sf::Color(25, 192, 25, 160));
+    WeaponNameText.setFillColor(sf::Color(25, 192, 25, 160));
+    WeaponNameText.setOutlineColor(sf::Color::Black);
 
     ReloadWeaponText.text.setFillColor(sf::Color(255, 20, 20));
     ReloadWeaponText.setCharacterSize(100);
@@ -569,7 +584,7 @@ void init() {
 
     BoxRect.setTexture(BoxTexture);
     BoxRect.setPosition(30, 30);
-    
+
     MMPortalRect.setSize(portal.getSize() * ScaleParam);
     MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
     
@@ -590,15 +605,19 @@ void EventHandler() {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
                 mutex.lock();
                 SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
-                if (HostFuncRun)        SendToClients(SendPacket);
-                else if (ClientFuncRun) MySocket.send(SendPacket);
+                if (HostFuncRun) {
+                    SendToClients(SendPacket);
+                } else if (ClientFuncRun) {
+                    MySocket.send(SendPacket);
+                }
                 SendPacket.clear();
                 mutex.unlock();
             }
         } else if (EscapeMenuActivated) {
             EscapeButton.isActivated(event);
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
                 EscapeMenuActivated = !EscapeMenuActivated;
+            }
         } else {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) {
@@ -609,17 +628,27 @@ void EventHandler() {
                 }
                 if (event.key.code == sf::Keyboard::Tab) {
                     MiniMapActivated = !MiniMapActivated;
-                    if (MiniMapActivated) MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
-                    else                  MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                    if (MiniMapActivated) {
+                        MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
+                    } else {
+                        MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                    }
                 }
                 if (event.key.code == sf::Keyboard::Space) {
-                    if (MiniMapActivated) MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
+                    if (MiniMapActivated) {
+                        MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
+                    }
                 }
             }
             if (event.type == sf::Event::MouseWheelMoved) {
                 if (MiniMapActivated) {
-                    if (event.mouseWheel.delta < 0) { MiniMapView.zoom(1.1f); MiniMapZoom *= 1.1f; }
-                    else { MiniMapView.zoom(1.f / 1.1f); MiniMapZoom /= 1.1f; }
+                    if (event.mouseWheel.delta < 0) {
+                        MiniMapView.zoom(1.1f);
+                        MiniMapZoom *= 1.1f;
+                    } else {
+                        MiniMapView.zoom(1.f / 1.1f);
+                        MiniMapZoom /= 1.1f;
+                    }
                 }
             }
 
@@ -651,22 +680,25 @@ void EventHandler() {
             
             switch (screen) {
                 case screens::MainRoom:
-                    if (event.type == sf::Event::KeyPressed)
+                    if (event.type == sf::Event::KeyPressed) {
                         if (event.key.code == sf::Keyboard::Escape) {
                             MainMenuMusic.pause();
                             window.close();
                         }
+                    }
                     break;
 
                 case screens::Dungeon:
                     if (player.CurWeapon != nullptr && !MiniMapActivated) {
                         player.CurWeapon->Update(event);
-                        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R)
+                        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
                             player.CurWeapon->Reload(player.Mana);
+                        }
                     }
                     if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Escape)
+                        if (event.key.code == sf::Keyboard::Escape) {
                             EscapeMenuActivated = true;
+                        }
                         if (event.key.code == sf::Keyboard::H) {
                             player.setPosition(size, size);
                             CurLocation = &WaitingRoomLoaction;
@@ -676,8 +708,6 @@ void EventHandler() {
                         if (!MiniMapActivated) {
                             CurWeapon -= (int)event.mouseWheelScroll.delta;
                             player.ChangeWeapon(weapons[CurWeapon.cur]);
-                            AmmoBar.setValue(player.CurWeapon->AmountOfAmmunition);
-                            WeaponNameText.setString(player.CurWeapon->Name);
             
                             std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
                             ReloadWeaponText.setString(reloadStr);
@@ -702,7 +732,7 @@ void EventHandler() {
                                 selector.add(MySocket);
                                 
                                 if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
-                                MySocket.receive(ReceivePacket) == sf::Socket::Done)
+                                    MySocket.receive(ReceivePacket) == sf::Socket::Done) {
                                     while (!ReceivePacket.endOfPacket()) {
                                         ReceivePacket >> packetState;
                                         switch (packetState) {
@@ -717,10 +747,13 @@ void EventHandler() {
                                                 std::cout << PacetData << " connected\n";
                                                 break;
                                             case pacetStates::SetPos:
-                                                for (Player& x: ConnectedPlayers) ReceivePacket >> x;
+                                                for (Player& x: ConnectedPlayers) {
+                                                    ReceivePacket >> x;
+                                                }
                                                 player.setPosition(ConnectedPlayers[ComputerID].getPosition());
                                         }
                                     }
+                                }
                                 ClientFuncRun = true;
                                 ClientTread.launch();
                             }
@@ -737,7 +770,7 @@ void EventHandler() {
 }
 
 void updateBullets() {
-    for (int i = 0; i < Bullets.size(); i++)
+    for (int i = 0; i < Bullets.size(); i++) {
         if (Bullets[i].penetration < 0 || Bullets[i].todel) {
             Bullets.erase(Bullets.begin() + i--);
         } else {
@@ -753,6 +786,7 @@ void updateBullets() {
                 }
             }
         }
+    }
 }
 
 void MainLoop() {
@@ -798,8 +832,9 @@ void MainLoop() {
             }
         }
         if (!window.hasFocus()) {
-            if (player.CurWeapon != nullptr)
+            if (player.CurWeapon != nullptr) {
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
+            }
             updateBullets();
 
             sf::Event event;
@@ -808,7 +843,9 @@ void MainLoop() {
             if (HostFuncRun) {
                 mutex.lock();
                 SendPacket << sf::Int32(pacetStates::PlayerPos);
-                for (Player& x: ConnectedPlayers) SendPacket << x;
+                for (Player& x: ConnectedPlayers) {
+                    SendPacket << x;
+                }
                 SendToClients(SendPacket);
                 SendPacket.clear();
                 mutex.unlock();
@@ -820,16 +857,21 @@ void MainLoop() {
                 FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
             }
             int wasBulletsSize = Bullets.size();
-            if (player.CurWeapon != nullptr)
+            if (player.CurWeapon != nullptr) {
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
+            }
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
                 mutex.lock();
                 SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size() - wasBulletsSize;
-                for (; wasBulletsSize < Bullets.size(); wasBulletsSize++)
+                for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
                     SendPacket << Bullets[wasBulletsSize];
-                if (HostFuncRun)        SendToClients(SendPacket);
-                else if (ClientFuncRun) MySocket.send(SendPacket);
+                }
+                if (HostFuncRun) {
+                    SendToClients(SendPacket);
+                } else if (ClientFuncRun) {
+                    MySocket.send(SendPacket);
+                }
                 SendPacket.clear();
                 mutex.unlock();
             }
@@ -841,7 +883,9 @@ void MainLoop() {
                 mutex.lock();
                 SendPacket << sf::Int32(pacetStates::PlayerPos);
                 if (HostFuncRun) {
-                    for (Player& x: ConnectedPlayers) SendPacket << x;
+                    for (Player& x: ConnectedPlayers) {
+                        SendPacket << x;
+                    }
                     SendToClients(SendPacket);
                 } else if (ClientFuncRun) {
                     SendPacket << player;
@@ -852,14 +896,16 @@ void MainLoop() {
             }
             
             if (MiniMapActivated) {
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                     MiniMapView.move(-sf::Vector2f(sf::Mouse::getPosition() - MouseBuffer) * MiniMapZoom);
+                }
             }
             MouseBuffer = sf::Mouse::getPosition();
 
             if (screen == screens::Dungeon) {
-                if (Enemies.size() == 0 && !in(InteractibeStuff, (Interactible*)&portal))
+                if (Enemies.size() == 0 && !in(InteractibeStuff, (Interactible*)&portal)) {
                     InteractibeStuff.push_back(&portal);
+                }
             }
         }
 
@@ -870,8 +916,11 @@ void MainLoop() {
 }
 
 bool IsSomeOneCanBeActivated() {
-    for (Interactible*& x: InteractibeStuff)
-        if (x->CanBeActivated(player)) return true;
+    for (Interactible*& x: InteractibeStuff) {
+        if (x->CanBeActivated(player)) {
+            return true;
+        }
+    }
     return false;
 }
 
@@ -922,24 +971,35 @@ void ClientConnect() {
 
         DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
 
-        for (int i = 0; i < ListOfPlayers.size(); i++)
+        for (int i = 0; i < ListOfPlayers.size(); i++) {
             SendPacket << sf::Int32(pacetStates::PlayerConnect) << ListOfPlayers[i];
+        }
 
         SendPacket << sf::Int32(pacetStates::Shooting) << (sf::Int32)Bullets.size();
         std::cout << "bullets: " << Bullets.size() << "\n";
-        for (int i = 0; i < Bullets.size(); i++) SendPacket << Bullets[i];
+        for (int i = 0; i < Bullets.size(); i++) {
+            SendPacket << Bullets[i];
+        }
 
         std::cout << "amount players = " << ConnectedPlayers.size() - 1 << '\n';
         SendPacket << sf::Int32(pacetStates::SetPos);
-        for (Player& x: ConnectedPlayers) SendPacket << x;
+        for (Player& x: ConnectedPlayers) {
+            SendPacket << x;
+        }
 
-        if (client->send(SendPacket) == sf::Socket::Done) std::cout << "SendPacket was sended\n";
-        else std::cout << "SendPacket didn't sended\n";
+        if (client->send(SendPacket) == sf::Socket::Done) {
+            std::cout << "SendPacket was sended\n";
+        } else {
+            std::cout << "SendPacket didn't sended\n";
+        }
 
         SendPacket.clear();
         SendPacket << LabyrinthLocation;
-        if (client->send(SendPacket) == sf::Socket::Done) std::cout << "Labyrinth walls sended\n";
-        else std::cout << "Labyrinth walls didn't sended\n";
+        if (client->send(SendPacket) == sf::Socket::Done) {
+            std::cout << "Labyrinth walls sended\n";
+        } else {
+            std::cout << "Labyrinth walls didn't sended\n";
+        }
         SendPacket.clear();
 
         mutex.unlock();
@@ -978,18 +1038,20 @@ void SelfDisconnect() {
 }
 
 void SendToClients(sf::Packet& pac, int ExceptOf) {
-    for (int i = 0; i < clients.size(); i++)
+    for (int i = 0; i < clients.size(); i++) {
         if (i != ExceptOf && clients[i]->send(pac) != sf::Socket::Done) {}
+    }
 }
 
 void funcOfHost() {
     std::cout << "Server turn on\n";
     while (HostFuncRun) {
         if (selector.wait(sf::seconds(1))) {
-            if (selector.isReady(listener)) ClientConnect();
-            else
-                for (int i = 0; i < clients.size(); i++)
-                    if (selector.isReady(*clients[i]) && clients[i]->receive(ReceivePacket) == sf::Socket::Done)
+            if (selector.isReady(listener)) {
+                ClientConnect();
+            } else {
+                for (int i = 0; i < clients.size(); i++) {
+                    if (selector.isReady(*clients[i]) && clients[i]->receive(ReceivePacket) == sf::Socket::Done) {
                         while (!ReceivePacket.endOfPacket()) {
                             ReceivePacket >> packetState;
                             switch (packetState) {
@@ -1021,10 +1083,13 @@ void funcOfHost() {
                                     SendToClients(SendPacket, i);
                                     SendPacket.clear();
                                     mutex.unlock();
-                                    }
                                     break;
+                                }
                             }
                         }
+                    }
+                }
+            }
         }
     }
     std::cout << "Server turn off\n";
@@ -1032,8 +1097,8 @@ void funcOfHost() {
 
 void funcOfClient() {
     while (ClientFuncRun) {
-        if (selector.wait(sf::seconds(1)))
-            if (selector.isReady(MySocket) && MySocket.receive(ReceivePacket) == sf::Socket::Done)
+        if (selector.wait(sf::seconds(1))) {
+            if (selector.isReady(MySocket) && MySocket.receive(ReceivePacket) == sf::Socket::Done) {
                 while (!ReceivePacket.endOfPacket()) {
                     ReceivePacket >> packetState;
                     switch (packetState) {
@@ -1060,16 +1125,19 @@ void funcOfClient() {
                             std::cout << "Labyrinth receive\n";
                             break;
                         case pacetStates::PlayerPos:
-                            for (int i = 0; i < ConnectedPlayers.size(); i++) 
+                            for (int i = 0; i < ConnectedPlayers.size(); i++) {
                                 if (i != ComputerID)
                                     ReceivePacket >> ConnectedPlayers[i];
                                 else {
                                     Point tempPoint;
                                     ReceivePacket >> tempPoint;
                                 }
+                            }
                             break;
                         case pacetStates::SetPos:
-                            for (Player& x: ConnectedPlayers) ReceivePacket >> x;
+                            for (Player& x: ConnectedPlayers) {
+                                ReceivePacket >> x;
+                            }
                             player.setPosition(ConnectedPlayers[ComputerID].getPosition());
                             GameView.setCenter(player.getPosition());
                             break;
@@ -1087,5 +1155,7 @@ void funcOfClient() {
                         }
                     }
                 }
+            }
+        }
     }
 }

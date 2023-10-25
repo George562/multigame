@@ -22,6 +22,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, FrameAmount, frameSize, duration);
+        setSize(animation->getGlobalSize());
         animation->play();
     };
 };

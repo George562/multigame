@@ -58,11 +58,11 @@ public:
     virtual void move(Location* location) {
         float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), 0.0167f) * 60.f;
         sf::Vector2f dist = target - getPosition();
-        sf::Vector2f VelocityTarget = {std::max(std::min(MaxVelocity * VelocityBuff, dist.x), -MaxVelocity * VelocityBuff),
-                                       std::max(std::min(MaxVelocity * VelocityBuff, dist.y), -MaxVelocity * VelocityBuff)};
+        sf::Vector2f VelocityTarget = {std::clamp(dist.x, -MaxVelocity * VelocityBuff, MaxVelocity * VelocityBuff),
+                                       std::clamp(dist.y, -MaxVelocity * VelocityBuff, MaxVelocity * VelocityBuff)};
         sf::Vector2f Vdist = VelocityTarget - Velocity;
-        sf::Vector2f Direction = {std::max(std::min(Acceleration, Vdist.x), -Acceleration),
-                                  std::max(std::min(Acceleration, Vdist.y), -Acceleration)};
+        sf::Vector2f Direction = {std::clamp(Vdist.x, -Acceleration, Acceleration),
+                                  std::clamp(Vdist.y, -Acceleration, Acceleration)};
         Velocity += Direction * ElapsedTimeAsSecond;
 
         sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, *this, Velocity * ElapsedTimeAsSecond);
@@ -75,7 +75,11 @@ public:
         LastMoveCheck = localClock->getElapsedTime();
     };
 
-    virtual void UpdateState() {};
+    virtual void UpdateState() {
+        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        LastStateCheck = localClock->getElapsedTime();
+    }
 
     void SetAnimation(sf::Texture& texture, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
         if (animation != nullptr) {
@@ -91,17 +95,15 @@ public:
 
     virtual void setTarget(sf::Vector2f target) { this->target = target; }
 
-    void AddItem(Item* item);
+    void AddItem(Item* item) {
+        inventory.addToDropable(item);
+        inventory.addToEquip(item);
+        inventory.addToKey(item);
+        inventory.addToSafe(item);
+    }
 };
 #pragma pack(pop)
 
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
-
-void Creature::AddItem(Item* item) {
-    inventory.addToDropable(item);
-    inventory.addToEquip(item);
-    inventory.addToKey(item);
-    inventory.addToSafe(item);
-}
