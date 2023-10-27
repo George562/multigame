@@ -70,8 +70,8 @@ Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
 Player player;
 std::vector<Player> ConnectedPlayers;
 
-sf::Shader MapShader;
-sf::RenderStates MapStates(&MapShader);
+sf::Shader MapShader, PlayerShader;
+sf::RenderStates MapStates(&MapShader), PlayerStates(&PlayerShader);
 
 //////////////////////////////////////////////////////////// Chat
 Chat chat;
@@ -513,14 +513,15 @@ void init() {
     FightMusic2.setVolume(20);
 
     // Load locations
-    WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
-    // MainMenuLocation.LoadFromFile("sources/locations/debugLocation.txt");
+    WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");    // MainMenuLocation.LoadFromFile("sources/locations/debugLocation.txt");
     MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
 
+    // Load shaders
     MapShader.loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
-    MapShader.setUniform("current", sf::Shader::CurrentTexture);
     MapShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
     MapShader.setUniform("u_playerRadius", player.Radius);
+
+    PlayerShader.loadFromFile("sources/shaders/player.vert", "sources/shaders/player.frag");
 
     loadTextures();
     loadItemTextures();
@@ -794,6 +795,8 @@ void MainLoop() {
         MapShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
         MapShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
         MapShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+
+        PlayerShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }
