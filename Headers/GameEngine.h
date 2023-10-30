@@ -177,20 +177,16 @@ void draw() {
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
             portal.setPosition(CurLocation->objects[i].pos);
-            window.draw(portal, MapStates);
+            window.draw(portal);
         }
         if (CurLocation->objects[i].id == Tiles::box) {
             BoxRect.setPosition(CurLocation->objects[i].pos);
-            window.draw(BoxRect, MapStates);
+            window.draw(BoxRect);
         }
     }
 
     for (sf::Drawable* d: DrawableStuff) {
-        if (d == static_cast<sf::Drawable*>(&player) ){
-            window.draw(*d, MapStates);
-        } else {
-            window.draw(*d, MapStates);
-        }
+        window.draw(*d);
     }
 
     for (int i = 0; i < Bullets.size(); i++) {
@@ -520,12 +516,18 @@ void init() {
     loadFonts();
     loadShaders();
 
-    portal.setAnimation(PortalAnimation2Texture, 9, 1, sf::seconds(1));
+    portal.setAnimation(PortalAnimation2Texture, 9, 1, sf::seconds(1), &PortalShader);
     portal.setSize(170.f, 320.f);
-    player.setAnimation(PlayerTexture, 1, 1, sf::seconds(1));
+    player.setAnimation(PlayerTexture, 1, 1, sf::seconds(1), &PlayerShader);
 
     MapShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
     MapShader.setUniform("u_playerRadius", player.Radius);
+
+    PlayerShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
+    PlayerShader.setUniform("u_playerRadius", player.Radius);
+
+    PortalShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
+    PortalShader.setUniform("u_playerRadius", player.Radius);
 
     IPPanel.setTexture(YellowPanelTexture);
     ListOfPlayers.setTexture(SteelFrameTexture);
@@ -795,8 +797,15 @@ void MainLoop() {
         MapShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
         MapShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
         MapShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
-
+        
+        PlayerShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
         PlayerShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+        PlayerShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+
+        PortalShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+        PortalShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+        PortalShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }

@@ -76,7 +76,7 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
 
-    setAnimation(*itemTextureName[id], 1, 1, sf::seconds(1));
+    setAnimation(*itemTextureName[id], 1, 1, sf::seconds(1), &MapShader);
     setSize(animation->getGlobalSize());
 }
 
@@ -98,7 +98,7 @@ bool Item::isActivated(Circle& player, sf::Event& event) {
 }
 
 void Item::dropTo(sf::Vector2f pos) {
-    setAnimation(*pickupItemTextureName[id], 1, 1, sf::seconds(1));
+    setAnimation(*pickupItemTextureName[id], 1, 1, sf::seconds(1), &MapShader);
     setPosition(pos);
     isInInventory = false;
 }

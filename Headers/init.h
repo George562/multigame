@@ -130,11 +130,13 @@ void loadFonts() {
 
 //////////////////////////////////////////////////////////// Shaders
 sf::Shader MapShader,
-           PlayerShader;
+           PlayerShader,
+           PortalShader;
 
 void loadShaders() {
     MapShader    .loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
     PlayerShader .loadFromFile("sources/shaders/player.vert", "sources/shaders/player.frag");
+    PortalShader .loadFromFile("sources/shaders/portal.vert", "sources/shaders/portal.frag");
 }
 
 //////////////////////////////////////////////////////////// States

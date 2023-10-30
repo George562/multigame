@@ -67,7 +67,7 @@ void Animation::draw(sf::RenderTarget& target, sf::RenderStates states) const {
         )
     );
     states.transform *= getTransform();
-    // states.shader = shader;
+    states.shader = shader;
     target.draw(sprite, states);
 }
 

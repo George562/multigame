@@ -17,11 +17,11 @@ public:
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         target.draw(*animation, states);
     }
-    void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration) {
+    void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader *shader = nullptr) {
         if (animation != nullptr) {
             delete animation;
         }
-        animation = new Animation(texture, FrameAmount, maxLevel, duration);
+        animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
         setSize(animation->getGlobalSize());
         animation->play();
     };
