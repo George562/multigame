@@ -38,12 +38,8 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
-//////////////////////////////////////////////////////////// Music
-sf::Music MainMenuMusic;
-sf::Music FightMusic1, FightMusic2;
-
 //////////////////////////////////////////////////////////// Animation
-Animation animation(ScottpilgrimTexture, 8, {108, 140}, sf::seconds(1));
+Animation animation(ScottPilgrimTexture, 8, 2, sf::seconds(1));
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
@@ -66,12 +62,14 @@ sf::Sprite BoxRect;
 Location* CurLocation = nullptr;
 Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
 
+void loadLocations() {
+    WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
+    MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
+}
+
 //////////////////////////////////////////////////////////// Players
 Player player;
 std::vector<Player> ConnectedPlayers;
-
-sf::Shader MapShader, PlayerShader;
-sf::RenderStates MapStates(&MapShader), PlayerStates(&PlayerShader);
 
 //////////////////////////////////////////////////////////// Chat
 Chat chat;
@@ -235,7 +233,11 @@ void drawWalls() {
             }
             if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
-                WallRect.setTextureRect({sf::Vector2i{0, 0}, static_cast<sf::Vector2i>(CurLocation->wallsRect[i][j].getSize())});
+                WallRect.setTextureRect(sf::IntRect(
+                        (WallTexture.getSize().x - CurLocation->wallsRect[i][j].Width) * random(sf::Vector2f(i, j)),
+                        (WallTexture.getSize().y - CurLocation->wallsRect[i][j].Height) * random(sf::Vector2f(j, i)),
+                        CurLocation->wallsRect[i][j].Width,
+                        CurLocation->wallsRect[i][j].Height));
                 window.draw(WallRect, MapStates);
             }
         }
@@ -353,7 +355,7 @@ void LevelGenerate(int n, int m) {
 
     for (int i = 0; i < 5; i++) {
         Enemies.push_back(new DistortedScientist());
-        Enemies.push_back(new ScottPiligrim());
+        Enemies.push_back(new ScottPilgrim());
         Enemies.push_back(new RamonaFlowers());
     }
 
@@ -461,38 +463,40 @@ void CreateImage() {
 void init() {
     setlocale(LC_ALL, "rus");
 
-    std::cout << "size of Animation       = " << sizeof(Animation) << '\n';
-    std::cout << "size of Button          = " << sizeof(Button) << '\n';
-    std::cout << "size of Panel           = " << sizeof(Panel) << '\n';
-    std::cout << "size of Chat            = " << sizeof(Chat) << '\n';
-    std::cout << "size of Inventory       = " << sizeof(Inventory) << '\n';
-    std::cout << "size of Item            = " << sizeof(Item) << '\n';
-    std::cout << "size of Location        = " << sizeof(Location) << '\n';
-    std::cout << "size of Scale<float>    = " << sizeof(Scale<int>) << '\n';
-    std::cout << "size of PlacedText      = " << sizeof(PlacedText) << '\n';
-    std::cout << "size of Weapon          = " << sizeof(Weapon) << '\n';
-    std::cout << "size of Portal          = " << sizeof(Portal) << '\n';
-    std::cout << "size of Interactible    = " << sizeof(Interactible) << '\n';
-    std::cout << "size of Creature        = " << sizeof(Creature) << '\n';
-    std::cout << "size of Bullet          = " << sizeof(Bullet) << '\n';
-    std::cout << "size of Circle          = " << sizeof(Circle) << '\n';
-    std::cout << "size of Rect            = " << sizeof(Rect) << '\n';
-    std::cout << "size of sf::Clock       = " << sizeof(sf::Clock) << '\n';
-    std::cout << "size of sf::Drawable    = " << sizeof(sf::Drawable) << '\n';
-    std::cout << "size of sf::CircleShape = " << sizeof(sf::CircleShape) << '\n';
-    std::cout << "size of sf::Sprite      = " << sizeof(sf::Sprite) << '\n';
-    std::cout << "size of sf::Text        = " << sizeof(sf::Text) << '\n';
-    std::cout << "size of sf::Font        = " << sizeof(sf::Font) << '\n';
-    std::cout << "size of sf::Time        = " << sizeof(sf::Time) << '\n';
-    std::cout << "size of sf::String      = " << sizeof(sf::String) << '\n';
-    std::cout << "size of sf::Texture     = " << sizeof(sf::Texture) << '\n';
-    std::cout << "size of sf::Vector2f    = " << sizeof(sf::Vector2f) << '\n';
-    std::cout << "size of sf::Color       = " << sizeof(sf::Color) << '\n';
-    std::cout << "size of float           = " << sizeof(float) << '\n';
-    std::cout << "size of int             = " << sizeof(int) << '\n';
-    std::cout << "size of bool            = " << sizeof(bool) << '\n';
-    std::cout << "size of str             = " << sizeof(str) << '\n';
-    std::cout << "size of Bullet::Type    = " << sizeof(Bullet::Type) << '\n';
+    std::cout << "size of Animation        = " << sizeof(Animation) << '\n';
+    std::cout << "size of Button           = " << sizeof(Button) << '\n';
+    std::cout << "size of Panel            = " << sizeof(Panel) << '\n';
+    std::cout << "size of Chat             = " << sizeof(Chat) << '\n';
+    std::cout << "size of Inventory        = " << sizeof(Inventory) << '\n';
+    std::cout << "size of Item             = " << sizeof(Item) << '\n';
+    std::cout << "size of Location         = " << sizeof(Location) << '\n';
+    std::cout << "size of Scale<float>     = " << sizeof(Scale<int>) << '\n';
+    std::cout << "size of PlacedText       = " << sizeof(PlacedText) << '\n';
+    std::cout << "size of Weapon           = " << sizeof(Weapon) << '\n';
+    std::cout << "size of Portal           = " << sizeof(Portal) << '\n';
+    std::cout << "size of Interactible     = " << sizeof(Interactible) << '\n';
+    std::cout << "size of Creature         = " << sizeof(Creature) << '\n';
+    std::cout << "size of Bullet           = " << sizeof(Bullet) << '\n';
+    std::cout << "size of Circle           = " << sizeof(Circle) << '\n';
+    std::cout << "size of Rect             = " << sizeof(Rect) << '\n';
+    std::cout << "size of sf::Clock        = " << sizeof(sf::Clock) << '\n';
+    std::cout << "size of sf::Drawable     = " << sizeof(sf::Drawable) << '\n';
+    std::cout << "size of sf::CircleShape  = " << sizeof(sf::CircleShape) << '\n';
+    std::cout << "size of sf::Sprite       = " << sizeof(sf::Sprite) << '\n';
+    std::cout << "size of sf::Text         = " << sizeof(sf::Text) << '\n';
+    std::cout << "size of sf::Font         = " << sizeof(sf::Font) << '\n';
+    std::cout << "size of sf::Time         = " << sizeof(sf::Time) << '\n';
+    std::cout << "size of sf::String       = " << sizeof(sf::String) << '\n';
+    std::cout << "size of sf::Texture      = " << sizeof(sf::Texture) << '\n';
+    std::cout << "size of sf::Vector2f     = " << sizeof(sf::Vector2f) << '\n';
+    std::cout << "size of sf::Color        = " << sizeof(sf::Color) << '\n';
+    std::cout << "size of sf::Shader       = " << sizeof(sf::Shader) << '\n';
+    std::cout << "size of sf::RenderStates = " << sizeof(sf::RenderStates) << '\n';
+    std::cout << "size of float            = " << sizeof(float) << '\n';
+    std::cout << "size of int              = " << sizeof(int) << '\n';
+    std::cout << "size of bool             = " << sizeof(bool) << '\n';
+    std::cout << "size of str              = " << sizeof(str) << '\n';
+    std::cout << "size of Bullet::Type     = " << sizeof(Bullet::Type) << '\n';
 
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
@@ -501,31 +505,27 @@ void init() {
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     GameClock = new sf::Clock;
 
-    // Load music
-    MainMenuMusic.openFromFile("sources/music/MainMenuMusic.wav");
+    loadMusics();
     MainMenuMusic.setLoop(true);
-    MainMenuMusic.setVolume(20);
-
-    FightMusic1.openFromFile("sources/music/FightMusic1.wav");
-    FightMusic1.setVolume(20);
-
-    FightMusic2.openFromFile("sources/music/FightMusic2.wav");
-    FightMusic2.setVolume(20);
+    MainMenuMusic.setVolume(0);
+    FightMusic1.setVolume(0);
+    FightMusic2.setVolume(0);
 
     // Load locations
-    WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");    // MainMenuLocation.LoadFromFile("sources/locations/debugLocation.txt");
+    WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
     MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
-
-    // Load shaders
-    MapShader.loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
-    MapShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
-    MapShader.setUniform("u_playerRadius", player.Radius);
-
-    PlayerShader.loadFromFile("sources/shaders/player.vert", "sources/shaders/player.frag");
 
     loadTextures();
     loadItemTextures();
     loadFonts();
+    loadShaders();
+
+    portal.setAnimation(PortalAnimation2Texture, 9, 1, sf::seconds(1));
+    portal.setSize(170.f, 320.f);
+    player.setAnimation(PlayerTexture, 1, 1, sf::seconds(1));
+
+    MapShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
+    MapShader.setUniform("u_playerRadius", player.Radius);
 
     IPPanel.setTexture(YellowPanelTexture);
     ListOfPlayers.setTexture(SteelFrameTexture);
