@@ -53,8 +53,6 @@ public:
     bool isKeyItem = false;
     bool isInInventory = true;
 
-    sf::Texture* texture, *pickupTexture;
-
     Item(ItemID, int, bool = true, bool = true, bool = true, bool = false, bool = false);
 
     void setPosition(sf::Vector2f);
@@ -78,10 +76,7 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
 
-    texture = itemTextureName[id];
-    pickupTexture = pickupItemTextureName[id];
-
-    SetAnimation(*texture, 1, static_cast<sf::Vector2f>(texture->getSize()), sf::seconds(1));
+    setAnimation(*itemTextureName[id], 1, 1, sf::seconds(1), &MapShader);
     setSize(animation->getGlobalSize());
 }
 
@@ -103,7 +98,7 @@ bool Item::isActivated(Circle& player, sf::Event& event) {
 }
 
 void Item::dropTo(sf::Vector2f pos) {
-    SetAnimation(*pickupTexture, 1, static_cast<sf::Vector2f>(pickupTexture->getSize()), sf::seconds(1));
+    setAnimation(*pickupItemTextureName[id], 1, 1, sf::seconds(1), &MapShader);
     setPosition(pos);
     isInInventory = false;
 }

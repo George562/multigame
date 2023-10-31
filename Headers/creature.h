@@ -81,11 +81,11 @@ public:
         LastStateCheck = localClock->getElapsedTime();
     }
 
-    void SetAnimation(sf::Texture& texture, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) {
+    void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader *shader = nullptr) {
         if (animation != nullptr) {
             delete animation;
         }
-        animation = new Animation(texture, FrameAmount, frameSize, duration);
+        animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
         animation->setSize({Radius * 2.f, Radius * 2.f});
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();

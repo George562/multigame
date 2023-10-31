@@ -9,17 +9,17 @@
 class Animation : public sf::Drawable, public sf::Transformable {
 private:
     mutable sf::Sprite sprite;
+    int maxLevel, curLevel;
     sf::Clock* localClock;
     sf::Time duration;
     mutable sf::Time curTime;
-    sf::Vector2f frameSize;
     int frameAmount;
-    int animationLevel;
     bool isPlaying;
+    sf::Shader* shader;
 
 public:
     Animation();
-    Animation(sf::Texture& texture, int FrameAmount, sf::Vector2f frameSize, sf::Time duration);
+    Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
     void setTexture(sf::Texture& name);
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const;
 
@@ -43,24 +43,31 @@ Animation::Animation() {
     this->localClock = new sf::Clock;
     this->isPlaying = false;
     this->curTime = sf::Time::Zero;
-    animationLevel = 0;
+    curLevel = 0;
 }
 
-Animation::Animation(sf::Texture& texture, int FrameAmount, sf::Vector2f frameSize, sf::Time duration) : Animation() {
-    this->frameAmount = FrameAmount;
-    this->frameSize = frameSize;
-    this->duration = duration;
+Animation::Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader) : Animation() {
     this->sprite.setTexture(texture);
-    this->sprite.setTextureRect({0, 0, (int)frameSize.x, (int)frameSize.y});
+    this->frameAmount = FrameAmount;
+    this->maxLevel = maxLevel;
+    this->duration = duration;
+    this->shader = shader;
 }
 
 void Animation::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (isPlaying) {
         curTime = (curTime + localClock->restart()) % duration;
     }
-    sprite.setTextureRect({(int)frameSize.x * int((curTime / duration) * frameAmount), animationLevel * (int)frameSize.y,
-                           (int)frameSize.x, (int)frameSize.y});
+    sprite.setTextureRect(
+        sf::IntRect(
+            sprite.getTexture()->getSize().x * int((curTime / duration) * frameAmount) / frameAmount,
+            curLevel * sprite.getTexture()->getSize().y / maxLevel,
+            sprite.getTexture()->getSize().x / frameAmount,
+            sprite.getTexture()->getSize().y / maxLevel
+        )
+    );
     states.transform *= getTransform();
+    states.shader = shader;
     target.draw(sprite, states);
 }
 
@@ -83,17 +90,19 @@ void Animation::setTexture(sf::Texture& texture) {
 }
 
 void Animation::setSize(sf::Vector2f size) {
-    setScale(size.x / sprite.getTextureRect().width, size.y / sprite.getTextureRect().height);
+    setScale(size.x / getLocalSize().x, size.y / getLocalSize().y);
 }
 
 sf::Vector2f Animation::getGlobalSize() const {
-    return { sprite.getLocalBounds().width * getScale().x, sprite.getLocalBounds().height * getScale().y };
+    return sf::Vector2f(getScale().x * sprite.getTexture()->getSize().x / frameAmount,
+                        getScale().y * sprite.getTexture()->getSize().y / maxLevel);
 }
 
 sf::Vector2f Animation::getLocalSize() const {
-    return  {sprite.getLocalBounds().width, sprite.getLocalBounds().height };
+    return sf::Vector2f(sprite.getTexture()->getSize().x / frameAmount,
+                        sprite.getTexture()->getSize().y / maxLevel);
 }
 
 void Animation::setAnimationLevel(int level) {
-    animationLevel = level;
+    curLevel = level;
 }

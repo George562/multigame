@@ -76,7 +76,7 @@ sf::View MiniMapView({0, 0, (float)scw, (float)sch});
 sf::Clock* GameClock;
 
 //////////////////////////////////////////////////////////// Textures
-sf::Texture ScottpilgrimTexture,
+sf::Texture ScottPilgrimTexture,
             RamonaFlowersTexture,
             DistortedScientistTexture,
             PlayerTexture,
@@ -100,7 +100,7 @@ sf::Texture ScottpilgrimTexture,
             ;
 
 void loadTextures() {
-    ScottpilgrimTexture       .loadFromFile("sources/textures/scottpilgrim_multiple.png");
+    ScottPilgrimTexture       .loadFromFile("sources/textures/scottpilgrim_multiple.png");
     RamonaFlowersTexture      .loadFromFile("sources/textures/ramonaflowers_multiple.png");
     DistortedScientistTexture .loadFromFile("sources/textures/DistortedScientist.png");
     PlayerTexture             .loadFromFile("sources/textures/Player.png");
@@ -130,6 +130,30 @@ void loadFonts() {
     ljk_InkyFont.loadFromFile("sources/ljk_Inky Thin Pixels.otf");
 }
 
+//////////////////////////////////////////////////////////// Shaders
+sf::Shader MapShader,
+           PlayerShader,
+           PortalShader;
+
+void loadShaders() {
+    MapShader    .loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
+    PlayerShader .loadFromFile("sources/shaders/player.vert", "sources/shaders/player.frag");
+    PortalShader .loadFromFile("sources/shaders/portal.vert", "sources/shaders/portal.frag");
+}
+
+//////////////////////////////////////////////////////////// States
+sf::RenderStates MapStates(&MapShader), PlayerStates(&PlayerShader);
+
+//////////////////////////////////////////////////////////// Music
+sf::Music MainMenuMusic;
+sf::Music FightMusic1, FightMusic2;
+
+void loadMusics() {
+    MainMenuMusic .openFromFile("sources/music/MainMenuMusic.wav");
+    FightMusic1   .openFromFile("sources/music/FightMusic1.wav");
+    FightMusic2   .openFromFile("sources/music/FightMusic2.wav");
+}
+
 bool Rect::intersect(Circle& circle) {
     return LenOfVector(sf::Vector2f{std::max(std::abs(circle.PosX - (PosX + Width  / 2)) - Width / 2,  0.f),
                                     std::max(std::abs(circle.PosY - (PosY + Height / 2)) - Height / 2, 0.f)}) <= circle.Radius;
@@ -138,4 +162,8 @@ bool Rect::intersect(Circle& circle) {
 
 bool Circle::intersect(Rect& rect) {
     return rect.intersect(*this);
+}
+
+float random(sf::Vector2f v) {
+    return std::modf( std::abs( std::sin( v.x * 12.9898 + v.y * 78.233  ) ) * 43758.5453123, nullptr);
 }

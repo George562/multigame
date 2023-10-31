@@ -22,11 +22,11 @@ public:
         Money = rand() % 100;
         Velocity = {0, 0}; MaxVelocity = 4.f;
         Acceleration = MaxVelocity / 0.6f;
-        Radius = 60;
+        Radius = 60.f;
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
 
-        SetAnimation(DistortedScientistTexture, 1, {650, 635}, sf::seconds(1));
+        setAnimation(DistortedScientistTexture, 1, 1, sf::seconds(1), &MapShader);
 
         inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
@@ -41,10 +41,10 @@ public:
     }
 };
 
-// ScottPiligrim
-class ScottPiligrim : public Enemy {
+// ScottPilgrim
+class ScottPilgrim : public Enemy {
 public:
-    ScottPiligrim() : Enemy("Scott Piligrim") {
+    ScottPilgrim() : Enemy("Scott Pilgrim") {
         Health = {0, 20, 20}; HealthRecovery = 1;
         Mana = {0, 100, 100}; ManaRecovery = 1;
         ManaRecovery = 1;
@@ -52,11 +52,11 @@ public:
         Money = rand() % 100;
         Velocity = {0, 0}; MaxVelocity = 4.f;
         Acceleration = MaxVelocity / 0.6f;
-        Radius = 60;
+        Radius = 60.f;
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
 
-        SetAnimation(ScottpilgrimTexture, 8, {108, 140}, sf::seconds(1));
+        setAnimation(ScottPilgrimTexture, 8, 2, sf::seconds(1), &MapShader);
 
         inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
@@ -83,17 +83,17 @@ public:
         Money = rand() % 100;
         Velocity = {0, 0}; MaxVelocity = 4.f;
         Acceleration = MaxVelocity / 0.6f;
-        Radius = 60;
+        Radius = 60.f;
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
 
-        SetAnimation(RamonaFlowersTexture, 8, {125, 157}, sf::seconds(1));
+        setAnimation(RamonaFlowersTexture, 8, 2, sf::seconds(1), &MapShader);
 
         inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
         Name.ShowText = true;
     }
-    
+
     void move(Location* location) override {
         VelocityBuff = 1;
 
