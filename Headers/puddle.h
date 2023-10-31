@@ -8,10 +8,13 @@
 class Puddle : public Interactible {
 public:
     //Effect effect;
-    Puddle();
+    Puddle() {}
     void setFunction(void (*func)(void)) { function = func; }
     bool CanBeActivated(Circle&);
     bool isActivated(Circle&, sf::Event&);
+    
+    void setSize(float x, float y) { Rect::setSize(x, y); animation->setSize(sf::Vector2f(x, y)); }
+    void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
 
     void setPosition(float x, float y) { PosX = x; PosY = y; animation->setPosition(PosX, PosY); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
@@ -24,11 +27,6 @@ public:
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
-
-Puddle::Puddle() {
-    SetAnimation(PuddleTexture, 9, {100, 100}, sf::seconds(1));
-    animation->setSize(sf::Vector2f{90.f, 90.f});
-}
 
 bool Puddle::CanBeActivated(Circle& rect) {
     Width = animation->getGlobalSize().x;

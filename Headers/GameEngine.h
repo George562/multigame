@@ -355,7 +355,7 @@ void LevelGenerate(int n, int m) {
     FillFloorRectsThread.launch();
 
     LabyrinthLocation.AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
-    LabyrinthLocation.AddObject({Tiles::puddle, player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(1000.f, 500.f)});
+    LabyrinthLocation.AddObject({Tiles::puddle, player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)});
 
     for (int i = 0; i < Enemies.size(); i++) {
         delete Enemies[i];
@@ -423,6 +423,7 @@ void LoadMainMenu() {
         InterfaceStuff.push_back(&chat);
         
         InteractibeStuff.clear();
+        InteractibeStuff.push_back(&puddle);
 
         for (Item* &item: PickupStuff) {
             delete item;
@@ -452,7 +453,6 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&HpBar);
     InterfaceStuff.push_back(&chat);
     InteractibeStuff.push_back(&portal);
-    InteractibeStuff.push_back(&puddle);
 
     PickupStuff.push_back(new Item(ItemID::regenDrug, 1));
     DrawableStuff.push_back(PickupStuff[0]);
@@ -537,6 +537,8 @@ void init() {
     portal.setAnimation(PortalAnimation2Texture, 9, 1, sf::seconds(1), &PortalShader);
     portal.setSize(170.f, 320.f);
     player.setAnimation(PlayerTexture, 1, 1, sf::seconds(1), &PlayerShader);
+    puddle.setAnimation(PuddleTexture, 1, 1, sf::seconds(1), &MapShader);
+    puddle.setSize(90.f, 90.f);
 
     MapShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
     MapShader.setUniform("u_playerRadius", player.Radius);

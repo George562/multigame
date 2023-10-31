@@ -11,6 +11,7 @@ public:
     void setFunction(void (*func)(void)) { function = func; }
     bool CanBeActivated(Circle&);
     bool isActivated(Circle&, sf::Event&);
+    
     void setSize(float x, float y) { Rect::setSize(x, y); animation->setSize(sf::Vector2f(x, y)); }
     void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
 
