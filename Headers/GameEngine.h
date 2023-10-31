@@ -1,6 +1,7 @@
 #include "chat.h"
 #include "contextMenu.h"
 #include "portal.h"
+#include "puddle.h"
 #include "enemy.h"
 #include "player.h"
 #include "client.h"
@@ -29,7 +30,7 @@ sf::CircleShape circleShape;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
-sf::RectangleShape MMPortalRect, MMBoxRect;
+sf::RectangleShape MMPortalRect, MMBoxRect, MMPuddleRect;
 
 //////////////////////////////////////////////////////////// InterfaceStuff
 Bar<float> ManaBar, HpBar;
@@ -54,6 +55,9 @@ bool ClientFuncRun, HostFuncRun;
 
 //////////////////////////////////////////////////////////// Portal
 Portal portal;
+
+//////////////////////////////////////////////////////////// Puddle
+Puddle puddle;
 
 //////////////////////////////////////////////////////////// Box
 sf::Sprite BoxRect;
@@ -183,6 +187,10 @@ void draw() {
             BoxRect.setPosition(CurLocation->objects[i].pos);
             window.draw(BoxRect);
         }
+        if (CurLocation->objects[i].id == Tiles::puddle) {
+            puddle.setPosition(CurLocation->objects[i].pos);
+            window.draw(puddle, MapStates);
+        }
     }
 
     for (sf::Drawable* d: DrawableStuff) {
@@ -273,6 +281,10 @@ void drawMiniMap() {
             MMBoxRect.setPosition(CurLocation->objects[i].pos * ScaleParam);
             window.draw(MMBoxRect);
         }
+        if (CurLocation->objects[i].id == Tiles::puddle) {
+            MMPuddleRect.setPosition(CurLocation->objects[i].pos * ScaleParam);
+            window.draw(MMPuddleRect);
+        }
     }
 
     // draw players
@@ -343,6 +355,7 @@ void LevelGenerate(int n, int m) {
     FillFloorRectsThread.launch();
 
     LabyrinthLocation.AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
+    LabyrinthLocation.AddObject({Tiles::puddle, player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(1000.f, 500.f)});
 
     for (int i = 0; i < Enemies.size(); i++) {
         delete Enemies[i];
@@ -417,6 +430,10 @@ void LoadMainMenu() {
         PickupStuff.clear();
     });
 
+    puddle.setFunction([](){
+        player.getDamage(5.f);
+    });
+
     // Set cameras
     GameView.setCenter(player.getPosition());
     MiniMapView.setCenter(player.getPosition() * ScaleParam);
@@ -435,6 +452,7 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&HpBar);
     InterfaceStuff.push_back(&chat);
     InteractibeStuff.push_back(&portal);
+    InteractibeStuff.push_back(&puddle);
 
     PickupStuff.push_back(new Item(ItemID::regenDrug, 1));
     DrawableStuff.push_back(PickupStuff[0]);
@@ -593,6 +611,9 @@ void init() {
     
     MMBoxRect.setSize(sf::Vector2f{BoxRect.getGlobalBounds().width, BoxRect.getGlobalBounds().height} * ScaleParam);
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
+
+    MMPuddleRect.setSize(puddle.getSize() * ScaleParam);
+    MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
 
     LoadMainMenu();
 

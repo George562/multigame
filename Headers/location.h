@@ -6,6 +6,7 @@ using ObjectID = sf::Uint16;
 namespace Tiles {
     ObjectID box = 1;
     ObjectID portal = 2;
+    ObjectID puddle = 3;
 }
 
 ////////////////////////////////////////////////////////////

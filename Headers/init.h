@@ -75,7 +75,7 @@ sf::View MiniMapView({0, 0, (float)scw, (float)sch});
 
 sf::Clock* GameClock;
 
-//////////////////////////////////////////////////////////// Tetures
+//////////////////////////////////////////////////////////// Textures
 sf::Texture ScottPilgrimTexture,
             RamonaFlowersTexture,
             DistortedScientistTexture,
@@ -86,6 +86,7 @@ sf::Texture ScottPilgrimTexture,
             XButtonTexture,
             BoxTexture,
             floor3xTexture,
+            PuddleTexture,
 //////////////////////////////////////////////////////////// Panel Tetures
             GreenPanelTexture,
             GreenPanelPushedTexture,
@@ -109,6 +110,7 @@ void loadTextures() {
     XButtonTexture            .loadFromFile("sources/textures/XButton.png");
     BoxTexture                .loadFromFile("sources/textures/Box.png");
     floor3xTexture            .loadFromFile("sources/floor3x.png");
+    PuddleTexture             .loadFromFile("sources/textures/Puddle.png");
 
     GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
     GreenPanelPushedTexture  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
