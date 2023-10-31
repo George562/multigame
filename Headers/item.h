@@ -43,7 +43,7 @@ void loadItemTextures() {
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Item : public Interactible {
+class Item : public Interactable {
 public:
     ItemID id;
     int amount = 0;

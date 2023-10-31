@@ -19,7 +19,7 @@ float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated;
 screens::screens screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
-std::vector<Interactible*> InteractibeStuff;
+std::vector<Interactable*> InteractibeStuff;
 
 std::vector<Item*> PickupStuff;
 
@@ -421,7 +421,7 @@ void LoadMainMenu() {
         InterfaceStuff.push_back(&AmmoBar);
         InterfaceStuff.push_back(&WeaponNameText);
         InterfaceStuff.push_back(&chat);
-        
+
         InteractibeStuff.clear();
         InteractibeStuff.push_back(&puddle);
 
@@ -488,7 +488,7 @@ void init() {
     std::cout << "size of PlacedText       = " << sizeof(PlacedText) << '\n';
     std::cout << "size of Weapon           = " << sizeof(Weapon) << '\n';
     std::cout << "size of Portal           = " << sizeof(Portal) << '\n';
-    std::cout << "size of Interactible     = " << sizeof(Interactible) << '\n';
+    std::cout << "size of Interactable     = " << sizeof(Interactable) << '\n';
     std::cout << "size of Creature         = " << sizeof(Creature) << '\n';
     std::cout << "size of Bullet           = " << sizeof(Bullet) << '\n';
     std::cout << "size of Circle           = " << sizeof(Circle) << '\n';
@@ -685,7 +685,7 @@ void EventHandler() {
                 DeleteFromVector(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite));
             }
 
-            for (Interactible*& x: InteractibeStuff) {
+            for (Interactable*& x: InteractibeStuff) {
                 if (x->CanBeActivated(player)) {
                     if (x->isActivated(player, event)) {
                         break;
@@ -938,7 +938,7 @@ void MainLoop() {
             MouseBuffer = sf::Mouse::getPosition();
 
             if (screen == screens::Dungeon) {
-                if (Enemies.size() == 0 && !in(InteractibeStuff, (Interactible*)&portal)) {
+                if (Enemies.size() == 0 && !in(InteractibeStuff, (Interactable*)&portal)) {
                     InteractibeStuff.push_back(&portal);
                 }
             }
@@ -951,7 +951,7 @@ void MainLoop() {
 }
 
 bool IsSomeOneCanBeActivated() {
-    for (Interactible*& x: InteractibeStuff) {
+    for (Interactable*& x: InteractibeStuff) {
         if (x->CanBeActivated(player)) {
             return true;
         }

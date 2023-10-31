@@ -5,13 +5,12 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Portal : public Interactible {
+class Portal : public Interactable {
 public:
-    Portal() : Interactible() {}
+    Portal() : Interactable() {}
     void setFunction(void (*func)(void)) { function = func; }
-    bool CanBeActivated(Circle&);
     bool isActivated(Circle&, sf::Event&);
-    
+
     void setSize(float x, float y) { Rect::setSize(x, y); animation->setSize(sf::Vector2f(x, y)); }
     void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
 
@@ -26,12 +25,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-bool Portal::CanBeActivated(Circle& rect) {
-    Width = animation->getGlobalSize().x;
-    Height = animation->getGlobalSize().y;
-    return intersect(rect); }
-
-bool Portal::isActivated(Circle& rect, sf::Event& event) {
+bool Portal::isActivated(Circle& circle, sf::Event& event) {
     if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
         function();
         return true;

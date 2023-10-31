@@ -5,14 +5,13 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Puddle : public Interactible {
+class Puddle : public Interactable {
 public:
     //Effect effect;
     Puddle() {}
     void setFunction(void (*func)(void)) { function = func; }
-    bool CanBeActivated(Circle&);
     bool isActivated(Circle&, sf::Event&);
-    
+
     void setSize(float x, float y) { Rect::setSize(x, y); animation->setSize(sf::Vector2f(x, y)); }
     void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
 
@@ -27,12 +26,6 @@ public:
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
-
-bool Puddle::CanBeActivated(Circle& rect) {
-    Width = animation->getGlobalSize().x;
-    Height = animation->getGlobalSize().y;
-    return intersect(rect);
-}
 
 bool Puddle::isActivated(Circle& rect, sf::Event& event) {
     if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {

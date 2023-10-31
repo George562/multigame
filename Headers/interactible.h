@@ -5,15 +5,15 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Interactible : public Rect, public sf::Drawable {
+class Interactable : public Rect, public sf::Drawable {
 public:
     Animation* animation = nullptr;
     void (*function)(void);
 
-    Interactible() : Rect() {}
+    Interactable() : Rect() {}
     void setFunction(void (*func)(void)) { function = func; }
     virtual bool isActivated(Circle&, sf::Event&) { return false; }
-    virtual bool CanBeActivated(Circle&) { return false; }
+    virtual bool CanBeActivated(Circle& circle) { return intersect(circle); }
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         target.draw(*animation, states);
     }
