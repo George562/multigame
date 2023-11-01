@@ -28,19 +28,27 @@ using vvb = std::vector<vb>;
 
 Point dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
-namespace Fraction {
-    enum Fraction : sf::Uint8 {
+namespace fraction {
+    using fractionType = sf::Uint8;
+
+    enum : fractionType {
         Player,
         Enemy
     };
-    std::map<Fraction, std::set<Fraction>> Friendship{
+
+    std::map<fractionType, std::set<fractionType>> Friendship{
         {Player, {Player}},
         {Enemy, {Enemy}}
     };
+
+    bool friends(fractionType& left, fractionType& right) {
+        return Friendship[left].count(right);
+    }
 };
 
 namespace screens {
-    enum screens : sf::Uint8 {  // the types of screen
+    using screenType = sf::Uint8;
+    enum : screenType {  // the types of screen
         MainRoom,
         SetIP,
         Dungeon
@@ -48,7 +56,8 @@ namespace screens {
 };
 
 namespace pacetStates {
-    enum pacetStates : sf::Uint8 {
+    sf::Uint8 curState;
+    enum : sf::Uint8 {
         disconnect,         // client send to host
         PlayersAmount,      // to connecting client
         PlayerConnect,      // host sent to clients when someone connected

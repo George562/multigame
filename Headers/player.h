@@ -19,7 +19,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Player::Player() : Creature("Player", Fraction::Player) {
+Player::Player() : Creature("Player", fraction::Player) {
     Health = {0.f, MAX_HEALTH, MAX_HEALTH}; HealthRecovery = 10.f;
     Mana = {0.f, MAX_MANA, MAX_MANA}; ManaRecovery = 10.5f;
     Armor = {0.f, 0.f, 0.f};

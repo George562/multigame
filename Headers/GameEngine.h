@@ -17,7 +17,7 @@ sf::ContextSettings settings;
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated;
-screens::screens screen = screens::MainRoom;
+screens::screenType screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactable*> InteractibeStuff;
 
@@ -49,7 +49,7 @@ std::vector<Client*> clients;
 sf::SocketSelector selector;
 str ClientState, IPOfHost, MyIP, PacetData;
 Client MySocket; // this computer socket
-sf::Int32 packetState, ComputerID;
+sf::Int32 ComputerID;
 sf::Mutex mutex;
 bool ClientFuncRun, HostFuncRun;
 
@@ -147,7 +147,7 @@ Button HostButton("Host", [](){
 Button EscapeButton("Exit", [](){
     if (HostFuncRun) {
         mutex.lock();
-        SendPacket << sf::Int32(pacetStates::disconnect);
+        SendPacket << pacetStates::disconnect;
         SendToClients(SendPacket);
         SendPacket.clear();
         mutex.unlock();
@@ -630,7 +630,7 @@ void EventHandler() {
         if (chat.InputText(event)) {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
                 mutex.lock();
-                SendPacket << sf::Int32(pacetStates::ChatEvent) << chat.Last();
+                SendPacket << pacetStates::ChatEvent << chat.Last();
                 if (HostFuncRun) {
                     SendToClients(SendPacket);
                 } else if (ClientFuncRun) {
@@ -760,8 +760,8 @@ void EventHandler() {
                                 if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
                                     MySocket.receive(ReceivePacket) == sf::Socket::Done) {
                                     while (!ReceivePacket.endOfPacket()) {
-                                        ReceivePacket >> packetState;
-                                        switch (packetState) {
+                                        ReceivePacket >> pacetStates::curState;
+                                        switch (pacetStates::curState) {
                                             case pacetStates::PlayersAmount:
                                                 ReceivePacket >> ComputerID;
                                                 std::cout << "My ID = " << ComputerID << '\n';
@@ -801,12 +801,12 @@ void updateBullets() {
             Bullets.erase(Bullets.begin() + i--);
         } else {
             Bullets[i].move(CurLocation);
-            if (Fraction::Friendship[Bullets[i].fromWho].count(player.fraction) == 0 && player.intersect(Bullets[i])) {
+            if (!fraction::friends(Bullets[i].fromWho, player.fraction) && player.intersect(Bullets[i])) {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
             for (Enemy* &enemy: Enemies) {
-                if (Fraction::Friendship[Bullets[i].fromWho].count(enemy->fraction) == 0 && enemy->intersect(Bullets[i])) {
+                if (!fraction::friends(Bullets[i].fromWho, enemy->fraction) && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
                 }
@@ -877,7 +877,7 @@ void MainLoop() {
 
             if (HostFuncRun) {
                 mutex.lock();
-                SendPacket << sf::Int32(pacetStates::PlayerPos);
+                SendPacket << pacetStates::PlayerPos;
                 for (Player& x: ConnectedPlayers) {
                     SendPacket << x;
                 }
@@ -898,7 +898,7 @@ void MainLoop() {
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
                 mutex.lock();
-                SendPacket << sf::Int32(pacetStates::Shooting) << (int)Bullets.size() - wasBulletsSize;
+                SendPacket << pacetStates::Shooting << (int)Bullets.size() - wasBulletsSize;
                 for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
                     SendPacket << Bullets[wasBulletsSize];
                 }
@@ -916,7 +916,7 @@ void MainLoop() {
             if (HostFuncRun || ClientFuncRun) {
                 ConnectedPlayers[ComputerID].setPosition(player.getPosition());
                 mutex.lock();
-                SendPacket << sf::Int32(pacetStates::PlayerPos);
+                SendPacket << pacetStates::PlayerPos;
                 if (HostFuncRun) {
                     for (Player& x: ConnectedPlayers) {
                         SendPacket << x;
@@ -989,7 +989,7 @@ void ClientConnect() {
         mutex.lock();
 
         str ConnectedClientIP = (*client).getRemoteAddress().toString();
-        SendPacket << sf::Int32(pacetStates::PlayerConnect) << ConnectedClientIP;
+        SendPacket << pacetStates::PlayerConnect << ConnectedClientIP;
         SendToClients(SendPacket);
         SendPacket.clear();
 
@@ -1002,22 +1002,22 @@ void ClientConnect() {
 
         ConnectedPlayers.push_back(*(new Player()));
         ConnectedPlayers[ConnectedPlayers.size() - 1].setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
-        SendPacket << sf::Int32(pacetStates::PlayersAmount) << (sf::Int32)ConnectedPlayers.size() - 1;
+        SendPacket << pacetStates::PlayersAmount << (sf::Int32)ConnectedPlayers.size() - 1;
 
         DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
 
         for (int i = 0; i < ListOfPlayers.size(); i++) {
-            SendPacket << sf::Int32(pacetStates::PlayerConnect) << ListOfPlayers[i];
+            SendPacket << pacetStates::PlayerConnect << ListOfPlayers[i];
         }
 
-        SendPacket << sf::Int32(pacetStates::Shooting) << (sf::Int32)Bullets.size();
+        SendPacket << pacetStates::Shooting << (sf::Int32)Bullets.size();
         std::cout << "bullets: " << Bullets.size() << "\n";
         for (int i = 0; i < Bullets.size(); i++) {
             SendPacket << Bullets[i];
         }
 
         std::cout << "amount players = " << ConnectedPlayers.size() - 1 << '\n';
-        SendPacket << sf::Int32(pacetStates::SetPos);
+        SendPacket << pacetStates::SetPos;
         for (Player& x: ConnectedPlayers) {
             SendPacket << x;
         }
@@ -1051,7 +1051,7 @@ void ClientDisconnect(int i) {
     
     std::cout << "amount of clients = " << clients.size() << "\n";
     mutex.lock();
-    SendPacket << sf::Int32(pacetStates::PlayerDisconnect) << i;
+    SendPacket << pacetStates::PlayerDisconnect << i;
     SendToClients(SendPacket);
     SendPacket.clear();
     mutex.unlock();
@@ -1063,7 +1063,7 @@ void SelfDisconnect() {
     screen = screens::MainRoom;
     LoadMainMenu();
     mutex.lock();
-    SendPacket << sf::Int32(pacetStates::disconnect);
+    SendPacket << pacetStates::disconnect;
     MySocket.send(SendPacket);
     SendPacket.clear();
     mutex.unlock();
@@ -1088,8 +1088,8 @@ void funcOfHost() {
                 for (int i = 0; i < clients.size(); i++) {
                     if (selector.isReady(*clients[i]) && clients[i]->receive(ReceivePacket) == sf::Socket::Done) {
                         while (!ReceivePacket.endOfPacket()) {
-                            ReceivePacket >> packetState;
-                            switch (packetState) {
+                            ReceivePacket >> pacetStates::curState;
+                            switch (pacetStates::curState) {
                                 case pacetStates::disconnect:
                                     std::cout << "client self disconect\n";
                                     ClientDisconnect(i--);
@@ -1101,7 +1101,7 @@ void funcOfHost() {
                                     ReceivePacket >> PacetData;
                                     chat.addLine(PacetData);
                                     mutex.lock();
-                                    SendPacket << sf::Int32(pacetStates::ChatEvent) << PacetData;
+                                    SendPacket << pacetStates::ChatEvent << PacetData;
                                     SendToClients(SendPacket, i);
                                     SendPacket.clear();
                                     mutex.unlock();
@@ -1109,7 +1109,7 @@ void funcOfHost() {
                                 case pacetStates::Shooting: {
                                     mutex.lock();
                                     int i; ReceivePacket >> i;
-                                    SendPacket << sf::Int32(pacetStates::Shooting) << i;
+                                    SendPacket << pacetStates::Shooting << i;
                                     for (; i > 0; i--) {
                                         ReceivePacket >> tempBullet;
                                         Bullets.push_back(tempBullet);
@@ -1135,8 +1135,8 @@ void funcOfClient() {
         if (selector.wait(sf::seconds(1))) {
             if (selector.isReady(MySocket) && MySocket.receive(ReceivePacket) == sf::Socket::Done) {
                 while (!ReceivePacket.endOfPacket()) {
-                    ReceivePacket >> packetState;
-                    switch (packetState) {
+                    ReceivePacket >> pacetStates::curState;
+                    switch (pacetStates::curState) {
                         case pacetStates::disconnect:
                             SelfDisconnect();
                             break;

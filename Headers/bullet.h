@@ -23,13 +23,13 @@ struct Bullet : public Circle {
     int penetration;
     sf::Vector2f Velocity;
     Scale<float> ExplosionRadius = {1, 12, 1};
-    Fraction::Fraction fromWho;
+    fraction::fractionType fromWho;
     sf::Clock* localClock;
     sf::Time timer;
     sf::Color color;
 
     Bullet() {}
-    Bullet(Fraction::Fraction f, sf::Vector2f pos, sf::Vector2f v, float dmg, int penetr = COMMON_BULLET_PENETRATION, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
+    Bullet(fraction::fractionType f, sf::Vector2f pos, sf::Vector2f v, float dmg, int penetr = COMMON_BULLET_PENETRATION, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
         fromWho = f;
         PosX = pos.x; PosY = pos.y;
         Velocity = v;

@@ -9,7 +9,7 @@
 #pragma pack(push, 1)
 class Creature : public Circle, public sf::Drawable {
 public:
-    Fraction::Fraction fraction;
+    fraction::fractionType fraction;
     Scale<float> Health;
     Scale<float> Mana;
     float ManaRecovery, HealthRecovery;
@@ -27,7 +27,7 @@ public:
     bool dropInventory;
     Inventory inventory;
 
-    Creature(str name, Fraction::Fraction f) : Circle() {
+    Creature(str name, fraction::fractionType f) : Circle() {
         Name.setString(name);
         Name.setCharacterSize(25);
         Name.setOutlineThickness(2);
