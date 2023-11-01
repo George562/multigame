@@ -94,16 +94,16 @@ bool Chat::InputText(sf::Event& event) {
             Entered();
 
         if (event.key.code == sf::Keyboard::BackSpace && cursorPos > 0)
-            lines[start].setString(lines[start].getString().substr(0, cursorPos) + lines[start].getString().substr(cursorPos--, lines[start].TextSize()));
+            lines[start].setString(lines[start].getString().substring(0, cursorPos) + lines[start].getString().substring(cursorPos--, lines[start].TextSize()));
         if (event.key.code == sf::Keyboard::Delete && cursorPos < lines[start].TextSize())
-            lines[start].setString(lines[start].getString().substr(0, cursorPos) + lines[start].getString().substr(cursorPos + 1, lines[start].TextSize()));
+            lines[start].setString(lines[start].getString().substring(0, cursorPos) + lines[start].getString().substring(cursorPos + 1, lines[start].TextSize()));
         if (event.key.code == sf::Keyboard::Left && cursorPos > 0) cursorPos--;
         if (event.key.code == sf::Keyboard::Right && cursorPos < lines[start].TextSize()) cursorPos++;
         if (event.key.code == sf::Keyboard::Home) cursorPos = 0;
         if (event.key.code == sf::Keyboard::End) cursorPos = lines[start].TextSize();
     }
     if (inputted) {
-        PlacedText tempText; tempText.setString(lines[start].getString().substr(0, cursorPos));
+        PlacedText tempText; tempText.setString(lines[start].getString().substring(0, cursorPos));
         tempText.setCharacterSize(CHARACTER_SIZE);
         cursor.setPosition(PosX + 5 + tempText.Width, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * len);
     }

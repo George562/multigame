@@ -136,7 +136,7 @@ void loadTextures() {
 sf::Font ljk_InkyFont;
 
 void loadFonts() {
-    ljk_InkyFont.loadFromFile("sources/ljk_Inky Thin Pixels.otf");
+    ljk_InkyFont.loadFromFile("sources/fonts/ljk_Inky Thin Pixels.otf");
 }
 
 //////////////////////////////////////////////////////////// Shaders

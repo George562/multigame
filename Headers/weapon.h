@@ -1,6 +1,5 @@
 #pragma once
 #include "bullet.h"
-#include "bar.h"
 
 #define M_PI_RAD M_PI / 180.f
 

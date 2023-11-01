@@ -5,6 +5,7 @@
 #include "enemy.h"
 #include "player.h"
 #include "client.h"
+#include "bar.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
@@ -567,8 +568,8 @@ void init() {
     std::cout << "IP: " << MyIP << '\n';
     
     EscapeButton.setCharacterSize(110);
-    IPPanel.setTextSize(80);
-    ListOfPlayers.setTextSize(60);
+    IPPanel.setCharacterSize(80);
+    ListOfPlayers.setCharacterSize(60);
 
     HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,     sch * 5 / 8);
     EscapeButton.setPosition    (scw / 2 -       EscapeButton.Width / 2,   sch * 5 / 8);
@@ -599,7 +600,7 @@ void init() {
     WeaponNameText.setFillColor(sf::Color(25, 192, 25, 160));
     WeaponNameText.setOutlineColor(sf::Color::Black);
 
-    ReloadWeaponText.text.setFillColor(sf::Color(255, 20, 20));
+    ReloadWeaponText.setFillColor(sf::Color(255, 20, 20));
     ReloadWeaponText.setCharacterSize(100);
 
     XButtonSprite.setTexture(XButtonTexture);
@@ -995,7 +996,7 @@ void ClientConnect() {
 
         std::cout << ConnectedClientIP << " connected\n";
         ListOfPlayers.addWord(ConnectedClientIP);
-        std::cout << "list of players:\n" << ListOfPlayers.getWord() << '\n';
+        std::cout << "list of players:\n" << (str)ListOfPlayers.getString() << '\n';
 
         clients.push_back(client);
         selector.add(*client);
