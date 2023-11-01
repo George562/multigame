@@ -1,3 +1,4 @@
+#include "bar.h"
 #include "chat.h"
 #include "contextMenu.h"
 #include "portal.h"
@@ -5,7 +6,6 @@
 #include "enemy.h"
 #include "player.h"
 #include "client.h"
-#include "bar.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
