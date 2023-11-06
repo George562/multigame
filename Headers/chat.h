@@ -1,5 +1,7 @@
 #pragma once
+#include "../SFML-2.5.1/include/SFML/Network.hpp"
 #include "text.h"
+#include "rect.h"
 
 #define SPACE_BETWEEN_LINES_IN_PIXELS 35
 #define CHARACTER_SIZE 27
@@ -12,7 +14,7 @@
 class Chat : public Rect, public sf::Drawable {
 public:
     std::vector<sf::Clock*> clocks;
-    std::map<str, void (*)(void)> commands;
+    std::map<sf::String, void (*)(void)> commands;
     PlacedText lines[11];
     int start, len;
     size_t cursorPos;
@@ -21,15 +23,15 @@ public:
     bool inputted;
     bool ChatEnable;
 
-    Chat();
+    Chat(int, int);
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
     bool InputText(sf::Event&);
     bool Entered();
-    void addLine(str);
+    void addLine(sf::String);
     void pushLine();
-    str Last() { return lines[(start + len - 1) % len].getString(); }
+    sf::String Last() { return lines[(start + len - 1) % len].getString(); }
 
-    void SetCommand(str CommandString, void (*CommandFunction)(void)) { commands[CommandString] = CommandFunction; }
+    void SetCommand(sf::String CommandString, void (*CommandFunction)(void)) { commands[CommandString] = CommandFunction; }
 };
 #pragma pack(pop)
 
@@ -37,7 +39,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Chat::Chat() : inputted(false), start(0), len(11) {
+Chat::Chat(int scw, int sch) : inputted(false), start(0), len(11) {
     PosX = 250; PosY = sch - SPACE_BETWEEN_LINES_IN_PIXELS * (len + 2);
     Width = scw - PosX * 2; Height = 35;
 
@@ -79,7 +81,7 @@ bool Chat::InputText(sf::Event& event) {
     if (!ChatEnable) return false;
     setlocale(LC_ALL, "rus");
 
-    str buffer;
+    std::string buffer;
     if (inputted && event.type == sf::Event::TextEntered && 32 <= event.text.unicode) {
         if (event.text.unicode <= 127)  buffer.push_back(event.text.unicode);
         else  buffer.push_back(event.text.unicode - 1072 - 32);
@@ -124,7 +126,7 @@ bool Chat::Entered() {
     return !inputted;
 }
 
-void Chat::addLine(str word) {
+void Chat::addLine(sf::String word) {
     std::swap(lines[start], lines[(start + 1) % len]);
     lines[start].setString(word);
     pushLine();

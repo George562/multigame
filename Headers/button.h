@@ -1,5 +1,7 @@
 #pragma once
+#include "../SFML-2.5.1/include/SFML/Network.hpp"
 #include "text.h"
+#include "rect.h"
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -15,7 +17,7 @@ public:
     void (*buttonFunction)(void);
 
     Button() {}
-    Button(str, void (*)(void));
+    Button(sf::String, void (*)(void));
 
     void setPosition(float, float);
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
@@ -25,7 +27,7 @@ public:
     void setSize(float, float);
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
 
-    void setWord(str word) { ButtonText.setString(word); ButtonText.setCenter(getCenter()); }
+    void setWord(sf::String word) { ButtonText.setString(word); ButtonText.setCenter(getCenter()); }
     void setTexture(sf::Texture&, sf::Texture&);
     void setCharacterSize(int size) { ButtonText.setCharacterSize(size); ButtonText.setCenter(getCenter()); }
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
@@ -38,7 +40,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Button::Button(str word, void (*foo)(void)) {
+Button::Button(sf::String word, void (*foo)(void)) {
     ButtonText.setCharacterSize(150);
     ButtonText.setFillColor(sf::Color(199, 199, 199));
     setWord(word);

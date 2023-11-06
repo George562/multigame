@@ -7,7 +7,7 @@ std::vector<std::vector<sf::Vector2f>> TheWayToPlayer;
 // Enemy
 class Enemy : public Creature {
 public:
-    Enemy(str name) : Creature(name, fraction::Enemy) {}
+    Enemy(sf::String name) : Creature(name, fraction::Enemy) {}
 };
 ////////////////////////////////////////////////////////////
 

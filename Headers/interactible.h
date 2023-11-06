@@ -1,5 +1,8 @@
 #pragma once
-#include "init.h"
+#include "animation.h"
+#include "rect.h"
+
+#define ActivationButton sf::Keyboard::X
 
 ////////////////////////////////////////////////////////////
 // Class

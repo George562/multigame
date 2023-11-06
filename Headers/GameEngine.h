@@ -1,9 +1,9 @@
-#include "bar.h"
+#include "enemy.h"
 #include "chat.h"
 #include "contextMenu.h"
+#include "bar.h"
 #include "portal.h"
 #include "puddle.h"
-#include "enemy.h"
 #include "player.h"
 #include "client.h"
 
@@ -40,15 +40,14 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
-//////////////////////////////////////////////////////////// Animation
-Animation animation(ScottPilgrimTexture, 8, 2, sf::seconds(1));
+//////////////////////////////////////////////////////////// Animations
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
 sf::Packet ReceivePacket, SendPacket;
 std::vector<Client*> clients;
 sf::SocketSelector selector;
-str ClientState, IPOfHost, MyIP, PacetData;
+std::string ClientState, IPOfHost, MyIP, PacetData;
 Client MySocket; // this computer socket
 sf::Int32 ComputerID;
 sf::Mutex mutex;
@@ -77,7 +76,7 @@ Player player;
 std::vector<Player> ConnectedPlayers;
 
 //////////////////////////////////////////////////////////// Chat
-Chat chat;
+Chat chat(scw, sch);
 
 //////////////////////////////////////////////////////////// Other stuff
 sf::Vector2i MouseBuffer;
@@ -354,7 +353,7 @@ void LevelGenerate(int n, int m) {
     MiniMapView.zoom(1 / MiniMapZoom);
     MiniMapZoom = 1;
 
-    LabyrinthLocation.GenerateLocation(n, m, player.getPosition());
+    LabyrinthLocation.GenerateLocation(n, m, player.getPosition() / float(size));
 
     FillFloorRectsThread.launch();
 
@@ -450,7 +449,6 @@ void LoadMainMenu() {
 
     DrawableStuff.clear();
     DrawableStuff.push_back(&player);
-    DrawableStuff.push_back(&animation);
     
     InterfaceStuff.clear();
     InterfaceStuff.push_back(&ManaBar);
@@ -513,7 +511,7 @@ void init() {
     std::cout << "size of float            = " << sizeof(float) << '\n';
     std::cout << "size of int              = " << sizeof(int) << '\n';
     std::cout << "size of bool             = " << sizeof(bool) << '\n';
-    std::cout << "size of str              = " << sizeof(str) << '\n';
+    std::cout << "size of sf::String              = " << sizeof(sf::String) << '\n';
     std::cout << "size of Bullet::Type     = " << sizeof(Bullet::Type) << '\n';
 
     window.setVerticalSyncEnabled(true);
@@ -553,16 +551,13 @@ void init() {
     PortalShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
     PortalShader.setUniform("u_playerRadius", player.Radius);
 
-    IPPanel.setTexture(YellowPanelTexture);
-    ListOfPlayers.setTexture(SteelFrameTexture);
+    IPPanel         .setTexture(YellowPanelTexture);
+    ListOfPlayers   .setTexture(SteelFrameTexture);
     
     EscapeButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
-    HostButton.setTexture(GreenPanelTexture, GreenPanelPushedTexture);
+    HostButton  .setTexture(GreenPanelTexture, GreenPanelPushedTexture);
 
     WallRect.setTexture(WallTexture);
-
-    animation.setPosition({800, 800});
-    animation.play();
 
     CurWeapon.looped = true;
 
@@ -571,14 +566,12 @@ void init() {
     std::cout << "IP: " << MyIP << '\n';
     
     EscapeButton.setCharacterSize(110);
-    IPPanel.setCharacterSize(80);
-    ListOfPlayers.setCharacterSize(60);
+    IPPanel.text.setCharacterSize(80);
+    ListOfPlayers.text.setCharacterSize(60);
 
-    HostButton.setPosition      (scw / 6 -       HostButton.Width / 4,     sch * 5 / 8);
-    EscapeButton.setPosition    (scw / 2 -       EscapeButton.Width / 2,   sch * 5 / 8);
+    EscapeButton.setCenter  (scw / 2, sch * 3 / 4);
 
-    IPPanel.setPosition         (scw / 2 -       IPPanel.Width / 2,        scw / 8    );
-    ListOfPlayers.setPosition   (scw / 2 -       ListOfPlayers.Width / 2,  scw / 16   );
+    ListOfPlayers.setCenter (scw / 2, sch / 4);
 
     MMPlayerCircle.setRadius(9);
     MMPlayerCircle.setFillColor(sf::Color(0, 180, 0));
@@ -622,10 +615,6 @@ void init() {
     MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
 
     LoadMainMenu();
-
-    chat.SetCommand("play", []{ animation.play(); });
-    chat.SetCommand("stop", []{ animation.stop(); });
-    chat.SetCommand("pause", []{ animation.pause(); });
 }
 
 void EventHandler() {
@@ -996,14 +985,14 @@ void ClientConnect() {
     if (listener.accept(*client) == sf::Socket::Done) {
         mutex.lock();
 
-        str ConnectedClientIP = (*client).getRemoteAddress().toString();
+        std::string ConnectedClientIP = (*client).getRemoteAddress().toString();
         SendPacket << pacetStates::PlayerConnect << ConnectedClientIP;
         SendToClients(SendPacket);
         SendPacket.clear();
 
         std::cout << ConnectedClientIP << " connected\n";
         ListOfPlayers.addWord(ConnectedClientIP);
-        std::cout << "list of players:\n" << (str)ListOfPlayers.getString() << '\n';
+        std::cout << "list of players:\n" << std::string(ListOfPlayers.text.getString()) << '\n';
 
         clients.push_back(client);
         selector.add(*client);
@@ -1157,7 +1146,7 @@ void funcOfClient() {
                         case pacetStates::PlayerDisconnect:
                             int index;
                             ReceivePacket >> index;
-                            std::cout << ListOfPlayers[index] << " disconnected\n";
+                            std::cout << std::string(ListOfPlayers[index]) << " disconnected\n";
                             if (index < ComputerID) ComputerID--;
                             ListOfPlayers.removeWord(index);
                             ConnectedPlayers.erase(ConnectedPlayers.begin() + index);
@@ -1172,7 +1161,7 @@ void funcOfClient() {
                                 if (i != ComputerID)
                                     ReceivePacket >> ConnectedPlayers[i];
                                 else {
-                                    Point tempPoint;
+                                    sf::Vector2i tempPoint;
                                     ReceivePacket >> tempPoint;
                                 }
                             }

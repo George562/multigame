@@ -27,7 +27,7 @@ public:
     bool dropInventory;
     Inventory inventory;
 
-    Creature(str name, fraction::fractionType f) : Circle() {
+    Creature(sf::String name, fraction::fractionType f) : Circle() {
         Name.setString(name);
         Name.setCharacterSize(25);
         Name.setOutlineThickness(2);

@@ -90,10 +90,10 @@ sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
     return sf::Vector2f{a.x * b.x, a.y * b.y};
 }
 
-sf::Packet& operator<<(sf::Packet& packet, Point& a) {
+sf::Packet& operator<<(sf::Packet& packet, sf::Vector2i& a) {
     return packet << a.x << a.y;
 }
-sf::Packet& operator>>(sf::Packet& packet, Point& a) {
+sf::Packet& operator>>(sf::Packet& packet, sf::Vector2i& a) {
     return packet >> a.x >> a.y;
 }
 

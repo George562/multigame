@@ -1,6 +1,11 @@
 #pragma once
 #include "init.h"
 
+using vb = std::vector<bool>;
+using vvb = std::vector<vb>;
+
+sf::Vector2i dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+
 using ObjectID = sf::Uint16;
 
 namespace Tiles {
@@ -34,8 +39,8 @@ public:
     void WallGenerator(float probability);
     void FindEnableTilesFrom(sf::Vector2f&);
     void FillWallsRect();
-    bool LoadFromFile(str FileName);
-    bool WriteToFile(str FileName);
+    bool LoadFromFile(sf::String FileName);
+    bool WriteToFile(sf::String FileName);
     void AddObject(LocationObject obj) { objects.push_back(obj); }
     void ClearSeenWalls() {
         SeenWalls.assign(walls.size(), vb(0));
@@ -65,7 +70,7 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
     sf::Clock timer;
     do {
         WallGenerator(0.48);
-        BuildWayFrom(RootPoint / (float)size);
+        BuildWayFrom(RootPoint);
         CounterOfGenerations++;
     } while (AmountOfEnableTiles < float(n * m) * 0.3f || AmountOfEnableTiles > float(n * m) * 0.7f);
     std::cout << "Location was generated in " << timer.getElapsedTime().asSeconds() << " seconds with total number of generations = "
@@ -75,17 +80,17 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
 void Location::BuildWayFrom(sf::Vector2f p) {
     FindEnableTilesFrom(p);
     Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
-    Point check;
+    sf::Vector2i check;
     bool todel;
     for (int i = 0; i < walls.size(); i++)
         for (int j = 0; j < walls[i].size(); j++) {
             if (!walls[i][j]) continue;
             
             todel = true;
-            check = Point{j, i / 2};
+            check = sf::Vector2i{j, i / 2};
             if (UsedAreaRect.contains(check.x, check.y) && EnableTiles[check.y][check.x])
                 todel = false;
-            check = (i % 2 == 0) ? Point{j, i / 2 - 1} : Point{j - 1, i / 2};
+            check = (i % 2 == 0) ? sf::Vector2i{j, i / 2 - 1} : sf::Vector2i{j - 1, i / 2};
             if (UsedAreaRect.contains(check.x, check.y) && EnableTiles[check.y][check.x])
                 todel = false;
             if (todel) walls[i][j] = false;
@@ -93,40 +98,6 @@ void Location::BuildWayFrom(sf::Vector2f p) {
 }
 
 void Location::WallGenerator(float probability) {
-    // auto gen = []() {
-    //     thread_local std::mt19937 rng{std::random_device()()};
-    //     thread_local std::uniform_real_distribution<float> distr(0, 100);
-    //     return distr(rng);
-    // };
-    // if (walls.size() == 0) return;
-
-    // walls[0].assign(m, true);
-    // walls[walls.size() - 1].assign(m, true);
-
-    // sf::Thread* thr[7];
-    // int from = 1, to = walls.size() / 8;
-    // for (int i = 0; i < 7;) {
-    //     thr[i] = new sf::Thread([&, to, from] {
-    //         for (int i = from; i < to; i++) {
-    //             for (int j = 0; j < walls[i].size(); j++)
-    //                 walls[i][j] = (gen() / 100 < probability);
-    //             if (i % 2 == 1)
-    //                 walls[i][0] = walls[i][m] = true;
-    //         }
-    //     });
-    //     thr[i++]->launch();
-    //     from = i * walls.size() / 8; to = (i + 1) * walls.size() / 8;
-    // }
-    // for (int i = from; i < to - 1; i++) {
-    //     for (int j = 0; j < walls[i].size(); j++)
-    //         walls[i][j] = (gen() / 100 < probability);
-    //     if (i % 2 == 1)
-    //         walls[i][0] = walls[i][m] = true;
-    // }
-    // ClearSeenWalls();
-    // for (int i = 0; i < 7; i++)
-    //     thr[i]->wait();
-    // FillWallsRect();
     walls[0].assign(m, true);
 
     for (int i = 1; i < walls.size() - 1; i++) {
@@ -146,8 +117,8 @@ void Location::WallGenerator(float probability) {
 void Location::FindEnableTilesFrom(sf::Vector2f& p) {
     EnableTiles.assign(n, vb(m, false));
     AmountOfEnableTiles = 0;
-    std::queue<Point> q; q.push(Point{int(p.x), int(p.y)});
-    Point cur, check;
+    std::queue<sf::Vector2i> q; q.push(sf::Vector2i{int(p.x), int(p.y)});
+    sf::Vector2i cur, check;
     Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
     while (!q.empty()) {
         cur = q.front(); q.pop();
@@ -181,7 +152,7 @@ void Location::FillWallsRect() {
             } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
 }
 
-bool Location::LoadFromFile(str FileName) {
+bool Location::LoadFromFile(sf::String FileName) {
     std::ifstream file(FileName);
     if (!file.is_open()) return false;
     file >> n >> m;
@@ -204,7 +175,7 @@ bool Location::LoadFromFile(str FileName) {
     return true;
 }
 
-bool Location::WriteToFile(str FileName) {
+bool Location::WriteToFile(sf::String FileName) {
     std::ofstream file(FileName);
     file << n << ' ' << m << '\n';
     for (int i = 0; i < walls.size(); i++) {
@@ -219,6 +190,10 @@ bool Location::WriteToFile(str FileName) {
     file.close();
     return true;
 }
+
+////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////
 
 sf::Packet& operator>>(sf::Packet& packet, Location& loc) {
     packet >> loc.n >> loc.m;
@@ -253,8 +228,8 @@ sf::Packet& operator<<(sf::Packet& packet, Location& loc) {
 
 void FindTheWay(Location* where, sf::Vector2f from, sf::Vector2f to, std::vector<sf::Vector2f>& theWay) {
     std::vector<std::vector<sf::Vector2i>> place(where->n, std::vector<sf::Vector2i>(where->m, {-1, -1}));
-    std::queue<Point> q; q.push(Point{int(from.x / size), int(from.y / size)});
-    Point cur, check;
+    std::queue<sf::Vector2i> q; q.push(sf::Vector2i{int(from.x / size), int(from.y / size)});
+    sf::Vector2i cur, check;
     Rect UsedAreaRect{0, 0, float(where->m - 1), float(where->n - 1)};
     vvb used(where->n, vb(where->m, false));
     while (!q.empty()) {
@@ -299,8 +274,8 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
     if (theWays.size() != location->n && (theWays.size() == 0 || theWays[0].size() != location->m)) {
         theWays.assign(location->n, std::vector<sf::Vector2f>(location->m, to));
     }
-    std::queue<Point> q; q.push(Point{int(to.x / size), int(to.y / size)});
-    Point cur, check;
+    std::queue<sf::Vector2i> q; q.push(sf::Vector2i{int(to.x / size), int(to.y / size)});
+    sf::Vector2i cur, check;
     Rect UsedAreaRect{0, 0, float(location->m - 1), float(location->n - 1)};
     vvb used(location->n, vb(location->m, false));
     while (!q.empty()) {
@@ -343,3 +318,44 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
     if (check.y >= 0 && !location->walls[check.y * 2 + 2][check.x])
         theWays[check.y][check.x] = to;
 }
+
+////////////////////////////////////////////////////////////
+// unusable code, but usefull for future perhaps
+////////////////////////////////////////////////////////////
+
+// void Location::WallGenerator(float probability) {
+    // auto gen = []() {
+    //     thread_local std::mt19937 rng{std::random_device()()};
+    //     thread_local std::uniform_real_distribution<float> distr(0, 100);
+    //     return distr(rng);
+    // };
+    // if (walls.size() == 0) return;
+
+    // walls[0].assign(m, true);
+    // walls[walls.size() - 1].assign(m, true);
+
+    // sf::Thread* thr[7];
+    // int from = 1, to = walls.size() / 8;
+    // for (int i = 0; i < 7;) {
+    //     thr[i] = new sf::Thread([&, to, from] {
+    //         for (int i = from; i < to; i++) {
+    //             for (int j = 0; j < walls[i].size(); j++)
+    //                 walls[i][j] = (gen() / 100 < probability);
+    //             if (i % 2 == 1)
+    //                 walls[i][0] = walls[i][m] = true;
+    //         }
+    //     });
+    //     thr[i++]->launch();
+    //     from = i * walls.size() / 8; to = (i + 1) * walls.size() / 8;
+    // }
+    // for (int i = from; i < to - 1; i++) {
+    //     for (int j = 0; j < walls[i].size(); j++)
+    //         walls[i][j] = (gen() / 100 < probability);
+    //     if (i % 2 == 1)
+    //         walls[i][0] = walls[i][m] = true;
+    // }
+    // ClearSeenWalls();
+    // for (int i = 0; i < 7; i++)
+    //     thr[i]->wait();
+    // FillWallsRect();
+// }

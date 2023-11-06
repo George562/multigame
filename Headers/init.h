@@ -16,17 +16,8 @@
 #include "rect.h"
 #include "circle.h"
 #include "animation.h"
+#include "text.h"
 #define M_PI       3.14159265358979323846   // pi
-
-#define ActivationButton sf::Keyboard::X
-
-using Point = sf::Vector2i;
-
-using str = std::string;
-using vb = std::vector<bool>;
-using vvb = std::vector<vb>;
-
-Point dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
 namespace fraction {
     using fractionType = sf::Uint8;
@@ -130,13 +121,6 @@ void loadTextures() {
     YellowPanelTexture       .loadFromFile("sources/textures/Panels/YellowPanel.png");
     YellowPanelPushedTexture .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
     SteelFrameTexture        .loadFromFile("sources/textures/Panels/SteelFrame.png");
-}
-
-//////////////////////////////////////////////////////////// Fonts
-sf::Font ljk_InkyFont;
-
-void loadFonts() {
-    ljk_InkyFont.loadFromFile("sources/fonts/ljk_Inky Thin Pixels.otf");
 }
 
 //////////////////////////////////////////////////////////// Shaders

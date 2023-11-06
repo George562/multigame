@@ -1,6 +1,6 @@
 #pragma once
-#include "tools.h"
 #include "location.h"
+#include "tools.h"
 
 #define COMMON_BULLET_RADIUS 7
 #define COMMON_BULLET_PENETRATION 0

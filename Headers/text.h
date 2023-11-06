@@ -1,5 +1,12 @@
 #pragma once
-#include "init.h"
+#include "../SFML-2.5.1/include/SFML/Graphics.hpp"
+
+//////////////////////////////////////////////////////////// Fonts
+sf::Font ljk_InkyFont;
+
+void loadFonts() {
+    ljk_InkyFont.loadFromFile("sources/fonts/ljk_Inky Thin Pixels.otf");
+}
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -13,19 +20,19 @@ public:
 
     PlacedText();
 
-    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
-    void setCenter(sf::Vector2f v)   { setCenter(v.x, v.y); }
+    void setCenter(float x, float y)    { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(sf::Vector2f v)      { setCenter(v.x, v.y); }
 
-    sf::Vector2f getSize() const     { return {Width, Height}; }
-    void setSize(float w, float h)   { Width = w; Height = h; }
-    void setSize(sf::Vector2f v)     { setSize(v.x, v.y); }
+    sf::Vector2f getSize() const        { return {Width, Height}; }
+    void setSize(float w, float h)      { Width = w; Height = h; }
+    void setSize(sf::Vector2f v)        { setSize(v.x, v.y); }
 
-    void setString(str s);
+    void setString(sf::String s);
     void setCharacterSize(int x);
     void setScale(sf::Vector2f);
     void setScale(float, float);
-    size_t TextSize()                { return getString().getSize(); }
-    void insert(int pos, str t)      { setString(getString().substring(0, pos) + t + getString().substring(pos, TextSize())); }
+    size_t TextSize()                   { return getString().getSize(); }
+    void insert(int pos, sf::String t)  { setString(getString().substring(0, pos) + t + getString().substring(pos, TextSize())); }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { 
         if (ShowText) {
@@ -43,7 +50,7 @@ PlacedText::PlacedText() : sf::Text() {
     setFont(ljk_InkyFont);
 }
 
-void PlacedText::setString(str s) {
+void PlacedText::setString(sf::String s) {
     sf::Text::setString(s);
     setSize(getGlobalBounds().width, getGlobalBounds().height);
 }

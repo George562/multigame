@@ -8,7 +8,7 @@
 #pragma pack(push, 1)
 class Weapon {
 public:
-    str Name;
+    sf::String Name;
     Scale<int> AmountOfAmmunition;
     sf::Clock* TimeFromLastShot;
     sf::Time FireRate;
@@ -20,7 +20,7 @@ public:
     bool lock; // Bullets is like a stream and "lock" is blocking it stream
 
     Weapon() {};
-    Weapon(str name, int MaxAmmo, float ManaCost, float FireRate, float dmg) {
+    Weapon(sf::String name, int MaxAmmo, float ManaCost, float FireRate, float dmg) {
         Name = name;
         AmountOfAmmunition = {0, MaxAmmo, MaxAmmo};
         this->ManaCost = ManaCost;
