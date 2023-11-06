@@ -962,7 +962,7 @@ bool IsSomeOneCanBeActivated() {
 
 void FillFloorRects() {
     sf::Image res, src;
-    src.loadFromFile("sources/floor3x.png");
+    src.loadFromFile("sources/textures/floors/floor3x.png");
     auto CreateOneFLoor = [&src](sf::Image& res){
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 5; x++) {
