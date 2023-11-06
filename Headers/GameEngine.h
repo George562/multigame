@@ -116,6 +116,7 @@ void EventHandler();
 void MainLoop();
 bool IsSomeOneCanBeActivated();
 void FillFloorRects();
+void updateShaders();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -175,6 +176,8 @@ Button EscapeButton("Exit", [](){
 void draw() {
     window.setView(GameView);
     window.clear(sf::Color::Black);
+
+    updateShaders();
 
     drawFloor();
     drawWalls();
@@ -818,21 +821,11 @@ void updateBullets() {
 
 void MainLoop() {
     while (window.isOpen()) {
-        MapShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-        MapShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-        MapShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
         
-        PlayerShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-        PlayerShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-        PlayerShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
-
-        PortalShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-        PortalShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-        PortalShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
-
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }
+
         for (int i = 0; i < Enemies.size(); i++) {
             if (Enemies[i]->Health.toBottom() == 0) {
                 if (Enemies[i]->dropInventory) {
@@ -981,6 +974,20 @@ void FillFloorRects() {
             }
         }
     }
+}
+
+void updateShaders() {
+    MapShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+    MapShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    MapShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    
+    PlayerShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+    PlayerShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    PlayerShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+
+    PortalShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+    PortalShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    PortalShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions

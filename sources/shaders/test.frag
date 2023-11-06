@@ -28,11 +28,10 @@ void main() {
     vec2 uv = (gl_FragCoord.xy - iResolution.xy / 2.) / iResolution.xy;
     // vec2 uv = (gl_FragCoord.xy * 2.0 - iResolution.xy) / iResolution.y;
 
-    float coef = 40.;
-    float d = fract(length(coef * uv)); 
-    vec2 r = vec2(cos(length(coef * uv)), sin(length(coef * uv)));
-    float phi = dot(r, normalize(coef * uv)) + iTime * 2.;
-    // vec3 col = vec3(acos(2. * d - 1.) / acos(-1.));
+    float coef = (iTime) * 30000.;
+    float d = length(coef * uv);
+    float phi = abs(dot(vec2(cos(d), sin(d)), normalize(coef * uv)));
+
     vec4 pixel = texture2D(iChannel0, gl_FragCoord.xy / iResolution.xy);
     vec4 col = pixel * phi;
     
