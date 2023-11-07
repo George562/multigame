@@ -954,12 +954,12 @@ void FillFloorRects() {
         }
     };
     res.create(480, 480);
-    FloorTextureRects.assign(CurLocation->n, std::vector<sf::Texture>(CurLocation->m));
+    FloorTextureRects.assign(CurLocation->n, std::vector<sf::Texture>(CurLocation->m)); // MEMORY LEAK!
     for (int i = 0; i < FloorTextureRects.size(); i++) {
         for (int j = 0; j < FloorTextureRects[0].size(); j++) {
             if (CurLocation->EnableTiles[i][j]) {
-                CreateOneFLoor(res);
-                FloorTextureRects[i][j].loadFromImage(res);
+                // CreateOneFLoor(res);
+                FloorTextureRects[i][j].loadFromImage(res); // MEMORY LEAK!
             }
         }
     }
