@@ -2,16 +2,11 @@
 #include "../SFML-2.5.1/include/SFML/Network.hpp"
 #include "../SFML-2.5.1/include/SFML/Graphics.hpp"
 #include "../SFML-2.5.1/include/SFML/Audio.hpp"
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include <map>
 #include <set>
-#include <string>
 #include <ctime>
-#include <queue>
 #include <cmath>
-#include <random>
 #include "scale.h"
 #include "rect.h"
 #include "circle.h"
