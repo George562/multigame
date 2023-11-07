@@ -26,7 +26,7 @@ std::vector<Item*> PickupStuff;
 
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect, FLoorTileSprite;
-std::vector<std::vector<sf::Texture>> FloorTextureRects;
+std::vector<sf::Texture> FloorTextureRects;
 sf::CircleShape circleShape;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
@@ -218,12 +218,14 @@ void draw() {
 }
 
 void drawFloor() {
-    for (int i = 0; i < FloorTextureRects.size(); i++) {
-        for (int j = 0; j < FloorTextureRects[0].size(); j++) {
+    std::vector<sf::Texture>::iterator it = FloorTextureRects.begin();
+    for (int i = 0; i < CurLocation->n; i++) {
+        for (int j = 0; j < CurLocation->m; j++) {
             if (CurLocation->EnableTiles[i][j]) {
-                FLoorTileSprite.setTexture(FloorTextureRects[i][j], true);
+                FLoorTileSprite.setTexture(*it, true);
                 FLoorTileSprite.setPosition(size * j, size * i);
                 window.draw(FLoorTileSprite, MapStates);
+                it++;
             }
         }
     }
@@ -366,9 +368,9 @@ void LevelGenerate(int n, int m) {
     Enemies.clear();
 
     for (int i = 0; i < 5; i++) {
-        Enemies.push_back(new DistortedScientist());
-        Enemies.push_back(new ScottPilgrim());
-        Enemies.push_back(new RamonaFlowers());
+        // Enemies.push_back(new DistortedScientist());
+        // Enemies.push_back(new ScottPilgrim());
+        // Enemies.push_back(new RamonaFlowers());
     }
 
     for (int i = 0; i < Enemies.size(); i++) {
@@ -511,7 +513,7 @@ void init() {
     std::cout << "size of float            = " << sizeof(float) << '\n';
     std::cout << "size of int              = " << sizeof(int) << '\n';
     std::cout << "size of bool             = " << sizeof(bool) << '\n';
-    std::cout << "size of sf::String              = " << sizeof(sf::String) << '\n';
+    std::cout << "size of std::string      = " << sizeof(std::string) << '\n';
     std::cout << "size of Bullet::Type     = " << sizeof(Bullet::Type) << '\n';
 
     window.setVerticalSyncEnabled(true);
@@ -546,7 +548,6 @@ void init() {
     MapShader.setUniform("u_playerRadius", player.Radius);
 
     PlayerShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
-    PlayerShader.setUniform("u_playerRadius", player.Radius);
 
     PortalShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
     PortalShader.setUniform("u_playerRadius", player.Radius);
@@ -943,23 +944,22 @@ bool IsSomeOneCanBeActivated() {
 }
 
 void FillFloorRects() {
-    sf::Image res, src;
-    src.loadFromFile("sources/textures/floors/floor3x.png");
+    sf::Image res, src = floor3xTexture.copyToImage();
     auto CreateOneFLoor = [&src](sf::Image& res){
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 5; x++) {
-                int r = rand() % 5;
-                res.copy(src, x * 96, y * 96, {r * 96, 0, 96, 96});
+                res.copy(src, x * 96, y * 96, {(rand() % 5) * 96, 0, 96, 96});
             }
         }
     };
     res.create(480, 480);
-    FloorTextureRects.assign(CurLocation->n, std::vector<sf::Texture>(CurLocation->m)); // MEMORY LEAK!
-    for (int i = 0; i < FloorTextureRects.size(); i++) {
-        for (int j = 0; j < FloorTextureRects[0].size(); j++) {
+    FloorTextureRects.clear();
+    for (int i = 0; i < CurLocation->n; i++) {
+        for (int j = 0; j < CurLocation->m; j++) {
             if (CurLocation->EnableTiles[i][j]) {
-                // CreateOneFLoor(res);
-                FloorTextureRects[i][j].loadFromImage(res); // MEMORY LEAK!
+                CreateOneFLoor(res);
+                FloorTextureRects.push_back(sf::Texture());
+                FloorTextureRects.rbegin()->loadFromImage(res); // MEMORY LEAK!
             }
         }
     }

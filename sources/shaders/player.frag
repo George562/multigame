@@ -5,7 +5,6 @@ uniform vec2 u_mouse;       // mouse position in screen pixels
 uniform float u_time;       // Time in seconds since load
 
 uniform vec2 u_playerPosition;
-uniform float u_playerRadius;
 
 float random (in vec2 st) {
     return fract(sin(dot(st.xy,
