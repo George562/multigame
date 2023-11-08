@@ -91,7 +91,7 @@ public:
 
         inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
-        Name.ShowText = true;
+        // Name.ShowText = true;
     }
 
     void move(Location* location) override {

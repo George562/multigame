@@ -367,10 +367,10 @@ void LevelGenerate(int n, int m) {
     }
     Enemies.clear();
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 15; i++) {
         // Enemies.push_back(new DistortedScientist());
         // Enemies.push_back(new ScottPilgrim());
-        // Enemies.push_back(new RamonaFlowers());
+        Enemies.push_back(new RamonaFlowers());
     }
 
     for (int i = 0; i < Enemies.size(); i++) {

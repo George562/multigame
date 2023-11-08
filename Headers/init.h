@@ -96,7 +96,7 @@ sf::Texture ScottPilgrimTexture,
 
 void loadTextures() {
     ScottPilgrimTexture       .loadFromFile("sources/textures/scottpilgrim_multiple.png");
-    RamonaFlowersTexture      .loadFromFile("sources/textures/ramonaflowers_multiple.png");
+    RamonaFlowersTexture      .loadFromFile("sources/textures/ramonaflowers_multiple_corrupted.png");
     DistortedScientistTexture .loadFromFile("sources/textures/DistortedScientist.png");
     PlayerTexture             .loadFromFile("sources/textures/Player.png");
     PortalTexture             .loadFromFile("sources/textures/Portal.png");
