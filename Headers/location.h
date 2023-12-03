@@ -23,7 +23,12 @@ namespace Tiles {
 
 class Location {
 public:
-    struct LocationObject { ObjectID id; sf::Vector2f pos; };
+    struct LocationObject {
+        ObjectID id; sf::Vector2f pos;
+        bool operator==(Location::LocationObject right) {
+            return this->id == right.id && this->pos == right.pos;
+        }
+    };
 
     int n, m;
     vvb walls;
@@ -45,6 +50,13 @@ public:
     bool LoadFromFile(sf::String FileName);
     bool WriteToFile(sf::String FileName);
     void AddObject(LocationObject obj) { objects.push_back(obj); }
+    void DelObject(LocationObject obj) {
+        for (auto it = objects.begin(); it != objects.end(); it++)
+            if (obj == *it) {
+                objects.erase(it);
+                break;
+            }
+    }
     void ClearSeenWalls() {
         SeenWalls.assign(walls.size(), vb(0));
         for (int i = 0; i < walls.size(); i++)

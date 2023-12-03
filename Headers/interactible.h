@@ -11,10 +11,10 @@
 class Interactable : public Rect, public sf::Drawable {
 public:
     Animation* animation = nullptr;
-    void (*function)(void);
+    void (*function)(Interactable*);
 
     Interactable() : Rect() {}
-    void setFunction(void (*func)(void)) { function = func; }
+    void setFunction(void (*func)(Interactable*)) { function = func; }
     virtual bool isActivated(Circle&, sf::Event&) { return false; }
     virtual bool CanBeActivated(Circle& circle) { return intersect(circle); }
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
@@ -28,6 +28,15 @@ public:
         setSize(animation->getGlobalSize());
         animation->play();
     };
+    
+    void setSize(float x, float y) { Rect::setSize(x, y); animation->setSize(sf::Vector2f(x, y)); }
+    void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
+
+    void setPosition(float x, float y) { PosX = x; PosY = y; animation->setPosition(PosX, PosY); }
+    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
+
+    void setCenter(float x, float y) { setPosition(x - animation->getGlobalSize().x / 2, y - animation->getGlobalSize().y / 2); }
+    void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 };
 
 ////////////////////////////////////////////////////////////

@@ -6,6 +6,7 @@
 #include "puddle.h"
 #include "player.h"
 #include "client.h"
+#include "box.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
@@ -60,7 +61,7 @@ Portal portal;
 Puddle puddle;
 
 //////////////////////////////////////////////////////////// Box
-sf::Sprite BoxRect;
+std::vector<Box*> listOfBox;
 
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
@@ -107,7 +108,7 @@ void draw();
 void drawFloor();
 void drawWalls();
 void drawMiniMap();
-void drawIterface();
+void drawInterface();
 void LevelGenerate(int, int);
 void LoadMainMenu();
 void init();
@@ -186,10 +187,6 @@ void draw() {
             portal.setPosition(CurLocation->objects[i].pos);
             window.draw(portal);
         }
-        if (CurLocation->objects[i].id == Tiles::box) {
-            BoxRect.setPosition(CurLocation->objects[i].pos);
-            window.draw(BoxRect);
-        }
         if (CurLocation->objects[i].id == Tiles::puddle) {
             puddle.setPosition(CurLocation->objects[i].pos);
             window.draw(puddle, MapStates);
@@ -212,7 +209,7 @@ void draw() {
         drawMiniMap();
     }
     if (IsDrawInterface) {
-        drawIterface();
+        drawInterface();
     }
     window.display();
 }
@@ -307,7 +304,7 @@ void drawMiniMap() {
 
 sf::Clock ClockFPS; int FPSCounter;
 PlacedText TextFPS;
-void drawIterface() {
+void drawInterface() {
     window.setView(InterfaceView);
     for (sf::Drawable* d: InterfaceStuff) {
         window.draw(*d);
@@ -362,14 +359,39 @@ void LevelGenerate(int n, int m) {
     LabyrinthLocation.AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
     LabyrinthLocation.AddObject({Tiles::puddle, player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)});
 
+    for (int i = 0; i < listOfBox.size(); i++) {
+        delete listOfBox[i];
+    }
+    listOfBox.clear();
+    for (int i = 0; i < 10; i++) {
+        listOfBox.push_back(new Box());
+        listOfBox[i]->setAnimation(BoxTexture, 1, 1, sf::seconds(1.f), &MapShader);
+        listOfBox[i]->setSize(listOfBox[i]->getSize() / 4.f);
+        do {
+            listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
+            sf::Vector2f(rand() % (size - BoxTexture.getSize().x / 4), rand() % (size - BoxTexture.getSize().y / 4)));
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
+        listOfBox[i]->setFillingScale({0.f, 0.f, 0.f});
+        listOfBox[i]->setFunction([](Interactable* i){
+            DeleteFromVector(listOfBox, (Box*)i);
+            DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
+            DeleteFromVector(InteractibeStuff, i);
+            LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
+        });
+        
+        LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
+        InteractibeStuff.push_back(listOfBox[i]);
+        DrawableStuff.push_back(listOfBox[i]);
+    }
+
     for (int i = 0; i < Enemies.size(); i++) {
         delete Enemies[i];
     }
     Enemies.clear();
 
-    for (int i = 0; i < 15; i++) {
-        // Enemies.push_back(new DistortedScientist());
-        // Enemies.push_back(new ScottPilgrim());
+    for (int i = 0; i < 10; i++) {
+        Enemies.push_back(new DistortedScientist());
+        Enemies.push_back(new ScottPilgrim());
         Enemies.push_back(new RamonaFlowers());
     }
 
@@ -393,8 +415,17 @@ void LoadMainMenu() {
     CurLocation->FindEnableTilesFrom(PlayerPos);
     FillFloorRectsThread.launch();
 
-    portal.setFunction([](){
-        player.setPosition(sf::Vector2f{(START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size});
+    portal.setFunction([](Interactable* i){
+        for (Item* &item: PickupStuff) {
+            delete item;
+        }
+
+        DrawableStuff.clear();
+        InterfaceStuff.clear();
+        InteractibeStuff.clear();
+        PickupStuff.clear();
+
+        player.setPosition(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
         player.ChangeWeapon(weapons[CurWeapon.cur]);
 
         screen = screens::Dungeon;
@@ -414,29 +445,21 @@ void LoadMainMenu() {
         LevelGenerate(START_N, START_M);
         FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
 
-        DrawableStuff.clear();
         DrawableStuff.push_back(&player);
         for (Enemy* &enemy: Enemies) {
             DrawableStuff.push_back(enemy);
         }
 
-        InterfaceStuff.clear();
         InterfaceStuff.push_back(&ManaBar);
         InterfaceStuff.push_back(&HpBar);
         InterfaceStuff.push_back(&AmmoBar);
         InterfaceStuff.push_back(&WeaponNameText);
         InterfaceStuff.push_back(&chat);
 
-        InteractibeStuff.clear();
         InteractibeStuff.push_back(&puddle);
-
-        for (Item* &item: PickupStuff) {
-            delete item;
-        }
-        PickupStuff.clear();
     });
 
-    puddle.setFunction([](){
+    puddle.setFunction([](Interactable* i){
         player.getDamage(5.f);
     });
 
@@ -460,7 +483,7 @@ void LoadMainMenu() {
 
     PickupStuff.push_back(new Item(ItemID::regenDrug, 1));
     DrawableStuff.push_back(PickupStuff[0]);
-    PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f{100, 100});
+    PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
 
     FillFloorRectsThread.wait();
 }
@@ -544,12 +567,12 @@ void init() {
     puddle.setAnimation(PuddleTexture, 1, 1, sf::seconds(1), &MapShader);
     puddle.setSize(90.f, 90.f);
 
-    MapShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
+    MapShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     MapShader.setUniform("u_playerRadius", player.Radius);
 
-    PlayerShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
+    PlayerShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
 
-    PortalShader.setUniform("u_resolution", sf::Vector2f{static_cast<float>(scw), static_cast<float>(sch)});
+    PortalShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     PortalShader.setUniform("u_playerRadius", player.Radius);
 
     IPPanel         .setTexture(YellowPanelTexture);
@@ -603,13 +626,10 @@ void init() {
     XButtonSprite.setTexture(XButtonTexture);
     XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
 
-    BoxRect.setTexture(BoxTexture);
-    BoxRect.setPosition(30, 30);
-
     MMPortalRect.setSize(portal.getSize() * ScaleParam);
     MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
-    
-    MMBoxRect.setSize(sf::Vector2f{BoxRect.getGlobalBounds().width, BoxRect.getGlobalBounds().height} * ScaleParam);
+
+    MMBoxRect.setSize(sf::Vector2f(BoxTexture.getSize() / 4u) * ScaleParam);
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
 
     MMPuddleRect.setSize(puddle.getSize() * ScaleParam);

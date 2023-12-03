@@ -1,5 +1,3 @@
-*.gch
-*.o
 .vscode/
 server.cpp
 client.cpp
@@ -7,4 +5,3 @@ setupScript.iss
 versions/
 *.exe
 *.ico
-*.srctrl*

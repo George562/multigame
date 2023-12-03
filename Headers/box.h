@@ -1,25 +1,30 @@
 #pragma once
 #include "interactible.h"
+#include "scale.h"
 
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
-class Portal : public Interactable {
+class Box : public Interactable {
 public:
-    Portal() : Interactable() {}
-    void setFunction(void (*func)(Interactable*)) { function = func; }
+    Box() : Interactable() {}
     bool isActivated(Circle&, sf::Event&);
+    void setFillingScale(Scale<float> s);
+
+    Scale<float> fillingScale; // you need to pour in mana to open (at future)
 };
 
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
 
-bool Portal::isActivated(Circle& circle, sf::Event& event) {
+bool Box::isActivated(Circle& circle, sf::Event& event) {
     if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
         function((Interactable*)this);
         return true;
     }
     return false;
 }
+
+void Box::setFillingScale(Scale<float> s) { fillingScale = s; }
