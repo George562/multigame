@@ -8,7 +8,8 @@ enum ItemID : sf::Uint8 {
     protectiveSuit,
     generic,
     medkit,
-    regenDrug
+    regenDrug,
+    coin
 };
 
 //////////////////////////////////////////////////////////// Item Tetures
@@ -17,13 +18,15 @@ std::map<ItemID, sf::Texture*> itemTextureName {
     {repairKit, new sf::Texture},
     {keyCard, new sf::Texture},
     {protectiveSuit, new sf::Texture},
-    {regenDrug, new sf::Texture}
+    {regenDrug, new sf::Texture},
+    {coin, new sf::Texture}
 };
 
 std::map<ItemID, sf::Texture*> pickupItemTextureName {
     {generic, new sf::Texture},
     {medkit, new sf::Texture},
-    {regenDrug, new sf::Texture}
+    {regenDrug, new sf::Texture},
+    {coin, new sf::Texture}
 };
 
 void loadItemTextures() {
@@ -32,10 +35,12 @@ void loadItemTextures() {
     // itemTextureName[keyCard]        ->loadFromFile("sources/textures/keyCardItem.png");
     // itemTextureName[protectiveSuit] ->loadFromFile("sources/textures/protectiveSuitItem.png");
     itemTextureName[regenDrug]      ->loadFromFile("sources/textures/regenDrugItem.png");
+    itemTextureName[coin]           ->loadFromFile("sources/textures/coin.png");
 
     // pickupItemTextureName[generic]   ->loadFromFile("sources/textures/genericPickup.png");
     // pickupItemTextureName[medkit]    ->loadFromFile("sources/textures/medkitPickup.png");
     pickupItemTextureName[regenDrug] ->loadFromFile("sources/textures/regenDrugPickup.png");
+    pickupItemTextureName[coin]      ->loadFromFile("sources/textures/coin.png");
 }
 
 ////////////////////////////////////////////////////////////
@@ -75,9 +80,6 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     isInInventory = _isInInventory;
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
-
-    setAnimation(*itemTextureName[id], 1, 1, sf::seconds(1), &MapShader);
-    setSize(animation->getGlobalSize());
 }
 
 void Item::setPosition(sf::Vector2f v) {

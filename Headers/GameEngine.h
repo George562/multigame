@@ -481,7 +481,9 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&chat);
     InteractibeStuff.push_back(&portal);
 
-    PickupStuff.push_back(new Item(ItemID::regenDrug, 1));
+    Item* newItem = new Item(ItemID::regenDrug, 1);
+    newItem->setAnimation(*itemTextureName[ItemID::regenDrug], 1, 1, sf::seconds(1), &MapShader);
+    PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
 
