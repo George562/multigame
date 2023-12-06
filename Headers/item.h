@@ -12,7 +12,7 @@ enum ItemID : sf::Uint8 {
     coin
 };
 
-//////////////////////////////////////////////////////////// Item Tetures
+//////////////////////////////////////////////////////////// Item Animation params
 std::map<ItemID, sf::Texture*> itemTextureName {
     {gunParts, new sf::Texture},
     {repairKit, new sf::Texture},
@@ -22,11 +22,54 @@ std::map<ItemID, sf::Texture*> itemTextureName {
     {coin, new sf::Texture}
 };
 
+std::map<ItemID, int> ItemTextureFrameAmount {
+    {generic, 1},
+    {medkit, 1},
+    {regenDrug, 1},
+    {coin, 4}
+};
+
+std::map<ItemID, sf::Time> ItemTextureDuration {
+    {generic, sf::seconds(1)},
+    {medkit, sf::seconds(1)},
+    {regenDrug, sf::seconds(1)},
+    {coin, sf::seconds(1)}
+};
+
+std::map<ItemID, sf::Shader *> ItemTextureShader {
+    {generic, &MapShader},
+    {medkit, &MapShader},
+    {regenDrug, &MapShader},
+    {coin, &MapShader}
+};
+
+//////////////////////////////////////////////////////////// Pickup Item Animation params
 std::map<ItemID, sf::Texture*> pickupItemTextureName {
     {generic, new sf::Texture},
     {medkit, new sf::Texture},
     {regenDrug, new sf::Texture},
     {coin, new sf::Texture}
+};
+
+std::map<ItemID, int> pickupItemTextureFrameAmount {
+    {generic, 1},
+    {medkit, 1},
+    {regenDrug, 1},
+    {coin, 4}
+};
+
+std::map<ItemID, sf::Time> pickupItemTextureDuration {
+    {generic, sf::seconds(1)},
+    {medkit, sf::seconds(1)},
+    {regenDrug, sf::seconds(1)},
+    {coin, sf::seconds(1)}
+};
+
+std::map<ItemID, sf::Shader *> pickupItemTextureShader {
+    {generic, &MapShader},
+    {medkit, &MapShader},
+    {regenDrug, &MapShader},
+    {coin, &MapShader}
 };
 
 void loadItemTextures() {
@@ -71,8 +114,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool _isDropable, bool _isKeyItem,
-           bool _isEquippable) {
+Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool _isDropable, bool _isKeyItem, bool _isEquippable) {
     id            = _id;
     amount        = _amount;
     pickupable    = _pickapable;
@@ -80,6 +122,8 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     isInInventory = _isInInventory;
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
+
+    setAnimation(*itemTextureName[id], ItemTextureFrameAmount[id], 1, ItemTextureDuration[id], ItemTextureShader[id]);
 }
 
 void Item::setPosition(sf::Vector2f v) {
@@ -100,7 +144,7 @@ bool Item::isActivated(Circle& player, sf::Event& event) {
 }
 
 void Item::dropTo(sf::Vector2f pos) {
-    setAnimation(*pickupItemTextureName[id], 1, 1, sf::seconds(1), &MapShader);
+    setAnimation(*pickupItemTextureName[id], pickupItemTextureFrameAmount[id], 1, pickupItemTextureDuration[id], pickupItemTextureShader[id]);
     setPosition(pos);
     isInInventory = false;
 }
