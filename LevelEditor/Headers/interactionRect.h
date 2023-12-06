@@ -8,13 +8,15 @@ class InteractionRect : public sf::Drawable, public sf::Transformable
 protected:
     float width, height;
     sf::RectangleShape drawRect;
+    mutable sf::Sprite sprite;
 public:
+    bool hasTexture = false;
+
     InteractionRect() {}
     InteractionRect(float _posX, float _posY, float _width, float _height)
     {
         setPosition(_posX, _posY);
         width = _width; height = _height;
-
         drawRect = sf::RectangleShape(sf::Vector2f(width, height));
     }
 
@@ -27,14 +29,23 @@ public:
     sf::Color getFillColor() const { return drawRect.getFillColor(); }
 
     void setSize(int _width, int _height) { width = _width; height = _height; drawRect.setSize(sf::Vector2f(width, height)); }
-
+    void setTexture(sf::Texture& _texture)
+    {        
+        sprite.setTexture(_texture);
+        sprite.setScale(width / sprite.getTexture()->getSize().x, height / sprite.getTexture()->getSize().y);
+        hasTexture = true;
+    }
     void setFillColor(sf::Color color) { drawRect.setFillColor(color); }
+    void setSpriteColor(sf::Color color) { sprite.setColor(color); }
     void setOutlineColor(sf::Color color) { drawRect.setOutlineColor(color); }
     void setOutlineThickness(int thickness) { drawRect.setOutlineThickness(thickness); }
 
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
+    {
         states.transform *= getTransform();
-        target.draw(drawRect, states);
+        if (hasTexture)
+            target.draw(sprite, states);
+        else target.draw(drawRect, states);
     }
     virtual bool isActivated(sf::Event&) { return false; };
 };

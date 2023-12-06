@@ -21,7 +21,8 @@ enum mapItem
     nothing,
     wall,
     box,
-    portal
+    portal,
+    puddle
 };
 
 enum windowMode
@@ -33,11 +34,14 @@ enum windowMode
 class App
 {
 private:
-    float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY, editorViewWidth, editorViewHeight, itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight;
+    ///////////////////////// Widths and heights for most drawn widgets
+    float levelMatrixHeight, levelMatrixWidth, editorViewX, editorViewY,
+          editorViewWidth, editorViewHeight, itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight;
     float wndW, wndH;
     float tileWidth = 60, tileHeight = 60, columnHeight = 480, rowWidth = 480, columnWidth = 60, rowHeight = 60;
     std::vector<int> arrowMoveAmount;
     int arrowMoveAmountIndex = 0;
+    ///////////////////////////////////////////
 
     float zoomFactor = 1.0f;
 
@@ -50,11 +54,14 @@ private:
 
     std::map<mapItem, sf::Color> mapItemColor;
     std::map<mapItem, std::string> mapItemName;
+    std::map<mapItem, sf::Vector2f> mapItemSize;
+    std::map<mapItem, sf::Texture> mapItemTexture;
 
     sf::RenderWindow *mainWindow;
     sf::View mainView;
     sf::Font font;
 
+    ///////////////////////// Editor window widgets
     ScrollContainer optionsContainer, itemContainer;
     NumBox levelHeightBox, levelWidthBox;
     Label mapWidthLabel, mapHeightLabel, itemMessageLabel, systemMessageLabel, itemOptionLabelX, itemOptionLabelY, itemEnterHintLabel;
@@ -67,16 +74,25 @@ private:
     vvpt levelMatrix;
     std::vector<Button*> itemButtonsList;
     sf::View editorView;
+    /////////////////////////
 
+    sf::Color inactiveSpriteColor = sf::Color(150, 150, 150);
+
+    ///////////////////////// Save window widgets
     Label fileNameLabel, filePathLabel;
     TextBox filePathBox, fileNameBox;
     Button saveFileButton, backButton, overWriteButton;
+    ///////////////////////// Save window widgets end
 
     std::vector<ScrollContainer*> scrollContainersList;
     std::vector<InteractionRect*> universalDrawnElements, editorDrawnElements, saveDrawnElements, editorItemPropertyElements;
     vvir levelMatrixSquares;
 
     void init();
+    void initMapItemNames();
+    void initMapItemColors();
+    void initMapItemSizes();
+    void initMapItemTextures();
     void loop();
     void poll(sf::Event&);
     sf::Event convertToViewEvent(sf::Event&, sf::View);
@@ -99,9 +115,49 @@ App::App(sf::RenderWindow& window)
     wndH = mainWindow->getSize().y;
 }
 
+void App::initMapItemNames()
+{
+    mapItemName[nothing] = "None (eraser)";
+    mapItemName[wall] = "Wall";
+    mapItemName[box] = "Box";
+    mapItemName[portal] = "Portal";
+    mapItemName[puddle] = "Puddle";
+}
+
+void App::initMapItemColors()
+{
+    mapItemColor[nothing] = sf::Color(100, 100, 100);
+    mapItemColor[wall] = sf::Color(200, 200, 200);
+    mapItemColor[box] = sf::Color(255, 228, 205);
+    mapItemColor[portal] = sf::Color(150, 0, 200);
+    mapItemColor[puddle] = sf::Color(0, 0, 200);
+}
+
+void App::initMapItemSizes()
+{
+    mapItemSize[box] = sf::Vector2f(105.0f, 117.0f);
+    mapItemSize[portal] = sf::Vector2f(170.f, 320.f);
+    mapItemSize[puddle] = sf::Vector2f(90.0f, 90.0f);
+}
+
+void App::initMapItemTextures()
+{
+    mapItemTexture[nothing].loadFromFile("sources/textures/floors/floorBG.png");
+    mapItemTexture[box].loadFromFile("sources/textures/" + mapItemName[box] + ".png");
+    mapItemTexture[portal].loadFromFile("sources/textures/" + mapItemName[portal] + ".png");
+    mapItemTexture[puddle].loadFromFile("sources/textures/" + mapItemName[puddle] + ".png");
+}
+
 void App::init()
 {
     mainWindow->setView(mainView);
+
+    initMapItemNames();
+    initMapItemColors();
+    initMapItemSizes();
+    initMapItemTextures();
+    font.loadFromFile("sources/fonts/consola.ttf");
+    selectedObject = wall;
 
     levelMatrixHeight = 0, levelMatrixWidth = 0;
     levelMatrix.resize(0);
@@ -110,20 +166,6 @@ void App::init()
     arrowMoveAmount.push_back(5);
     arrowMoveAmount.push_back(50);
     arrowMoveAmount.push_back(200);
-
-    selectedObject = wall;
-
-    mapItemColor[nothing] = sf::Color(100, 100, 100);
-    mapItemColor[wall] = sf::Color(200, 200, 200);
-    mapItemColor[box] = sf::Color(255, 228, 205);
-    mapItemColor[portal] = sf::Color(150, 0, 200);
-
-    mapItemName[nothing] = "None (eraser)";
-    mapItemName[wall] = "Wall";
-    mapItemName[box] = "Box";
-    mapItemName[portal] = "Portal";
-
-    font.loadFromFile("Resources/Fonts/consola.ttf");
 
     // [Editor window elements]. All you need for actual level editing
     sf::FloatRect scrollViewport = sf::FloatRect(1 / 20.0f, 1 / 20.0f, 1 / 4.0f, 7 / 20.0f);
@@ -156,13 +198,13 @@ void App::init()
     editorViewHeight = wndH - editorViewY - wndH * 3 / 20;
     
     editorRect = InteractionRect(editorViewX, editorViewY, editorViewWidth, editorViewHeight);
-    editorRect.setFillColor(sf::Color(0, 0, 100));
+    editorRect.setFillColor(sf::Color::White);
     editorRect.setOutlineColor(sf::Color::Black);
     editorRect.setOutlineThickness(2);
 
     editorView = sf::View(sf::FloatRect(0, 0, editorViewWidth, editorViewHeight));
     editorView.setViewport(sf::FloatRect(editorViewX / wndW, editorViewY / wndH, editorViewWidth / wndW, editorViewHeight / wndH));
-
+    editorRect.setTexture(mapItemTexture[nothing]);
 
     itemOptionWidth = editorRect.getWidth() / 2;
     itemOptionHeight = editorRect.getHeight() / 5;
@@ -444,7 +486,11 @@ void App::interactionViewPoll(sf::Event& event)
         if(viewEvent.mouseButton.button == sf::Mouse::Button::Left || viewEvent.mouseButton.button == sf::Mouse::Button::Right)
         {
             if(selectedMapItem.second != nullptr)
+            {
                 selectedMapItem.second->setFillColor(mapItemColor[selectedMapItem.first]);
+                if (selectedMapItem.second->hasTexture)
+                    selectedMapItem.second->setSpriteColor(inactiveSpriteColor);
+            }
             isMapItemSelected = false;
             selectedMapItem.first = nothing;
             selectedMapItem.second = nullptr;
@@ -464,11 +510,12 @@ void App::interactionViewPoll(sf::Event& event)
         {
             if(selectedMapItem.second == nullptr && selectedObject != wall && selectedObject != nothing)
             {
-                sf::Image sprite;
-                sprite.loadFromFile("~/../../sources/textures/" + mapItemName[selectedObject] + ".png");
                 mapItemDict[selectedObject].push_back(new PushTile(viewEvent.mouseButton.x, viewEvent.mouseButton.y,
-                    sprite.getSize().x, sprite.getSize().y));
-                mapItemDict[selectedObject][mapItemDict[selectedObject].size() - 1]->setState(selectedObject, mapItemColor[selectedObject]);
+                    mapItemSize[selectedObject].x, mapItemSize[selectedObject].y));
+                int lastItem = mapItemDict[selectedObject].size() - 1;
+                mapItemDict[selectedObject][lastItem]->setTexture(mapItemTexture[selectedObject]);
+                mapItemDict[selectedObject][lastItem]->setFillColor(mapItemColor[selectedObject]);
+                mapItemDict[selectedObject][lastItem]->setSpriteColor(inactiveSpriteColor);
                 systemMessageLabel.setText("Added a \"" + mapItemName[selectedObject] + "\" object");
             }
             else if(selectedMapItem.second != nullptr)
@@ -478,6 +525,7 @@ void App::interactionViewPoll(sf::Event& event)
                 isMapItemSelected = true;
                 isItemHeld = true;
                 selectedMapItem.second->setFillColor(sf::Color::White);
+                selectedMapItem.second->setSpriteColor(sf::Color::White);
                 systemMessageLabel.setText("Selected a \"" + mapItemName[selectedMapItem.first] + "\" object at\n[X: " +
                 std::to_string(selectedMapItem.second->getX()) + ", Y: " + std::to_string(selectedMapItem.second->getY()) + "]");
             }
@@ -549,9 +597,15 @@ void App::draw()
     switch (mode)
     {
     case editing:
-
         for(int i = 0; i < editorDrawnElements.size(); i++)
             mainWindow->draw(*(editorDrawnElements[i]));
+        
+        for(int i = 0; i < scrollContainersList.size(); i++)
+            scrollContainersList[i]->draw(*mainWindow, sf::RenderStates::Default);
+    
+        if(isMapItemSelected)
+            for(int i = 0; i < editorItemPropertyElements.size(); i++)
+                mainWindow->draw(*(editorItemPropertyElements[i]));
 
         if(!levelMatrix.empty())
         {
@@ -581,12 +635,6 @@ void App::draw()
     default:
         break;
     }
-
-    for(int i = 0; i < universalDrawnElements.size(); i++)
-        mainWindow->draw(*(universalDrawnElements[i]));
-    
-    for(int i = 0; i < scrollContainersList.size(); i++)
-        scrollContainersList[i]->draw(*mainWindow, sf::RenderStates::Default);
         
     if(isMapItemSelected)
         for(int i = 0; i < editorItemPropertyElements.size(); i++)

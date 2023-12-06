@@ -11,7 +11,7 @@ private:
     int lastButton = 0;
 
     sf::Color activeColor = sf::Color::White;
-    sf::Color inactiveColor = sf::Color(100, 100, 100);
+    sf::Color inactiveColor = sf::Color(75, 75, 75);
 
 public:
     PushTile() {}
@@ -29,8 +29,16 @@ public:
         else setFillColor(inactiveColor);
     };
 
-    void setActiveColor(sf::Color color) { activeColor = color; setFillColor(state != 0 ? activeColor : inactiveColor); }
-    void setInactiveColor(sf::Color color) { inactiveColor = color; setFillColor(state != 0 ? activeColor : inactiveColor); }
+    void setActiveColor(sf::Color color)
+    {
+        activeColor = color;
+        setFillColor(state != 0 ? activeColor : inactiveColor);
+    }
+    void setInactiveColor(sf::Color color)
+    {
+        inactiveColor = color;
+        setFillColor(state != 0 ? activeColor : inactiveColor);
+    }
 
     bool isActivated(sf::Event&) override;
     void draw(sf::RenderTarget&, sf::RenderStates) const override;
@@ -85,6 +93,5 @@ bool PushTile::isActivated(sf::Event& event)
 
 void PushTile::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-    states.transform *= getTransform();
-    target.draw(drawRect, states);
+    InteractionRect::draw(target, states);
 }
