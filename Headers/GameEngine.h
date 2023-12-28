@@ -226,6 +226,7 @@ void drawFloor() {
             if (CurLocation->EnableTiles[i][j]) {
                 FLoorTileSprite.setTexture(*it, true);
                 FLoorTileSprite.setPosition(size * j, size * i);
+                FLoorTileSprite.setScale(3.f, 3.f);
                 window.draw(FLoorTileSprite, MapStates);
                 it++;
             }
@@ -977,15 +978,15 @@ bool IsSomeOneCanBeActivated() {
 }
 
 void FillFloorRects() {
-    sf::Image res, src = floor3xTexture.copyToImage();
+    sf::Image res, src = floor1xTexture.copyToImage();
     auto CreateOneFLoor = [&src](sf::Image& res){
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 5; x++) {
-                res.copy(src, x * 96, y * 96, {(rand() % 5) * 96, 0, 96, 96});
+                res.copy(src, x * 32, y * 32, {(rand() % 5) * 32, 0, 32, 32});
             }
         }
     };
-    res.create(480, 480);
+    res.create(160, 160);
     FloorTextureRects.clear();
     for (int i = 0; i < CurLocation->n; i++) {
         for (int j = 0; j < CurLocation->m; j++) {

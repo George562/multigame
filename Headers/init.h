@@ -80,7 +80,7 @@ sf::Texture ScottPilgrimTexture,
             WallTexture,
             XButtonTexture,
             BoxTexture,
-            floor3xTexture,
+            floor1xTexture,
             PuddleTexture,
 //////////////////////////////////////////////////////////// Panel Tetures
             GreenPanelTexture,
@@ -104,7 +104,7 @@ void loadTextures() {
     WallTexture               .loadFromFile("sources/textures/wall.png");
     XButtonTexture            .loadFromFile("sources/textures/XButton.png");
     BoxTexture                .loadFromFile("sources/textures/Box.png");
-    floor3xTexture            .loadFromFile("sources/textures/floors/floor3x.png");
+    floor1xTexture            .loadFromFile("sources/textures/floors/floor1x.png");
     PuddleTexture             .loadFromFile("sources/textures/Puddle.png");
 
     GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
