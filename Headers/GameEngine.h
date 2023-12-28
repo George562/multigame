@@ -7,6 +7,7 @@
 #include "player.h"
 #include "client.h"
 #include "box.h"
+#include "effect.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
@@ -103,6 +104,9 @@ Scale<int> CurWeapon{0, 4, 0};
 //////////////////////////////////////////////////////////// Enemies
 std::vector<Enemy*> Enemies;
 
+//////////////////////////////////////////////////////////// Effects
+std::queue<Effect> QueueEffects;
+
 //////////////////////////////////////////////////////////// functions
 void draw();
 void drawFloor();
@@ -117,6 +121,7 @@ void MainLoop();
 bool IsSomeOneCanBeActivated();
 void FillFloorRects();
 void updateShaders();
+void processEffects();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -371,7 +376,7 @@ void LevelGenerate(int n, int m) {
             listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
             sf::Vector2f(rand() % (size - BoxTexture.getSize().x / 4), rand() % (size - BoxTexture.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
-        listOfBox[i]->setFillingScale({0.f, 0.f, 0.f});
+        //listOfBox[i]->setFillingScale({0.f, 0.f, 0.f});
         listOfBox[i]->setFunction([](Interactable* i){
             DeleteFromVector(listOfBox, (Box*)i);
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
@@ -540,6 +545,7 @@ void init() {
     std::cout << "size of bool             = " << sizeof(bool) << '\n';
     std::cout << "size of std::string      = " << sizeof(std::string) << '\n';
     std::cout << "size of Bullet::Type     = " << sizeof(Bullet::Type) << '\n';
+    std::cout << "size of Effect           = " << sizeof(Effect) << '\n';
 
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
@@ -952,6 +958,11 @@ void MainLoop() {
 
         draw();
 
+        if (puddle.intersect(player))
+            QueueEffects.push(Effect(&player, EffectType::Damage, 0.1, 1));
+
+        processEffects();
+
         EventHandler();
     }
 }
@@ -999,6 +1010,31 @@ void updateShaders() {
     PortalShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
     PortalShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
     PortalShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+}
+
+void processEffects() {
+    for (int i = 0; i < QueueEffects.size(); i++) {
+        Effect effect = QueueEffects.front();
+        switch (effect.type) {
+        case EffectType::Damage :
+            if (effect.tacts != 0) {
+                --effect.tacts;
+                effect.owner->getDamage(effect.parameter);
+            }
+            break;
+        case EffectType::Heal :
+            if (effect.tacts != 0) {
+                --effect.tacts;
+                effect.owner->Health += (float)effect.parameter;
+            }
+            break;
+        default:
+            break;
+        }
+        QueueEffects.pop();
+        if (effect.tacts != 0)
+            QueueEffects.push(effect);
+    }
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions
