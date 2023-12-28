@@ -139,8 +139,8 @@ sf::Music MainMenuMusic,
 
 void loadMusics() {
     MainMenuMusic .openFromFile("sources/music/MainMenuMusic.wav");
-    FightMusic1   .openFromFile("sources/music/FightMusic1.wav");
-    FightMusic2   .openFromFile("sources/music/FightMusic2.wav");
+    FightMusic1   .openFromFile("sources/music/FightMusic1.flac");
+    FightMusic2   .openFromFile("sources/music/FightMusic2.flac");
 }
 
 bool Rect::intersect(Circle& circle) {

@@ -1018,20 +1018,20 @@ void processEffects() {
     for (int i = 0; i < size; i++) {
         Effect effect = QueueEffects.front();
         switch (effect.type) {
-        case EffectType::Damage :
-            if (effect.tacts != 0) {
-                --effect.tacts;
-                effect.owner->getDamage(effect.parameter);
-            }
-            break;
-        case EffectType::Heal :
-            if (effect.tacts != 0) {
-                --effect.tacts;
-                effect.owner->Health += (float)effect.parameter;
-            }
-            break;
-        default:
-            break;
+            case EffectType::Damage :
+                if (effect.tacts != 0) {
+                    --effect.tacts;
+                    effect.owner->getDamage(effect.parameter);
+                }
+                break;
+            case EffectType::Heal :
+                if (effect.tacts != 0) {
+                    --effect.tacts;
+                    effect.owner->Health += (float)effect.parameter;
+                }
+                break;
+            default:
+                break;
         }
         QueueEffects.pop();
         if (effect.tacts != 0)
