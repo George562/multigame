@@ -10,9 +10,9 @@ class Box : public Interactable {
 public:
     Box() : Interactable() {}
     bool isActivated(Circle&, sf::Event&);
-    void setFillingScale(Scale<float>& s);
+    void setFillingScale(Scale<float> s);
 
-    Scale<float>* fillingScale; // you need to pour in mana to open (at future)
+    Scale<float> fillingScale; // you need to pour in mana to open (at future)
 };
 
 ////////////////////////////////////////////////////////////
@@ -27,4 +27,4 @@ bool Box::isActivated(Circle& circle, sf::Event& event) {
     return false;
 }
 
-void Box::setFillingScale(Scale<float>& s) { fillingScale = &s; }
+void Box::setFillingScale(Scale<float> s) { fillingScale = s; }
