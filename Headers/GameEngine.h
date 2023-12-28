@@ -1014,7 +1014,8 @@ void updateShaders() {
 }
 
 void processEffects() {
-    for (int i = 0; i < QueueEffects.size(); i++) {
+    int size = QueueEffects.size();
+    for (int i = 0; i < size; i++) {
         Effect effect = QueueEffects.front();
         switch (effect.type) {
         case EffectType::Damage :
