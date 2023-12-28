@@ -154,5 +154,5 @@ bool Circle::intersect(Rect& rect) {
 }
 
 float random(sf::Vector2f v) {
-    return std::modf( ( 1.f +  std::sin( v.x * 12.9898f + v.y * 78.233f  ) ) * 43758.5453123f, nullptr);
+    return std::modf( ( 1.f + std::sin( v.x * 12.9898f + v.y * 78.233f ) ) * 43758.5453123f, nullptr);
 }
