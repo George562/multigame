@@ -46,18 +46,38 @@ sf::Sprite XButtonSprite;
 inventoryPage::Type activeInventoryPage = inventoryPage::Crafting;
 std::vector<sf::Drawable*> inventoryElements; // These elements appear on every page
 
-Button backButton = Button("Back", [](){ InventoryActivated = false; std::cout << "Backbutton Activation\n"; });
-Button craftingPageButton = Button("Crafting", [](){ activeInventoryPage = inventoryPage::Crafting; std::cout << "Craftingbutton Activation\n"; });
-Button weaponsPageButton = Button("Weapons", [](){ activeInventoryPage = inventoryPage::Weapons; std::cout << "Weaponbutton Activation\n"; });
-Button equipablesPageButton = Button("Equipables", [](){ activeInventoryPage = inventoryPage::Equipables; std::cout << "Equipbutton Activation\n"; });
-Button perksPageButton = Button("Perks", [](){ activeInventoryPage = inventoryPage::Perks; std::cout << "Perksbutton Activation\n"; });
-Button statsPageButton = Button("Stats", [](){ activeInventoryPage = inventoryPage::Stats; std::cout << "Statsbutton Activation\n"; });
+Button backButton("Back", [](){
+    InventoryActivated = false;
+    std::cout << "Backbutton Activation\n";
+});
+Button craftingPageButton("Crafting", [](){
+    activeInventoryPage = inventoryPage::Crafting;
+    std::cout << "Craftingbutton Activation\n";
+});
+Button weaponsPageButton("Weapons", [](){
+    activeInventoryPage = inventoryPage::Weapons;
+    std::cout << "Weaponbutton Activation\n";
+});
+Button equipablesPageButton("Equipables", [](){
+    activeInventoryPage = inventoryPage::Equipables;
+    std::cout << "Equipbutton Activation\n";
+});
+Button perksPageButton("Perks", [](){
+    activeInventoryPage = inventoryPage::Perks;
+    std::cout << "Perksbutton Activation\n";
+});
+Button statsPageButton("Stats", [](){
+    activeInventoryPage = inventoryPage::Stats;
+    std::cout << "Statsbutton Activation\n";
+});
 Panel invBackground = Panel();
 
 
 std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
 
-Button craftButton = Button("Craft!", [](){ std::cout << "Craft Activation\n"; });  // PLACEHOLDER. DOES NOTHING
+Button craftButton("Craft!", [](){
+    std::cout << "Craft Activation\n";
+});  // PLACEHOLDER. DOES NOTING
 Panel statsPlayerImage = Panel();
 
 //////////////////////////////////////////////////////////// Animations
