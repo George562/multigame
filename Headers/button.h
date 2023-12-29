@@ -64,7 +64,7 @@ void Button::setSize(float w, float h) {
     if (Width != 0 && Height != 0) {
         sprite.setScale(w / Width, h / Height);
     }
-    Width = w; Height = h;
+    Rect::setSize(w, h);
     ButtonText.setCenter(getCenter());
 }
 

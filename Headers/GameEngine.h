@@ -20,7 +20,7 @@ sf::ContextSettings settings;
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated, InventoryActivated;
-screens::screenType screen = screens::MainRoom;
+screens::Type screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactable*> InteractibeStuff;
 
@@ -43,30 +43,22 @@ PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
 //////////////////////////////////////////////////////////// InventoryStuff
-enum inventoryPage {
-    Crafting,
-    Weapons,
-    Equipables,
-    Perks,
-    Stats
-};
-inventoryPage activeInventoryPage = Crafting;
+inventoryPage::Type activeInventoryPage = inventoryPage::Crafting;
 std::vector<sf::Drawable*> inventoryElements; // These elements appear on every page
 
 Button backButton = Button("Back", [](){ InventoryActivated = false; std::cout << "Backbutton Activation\n"; });
-Button craftingPageButton = Button("Crafting", [](){ activeInventoryPage = Crafting; std::cout << "Craftingbutton Activation\n"; });
-Button weaponsPageButton = Button("Weapons", [](){ activeInventoryPage = Weapons; std::cout << "Weaponbutton Activation\n"; });
-Button equipablesPageButton = Button("Equipables", [](){ activeInventoryPage = Equipables; std::cout << "Equipbutton Activation\n"; });
-Button perksPageButton = Button("Perks", [](){ activeInventoryPage = Perks; std::cout << "Perksbutton Activation\n"; });
-Button statsPageButton = Button("Stats", [](){ activeInventoryPage = Stats; std::cout << "Statsbutton Activation\n"; });
+Button craftingPageButton = Button("Crafting", [](){ activeInventoryPage = inventoryPage::Crafting; std::cout << "Craftingbutton Activation\n"; });
+Button weaponsPageButton = Button("Weapons", [](){ activeInventoryPage = inventoryPage::Weapons; std::cout << "Weaponbutton Activation\n"; });
+Button equipablesPageButton = Button("Equipables", [](){ activeInventoryPage = inventoryPage::Equipables; std::cout << "Equipbutton Activation\n"; });
+Button perksPageButton = Button("Perks", [](){ activeInventoryPage = inventoryPage::Perks; std::cout << "Perksbutton Activation\n"; });
+Button statsPageButton = Button("Stats", [](){ activeInventoryPage = inventoryPage::Stats; std::cout << "Statsbutton Activation\n"; });
 Panel invBackground = Panel();
 
 
-std::map<inventoryPage, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
+std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
 
 Button craftButton = Button("Craft!", [](){ std::cout << "Craft Activation\n"; });  // PLACEHOLDER. DOES NOTHING
-Panel statsPlayerImage = Panel(); 
-
+Panel statsPlayerImage = Panel();
 
 //////////////////////////////////////////////////////////// Animations
 
@@ -688,44 +680,44 @@ void init() {
 
 void initInventory() {
     craftButton.setTexture(YellowPanelTexture, YellowPanelPushedTexture);
-    craftButton.setCharacterSize(32 + 20);
+    craftButton.setCharacterSize(32);
     craftButton.setPosition(3 * scw / 4, 3 * sch / 4);
     craftButton.setSize(300, 150);
 
     statsPlayerImage.setTexture(PlayerTexture);
     statsPlayerImage.setCenter(5 * scw / 6, sch / 2);
 
-    inventoryPageElements[Crafting].push_back(&craftButton);
-    inventoryPageElements[Stats].push_back(&statsPlayerImage);
+    inventoryPageElements[inventoryPage::Crafting].push_back(&craftButton);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
 
 
     backButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
-    backButton.setCharacterSize(24 + 20);
+    backButton.setCharacterSize(52);
     backButton.setPosition(0, 0);
     backButton.setSize(300, 150);
 
     craftingPageButton.setTexture(YellowPanelTexture, YellowPanelPushedTexture);
-    craftingPageButton.setCharacterSize(32 + 20);
+    craftingPageButton.setCharacterSize(32);
     craftingPageButton.setPosition(0 * scw / 5, 9 * sch / 10);
     craftingPageButton.setSize(scw / 5, sch / 10);
 
     weaponsPageButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
-    weaponsPageButton.setCharacterSize(32 + 20);
+    weaponsPageButton.setCharacterSize(32);
     weaponsPageButton.setPosition(1 * scw / 5, 9 * sch / 10);
     weaponsPageButton.setSize(scw / 5, sch / 10);
 
     equipablesPageButton.setTexture(GreenPanelTexture, GreenPanelPushedTexture);
-    equipablesPageButton.setCharacterSize(32 + 20);
+    equipablesPageButton.setCharacterSize(32);
     equipablesPageButton.setPosition(2 * scw / 5, 9 * sch / 10);
     equipablesPageButton.setSize(scw / 5, sch / 10);
 
     perksPageButton.setTexture(BluePanelTexture, BluePanelPushedTexture);
-    perksPageButton.setCharacterSize(32 + 20);
+    perksPageButton.setCharacterSize(32);
     perksPageButton.setPosition(3 * scw / 5, 9 * sch / 10);
     perksPageButton.setSize(scw / 5, sch / 10);
 
     statsPageButton.setTexture(ItemPanelTexture, ItemPanelTexture);
-    statsPageButton.setCharacterSize(32 + 20);
+    statsPageButton.setCharacterSize(32);
     statsPageButton.setPosition(4 * scw / 5, 9 * sch / 10);
     statsPageButton.setSize(scw / 5, sch / 10);
 

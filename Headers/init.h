@@ -33,8 +33,8 @@ namespace fraction {
 };
 
 namespace screens {
-    using screenType = sf::Uint8;
-    enum : screenType {  // the types of screen
+    using Type = sf::Uint8;
+    enum : Type {  // the types of screen
         MainRoom,
         SetIP,
         Dungeon
@@ -55,6 +55,17 @@ namespace pacetStates {
         Shooting,
     };
 };
+
+namespace inventoryPage {
+    using Type = sf::Uint8;
+    enum : sf::Uint8 {
+        Crafting,
+        Weapons,
+        Equipables,
+        Perks,
+        Stats
+    };
+}
 
 constexpr int scw = 1920; // screen width
 constexpr int sch = 1080; // screen height
