@@ -81,7 +81,7 @@ sf::Texture ScottPilgrimTexture,
             WallTexture,
             XButtonTexture,
             BoxTexture,
-            floor3xTexture,
+            floor1xTexture,
             PuddleTexture,
 //////////////////////////////////////////////////////////// Panel Tetures
             GreenPanelTexture,
@@ -106,7 +106,7 @@ void loadTextures() {
     WallTexture               .loadFromFile("sources/textures/wall.png");
     XButtonTexture            .loadFromFile("sources/textures/XButton.png");
     BoxTexture                .loadFromFile("sources/textures/Box.png");
-    floor3xTexture            .loadFromFile("sources/textures/floors/floor3x.png");
+    floor1xTexture            .loadFromFile("sources/textures/floors/floor1x.png");
     PuddleTexture             .loadFromFile("sources/textures/Puddle.png");
 
     GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
@@ -142,8 +142,8 @@ sf::Music MainMenuMusic,
 
 void loadMusics() {
     MainMenuMusic .openFromFile("sources/music/MainMenuMusic.wav");
-    FightMusic1   .openFromFile("sources/music/FightMusic1.wav");
-    FightMusic2   .openFromFile("sources/music/FightMusic2.wav");
+    FightMusic1   .openFromFile("sources/music/FightMusic1.flac");
+    FightMusic2   .openFromFile("sources/music/FightMusic2.flac");
 }
 
 bool Rect::intersect(Circle& circle) {
@@ -157,5 +157,5 @@ bool Circle::intersect(Rect& rect) {
 }
 
 float random(sf::Vector2f v) {
-    return std::modf( ( 1.f +  std::sin( v.x * 12.9898f + v.y * 78.233f  ) ) * 43758.5453123f, nullptr);
+    return std::modf( ( 1.f + std::sin( v.x * 12.9898f + v.y * 78.233f ) ) * 43758.5453123f, nullptr);
 }

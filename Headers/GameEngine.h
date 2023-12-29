@@ -253,6 +253,7 @@ void drawFloor() {
             if (CurLocation->EnableTiles[i][j]) {
                 FLoorTileSprite.setTexture(*it, true);
                 FLoorTileSprite.setPosition(size * j, size * i);
+                FLoorTileSprite.setScale(3.f, 3.f);
                 window.draw(FLoorTileSprite, MapStates);
                 it++;
             }
@@ -548,41 +549,41 @@ void CreateImage() {
 void init() {
     setlocale(LC_ALL, "rus");
 
-    std::cout << "size of Animation        = " << sizeof(Animation) << '\n';
-    std::cout << "size of Button           = " << sizeof(Button) << '\n';
-    std::cout << "size of Panel            = " << sizeof(Panel) << '\n';
-    std::cout << "size of Chat             = " << sizeof(Chat) << '\n';
-    std::cout << "size of Inventory        = " << sizeof(Inventory) << '\n';
-    std::cout << "size of Item             = " << sizeof(Item) << '\n';
-    std::cout << "size of Location         = " << sizeof(Location) << '\n';
-    std::cout << "size of Scale<float>     = " << sizeof(Scale<int>) << '\n';
-    std::cout << "size of PlacedText       = " << sizeof(PlacedText) << '\n';
-    std::cout << "size of Weapon           = " << sizeof(Weapon) << '\n';
-    std::cout << "size of Portal           = " << sizeof(Portal) << '\n';
-    std::cout << "size of Interactable     = " << sizeof(Interactable) << '\n';
-    std::cout << "size of Creature         = " << sizeof(Creature) << '\n';
-    std::cout << "size of Bullet           = " << sizeof(Bullet) << '\n';
-    std::cout << "size of Circle           = " << sizeof(Circle) << '\n';
-    std::cout << "size of Rect             = " << sizeof(Rect) << '\n';
-    std::cout << "size of sf::Clock        = " << sizeof(sf::Clock) << '\n';
-    std::cout << "size of sf::Drawable     = " << sizeof(sf::Drawable) << '\n';
-    std::cout << "size of sf::CircleShape  = " << sizeof(sf::CircleShape) << '\n';
-    std::cout << "size of sf::Sprite       = " << sizeof(sf::Sprite) << '\n';
-    std::cout << "size of sf::Text         = " << sizeof(sf::Text) << '\n';
-    std::cout << "size of sf::Font         = " << sizeof(sf::Font) << '\n';
-    std::cout << "size of sf::Time         = " << sizeof(sf::Time) << '\n';
-    std::cout << "size of sf::String       = " << sizeof(sf::String) << '\n';
-    std::cout << "size of sf::Texture      = " << sizeof(sf::Texture) << '\n';
-    std::cout << "size of sf::Vector2f     = " << sizeof(sf::Vector2f) << '\n';
-    std::cout << "size of sf::Color        = " << sizeof(sf::Color) << '\n';
-    std::cout << "size of sf::Shader       = " << sizeof(sf::Shader) << '\n';
+    std::cout << "size of Animation        = " << sizeof(Animation)        << '\n';
+    std::cout << "size of Button           = " << sizeof(Button)           << '\n';
+    std::cout << "size of Panel            = " << sizeof(Panel)            << '\n';
+    std::cout << "size of Chat             = " << sizeof(Chat)             << '\n';
+    std::cout << "size of Inventory        = " << sizeof(Inventory)        << '\n';
+    std::cout << "size of Item             = " << sizeof(Item)             << '\n';
+    std::cout << "size of Location         = " << sizeof(Location)         << '\n';
+    std::cout << "size of Scale<float>     = " << sizeof(Scale<int>)       << '\n';
+    std::cout << "size of PlacedText       = " << sizeof(PlacedText)       << '\n';
+    std::cout << "size of Weapon           = " << sizeof(Weapon)           << '\n';
+    std::cout << "size of Portal           = " << sizeof(Portal)           << '\n';
+    std::cout << "size of Interactable     = " << sizeof(Interactable)     << '\n';
+    std::cout << "size of Creature         = " << sizeof(Creature)         << '\n';
+    std::cout << "size of Bullet           = " << sizeof(Bullet)           << '\n';
+    std::cout << "size of Circle           = " << sizeof(Circle)           << '\n';
+    std::cout << "size of Rect             = " << sizeof(Rect)             << '\n';
+    std::cout << "size of sf::Clock        = " << sizeof(sf::Clock)        << '\n';
+    std::cout << "size of sf::Drawable     = " << sizeof(sf::Drawable)     << '\n';
+    std::cout << "size of sf::CircleShape  = " << sizeof(sf::CircleShape)  << '\n';
+    std::cout << "size of sf::Sprite       = " << sizeof(sf::Sprite)       << '\n';
+    std::cout << "size of sf::Text         = " << sizeof(sf::Text)         << '\n';
+    std::cout << "size of sf::Font         = " << sizeof(sf::Font)         << '\n';
+    std::cout << "size of sf::Time         = " << sizeof(sf::Time)         << '\n';
+    std::cout << "size of sf::String       = " << sizeof(sf::String)       << '\n';
+    std::cout << "size of sf::Texture      = " << sizeof(sf::Texture)      << '\n';
+    std::cout << "size of sf::Vector2f     = " << sizeof(sf::Vector2f)     << '\n';
+    std::cout << "size of sf::Color        = " << sizeof(sf::Color)        << '\n';
+    std::cout << "size of sf::Shader       = " << sizeof(sf::Shader)       << '\n';
     std::cout << "size of sf::RenderStates = " << sizeof(sf::RenderStates) << '\n';
-    std::cout << "size of float            = " << sizeof(float) << '\n';
-    std::cout << "size of int              = " << sizeof(int) << '\n';
-    std::cout << "size of bool             = " << sizeof(bool) << '\n';
-    std::cout << "size of std::string      = " << sizeof(std::string) << '\n';
-    std::cout << "size of Bullet::Type     = " << sizeof(Bullet::Type) << '\n';
-    std::cout << "size of Effect           = " << sizeof(Effect) << '\n';
+    std::cout << "size of float            = " << sizeof(float)            << '\n';
+    std::cout << "size of int              = " << sizeof(int)              << '\n';
+    std::cout << "size of bool             = " << sizeof(bool)             << '\n';
+    std::cout << "size of std::string      = " << sizeof(std::string)      << '\n';
+    std::cout << "size of Bullet::Type     = " << sizeof(Bullet::Type)     << '\n';
+    std::cout << "size of Effect           = " << sizeof(Effect)           << '\n';
 
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
@@ -1088,15 +1089,15 @@ bool IsSomeOneCanBeActivated() {
 }
 
 void FillFloorRects() {
-    sf::Image res, src = floor3xTexture.copyToImage();
+    sf::Image res, src = floor1xTexture.copyToImage();
     auto CreateOneFLoor = [&src](sf::Image& res){
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 5; x++) {
-                res.copy(src, x * 96, y * 96, {(rand() % 5) * 96, 0, 96, 96});
+                res.copy(src, x * 32, y * 32, {(rand() % 5) * 32, 0, 32, 32});
             }
         }
     };
-    res.create(480, 480);
+    res.create(160, 160);
     FloorTextureRects.clear();
     for (int i = 0; i < CurLocation->n; i++) {
         for (int j = 0; j < CurLocation->m; j++) {
@@ -1124,23 +1125,24 @@ void updateShaders() {
 }
 
 void processEffects() {
-    for (int i = 0; i < QueueEffects.size(); i++) {
+    int size = QueueEffects.size();
+    for (int i = 0; i < size; i++) {
         Effect effect = QueueEffects.front();
         switch (effect.type) {
-        case EffectType::Damage :
-            if (effect.tacts != 0) {
-                --effect.tacts;
-                effect.owner->getDamage(effect.parameter);
-            }
-            break;
-        case EffectType::Heal :
-            if (effect.tacts != 0) {
-                --effect.tacts;
-                effect.owner->Health += (float)effect.parameter;
-            }
-            break;
-        default:
-            break;
+            case EffectType::Damage :
+                if (effect.tacts != 0) {
+                    --effect.tacts;
+                    effect.owner->getDamage(effect.parameter);
+                }
+                break;
+            case EffectType::Heal :
+                if (effect.tacts != 0) {
+                    --effect.tacts;
+                    effect.owner->Health += (float)effect.parameter;
+                }
+                break;
+            default:
+                break;
         }
         QueueEffects.pop();
         if (effect.tacts != 0)
