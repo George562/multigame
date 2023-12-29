@@ -9,6 +9,10 @@ public:
     void setPosition(float x, float y) { position.x = x; position.y = y; }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
+    // Move the rect by a given offset
+    void move(float offsetX, float offsetY) { setPosition(position.x + offsetX, position.y + offsetY); }
+    void move(sf::Vector2f offset) { setPosition(position + offset); }
+
     // Get right and bottom
     float getRight() const { return position.x + size.x; }
     float getBottom() const { return position.y + size.y; }
@@ -44,8 +48,8 @@ sf::Packet& operator<<(sf::Packet& packet, Rect& a) {
     return packet << a.getPosition().x << a.getPosition().y << a.getSize().x << a.getSize().y;
 }
 sf::Packet& operator>>(sf::Packet& packet, Rect& a) {
-    sf::Vector2f v1, v2;
-    packet >> v1.x >> v1.y >> v2.x >> v2.y;
-    a.setRect(v1, v2);
+    sf::Vector2f pos, size;
+    packet >> pos.x >> pos.y >> size.x >> size.y;
+    a.setRect(pos, size);
     return packet;
 }

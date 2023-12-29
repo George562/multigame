@@ -62,11 +62,10 @@ void Button::setPosition(float x, float y) {
 
 void Button::setSize(float w, float h) {
     if (Width != 0 && Height != 0) {
-        ButtonText.setScale(w / Width, h / Height);
-        ButtonText.setCenter(getCenter());
         sprite.setScale(w / Width, h / Height);
     }
     Width = w; Height = h;
+    ButtonText.setCenter(getCenter());
 }
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {

@@ -2,44 +2,35 @@
 #include "../../SFML-2.5.1/include/SFML/Network.hpp"
 #include "shape.h"
 
-class EllipseShape : public sf::ConvexShape
-{
-public :
+struct Circle {
+public:
+    // Get and set position
+    sf::Vector2f getPosition() const { return position; }
+    void setPosition(float x, float y) { position.x = x; position.y = y; }
+    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
-    explicit EllipseShape(const float& radius = 0.f) :
-    m_radius(radius)
-    {
-        update();
-    }
+    // Move the circle by a given offset
+    void move(float offsetX, float offsetY) { setPosition(position.x + offsetX, position.y + offsetY); }
+    void move(sf::Vector2f offset) { setPosition(position + offset); }
 
-    void setRadius(const float& radius)
-    {
-        m_radius = radius;
-        update();
-    }
+    // Get and set radius
+    float getRadius() const { return radius; }
+    void setRadius(float r) { radius = r; }
 
-    const float& getRadius() const
-    {
-        return m_radius;
-    }
+    // Set position and radius
+    void setCircle(float x, float y, float r) { setPosition(x, y); setRadius(r); }
+    void setCircle(sf::Vector2f pos, float r) { setPosition(pos); setRadius(r); }
 
-    virtual std::size_t getPointCount() const
-    {
-        return 30; // fixed, but could be an attribute of the class if needed
-    }
-
-    virtual sf::Vector2f getPoint(std::size_t index) const
-    {
-        static const float pi = 3.141592654f;
-
-        float angle = index * 2 * pi / getPointCount() - pi / 2;
-        float x = std::cos(angle) * m_radius;
-        float y = std::sin(angle) * m_radius;
-
-        return sf::Vector2f(m_radius + x, m_radius + y);
-    }
-
-private :
-
-    float m_radius;
+private:
+    float radius;
+    sf::Vector2f position;
 };
+
+sf::Packet& operator<<(sf::Packet& packet, Circle& a) {
+    return packet << a.getPosition().x << a.getPosition().y << a.getRadius();
+}
+sf::Packet& operator>>(sf::Packet& packet, Circle& a) {
+    float x, y, r;
+    return packet >> x >> y >> r;
+    a.setCircle(x, y, r);
+}

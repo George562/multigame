@@ -26,7 +26,7 @@ public:
 ContextMenu::ContextMenu(sf::String name, Rect rect = Rect{0, 0, 600, 600}) : Panel(name) {
     elements.resize(0);
     setPosition(rect.PosX, rect.PosY);
-    setSize(rect.Width, rect.Height);
+    setScale(rect.Width, rect.Height);
 }
 
 void ContextMenu::addElement(sf::Texture& texture, sf::Texture& pushedTexture, sf::String text, void (*func)(void), sf::Vector2f elemPos, sf::Vector2f elemSize) {
