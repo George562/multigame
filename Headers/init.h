@@ -67,6 +67,7 @@ float WallMinSize = size / 8, WallMaxSize = size;
 sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
+sf::View InventoryView({0, 0, (float)scw, (float)sch});
 
 sf::Clock* GameClock;
 
@@ -91,7 +92,8 @@ sf::Texture ScottPilgrimTexture,
             BluePanelPushedTexture,
             YellowPanelTexture,
             YellowPanelPushedTexture,
-            SteelFrameTexture
+            SteelFrameTexture,
+            ItemPanelTexture
             ;
 
 void loadTextures() {
@@ -116,6 +118,7 @@ void loadTextures() {
     YellowPanelTexture       .loadFromFile("sources/textures/Panels/YellowPanel.png");
     YellowPanelPushedTexture .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
     SteelFrameTexture        .loadFromFile("sources/textures/Panels/SteelFrame.png");
+    ItemPanelTexture         .loadFromFile("sources/textures/Panels/ItemPanel.png");
 }
 
 //////////////////////////////////////////////////////////// Shaders

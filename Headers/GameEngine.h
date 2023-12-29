@@ -19,7 +19,7 @@ sf::ContextSettings settings;
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 float MiniMapZoom = 1.f;
-bool MiniMapActivated, EscapeMenuActivated;
+bool MiniMapActivated, EscapeMenuActivated, InventoryActivated;
 screens::screenType screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactable*> InteractibeStuff;
@@ -41,6 +41,32 @@ Bar<int> AmmoBar;
 PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
+
+//////////////////////////////////////////////////////////// InventoryStuff
+enum inventoryPage {
+    Crafting,
+    Weapons,
+    Equipables,
+    Perks,
+    Stats
+};
+inventoryPage activeInventoryPage = Crafting;
+std::vector<sf::Drawable*> inventoryElements; // These elements appear on every page
+
+Button backButton = Button("Back", [](){ InventoryActivated = false; std::cout << "Backbutton Activation\n"; });
+Button craftingPageButton = Button("Crafting", [](){ activeInventoryPage = Crafting; std::cout << "Craftingbutton Activation\n"; });
+Button weaponsPageButton = Button("Weapons", [](){ activeInventoryPage = Weapons; std::cout << "Weaponbutton Activation\n"; });
+Button equipablesPageButton = Button("Equipables", [](){ activeInventoryPage = Equipables; std::cout << "Equipbutton Activation\n"; });
+Button perksPageButton = Button("Perks", [](){ activeInventoryPage = Perks; std::cout << "Perksbutton Activation\n"; });
+Button statsPageButton = Button("Stats", [](){ activeInventoryPage = Stats; std::cout << "Statsbutton Activation\n"; });
+Panel invBackground = Panel();
+
+
+std::map<inventoryPage, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
+
+Button craftButton = Button("Craft!", [](){ std::cout << "Craft Activation\n"; });  // PLACEHOLDER. DOES NOTHING
+Panel statsPlayerImage = Panel(); 
+
 
 //////////////////////////////////////////////////////////// Animations
 
@@ -116,6 +142,7 @@ void drawInterface();
 void LevelGenerate(int, int);
 void LoadMainMenu();
 void init();
+void initInventory();
 void EventHandler();
 void MainLoop();
 bool IsSomeOneCanBeActivated();
@@ -338,6 +365,16 @@ void drawInterface() {
     if (EscapeMenuActivated) {
         window.draw(ListOfPlayers);
         window.draw(EscapeButton);
+    }
+
+    if (InventoryActivated) {
+        window.setView(InventoryView);
+        for(sf::Drawable* elem : inventoryElements)
+            window.draw(*elem);
+        for(sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
+            window.draw(*elem);
+
+        window.setView(InterfaceView);
     }
 
     FPSCounter++;
@@ -643,7 +680,66 @@ void init() {
     MMPuddleRect.setSize(puddle.getSize() * ScaleParam);
     MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
 
+    initInventory();
+
     LoadMainMenu();
+}
+
+void initInventory()
+{
+    craftButton.setTexture(YellowPanelTexture, YellowPanelPushedTexture);
+    craftButton.setCharacterSize(32);
+    craftButton.setPosition(3 * scw / 4, 3 * sch / 4);
+    craftButton.setSize(300, 150);
+
+    statsPlayerImage.setTexture(PlayerTexture);
+    statsPlayerImage.setCenter(5 * scw / 6, sch / 2);
+
+    inventoryPageElements[Crafting].push_back(&craftButton);
+    inventoryPageElements[Stats].push_back(&statsPlayerImage);
+
+
+    backButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
+    backButton.setCharacterSize(24);
+    backButton.setPosition(0, 0);
+    backButton.setSize(300, 150);
+
+    craftingPageButton.setTexture(YellowPanelTexture, YellowPanelPushedTexture);
+    craftingPageButton.setCharacterSize(32);
+    craftingPageButton.setPosition(0 * scw / 5, 9 * sch / 10);
+    craftingPageButton.setSize(scw / 5, sch / 10);
+
+    weaponsPageButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
+    weaponsPageButton.setCharacterSize(32);
+    weaponsPageButton.setPosition(1 * scw / 5, 9 * sch / 10);
+    weaponsPageButton.setSize(scw / 5, sch / 10);
+
+    equipablesPageButton.setTexture(GreenPanelTexture, GreenPanelPushedTexture);
+    equipablesPageButton.setCharacterSize(32);
+    equipablesPageButton.setPosition(2 * scw / 5, 9 * sch / 10);
+    equipablesPageButton.setSize(scw / 5, sch / 10);
+
+    perksPageButton.setTexture(BluePanelTexture, BluePanelPushedTexture);
+    perksPageButton.setCharacterSize(32);
+    perksPageButton.setPosition(3 * scw / 5, 9 * sch / 10);
+    perksPageButton.setSize(scw / 5, sch / 10);
+
+    statsPageButton.setTexture(ItemPanelTexture, ItemPanelTexture);
+    statsPageButton.setCharacterSize(32);
+    statsPageButton.setPosition(4 * scw / 5, 9 * sch / 10);
+    statsPageButton.setSize(scw / 5, sch / 10);
+
+    invBackground.setTexture(SteelFrameTexture);
+    invBackground.setSize(scw, sch);
+    invBackground.setPosition(0, 0);
+
+    inventoryElements.push_back(&invBackground);
+    inventoryElements.push_back(&backButton);
+    inventoryElements.push_back(&craftingPageButton);
+    inventoryElements.push_back(&weaponsPageButton);
+    inventoryElements.push_back(&equipablesPageButton);
+    inventoryElements.push_back(&perksPageButton);
+    inventoryElements.push_back(&statsPageButton);
 }
 
 void EventHandler() {
@@ -666,6 +762,18 @@ void EventHandler() {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
                 EscapeMenuActivated = !EscapeMenuActivated;
             }
+        } else if (InventoryActivated) {
+
+            if (event.key.code == sf::Keyboard::Escape)
+                InventoryActivated = false;
+            backButton.isActivated(event);
+            craftingPageButton.isActivated(event);
+            weaponsPageButton.isActivated(event);
+            equipablesPageButton.isActivated(event);
+            perksPageButton.isActivated(event);
+            statsPageButton.isActivated(event);
+            
+            craftButton.isActivated(event);
         } else {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) {
@@ -686,6 +794,9 @@ void EventHandler() {
                     if (MiniMapActivated) {
                         MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
                     }
+                }
+                if (event.key.code == sf::Keyboard::Tilde) {
+                    InventoryActivated = true;
                 }
             }
             if (event.type == sf::Event::MouseWheelMoved) {
