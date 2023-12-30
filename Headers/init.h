@@ -15,19 +15,19 @@
 #define M_PI       3.14159265358979323846   // pi
 
 namespace fraction {
-    using fractionType = sf::Uint8;
+    using Type = sf::Uint8;
 
-    enum : fractionType {
+    enum : Type {
         Player,
         Enemy
     };
 
-    std::map<fractionType, std::set<fractionType>> Friendship{
+    std::map<Type, std::set<Type>> Friendship{
         {Player, {Player}},
         {Enemy, {Enemy}}
     };
 
-    bool friends(fractionType& left, fractionType& right) {
+    bool friends(Type& left, Type& right) {
         return Friendship[left].count(right);
     }
 };
