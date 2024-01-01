@@ -139,8 +139,8 @@ sf::Shader MapShader,
 
 void loadShaders() {
     MapShader    .loadFromFile("sources/shaders/terrain.vert", "sources/shaders/terrain.frag");
-    PlayerShader .loadFromFile("sources/shaders/player.vert", "sources/shaders/player.frag");
-    PortalShader .loadFromFile("sources/shaders/portal.vert", "sources/shaders/portal.frag");
+    PlayerShader .loadFromFile("sources/shaders/player/player.vert", "sources/shaders/player/player.frag");
+    PortalShader .loadFromFile("sources/shaders/portal/portal.vert", "sources/shaders/portal/portal.frag");
 }
 
 //////////////////////////////////////////////////////////// States
