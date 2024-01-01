@@ -48,32 +48,27 @@ std::vector<sf::Drawable*> inventoryElements; // These elements appear on every 
 
 Button backButton("Back", [](){
     InventoryActivated = false;
-    std::cout << "Backbutton Activation\n";
 });
 Button craftingPageButton("Crafting", [](){
     activeInventoryPage = inventoryPage::Crafting;
-    std::cout << "Craftingbutton Activation\n";
 });
 Button weaponsPageButton("Weapons", [](){
     activeInventoryPage = inventoryPage::Weapons;
-    std::cout << "Weaponbutton Activation\n";
 });
 Button equipablesPageButton("Equipables", [](){
     activeInventoryPage = inventoryPage::Equipables;
-    std::cout << "Equipbutton Activation\n";
 });
 Button perksPageButton("Perks", [](){
     activeInventoryPage = inventoryPage::Perks;
-    std::cout << "Perksbutton Activation\n";
 });
 Button statsPageButton("Stats", [](){
     activeInventoryPage = inventoryPage::Stats;
-    std::cout << "Statsbutton Activation\n";
 });
 Panel invBackground = Panel();
-
+Panel itemListBG = Panel();
 
 std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
+std::vector<sf::Drawable*> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 
 Button craftButton("Craft!", [](){
     std::cout << "Craft Activation\n";
@@ -386,6 +381,47 @@ void drawInterface() {
             window.draw(*elem);
         for(sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
             window.draw(*elem);
+        
+        itemSlotsElements.clear();
+
+        std::vector<std::map<ItemID, Item*>*> currInventory;
+        currInventory.push_back(&player.inventory.keyItems);
+        currInventory.push_back(&player.inventory.safeItems);
+        currInventory.push_back(&player.inventory.equipItems);
+        currInventory.push_back(&player.inventory.dropableItems);
+
+        for(int i = 0; i < 4; i++) {
+            if(player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
+                int slotNumber = 0;
+                for(sf::Uint8 id = 0; id != NONE; id++) {
+                    if(currInventory[i]->find(ItemID(id)) != currInventory[i]->end()) {
+                        Item* drawnItem = (*currInventory[i])[ItemID(id)];
+                        float itemX = int(slotNumber % 4) * 150 + itemListBG.getPosition().x + 50;
+                        float itemY = int(slotNumber / 4) * 150 + itemListBG.getPosition().y + 50;
+
+                        Panel* bgPanel = new Panel();
+                        bgPanel->setPosition(sf::Vector2f(itemX, itemY));
+                        bgPanel->setScale(0.5, 0.5);
+                        bgPanel->setTexture(ItemPanelTexture);
+                        itemSlotsElements.push_back(bgPanel);
+                        window.draw(*itemSlotsElements[slotNumber * 2]);
+
+                        drawnItem->setCenter(sf::Vector2f(itemX + 75, itemY + 75));
+                        drawnItem->draw(window, sf::RenderStates::Default);
+
+                        PlacedText* itemAmountText = new PlacedText();
+                        itemAmountText->setCharacterSize(16);
+                        itemAmountText->setString(std::to_string(drawnItem->amount));
+                        itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
+                        itemSlotsElements.push_back(itemAmountText);
+                        if(drawnItem->amount > 1)
+                            window.draw(*itemSlotsElements[slotNumber * 2 + 1]);
+
+                        slotNumber++;
+                    }
+                }
+            }
+        }
 
         window.setView(InterfaceView);
     }
@@ -707,6 +743,15 @@ void initInventory() {
     statsPlayerImage.setTexture(PlayerTexture);
     statsPlayerImage.setCenter(5 * scw / 6, sch / 2);
 
+    itemListBG.setPosition(100, 200);
+    itemListBG.setTexture(SteelFrameTexture);
+    itemListBG.setScale(scw / 2 / SteelFrameTexture.getSize().x, (sch - 400) / SteelFrameTexture.getSize().y);
+
+    inventoryPageElements[inventoryPage::Crafting].push_back(&itemListBG);
+    inventoryPageElements[inventoryPage::Weapons].push_back(&itemListBG);
+    inventoryPageElements[inventoryPage::Equipables].push_back(&itemListBG);
+    inventoryPageElements[inventoryPage::Perks].push_back(&itemListBG);
+
     inventoryPageElements[inventoryPage::Crafting].push_back(&craftButton);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
 
@@ -946,12 +991,12 @@ void updateBullets() {
             Bullets.erase(Bullets.begin() + i--);
         } else {
             Bullets[i].move(CurLocation);
-            if (!fraction::friends(Bullets[i].fromWho, player.fraction) && player.intersect(Bullets[i])) {
+            if (!faction::friends(Bullets[i].fromWho, player.faction) && player.intersect(Bullets[i])) {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
             for (Enemy* &enemy: Enemies) {
-                if (!fraction::friends(Bullets[i].fromWho, enemy->fraction) && enemy->intersect(Bullets[i])) {
+                if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
                 }
@@ -988,7 +1033,7 @@ void MainLoop() {
                 Enemies[i]->move(CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition(), Enemies[i]->fraction);
+                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition(), Enemies[i]->faction);
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
@@ -1003,7 +1048,7 @@ void MainLoop() {
         }
         if (!window.hasFocus()) {
             if (player.CurWeapon != nullptr) {
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
+                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             updateBullets();
 
@@ -1028,7 +1073,7 @@ void MainLoop() {
             }
             int wasBulletsSize = Bullets.size();
             if (player.CurWeapon != nullptr) {
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
+                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {

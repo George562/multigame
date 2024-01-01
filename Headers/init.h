@@ -14,7 +14,7 @@
 #include "text.h"
 #define M_PI       3.14159265358979323846   // pi
 
-namespace fraction {
+namespace faction {
     using Type = sf::Uint8;
 
     enum : Type {

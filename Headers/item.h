@@ -9,7 +9,8 @@ enum ItemID : sf::Uint8 {
     generic,
     medkit,
     regenDrug,
-    coin
+    coin,
+    NONE
 };
 
 //////////////////////////////////////////////////////////// Item Animation params
