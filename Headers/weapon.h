@@ -37,7 +37,7 @@ public:
             lock = true;
     };
 
-    virtual void Shoot(Circle& shooter, sf::Vector2f direction, fraction::fractionType f) {
+    virtual void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
@@ -70,7 +70,7 @@ public:
 class Revolver : public Weapon {
 public:
     Revolver() : Weapon("Revolver", 6, 2, 0, 5) { BulletVelocity = 16; NumberOfBulletsPerShot = 1;  scatter = 10; }
-    void Shoot(Circle& shooter, sf::Vector2f direction, fraction::fractionType f) {
+    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         Weapon::Shoot(shooter, direction, f);
         lock = true;
     }
@@ -80,7 +80,7 @@ public:
 class Shotgun : public Weapon {
 public:
     Shotgun() : Weapon("Shotgun", 5, 10, 1, 3) { BulletVelocity = 10; NumberOfBulletsPerShot = 10;  scatter = 50; }
-    void Shoot(Circle& shooter, sf::Vector2f direction, fraction::fractionType f) {
+    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
@@ -112,7 +112,7 @@ public:
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
             lock = false;
     };
-    void Shoot(Circle& shooter, sf::Vector2f direction, fraction::fractionType f) {
+    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
         sf::Vector2f d = direction - shooter.getPosition();
@@ -141,7 +141,7 @@ public:
         } if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
             lock = true;
     };
-    void Shoot(Circle& shooter, sf::Vector2f direction, fraction::fractionType f) {
+    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
         
@@ -159,7 +159,7 @@ public:
 class Chaotic : public Weapon {
 public:
     Chaotic() : Weapon("Chaotic", 300, 0.1, 1.f / 16, 3) { BulletVelocity = 3; }
-    void Shoot(Circle& shooter, sf::Vector2f direction, fraction::fractionType f) {
+    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
         

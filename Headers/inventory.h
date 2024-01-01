@@ -57,6 +57,11 @@ public:
         }
         *(equipItems[item->id]) += *item;
     }
+
+    int itemAmount()
+    {
+        return dropableItems.size() + safeItems.size() + keyItems.size() + equipItems.size();
+    }
 };
 
 ////////////////////////////////////////////////////////////
