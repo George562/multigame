@@ -28,7 +28,7 @@ void main() {
     vec2 uv = (gl_FragCoord.xy - iResolution.xy / 2.) / iResolution.xy;
     // vec2 uv = (gl_FragCoord.xy * 2.0 - iResolution.xy) / iResolution.y;
 
-    float coef = (iTime) * 30000.;
+    float coef = 20.;
     float d = length(coef * uv);
     float phi = abs(dot(vec2(cos(d), sin(d)), normalize(coef * uv)));
 
