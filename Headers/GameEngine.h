@@ -312,7 +312,7 @@ void drawMiniMap() {
             }
         }
     }
-    
+
     // draw location objects
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
@@ -381,7 +381,7 @@ void drawInterface() {
             window.draw(*elem);
         for(sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
             window.draw(*elem);
-        
+
         itemSlotsElements.clear();
 
         std::vector<std::map<ItemID, Item*>*> currInventory;
@@ -469,7 +469,7 @@ void LevelGenerate(int n, int m) {
             DeleteFromVector(InteractibeStuff, i);
             LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
         });
-        
+
         LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
         InteractibeStuff.push_back(listOfBox[i]);
         DrawableStuff.push_back(listOfBox[i]);
@@ -497,7 +497,7 @@ void LevelGenerate(int n, int m) {
 
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
-    
+
     player.setPosition(3.5f * size, 2.5f * size);
     FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
     player.CurWeapon = nullptr;
@@ -565,7 +565,7 @@ void LoadMainMenu() {
 
     DrawableStuff.clear();
     DrawableStuff.push_back(&player);
-    
+
     InterfaceStuff.clear();
     InterfaceStuff.push_back(&ManaBar);
     InterfaceStuff.push_back(&HpBar);
@@ -636,7 +636,7 @@ void init() {
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
     window.setView(GameView);
-    
+
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     GameClock = new sf::Clock;
 
@@ -671,7 +671,7 @@ void init() {
 
     IPPanel         .setTexture(YellowPanelTexture);
     ListOfPlayers   .setTexture(SteelFrameTexture);
-    
+
     EscapeButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
     HostButton  .setTexture(GreenPanelTexture, GreenPanelPushedTexture);
 
@@ -682,7 +682,7 @@ void init() {
     listener.setBlocking(false);
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
     std::cout << "IP: " << MyIP << '\n';
-    
+
     EscapeButton.setCharacterSize(110);
     IPPanel.text.setCharacterSize(80);
     ListOfPlayers.text.setCharacterSize(60);
@@ -702,7 +702,7 @@ void init() {
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
     HpBar.setValue(player.Health);
     HpBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
-    
+
     ManaBar.setWidth(240);
     ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
     ManaBar.setValue(player.Mana);
@@ -829,7 +829,7 @@ void EventHandler() {
             equipablesPageButton.isActivated(event);
             perksPageButton.isActivated(event);
             statsPageButton.isActivated(event);
-            
+
             craftButton.isActivated(event);
         } else {
             if (event.type == sf::Event::KeyPressed) {
@@ -882,7 +882,7 @@ void EventHandler() {
                     }
                 }
             }
-            
+
             for (int i = 0; i < PickupStuff.size(); i++) {
                 if (PickupStuff[i]->CanBeActivated(player)) {
                     if (PickupStuff[i]->isActivated(player, event)) {
@@ -893,7 +893,7 @@ void EventHandler() {
                     }
                 }
             }
-            
+
             switch (screen) {
                 case screens::MainRoom:
                     if (event.type == sf::Event::KeyPressed) {
@@ -924,7 +924,7 @@ void EventHandler() {
                         if (!MiniMapActivated) {
                             CurWeapon -= (int)event.mouseWheelScroll.delta;
                             player.ChangeWeapon(weapons[CurWeapon.cur]);
-            
+
                             std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
                             ReloadWeaponText.setString(reloadStr);
                             ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
@@ -946,7 +946,7 @@ void EventHandler() {
                             draw();
                             if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
                                 selector.add(MySocket);
-                                
+
                                 if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
                                     MySocket.receive(ReceivePacket) == sf::Socket::Done) {
                                     while (!ReceivePacket.endOfPacket()) {
@@ -1007,7 +1007,7 @@ void updateBullets() {
 
 void MainLoop() {
     while (window.isOpen()) {
-        
+
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }
@@ -1018,7 +1018,7 @@ void MainLoop() {
                     for (std::map<ItemID, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
                         it != Enemies[i]->inventory.dropableItems.end(); it++) {
                         it->second->dropTo(Enemies[i]->getPosition());
-                        
+
                         PickupStuff.push_back(it->second);
                         DrawableStuff.push_back(it->second);
                     }
@@ -1109,7 +1109,7 @@ void MainLoop() {
                 SendPacket.clear();
                 mutex.unlock();
             }
-            
+
             if (MiniMapActivated) {
                 if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                     MiniMapView.move(-sf::Vector2f(sf::Mouse::getPosition() - MouseBuffer) * MiniMapZoom);
@@ -1170,7 +1170,7 @@ void updateShaders() {
     MapShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
     MapShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
     MapShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
-    
+
     PlayerShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
     PlayerShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
     PlayerShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
@@ -1178,6 +1178,8 @@ void updateShaders() {
     PortalShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
     PortalShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
     PortalShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+
+    PickupItemShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
 }
 
 void processEffects() {
@@ -1272,7 +1274,7 @@ void ClientDisconnect(int i) {
     clients.erase(clients.begin() + i);
     ConnectedPlayers.erase(ConnectedPlayers.begin() + i + 1);
     ListOfPlayers.removeWord(i);
-    
+
     std::cout << "amount of clients = " << clients.size() << "\n";
     mutex.lock();
     SendPacket << pacetStates::PlayerDisconnect << i;

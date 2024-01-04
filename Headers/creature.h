@@ -96,10 +96,8 @@ public:
     virtual void setTarget(sf::Vector2f target) { this->target = target; }
 
     void AddItem(Item* item) {
-        inventory.addToDropable(item);
-        inventory.addToEquip(item);
-        inventory.addToKey(item);
-        inventory.addToSafe(item);
+        inventory.addItem(item);
+        item->picked();
     }
 };
 #pragma pack(pop)

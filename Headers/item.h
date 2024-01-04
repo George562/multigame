@@ -23,25 +23,25 @@ std::map<ItemID, sf::Texture*> itemTextureName {
     {coin, new sf::Texture}
 };
 
-std::map<ItemID, int> ItemTextureFrameAmount {
+std::map<ItemID, int> itemTextureFrameAmount {
     {generic, 1},
     {medkit, 1},
     {regenDrug, 1},
     {coin, 4}
 };
 
-std::map<ItemID, sf::Time> ItemTextureDuration {
+std::map<ItemID, sf::Time> itemTextureDuration {
     {generic, sf::seconds(1)},
     {medkit, sf::seconds(1)},
     {regenDrug, sf::seconds(1)},
     {coin, sf::seconds(1)}
 };
 
-std::map<ItemID, sf::Shader *> ItemTextureShader {
-    {generic, &MapShader},
-    {medkit, &MapShader},
-    {regenDrug, &MapShader},
-    {coin, &MapShader}
+std::map<ItemID, sf::Shader *> itemTextureShader {
+    {generic, &PickupItemShader},
+    {medkit, &PickupItemShader},
+    {regenDrug, &PickupItemShader},
+    {coin, &PickupItemShader}
 };
 
 //////////////////////////////////////////////////////////// Pickup Item Animation params
@@ -108,6 +108,7 @@ public:
     bool isActivated(Circle&, sf::Event&) override;
     bool CanBeActivated(Circle&) override;
     void dropTo(sf::Vector2f);
+    void picked(); // call when you pick up
 };
 #pragma pack(pop)
 
@@ -124,7 +125,7 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
 
-    setAnimation(*itemTextureName[id], ItemTextureFrameAmount[id], 1, ItemTextureDuration[id], ItemTextureShader[id]);
+    setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
 }
 
 void Item::setPosition(sf::Vector2f v) {
@@ -148,6 +149,10 @@ void Item::dropTo(sf::Vector2f pos) {
     setAnimation(*pickupItemTextureName[id], pickupItemTextureFrameAmount[id], 1, pickupItemTextureDuration[id], pickupItemTextureShader[id]);
     setPosition(pos);
     isInInventory = false;
+}
+
+void Item::picked() {
+    setAnimation(*pickupItemTextureName[id], pickupItemTextureFrameAmount[id], 1, pickupItemTextureDuration[id], itemTextureShader[id]);
 }
 
 void operator +=(Item& sumTo, Item& sumItem) {
