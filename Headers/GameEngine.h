@@ -377,44 +377,49 @@ void drawInterface() {
 
     if (InventoryActivated) {
         window.setView(InventoryView);
-        for(sf::Drawable* elem : inventoryElements)
+        for (sf::Drawable* elem : inventoryElements)
             window.draw(*elem);
-        for(sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
+        for (sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
             window.draw(*elem);
 
+        for (int i = 0; i < itemSlotsElements.size(); i++) {
+            delete itemSlotsElements[i];
+        }
         itemSlotsElements.clear();
 
-        std::vector<std::map<ItemID, Item*>*> currInventory;
-        currInventory.push_back(&player.inventory.keyItems);
-        currInventory.push_back(&player.inventory.safeItems);
-        currInventory.push_back(&player.inventory.equipItems);
-        currInventory.push_back(&player.inventory.dropableItems);
+        std::vector<std::map<ItemID::Type, Item*>*> currInventory
+        {
+            &player.inventory.keyItems,
+            &player.inventory.safeItems,
+            &player.inventory.equipItems,
+            &player.inventory.dropableItems
+        };
 
-        for(int i = 0; i < 4; i++) {
-            if(player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
+        for (int i = 0; i < 4; i++) {
+            if (player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
                 int slotNumber = 0;
-                for(sf::Uint8 id = 0; id != NONE; id++) {
-                    if(currInventory[i]->find(ItemID(id)) != currInventory[i]->end()) {
-                        Item* drawnItem = (*currInventory[i])[ItemID(id)];
+                for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+                    if (currInventory[i]->find(id) != currInventory[i]->end()) {
+                        Item* drawnItem = (*currInventory[i])[id];
                         float itemX = int(slotNumber % 4) * 150 + itemListBG.getPosition().x + 50;
                         float itemY = int(slotNumber / 4) * 150 + itemListBG.getPosition().y + 50;
 
                         Panel* bgPanel = new Panel();
-                        bgPanel->setPosition(sf::Vector2f(itemX, itemY));
+                        bgPanel->setPosition(itemX, itemY);
                         bgPanel->setScale(0.5, 0.5);
                         bgPanel->setTexture(ItemPanelTexture);
                         itemSlotsElements.push_back(bgPanel);
                         window.draw(*itemSlotsElements[slotNumber * 2]);
 
-                        drawnItem->setCenter(sf::Vector2f(itemX + 75, itemY + 75));
-                        drawnItem->draw(window, sf::RenderStates::Default);
+                        drawnItem->setCenter(itemX + 75, itemY + 75);
+                        window.draw(*drawnItem);
 
                         PlacedText* itemAmountText = new PlacedText();
                         itemAmountText->setCharacterSize(16);
                         itemAmountText->setString(std::to_string(drawnItem->amount));
                         itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
                         itemSlotsElements.push_back(itemAmountText);
-                        if(drawnItem->amount > 1)
+                        if (drawnItem->amount > 1)
                             window.draw(*itemSlotsElements[slotNumber * 2 + 1]);
 
                         slotNumber++;
@@ -468,6 +473,7 @@ void LevelGenerate(int n, int m) {
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);
             LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
+            delete i;
         });
 
         LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
@@ -597,41 +603,40 @@ void CreateImage() {
 void init() {
     setlocale(LC_ALL, "rus");
 
-    std::cout << "size of Animation        = " << sizeof(Animation)        << '\n';
-    std::cout << "size of Button           = " << sizeof(Button)           << '\n';
-    std::cout << "size of Panel            = " << sizeof(Panel)            << '\n';
-    std::cout << "size of Chat             = " << sizeof(Chat)             << '\n';
-    std::cout << "size of Inventory        = " << sizeof(Inventory)        << '\n';
-    std::cout << "size of Item             = " << sizeof(Item)             << '\n';
-    std::cout << "size of Location         = " << sizeof(Location)         << '\n';
-    std::cout << "size of Scale<float>     = " << sizeof(Scale<int>)       << '\n';
-    std::cout << "size of PlacedText       = " << sizeof(PlacedText)       << '\n';
-    std::cout << "size of Weapon           = " << sizeof(Weapon)           << '\n';
-    std::cout << "size of Portal           = " << sizeof(Portal)           << '\n';
-    std::cout << "size of Interactable     = " << sizeof(Interactable)     << '\n';
-    std::cout << "size of Creature         = " << sizeof(Creature)         << '\n';
-    std::cout << "size of Bullet           = " << sizeof(Bullet)           << '\n';
-    std::cout << "size of Circle           = " << sizeof(Circle)           << '\n';
-    std::cout << "size of Rect             = " << sizeof(Rect)             << '\n';
-    std::cout << "size of sf::Clock        = " << sizeof(sf::Clock)        << '\n';
-    std::cout << "size of sf::Drawable     = " << sizeof(sf::Drawable)     << '\n';
-    std::cout << "size of sf::CircleShape  = " << sizeof(sf::CircleShape)  << '\n';
-    std::cout << "size of sf::Sprite       = " << sizeof(sf::Sprite)       << '\n';
-    std::cout << "size of sf::Text         = " << sizeof(sf::Text)         << '\n';
-    std::cout << "size of sf::Font         = " << sizeof(sf::Font)         << '\n';
-    std::cout << "size of sf::Time         = " << sizeof(sf::Time)         << '\n';
-    std::cout << "size of sf::String       = " << sizeof(sf::String)       << '\n';
-    std::cout << "size of sf::Texture      = " << sizeof(sf::Texture)      << '\n';
-    std::cout << "size of sf::Vector2f     = " << sizeof(sf::Vector2f)     << '\n';
-    std::cout << "size of sf::Color        = " << sizeof(sf::Color)        << '\n';
-    std::cout << "size of sf::Shader       = " << sizeof(sf::Shader)       << '\n';
-    std::cout << "size of sf::RenderStates = " << sizeof(sf::RenderStates) << '\n';
-    std::cout << "size of float            = " << sizeof(float)            << '\n';
-    std::cout << "size of int              = " << sizeof(int)              << '\n';
-    std::cout << "size of bool             = " << sizeof(bool)             << '\n';
-    std::cout << "size of std::string      = " << sizeof(std::string)      << '\n';
-    std::cout << "size of Bullet::Type     = " << sizeof(Bullet::Type)     << '\n';
-    std::cout << "size of Effect           = " << sizeof(Effect)           << '\n';
+    std::cout << "size of Animation       = " << sizeof(Animation)        << '\n';
+    std::cout << "size of Button          = " << sizeof(Button)           << '\n';
+    std::cout << "size of Panel           = " << sizeof(Panel)            << '\n';
+    std::cout << "size of Chat            = " << sizeof(Chat)             << '\n';
+    std::cout << "size of Inventory       = " << sizeof(Inventory)        << '\n';
+    std::cout << "size of Item            = " << sizeof(Item)             << '\n';
+    std::cout << "size of Location        = " << sizeof(Location)         << '\n';
+    std::cout << "size of Scale<float>    = " << sizeof(Scale<int>)       << '\n';
+    std::cout << "size of PlacedText      = " << sizeof(PlacedText)       << '\n';
+    std::cout << "size of Weapon          = " << sizeof(Weapon)           << '\n';
+    std::cout << "size of Portal          = " << sizeof(Portal)           << '\n';
+    std::cout << "size of Interactable    = " << sizeof(Interactable)     << '\n';
+    std::cout << "size of Creature        = " << sizeof(Creature)         << '\n';
+    std::cout << "size of Bullet          = " << sizeof(Bullet)           << '\n';
+    std::cout << "size of Circle          = " << sizeof(Circle)           << '\n';
+    std::cout << "size of Rect            = " << sizeof(Rect)             << '\n';
+    std::cout << "size of sf::Clock       = " << sizeof(sf::Clock)        << '\n';
+    std::cout << "size of sf::Drawable    = " << sizeof(sf::Drawable)     << '\n';
+    std::cout << "size of sf::CircleShape = " << sizeof(sf::CircleShape)  << '\n';
+    std::cout << "size of sf::Sprite      = " << sizeof(sf::Sprite)       << '\n';
+    std::cout << "size of sf::Text        = " << sizeof(sf::Text)         << '\n';
+    std::cout << "size of sf::Font        = " << sizeof(sf::Font)         << '\n';
+    std::cout << "size of sf::Time        = " << sizeof(sf::Time)         << '\n';
+    std::cout << "size of sf::String      = " << sizeof(sf::String)       << '\n';
+    std::cout << "size of sf::Texture     = " << sizeof(sf::Texture)      << '\n';
+    std::cout << "size of sf::Vector2f    = " << sizeof(sf::Vector2f)     << '\n';
+    std::cout << "size of sf::Color       = " << sizeof(sf::Color)        << '\n';
+    std::cout << "size of sf::Shader      = " << sizeof(sf::Shader)       << '\n';
+    std::cout << "size of float           = " << sizeof(float)            << '\n';
+    std::cout << "size of int             = " << sizeof(int)              << '\n';
+    std::cout << "size of bool            = " << sizeof(bool)             << '\n';
+    std::cout << "size of std::string     = " << sizeof(std::string)      << '\n';
+    std::cout << "size of Bullet::Type    = " << sizeof(Bullet::Type)     << '\n';
+    std::cout << "size of Effect          = " << sizeof(Effect)           << '\n';
 
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
@@ -639,12 +644,6 @@ void init() {
 
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     GameClock = new sf::Clock;
-
-    loadMusics();
-    MainMenuMusic.setLoop(true);
-    MainMenuMusic.setVolume(0);
-    FightMusic1.setVolume(0);
-    FightMusic2.setVolume(0);
 
     // Load locations
     WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
@@ -654,6 +653,12 @@ void init() {
     loadItemTextures();
     loadFonts();
     loadShaders();
+    loadMusics();
+
+    MainMenuMusic.setLoop(true);
+    MainMenuMusic.setVolume(0);
+    FightMusic1.setVolume(0);
+    FightMusic2.setVolume(0);
 
     portal.setAnimation(PortalAnimation2Texture, 9, 1, sf::seconds(1), &PortalShader);
     portal.setSize(170.f, 320.f);
@@ -669,11 +674,11 @@ void init() {
     PortalShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     PortalShader.setUniform("u_playerRadius", player.Radius);
 
-    IPPanel         .setTexture(YellowPanelTexture);
-    ListOfPlayers   .setTexture(SteelFrameTexture);
+    IPPanel       .setTexture(YellowPanelTexture);
+    ListOfPlayers .setTexture(SteelFrameTexture);
 
-    EscapeButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
-    HostButton  .setTexture(GreenPanelTexture, GreenPanelPushedTexture);
+    EscapeButton .setTexture(RedPanelTexture, RedPanelPushedTexture);
+    HostButton   .setTexture(GreenPanelTexture, GreenPanelPushedTexture);
 
     WallRect.setTexture(WallTexture);
 
@@ -681,7 +686,7 @@ void init() {
 
     listener.setBlocking(false);
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
-    std::cout << "IP: " << MyIP << '\n';
+    std::cout << "LocalAddress: " << MyIP << "\nPublicAddress: " << MySocket.getRemoteAddress().getPublicAddress().toString() << '\n';
 
     EscapeButton.setCharacterSize(110);
     IPPanel.text.setCharacterSize(80);
@@ -1015,7 +1020,7 @@ void MainLoop() {
         for (int i = 0; i < Enemies.size(); i++) {
             if (Enemies[i]->Health.toBottom() == 0) {
                 if (Enemies[i]->dropInventory) {
-                    for (std::map<ItemID, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
+                    for (std::map<ItemID::Type, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
                         it != Enemies[i]->inventory.dropableItems.end(); it++) {
                         it->second->dropTo(Enemies[i]->getPosition());
 

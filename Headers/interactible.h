@@ -25,17 +25,17 @@ public:
             delete animation;
         }
         animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
-        setSize(animation->getGlobalSize());
+        Rect::setSize(animation->getGlobalSize());
         animation->play();
     };
     
-    void setSize(float x, float y) { Rect::setSize(x, y); animation->setSize(sf::Vector2f(x, y)); }
+    void setSize(float w, float h) { Rect::setSize(w, h); animation->setSize(sf::Vector2f(w, h)); }
     void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
 
-    void setPosition(float x, float y) { PosX = x; PosY = y; animation->setPosition(PosX, PosY); }
+    void setPosition(float x, float y) { Rect::setPosition(x, y); animation->setPosition(x, y); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
-    void setCenter(float x, float y) { setPosition(x - animation->getGlobalSize().x / 2, y - animation->getGlobalSize().y / 2); }
+    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 };
 

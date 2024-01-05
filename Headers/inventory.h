@@ -10,17 +10,17 @@ public:
     float money = 0;
     int slotAmount = -1; // -1 means unlimited (for enemies only).
 
-    std::map<ItemID, Item*> dropableItems; // All items that can be dropped.
-                                                     // Mostly materials from enemies or pickups.
+    std::map<ItemID::Type, Item*> dropableItems; // All items that can be dropped.
+                                           // Mostly materials from enemies or pickups.
 
-    std::map<ItemID, Item*> safeItems; // Cannot be dropped by dying, but can be removed 
-                                                 // if the player wishes to.
+    std::map<ItemID::Type, Item*> safeItems; // Cannot be dropped by dying, but can be removed 
+                                       // if the player wishes to.
 
-    std::map<ItemID, Item*> keyItems; // Items for quests, story progression etc. 
-                                                // So it is mostly items that cannot be removed by any normal means.
-                                                // Due to this, they will not occupy general inventory slots.
+    std::map<ItemID::Type, Item*> keyItems; // Items for quests, story progression etc. 
+                                      // So it is mostly items that cannot be removed by any normal means.
+                                      // Due to this, they will not occupy general inventory slots.
 
-    std::map<ItemID, Item*> equipItems; // Stuff like armor, accessories etc.
+    std::map<ItemID::Type, Item*> equipItems; // Stuff like armor, accessories etc.
 
     void addItem(Item* item) {
         if      (!addToDropable(item)) {}

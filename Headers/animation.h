@@ -20,13 +20,14 @@ private:
 public:
     Animation();
     Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
-    void setTexture(sf::Texture& name);
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const;
 
     void play();
     void pause();
     void stop();
 
+    void setTexture(sf::Texture& name);
+    void setShader(sf::Shader* shader);
     void setAnimationLevel(int);
     void setSize(sf::Vector2f size);
     sf::Vector2f getSize() const;
@@ -87,6 +88,10 @@ void Animation::stop() {
 
 void Animation::setTexture(sf::Texture& texture) {
     sprite.setTexture(texture);
+}
+
+void Animation::setShader(sf::Shader* shader) {
+    this->shader = shader;
 }
 
 void Animation::setSize(sf::Vector2f size) {

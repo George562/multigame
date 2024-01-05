@@ -6,13 +6,13 @@
 #include <map>
 #include <set>
 #include <ctime>
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include "scale.h"
 #include "rect.h"
 #include "circle.h"
 #include "animation.h"
 #include "text.h"
-#define M_PI       3.14159265358979323846   // pi
 
 namespace faction {
     using Type = sf::Uint8;
@@ -136,7 +136,8 @@ void loadTextures() {
 sf::Shader MapShader,
            PlayerShader,
            PortalShader,
-           PickupItemShader;
+           PickupItemShader
+           ;
 
 void loadShaders() {
     MapShader        .loadFromFile("sources/shaders/terrain.vert",               "sources/shaders/terrain.frag"              );
@@ -151,7 +152,8 @@ sf::RenderStates MapStates(&MapShader);
 //////////////////////////////////////////////////////////// Music
 sf::Music MainMenuMusic,
           FightMusic1,
-          FightMusic2;
+          FightMusic2
+          ;
 
 void loadMusics() {
     MainMenuMusic .openFromFile("sources/music/MainMenuMusic.wav");
