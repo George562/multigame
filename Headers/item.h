@@ -149,7 +149,7 @@ void Item::dropTo(sf::Vector2f pos) {
 }
 
 void Item::picked() {
-    animation->setShader(pickupItemTextureShader[id]);
+    animation->setShader(itemTextureShader[id]);
     isInInventory = true;
 }
 
