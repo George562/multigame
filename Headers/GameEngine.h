@@ -64,8 +64,8 @@ Button perksPageButton("Perks", [](){
 Button statsPageButton("Stats", [](){
     activeInventoryPage = inventoryPage::Stats;
 });
-Panel invBackground = Panel();
-Panel itemListBG = Panel();
+Panel invBackground;
+Panel itemListBG;
 
 std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
 std::vector<sf::Drawable*> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
@@ -73,7 +73,7 @@ std::vector<sf::Drawable*> itemSlotsElements; // Elements that comprise an inven
 Button craftButton("Craft!", [](){
     std::cout << "Craft Activation\n";
 });  // PLACEHOLDER. DOES NOTING
-Panel statsPlayerImage = Panel();
+Panel statsPlayerImage;
 
 //////////////////////////////////////////////////////////// Animations
 
@@ -749,8 +749,8 @@ void initInventory() {
     statsPlayerImage.setCenter(5 * scw / 6, sch / 2);
 
     itemListBG.setPosition(100, 200);
-    itemListBG.setTexture(SteelFrameTexture);
-    itemListBG.setScale(scw / 2 / SteelFrameTexture.getSize().x, (sch - 400) / SteelFrameTexture.getSize().y);
+    itemListBG.setTexture(Frame4Texture);
+    itemListBG.setScale(scw / 2.f / Frame4Texture.getSize().x, (sch - 400.f) / Frame4Texture.getSize().y);
 
     inventoryPageElements[inventoryPage::Crafting].push_back(&itemListBG);
     inventoryPageElements[inventoryPage::Weapons].push_back(&itemListBG);

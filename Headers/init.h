@@ -104,7 +104,8 @@ sf::Texture ScottPilgrimTexture,
             YellowPanelTexture,
             YellowPanelPushedTexture,
             SteelFrameTexture,
-            ItemPanelTexture
+            ItemPanelTexture,
+            Frame4Texture
             ;
 
 void loadTextures() {
@@ -130,6 +131,7 @@ void loadTextures() {
     YellowPanelPushedTexture .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
     SteelFrameTexture        .loadFromFile("sources/textures/Panels/SteelFrame.png");
     ItemPanelTexture         .loadFromFile("sources/textures/Panels/ItemPanel.png");
+    Frame4Texture            .loadFromFile("sources/textures/Panels/frame4.png");
 }
 
 //////////////////////////////////////////////////////////// Shaders

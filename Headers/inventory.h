@@ -13,10 +13,10 @@ public:
     std::map<ItemID::Type, Item*> dropableItems; // All items that can be dropped.
                                            // Mostly materials from enemies or pickups.
 
-    std::map<ItemID::Type, Item*> safeItems; // Cannot be dropped by dying, but can be removed 
+    std::map<ItemID::Type, Item*> safeItems; // Cannot be dropped by dying, but can be removed
                                        // if the player wishes to.
 
-    std::map<ItemID::Type, Item*> keyItems; // Items for quests, story progression etc. 
+    std::map<ItemID::Type, Item*> keyItems; // Items for quests, story progression etc.
                                       // So it is mostly items that cannot be removed by any normal means.
                                       // Due to this, they will not occupy general inventory slots.
 
