@@ -1,89 +1,93 @@
 #pragma once
 #include "interactible.h"
 
-enum ItemID : sf::Uint8 {
-    gunParts,
-    repairKit,
-    keyCard,
-    protectiveSuit,
-    generic,
-    medkit,
-    regenDrug,
-    coin
-};
+namespace ItemID {
+    using Type = sf::Uint8;
+    enum : Type {
+        gunParts,
+        repairKit,
+        keyCard,
+        protectiveSuit,
+        generic,
+        medkit,
+        regenDrug,
+        coin,
+        NONE
+    };
+}
 
 //////////////////////////////////////////////////////////// Item Animation params
-std::map<ItemID, sf::Texture*> itemTextureName {
-    {gunParts, new sf::Texture},
-    {repairKit, new sf::Texture},
-    {keyCard, new sf::Texture},
-    {protectiveSuit, new sf::Texture},
-    {regenDrug, new sf::Texture},
-    {coin, new sf::Texture}
+std::map<ItemID::Type, sf::Texture*> itemTextureName {
+    {ItemID::gunParts, new sf::Texture},
+    {ItemID::repairKit, new sf::Texture},
+    {ItemID::keyCard, new sf::Texture},
+    {ItemID::protectiveSuit, new sf::Texture},
+    {ItemID::regenDrug, new sf::Texture},
+    {ItemID::coin, new sf::Texture}
 };
 
-std::map<ItemID, int> ItemTextureFrameAmount {
-    {generic, 1},
-    {medkit, 1},
-    {regenDrug, 1},
-    {coin, 4}
+std::map<ItemID::Type, int> itemTextureFrameAmount {
+    {ItemID::generic, 1},
+    {ItemID::medkit, 1},
+    {ItemID::regenDrug, 1},
+    {ItemID::coin, 4}
 };
 
-std::map<ItemID, sf::Time> ItemTextureDuration {
-    {generic, sf::seconds(1)},
-    {medkit, sf::seconds(1)},
-    {regenDrug, sf::seconds(1)},
-    {coin, sf::seconds(1)}
+std::map<ItemID::Type, sf::Time> itemTextureDuration {
+    {ItemID::generic, sf::seconds(1)},
+    {ItemID::medkit, sf::seconds(1)},
+    {ItemID::regenDrug, sf::seconds(1)},
+    {ItemID::coin, sf::seconds(1)}
 };
 
-std::map<ItemID, sf::Shader *> ItemTextureShader {
-    {generic, &MapShader},
-    {medkit, &MapShader},
-    {regenDrug, &MapShader},
-    {coin, &MapShader}
+std::map<ItemID::Type, sf::Shader *> itemTextureShader {
+    {ItemID::generic, &PickupItemShader},
+    {ItemID::medkit, &PickupItemShader},
+    {ItemID::regenDrug, &PickupItemShader},
+    {ItemID::coin, &PickupItemShader}
 };
 
 //////////////////////////////////////////////////////////// Pickup Item Animation params
-std::map<ItemID, sf::Texture*> pickupItemTextureName {
-    {generic, new sf::Texture},
-    {medkit, new sf::Texture},
-    {regenDrug, new sf::Texture},
-    {coin, new sf::Texture}
+std::map<ItemID::Type, sf::Texture*> pickupItemTextureName {
+    {ItemID::generic, new sf::Texture},
+    {ItemID::medkit, new sf::Texture},
+    {ItemID::regenDrug, new sf::Texture},
+    {ItemID::coin, new sf::Texture}
 };
 
-std::map<ItemID, int> pickupItemTextureFrameAmount {
-    {generic, 1},
-    {medkit, 1},
-    {regenDrug, 1},
-    {coin, 4}
+std::map<ItemID::Type, int> pickupItemTextureFrameAmount {
+    {ItemID::generic, 1},
+    {ItemID::medkit, 1},
+    {ItemID::regenDrug, 1},
+    {ItemID::coin, 4}
 };
 
-std::map<ItemID, sf::Time> pickupItemTextureDuration {
-    {generic, sf::seconds(1)},
-    {medkit, sf::seconds(1)},
-    {regenDrug, sf::seconds(1)},
-    {coin, sf::seconds(1)}
+std::map<ItemID::Type, sf::Time> pickupItemTextureDuration {
+    {ItemID::generic, sf::seconds(1)},
+    {ItemID::medkit, sf::seconds(1)},
+    {ItemID::regenDrug, sf::seconds(1)},
+    {ItemID::coin, sf::seconds(1)}
 };
 
-std::map<ItemID, sf::Shader *> pickupItemTextureShader {
-    {generic, &MapShader},
-    {medkit, &MapShader},
-    {regenDrug, &MapShader},
-    {coin, &MapShader}
+std::map<ItemID::Type, sf::Shader *> pickupItemTextureShader {
+    {ItemID::generic, &MapShader},
+    {ItemID::medkit, &MapShader},
+    {ItemID::regenDrug, &MapShader},
+    {ItemID::coin, &MapShader}
 };
 
 void loadItemTextures() {
-    // itemTextureName[gunParts]       ->loadFromFile("sources/textures/gunPartsItem.png");
-    // itemTextureName[repairKit]      ->loadFromFile("sources/textures/repairKitItem.png");
-    // itemTextureName[keyCard]        ->loadFromFile("sources/textures/keyCardItem.png");
-    // itemTextureName[protectiveSuit] ->loadFromFile("sources/textures/protectiveSuitItem.png");
-    itemTextureName[regenDrug]      ->loadFromFile("sources/textures/regenDrugItem.png");
-    itemTextureName[coin]           ->loadFromFile("sources/textures/coin.png");
+    // itemTextureName[ItemID::gunParts]       ->loadFromFile("sources/textures/gunPartsItem.png");
+    // itemTextureName[ItemID::repairKit]      ->loadFromFile("sources/textures/repairKitItem.png");
+    // itemTextureName[ItemID::keyCard]        ->loadFromFile("sources/textures/keyCardItem.png");
+    // itemTextureName[ItemID::protectiveSuit] ->loadFromFile("sources/textures/protectiveSuitItem.png");
+    itemTextureName[ItemID::regenDrug]      ->loadFromFile("sources/textures/regenDrugItem.png");
+    itemTextureName[ItemID::coin]           ->loadFromFile("sources/textures/coin.png");
 
-    // pickupItemTextureName[generic]   ->loadFromFile("sources/textures/genericPickup.png");
-    // pickupItemTextureName[medkit]    ->loadFromFile("sources/textures/medkitPickup.png");
-    pickupItemTextureName[regenDrug] ->loadFromFile("sources/textures/regenDrugPickup.png");
-    pickupItemTextureName[coin]      ->loadFromFile("sources/textures/coin.png");
+    // pickupItemTextureName[ItemID::generic]   ->loadFromFile("sources/textures/genericPickup.png");
+    // pickupItemTextureName[ItemID::medkit]    ->loadFromFile("sources/textures/medkitPickup.png");
+    pickupItemTextureName[ItemID::regenDrug] ->loadFromFile("sources/textures/regenDrugPickup.png");
+    pickupItemTextureName[ItemID::coin]      ->loadFromFile("sources/textures/coin.png");
 }
 
 ////////////////////////////////////////////////////////////
@@ -93,7 +97,7 @@ void loadItemTextures() {
 #pragma pack(push, 1)
 class Item : public Interactable {
 public:
-    ItemID id;
+    ItemID::Type id;
     int amount = 0;
     bool pickupable = true;
     bool isDropable = true;
@@ -101,12 +105,12 @@ public:
     bool isKeyItem = false;
     bool isInInventory = true;
 
-    Item(ItemID, int, bool = true, bool = true, bool = true, bool = false, bool = false);
+    Item(ItemID::Type, int, bool = true, bool = true, bool = true, bool = false, bool = false);
 
-    void setPosition(sf::Vector2f);
     bool isActivated(Circle&, sf::Event&) override;
     bool CanBeActivated(Circle&) override;
     void dropTo(sf::Vector2f);
+    void picked(); // call when you pick up
 };
 #pragma pack(pop)
 
@@ -114,7 +118,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool _isDropable, bool _isKeyItem, bool _isEquippable) {
+Item::Item(ItemID::Type _id, int _amount, bool _pickapable, bool _isInInventory, bool _isDropable, bool _isKeyItem, bool _isEquippable) {
     id            = _id;
     amount        = _amount;
     pickupable    = _pickapable;
@@ -123,12 +127,7 @@ Item::Item(ItemID _id, int _amount, bool _pickapable, bool _isInInventory, bool 
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
 
-    setAnimation(*itemTextureName[id], ItemTextureFrameAmount[id], 1, ItemTextureDuration[id], ItemTextureShader[id]);
-}
-
-void Item::setPosition(sf::Vector2f v) {
-    PosX = v.x; PosY = v.y;
-    animation->setPosition(v);
+    setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
 }
 
 bool Item::CanBeActivated(Circle& player) {
@@ -147,6 +146,11 @@ void Item::dropTo(sf::Vector2f pos) {
     setAnimation(*pickupItemTextureName[id], pickupItemTextureFrameAmount[id], 1, pickupItemTextureDuration[id], pickupItemTextureShader[id]);
     setPosition(pos);
     isInInventory = false;
+}
+
+void Item::picked() {
+    animation->setShader(itemTextureShader[id]);
+    isInInventory = true;
 }
 
 void operator +=(Item& sumTo, Item& sumItem) {

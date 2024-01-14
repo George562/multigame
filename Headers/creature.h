@@ -9,7 +9,7 @@
 #pragma pack(push, 1)
 class Creature : public Circle, public sf::Drawable {
 public:
-    fraction::Type fraction;
+    faction::Type faction;
     Scale<float> Health;
     Scale<float> Mana;
     float ManaRecovery, HealthRecovery;
@@ -27,7 +27,7 @@ public:
     bool dropInventory;
     Inventory inventory;
 
-    Creature(sf::String name, fraction::Type f) : Circle() {
+    Creature(sf::String name, faction::Type f) : Circle() {
         Name.setString(name);
         Name.setCharacterSize(25);
         Name.setOutlineThickness(2);
@@ -35,7 +35,7 @@ public:
         Name.setFillColor(sf::Color::White);
         Name.ShowText = false;
 
-        fraction = f;
+        faction = f;
 
         LastStateCheck = sf::seconds(0);
         LastMoveCheck = sf::seconds(0);
@@ -96,10 +96,8 @@ public:
     virtual void setTarget(sf::Vector2f target) { this->target = target; }
 
     void AddItem(Item* item) {
-        inventory.addToDropable(item);
-        inventory.addToEquip(item);
-        inventory.addToKey(item);
-        inventory.addToSafe(item);
+        inventory.addItem(item);
+        item->picked();
     }
 };
 #pragma pack(pop)

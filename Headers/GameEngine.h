@@ -49,32 +49,27 @@ std::vector<sf::Drawable*> inventoryElements; // These elements appear on every 
 
 Button backButton("Back", [](){
     InventoryActivated = false;
-    std::cout << "Backbutton Activation\n";
 });
 Button craftingPageButton("Crafting", [](){
     activeInventoryPage = inventoryPage::Crafting;
-    std::cout << "Craftingbutton Activation\n";
 });
 Button weaponsPageButton("Weapons", [](){
     activeInventoryPage = inventoryPage::Weapons;
-    std::cout << "Weaponbutton Activation\n";
 });
 Button equipablesPageButton("Equipables", [](){
     activeInventoryPage = inventoryPage::Equipables;
-    std::cout << "Equipbutton Activation\n";
 });
 Button perksPageButton("Perks", [](){
     activeInventoryPage = inventoryPage::Perks;
-    std::cout << "Perksbutton Activation\n";
 });
 Button statsPageButton("Stats", [](){
     activeInventoryPage = inventoryPage::Stats;
-    std::cout << "Statsbutton Activation\n";
 });
 Panel invBackground = Panel();
-
+Panel itemListBG = Panel();
 
 std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
+std::vector<sf::Drawable*> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 
 Button craftButton("Craft!", [](){
     std::cout << "Craft Activation\n";
@@ -325,7 +320,7 @@ void drawMiniMap() {
             }
         }
     }
-    
+
     // draw location objects
     for (int i = 0; i < CurLocation->objects.size(); i++) {
         if (CurLocation->objects[i].id == Tiles::portal) {
@@ -390,10 +385,56 @@ void drawInterface() {
 
     if (InventoryActivated) {
         window.setView(InventoryView);
-        for(sf::Drawable* elem : inventoryElements)
+        for (sf::Drawable* elem : inventoryElements)
             window.draw(*elem);
-        for(sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
+        for (sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
             window.draw(*elem);
+
+        for (int i = 0; i < itemSlotsElements.size(); i++) {
+            delete itemSlotsElements[i];
+        }
+        itemSlotsElements.clear();
+
+        std::vector<std::map<ItemID::Type, Item*>*> currInventory
+        {
+            &player.inventory.keyItems,
+            &player.inventory.safeItems,
+            &player.inventory.equipItems,
+            &player.inventory.dropableItems
+        };
+
+        for (int i = 0; i < 4; i++) {
+            if (player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
+                int slotNumber = 0;
+                for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+                    if (currInventory[i]->find(id) != currInventory[i]->end()) {
+                        Item* drawnItem = (*currInventory[i])[id];
+                        float itemX = int(slotNumber % 4) * 150 + itemListBG.getPosition().x + 50;
+                        float itemY = int(slotNumber / 4) * 150 + itemListBG.getPosition().y + 50;
+
+                        Panel* bgPanel = new Panel();
+                        bgPanel->setPosition(itemX, itemY);
+                        bgPanel->setScale(0.5, 0.5);
+                        bgPanel->setTexture(ItemPanelTexture);
+                        itemSlotsElements.push_back(bgPanel);
+                        window.draw(*itemSlotsElements[slotNumber * 2]);
+
+                        drawnItem->setCenter(itemX + 75, itemY + 75);
+                        window.draw(*drawnItem);
+
+                        PlacedText* itemAmountText = new PlacedText();
+                        itemAmountText->setCharacterSize(16);
+                        itemAmountText->setString(std::to_string(drawnItem->amount));
+                        itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
+                        itemSlotsElements.push_back(itemAmountText);
+                        if (drawnItem->amount > 1)
+                            window.draw(*itemSlotsElements[slotNumber * 2 + 1]);
+
+                        slotNumber++;
+                    }
+                }
+            }
+        }
 
         window.setView(InterfaceView);
     }
@@ -440,8 +481,9 @@ void LevelGenerate(int n, int m) {
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);
             LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
+            delete i;
         });
-        
+
         LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
         InteractibeStuff.push_back(listOfBox[i]);
         DrawableStuff.push_back(listOfBox[i]);
@@ -479,7 +521,7 @@ void LevelGenerate(int n, int m) {
 
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
-    
+
     player.setPosition(3.5f * size, 2.5f * size);
     FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
     player.CurWeapon = nullptr;
@@ -550,7 +592,7 @@ void LoadMainMenu() {
 
     DrawableStuff.clear();
     DrawableStuff.push_back(&player);
-    
+
     InterfaceStuff.clear();
     InterfaceStuff.push_back(&ManaBar);
     InterfaceStuff.push_back(&HpBar);
@@ -582,54 +624,47 @@ void CreateImage() {
 void init() {
     setlocale(LC_ALL, "rus");
 
-    std::cout << "size of Animation        = " << sizeof(Animation)        << '\n';
-    std::cout << "size of Button           = " << sizeof(Button)           << '\n';
-    std::cout << "size of Panel            = " << sizeof(Panel)            << '\n';
-    std::cout << "size of Chat             = " << sizeof(Chat)             << '\n';
-    std::cout << "size of Inventory        = " << sizeof(Inventory)        << '\n';
-    std::cout << "size of Item             = " << sizeof(Item)             << '\n';
-    std::cout << "size of Location         = " << sizeof(Location)         << '\n';
-    std::cout << "size of Scale<float>     = " << sizeof(Scale<int>)       << '\n';
-    std::cout << "size of PlacedText       = " << sizeof(PlacedText)       << '\n';
-    std::cout << "size of Weapon           = " << sizeof(Weapon)           << '\n';
-    std::cout << "size of Portal           = " << sizeof(Portal)           << '\n';
-    std::cout << "size of Interactable     = " << sizeof(Interactable)     << '\n';
-    std::cout << "size of Creature         = " << sizeof(Creature)         << '\n';
-    std::cout << "size of Bullet           = " << sizeof(Bullet)           << '\n';
-    std::cout << "size of Circle           = " << sizeof(Circle)           << '\n';
-    std::cout << "size of Rect             = " << sizeof(Rect)             << '\n';
-    std::cout << "size of sf::Clock        = " << sizeof(sf::Clock)        << '\n';
-    std::cout << "size of sf::Drawable     = " << sizeof(sf::Drawable)     << '\n';
-    std::cout << "size of sf::CircleShape  = " << sizeof(sf::CircleShape)  << '\n';
-    std::cout << "size of sf::Sprite       = " << sizeof(sf::Sprite)       << '\n';
-    std::cout << "size of sf::Text         = " << sizeof(sf::Text)         << '\n';
-    std::cout << "size of sf::Font         = " << sizeof(sf::Font)         << '\n';
-    std::cout << "size of sf::Time         = " << sizeof(sf::Time)         << '\n';
-    std::cout << "size of sf::String       = " << sizeof(sf::String)       << '\n';
-    std::cout << "size of sf::Texture      = " << sizeof(sf::Texture)      << '\n';
-    std::cout << "size of sf::Vector2f     = " << sizeof(sf::Vector2f)     << '\n';
-    std::cout << "size of sf::Color        = " << sizeof(sf::Color)        << '\n';
-    std::cout << "size of sf::Shader       = " << sizeof(sf::Shader)       << '\n';
-    std::cout << "size of sf::RenderStates = " << sizeof(sf::RenderStates) << '\n';
-    std::cout << "size of float            = " << sizeof(float)            << '\n';
-    std::cout << "size of int              = " << sizeof(int)              << '\n';
-    std::cout << "size of bool             = " << sizeof(bool)             << '\n';
-    std::cout << "size of std::string      = " << sizeof(std::string)      << '\n';
-    std::cout << "size of Bullet::Type     = " << sizeof(Bullet::Type)     << '\n';
-    std::cout << "size of Effect           = " << sizeof(Effect)           << '\n';
+    std::cout << "size of Animation       = " << sizeof(Animation)        << '\n';
+    std::cout << "size of Button          = " << sizeof(Button)           << '\n';
+    std::cout << "size of Panel           = " << sizeof(Panel)            << '\n';
+    std::cout << "size of Chat            = " << sizeof(Chat)             << '\n';
+    std::cout << "size of Inventory       = " << sizeof(Inventory)        << '\n';
+    std::cout << "size of Item            = " << sizeof(Item)             << '\n';
+    std::cout << "size of Location        = " << sizeof(Location)         << '\n';
+    std::cout << "size of Scale<float>    = " << sizeof(Scale<int>)       << '\n';
+    std::cout << "size of PlacedText      = " << sizeof(PlacedText)       << '\n';
+    std::cout << "size of Weapon          = " << sizeof(Weapon)           << '\n';
+    std::cout << "size of Portal          = " << sizeof(Portal)           << '\n';
+    std::cout << "size of Interactable    = " << sizeof(Interactable)     << '\n';
+    std::cout << "size of Creature        = " << sizeof(Creature)         << '\n';
+    std::cout << "size of Bullet          = " << sizeof(Bullet)           << '\n';
+    std::cout << "size of Circle          = " << sizeof(Circle)           << '\n';
+    std::cout << "size of Rect            = " << sizeof(Rect)             << '\n';
+    std::cout << "size of sf::Clock       = " << sizeof(sf::Clock)        << '\n';
+    std::cout << "size of sf::Drawable    = " << sizeof(sf::Drawable)     << '\n';
+    std::cout << "size of sf::CircleShape = " << sizeof(sf::CircleShape)  << '\n';
+    std::cout << "size of sf::Sprite      = " << sizeof(sf::Sprite)       << '\n';
+    std::cout << "size of sf::Text        = " << sizeof(sf::Text)         << '\n';
+    std::cout << "size of sf::Font        = " << sizeof(sf::Font)         << '\n';
+    std::cout << "size of sf::Time        = " << sizeof(sf::Time)         << '\n';
+    std::cout << "size of sf::String      = " << sizeof(sf::String)       << '\n';
+    std::cout << "size of sf::Texture     = " << sizeof(sf::Texture)      << '\n';
+    std::cout << "size of sf::Vector2f    = " << sizeof(sf::Vector2f)     << '\n';
+    std::cout << "size of sf::Color       = " << sizeof(sf::Color)        << '\n';
+    std::cout << "size of sf::Shader      = " << sizeof(sf::Shader)       << '\n';
+    std::cout << "size of float           = " << sizeof(float)            << '\n';
+    std::cout << "size of int             = " << sizeof(int)              << '\n';
+    std::cout << "size of bool            = " << sizeof(bool)             << '\n';
+    std::cout << "size of std::string     = " << sizeof(std::string)      << '\n';
+    std::cout << "size of Bullet::Type    = " << sizeof(Bullet::Type)     << '\n';
+    std::cout << "size of Effect          = " << sizeof(Effect)           << '\n';
 
     window.setVerticalSyncEnabled(true);
     settings.antialiasingLevel = 8;
     window.setView(GameView);
-    
+
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     GameClock = new sf::Clock;
-
-    loadMusics();
-    MainMenuMusic.setLoop(true);
-    MainMenuMusic.setVolume(0);
-    FightMusic1.setVolume(0);
-    FightMusic2.setVolume(0);
 
     // Load locations
     WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
@@ -639,6 +674,12 @@ void init() {
     loadItemTextures();
     loadFonts();
     loadShaders();
+    loadMusics();
+
+    MainMenuMusic.setLoop(true);
+    MainMenuMusic.setVolume(0);
+    FightMusic1.setVolume(0);
+    FightMusic2.setVolume(0);
 
     portal.setAnimation(PortalAnimation2Texture, 9, 1, sf::seconds(1), &PortalShader);
     portal.setSize(170.f, 320.f);
@@ -654,11 +695,11 @@ void init() {
     PortalShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     PortalShader.setUniform("u_playerRadius", player.Radius);
 
-    IPPanel         .setTexture(YellowPanelTexture);
-    ListOfPlayers   .setTexture(SteelFrameTexture);
-    
-    EscapeButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
-    HostButton  .setTexture(GreenPanelTexture, GreenPanelPushedTexture);
+    IPPanel       .setTexture(YellowPanelTexture);
+    ListOfPlayers .setTexture(SteelFrameTexture);
+
+    EscapeButton .setTexture(RedPanelTexture, RedPanelPushedTexture);
+    HostButton   .setTexture(GreenPanelTexture, GreenPanelPushedTexture);
 
     WallRect.setTexture(WallTexture);
 
@@ -666,8 +707,8 @@ void init() {
 
     listener.setBlocking(false);
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
-    std::cout << "IP: " << MyIP << '\n';
-    
+    std::cout << "LocalAddress: " << MyIP << "\nPublicAddress: " << MySocket.getRemoteAddress().getPublicAddress().toString() << '\n';
+
     EscapeButton.setCharacterSize(110);
     IPPanel.text.setCharacterSize(80);
     ListOfPlayers.text.setCharacterSize(60);
@@ -687,7 +728,7 @@ void init() {
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
     HpBar.setValue(player.Health);
     HpBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
-    
+
     ManaBar.setWidth(240);
     ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
     ManaBar.setValue(player.Mana);
@@ -727,6 +768,15 @@ void initInventory() {
 
     statsPlayerImage.setTexture(PlayerTexture);
     statsPlayerImage.setCenter(5 * scw / 6, sch / 2);
+
+    itemListBG.setPosition(100, 200);
+    itemListBG.setTexture(SteelFrameTexture);
+    itemListBG.setScale(scw / 2 / SteelFrameTexture.getSize().x, (sch - 400) / SteelFrameTexture.getSize().y);
+
+    inventoryPageElements[inventoryPage::Crafting].push_back(&itemListBG);
+    inventoryPageElements[inventoryPage::Weapons].push_back(&itemListBG);
+    inventoryPageElements[inventoryPage::Equipables].push_back(&itemListBG);
+    inventoryPageElements[inventoryPage::Perks].push_back(&itemListBG);
 
     inventoryPageElements[inventoryPage::Crafting].push_back(&craftButton);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
@@ -805,7 +855,7 @@ void EventHandler() {
             equipablesPageButton.isActivated(event);
             perksPageButton.isActivated(event);
             statsPageButton.isActivated(event);
-            
+
             craftButton.isActivated(event);
         } else {
             if (event.type == sf::Event::KeyPressed) {
@@ -858,7 +908,7 @@ void EventHandler() {
                     }
                 }
             }
-            
+
             for (int i = 0; i < PickupStuff.size(); i++) {
                 if (PickupStuff[i]->CanBeActivated(player)) {
                     if (PickupStuff[i]->isActivated(player, event)) {
@@ -869,7 +919,7 @@ void EventHandler() {
                     }
                 }
             }
-            
+
             switch (screen) {
                 case screens::MainRoom:
                     if (event.type == sf::Event::KeyPressed) {
@@ -900,7 +950,7 @@ void EventHandler() {
                         if (!MiniMapActivated) {
                             CurWeapon -= (int)event.mouseWheelScroll.delta;
                             player.ChangeWeapon(weapons[CurWeapon.cur]);
-            
+
                             std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
                             ReloadWeaponText.setString(reloadStr);
                             ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
@@ -922,7 +972,7 @@ void EventHandler() {
                             draw();
                             if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
                                 selector.add(MySocket);
-                                
+
                                 if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
                                     MySocket.receive(ReceivePacket) == sf::Socket::Done) {
                                     while (!ReceivePacket.endOfPacket()) {
@@ -967,12 +1017,12 @@ void updateBullets() {
             Bullets.erase(Bullets.begin() + i--);
         } else {
             Bullets[i].move(CurLocation);
-            if (!fraction::friends(Bullets[i].fromWho, player.fraction) && player.intersect(Bullets[i])) {
+            if (!faction::friends(Bullets[i].fromWho, player.faction) && player.intersect(Bullets[i])) {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
             for (Enemy* &enemy: Enemies) {
-                if (!fraction::friends(Bullets[i].fromWho, enemy->fraction) && enemy->intersect(Bullets[i])) {
+                if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
                 }
@@ -983,7 +1033,7 @@ void updateBullets() {
 
 void MainLoop() {
     while (window.isOpen()) {
-        
+
         if (player.Health.toBottom() == 0) {
             EscapeButton.buttonFunction();
         }
@@ -991,10 +1041,10 @@ void MainLoop() {
         for (int i = 0; i < Enemies.size(); i++) {
             if (Enemies[i]->Health.toBottom() == 0) {
                 if (Enemies[i]->dropInventory) {
-                    for (std::map<ItemID, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
+                    for (std::map<ItemID::Type, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
                         it != Enemies[i]->inventory.dropableItems.end(); it++) {
                         it->second->dropTo(Enemies[i]->getPosition());
-                        
+
                         PickupStuff.push_back(it->second);
                         DrawableStuff.push_back(it->second);
                     }
@@ -1009,7 +1059,7 @@ void MainLoop() {
                 Enemies[i]->move(CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition(), Enemies[i]->fraction);
+                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition(), Enemies[i]->faction);
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
@@ -1039,7 +1089,7 @@ void MainLoop() {
         }
         if (!window.hasFocus()) {
             if (player.CurWeapon != nullptr) {
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
+                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             updateBullets();
 
@@ -1064,7 +1114,7 @@ void MainLoop() {
             }
             int wasBulletsSize = Bullets.size();
             if (player.CurWeapon != nullptr) {
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.fraction);
+                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
@@ -1100,7 +1150,7 @@ void MainLoop() {
                 SendPacket.clear();
                 mutex.unlock();
             }
-            
+
             if (MiniMapActivated) {
                 if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                     MiniMapView.move(-sf::Vector2f(sf::Mouse::getPosition() - MouseBuffer) * MiniMapZoom);
@@ -1165,7 +1215,7 @@ void updateShaders() {
     MapShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
     MapShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
     MapShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
-    
+
     PlayerShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
     PlayerShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
     PlayerShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
@@ -1173,6 +1223,8 @@ void updateShaders() {
     PortalShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
     PortalShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
     PortalShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+
+    PickupItemShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
 }
 
 void processEffects() {
@@ -1267,7 +1319,7 @@ void ClientDisconnect(int i) {
     clients.erase(clients.begin() + i);
     ConnectedPlayers.erase(ConnectedPlayers.begin() + i + 1);
     ListOfPlayers.removeWord(i);
-    
+
     std::cout << "amount of clients = " << clients.size() << "\n";
     mutex.lock();
     SendPacket << pacetStates::PlayerDisconnect << i;
