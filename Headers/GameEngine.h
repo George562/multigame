@@ -8,6 +8,7 @@
 #include "client.h"
 #include "box.h"
 #include "effect.h"
+#include "fire.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
@@ -93,6 +94,9 @@ Portal portal;
 
 //////////////////////////////////////////////////////////// Puddle
 Puddle puddle;
+
+//////////////////////////////////////////////////////////// Fire
+std::vector<Fire*> FireSet;
 
 //////////////////////////////////////////////////////////// Box
 std::vector<Box*> listOfBox;
@@ -208,6 +212,10 @@ Button EscapeButton("Exit", [](){
         delete Enemies[i];
     }
     Enemies.clear();
+    for (int i = 0; i < FireSet.size(); i++) {
+        delete FireSet[i];
+    }
+    FireSet.clear();
     LoadMainMenu();
 });
 
@@ -481,6 +489,16 @@ void LevelGenerate(int n, int m) {
         DrawableStuff.push_back(listOfBox[i]);
     }
 
+    for (int i = 0; i < FireSet.size(); i++) {
+        delete FireSet[i];
+    }
+    FireSet.clear();
+
+    for (int i = 0; i < 1; i++) {
+        FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x, 
+                                (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f, 1000));
+    }
+
     for (int i = 0; i < Enemies.size(); i++) {
         delete Enemies[i];
     }
@@ -545,6 +563,9 @@ void LoadMainMenu() {
         DrawableStuff.push_back(&player);
         for (Enemy* &enemy: Enemies) {
             DrawableStuff.push_back(enemy);
+        }
+        for (Fire* &fire: FireSet) {
+            DrawableStuff.push_back(fire);
         }
 
         InterfaceStuff.push_back(&ManaBar);
@@ -1042,6 +1063,21 @@ void MainLoop() {
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
+
+        for (int i = 0; i < FireSet.size(); i++) {
+            FireSet[i]->tacts--;
+            if (FireSet[i]->tacts == 0) {
+                FireSet[i]->Propagation();
+                FireSet.push_back(FireSet[i]->descendant1);
+                FireSet.push_back(FireSet[i]->descendant2);
+                DrawableStuff.push_back(FireSet[i]->descendant1);
+                DrawableStuff.push_back(FireSet[i]->descendant2);
+                DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
+                delete FireSet[i];
+                FireSet.erase(FireSet.begin() + i--);
+            }
+        }
+
         player.UpdateState();
         if (screen == screens::Dungeon) {
             if (FightMusic1.getDuration() - FightMusic1.getPlayingOffset() < sf::seconds(0.3f)) {
@@ -1132,8 +1168,12 @@ void MainLoop() {
         draw();
 
         if (puddle.intersect(player))
-            QueueEffects.push(Effect(&player, EffectType::Damage, 0.1, 1));
+            QueueEffects.push(Effect(&player, EffectType::Damage, 0.5, 1));
 
+        for (Fire* &fire: FireSet) {
+            if (fire->intersect(player))
+                QueueEffects.push(Effect(&player, EffectType::Damage, 0.05, 2));
+        }
         processEffects();
 
         EventHandler();

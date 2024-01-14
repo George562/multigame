@@ -94,6 +94,7 @@ sf::Texture ScottPilgrimTexture,
             BoxTexture,
             floor1xTexture,
             PuddleTexture,
+            FireTexture,
 //////////////////////////////////////////////////////////// Panel Tetures
             GreenPanelTexture,
             GreenPanelPushedTexture,
@@ -120,6 +121,7 @@ void loadTextures() {
     BoxTexture                .loadFromFile("sources/textures/Box.png");
     floor1xTexture            .loadFromFile("sources/textures/floors/floor1x.png");
     PuddleTexture             .loadFromFile("sources/textures/Puddle.png");
+    FireTexture               .loadFromFile("sources/textures/Fire.png");
 
     GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
     GreenPanelPushedTexture  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
