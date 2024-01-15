@@ -73,7 +73,7 @@ std::vector<sf::Drawable*> itemSlotsElements; // Elements that comprise an inven
 
 Button craftButton("Craft!", [](){
     std::cout << "Craft Activation\n";
-});  // PLACEHOLDER. DOES NOTING
+});  // PLACEHOLDER. DOES NOTHING
 Panel statsPlayerImage;
 
 //////////////////////////////////////////////////////////// Animations
@@ -383,17 +383,13 @@ void drawInterface() {
         window.draw(EscapeButton);
     }
 
+    ////////////////////////////////////////////////////////////////////////// INVENTORY DRAWING
     if (InventoryActivated) {
         window.setView(InventoryView);
         for (sf::Drawable* elem : inventoryElements)
             window.draw(*elem);
         for (sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
             window.draw(*elem);
-
-        for (int i = 0; i < itemSlotsElements.size(); i++) {
-            delete itemSlotsElements[i];
-        }
-        itemSlotsElements.clear();
 
         std::vector<std::map<ItemID::Type, Item*>*> currInventory
         {
@@ -409,15 +405,13 @@ void drawInterface() {
                 for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
                     if (currInventory[i]->find(id) != currInventory[i]->end()) {
                         Item* drawnItem = (*currInventory[i])[id];
-                        float itemX = int(slotNumber % 4) * 150 + itemListBG.getPosition().x + 50;
-                        float itemY = int(slotNumber / 4) * 150 + itemListBG.getPosition().y + 50;
+                        float itemX = int(slotNumber % 4) * 150 + 50;
+                        float itemY = int(slotNumber / 4) * 150 + 50;
 
                         Panel* bgPanel = new Panel();
                         bgPanel->setPosition(itemX, itemY);
                         bgPanel->setScale(0.5, 0.5);
                         bgPanel->setTexture(ItemPanelTexture);
-                        itemSlotsElements.push_back(bgPanel);
-                        window.draw(*itemSlotsElements[slotNumber * 2]);
 
                         drawnItem->setCenter(itemX + 75, itemY + 75);
                         window.draw(*drawnItem);
@@ -426,10 +420,15 @@ void drawInterface() {
                         itemAmountText->setCharacterSize(16);
                         itemAmountText->setString(std::to_string(drawnItem->amount));
                         itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
-                        itemSlotsElements.push_back(itemAmountText);
-                        if (drawnItem->amount > 1)
-                            window.draw(*itemSlotsElements[slotNumber * 2 + 1]);
 
+                            
+                        InventoryItemListView.addPassive(*bgPanel, bgPanel->getPosition().y + bgPanel->sprite.getGlobalBounds().height);
+                        if (drawnItem->amount > 1)
+                            InventoryItemListView.addPassive(*itemAmountText, itemAmountText->getPosition().y + itemAmountText->getGlobalBounds().height);
+                        
+                        InventoryItemListView.addActive(*drawnItem, drawnItem->getRightBottom().y);
+
+                        InventoryItemListView.draw(window, sf::RenderStates::Default);
                         slotNumber++;
                     }
                 }
@@ -438,6 +437,7 @@ void drawInterface() {
 
         window.setView(InterfaceView);
     }
+    ////////////////////////////////////////////////////////////////////////// INVENTORY DRAWING END
 
     FPSCounter++;
     if (ClockFPS.getElapsedTime() >= sf::seconds(1)) {
@@ -769,14 +769,17 @@ void initInventory() {
     statsPlayerImage.setTexture(PlayerTexture);
     statsPlayerImage.setCenter(5 * scw / 6, sch / 2);
 
-    itemListBG.setPosition(100, 200);
+    itemListBG.setPosition(0, 0);
     itemListBG.setTexture(Frame4Texture);
-    itemListBG.setScale(scw / 2.f / Frame4Texture.getSize().x, (sch - 400.f) / Frame4Texture.getSize().y);
+    itemListBG.setScale(InventoryItemListView.getSize().x / Frame4Texture.getSize().x,
+                        InventoryItemListView.getSize().y / Frame4Texture.getSize().y);
 
-    inventoryPageElements[inventoryPage::Crafting].push_back(&itemListBG);
-    inventoryPageElements[inventoryPage::Weapons].push_back(&itemListBG);
-    inventoryPageElements[inventoryPage::Equipables].push_back(&itemListBG);
-    inventoryPageElements[inventoryPage::Perks].push_back(&itemListBG);
+    InventoryItemListView.setBG(itemListBG);
+
+    // inventoryPageElements[inventoryPage::Crafting].push_back(&itemListBG);
+    // inventoryPageElements[inventoryPage::Weapons].push_back(&itemListBG);
+    // inventoryPageElements[inventoryPage::Equipables].push_back(&itemListBG);
+    // inventoryPageElements[inventoryPage::Perks].push_back(&itemListBG);
 
     inventoryPageElements[inventoryPage::Crafting].push_back(&craftButton);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
@@ -849,6 +852,7 @@ void EventHandler() {
 
             if (event.key.code == sf::Keyboard::Escape)
                 InventoryActivated = false;
+            InventoryItemListView.isActivated(event);
             backButton.isActivated(event);
             craftingPageButton.isActivated(event);
             weaponsPageButton.isActivated(event);

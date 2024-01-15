@@ -13,6 +13,7 @@
 #include "circle.h"
 #include "animation.h"
 #include "text.h"
+#include "scrollView.h"
 
 namespace faction {
     using Type = sf::Uint8;
@@ -78,7 +79,9 @@ float WallMinSize = size / 8, WallMaxSize = size;
 sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
+
 sf::View InventoryView({0, 0, (float)scw, (float)sch});
+ScrollView InventoryItemListView(100, 200, scw / 2.0f, sch / 2.0f, sf::FloatRect(100.0f / scw, 200.0f / sch, 0.5f, 0.5f));
 
 sf::Clock* GameClock;
 
