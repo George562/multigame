@@ -24,20 +24,37 @@ vec3 pallete(float t) {
     return a + b * cos(6.28318 * (c * t + d));
 }
 
+vec3 redColor = vec3(1.0, 0.0, 0.0);
+vec3 blueColor = vec3(0.0, 0.0, 1.0);
+float PI = 3.14159265359;
+float PI2 = 3.14159265359 * 2.0;
+
 void main() {   
     vec2 uv = (gl_FragCoord.xy - iResolution.xy / 2.) / iResolution.xy;
     // vec2 uv = (gl_FragCoord.xy * 2.0 - iResolution.xy) / iResolution.y;
 
-    float coef = 20.;
-    float d = length(coef * uv);
-    float phi = abs(dot(vec2(cos(d), sin(d)), normalize(coef * uv)));
+    // float coef = 20.;
+    float d = length(uv);
+    // float phi;
+    // if (uv.y >= 0.0) {
+    //     phi = acos(dot(vec2(1., 0.), normalize(uv)));
+    // } else{
+    //     phi = 2.0 * PI - acos(dot(vec2(1., 0.), normalize(uv)));
+    // }
+    float phi = acos(dot(vec2(1., 0.), normalize(uv)));
+    phi = 2.0 * PI * step(uv.y, 0.0) + (1.0 - 2.0 * step(uv.y, 0.0)) * phi;
+    phi += exp(fract(iTime / 15.0) * 3.5);
 
-    vec4 pixel = texture2D(iChannel0, gl_FragCoord.xy / iResolution.xy);
-    vec4 col = pixel * phi;
+    // vec4 pixel = texture2D(iChannel0, gl_FragCoord.xy / iResolution.xy);
+    // vec4 col = pixel * phi;
     
     // vec3 col = pallete(sin(length(uv)) + iTime * 0.3);
     // vec3 col = vec3(smoothstep(0.55, 0.85, cos(length(uv)*50.0)));
     // vec3 col = vec3(smoothstep(0.55, 0.85, cos(length(uv)*20. + 3. * sin(iTime * 2.))));
-    gl_FragColor = col;
+    float r = 0.45;
+    vec3 col = mix(blueColor, redColor, smoothstep(PI + 0.02, PI - 0.02, PI2 * fract(10.0 * phi / PI2)));
+    col = mix(vec3(0.0, 0.0, 0.0), col, smoothstep(r + 0.001, r - 0.001, length(uv)));
+    gl_FragColor = vec4(col, 1.0);
+    // gl_FragColor = col;
     
 }
