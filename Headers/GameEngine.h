@@ -421,14 +421,13 @@ void drawInterface() {
                         itemAmountText->setString(std::to_string(drawnItem->amount));
                         itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
 
-                            
                         InventoryItemListView.addPassive(*bgPanel, bgPanel->getPosition().y + bgPanel->sprite.getGlobalBounds().height);
                         if (drawnItem->amount > 1)
                             InventoryItemListView.addPassive(*itemAmountText, itemAmountText->getPosition().y + itemAmountText->getGlobalBounds().height);
-                        
+
                         InventoryItemListView.addActive(*drawnItem, drawnItem->getRightBottom().y);
 
-                        InventoryItemListView.draw(window, sf::RenderStates::Default);
+                        window.draw(InventoryItemListView);
                         slotNumber++;
                     }
                 }
@@ -495,8 +494,8 @@ void LevelGenerate(int n, int m) {
     FireSet.clear();
 
     for (int i = 0; i < 1; i++) {
-        FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x, 
-                                (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f, 1000));
+        FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x,
+                                   (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f, 1000));
     }
 
     for (int i = 0; i < Enemies.size(); i++) {
