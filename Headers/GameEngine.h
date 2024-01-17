@@ -95,6 +95,9 @@ Portal portal;
 //////////////////////////////////////////////////////////// Puddle
 Puddle puddle;
 
+//////////////////////////////////////////////////////////// Puddle
+Interactable architect;
+
 //////////////////////////////////////////////////////////// Fire
 std::vector<Fire*> FireSet;
 
@@ -237,6 +240,10 @@ void draw() {
         if (CurLocation->objects[i].id == Tiles::puddle) {
             puddle.setPosition(CurLocation->objects[i].pos);
             window.draw(puddle, MapStates);
+        }
+        if (CurLocation->objects[i].id == Tiles::architect) {
+            architect.setPosition(CurLocation->objects[i].pos);
+            window.draw(architect);
         }
     }
 
@@ -578,6 +585,12 @@ void LoadMainMenu() {
 
     puddle.setFunction([](Interactable* i){
         player.getDamage(5.f);
+        std::cout << "bruh\n";
+    });
+
+    architect.setFunction([](Interactable* i){
+        player.Health.top += 20.f;
+        std::cout << "bruh\n";
     });
 
     // Set cameras
@@ -596,7 +609,9 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&ManaBar);
     InterfaceStuff.push_back(&HpBar);
     InterfaceStuff.push_back(&chat);
+
     InteractibeStuff.push_back(&portal);
+    InteractibeStuff.push_back(&architect);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
     newItem->setAnimation(*itemTextureName[ItemID::regenDrug], 1, 1, sf::seconds(1), &MapShader);
@@ -650,6 +665,8 @@ void init() {
     player.setAnimation(PlayerTexture, 1, 1, sf::seconds(1), &PlayerShader);
     puddle.setAnimation(PuddleTexture, 1, 1, sf::seconds(1), &MapShader);
     puddle.setSize(90.f, 90.f);
+    architect.setAnimation(ArchitectTexture, 1, 1, sf::seconds(1), &ArchitectShader);
+    architect.setSize(150.f, 150.f);
 
     MapShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     MapShader.setUniform("u_playerRadius", player.Radius);
@@ -658,6 +675,9 @@ void init() {
 
     PortalShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     PortalShader.setUniform("u_playerRadius", player.Radius);
+
+    ArchitectShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    ArchitectShader.setUniform("u_playerRadius", player.Radius);
 
     IPPanel       .setTexture(YellowPanelTexture);
     ListOfPlayers .setTexture(SteelFrameTexture);
@@ -1191,6 +1211,10 @@ void updateShaders() {
     PortalShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
     PortalShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
     PortalShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+
+    ArchitectShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+    ArchitectShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    ArchitectShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
 
     PickupItemShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
 }

@@ -98,6 +98,7 @@ sf::Texture ScottPilgrimTexture,
             floor1xTexture,
             PuddleTexture,
             FireTexture,
+            ArchitectTexture,
 //////////////////////////////////////////////////////////// Panel Tetures
             GreenPanelTexture,
             GreenPanelPushedTexture,
@@ -125,6 +126,7 @@ void loadTextures() {
     floor1xTexture            .loadFromFile("sources/textures/floors/floor1x.png");
     PuddleTexture             .loadFromFile("sources/textures/Puddle.png");
     FireTexture               .loadFromFile("sources/textures/Fire.png");
+    ArchitectTexture          .loadFromFile("sources/textures/Architect.png");
 
     GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
     GreenPanelPushedTexture  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
@@ -143,7 +145,8 @@ void loadTextures() {
 sf::Shader MapShader,
            PlayerShader,
            PortalShader,
-           PickupItemShader
+           PickupItemShader,
+           ArchitectShader
            ;
 
 void loadShaders() {
@@ -151,6 +154,7 @@ void loadShaders() {
     PlayerShader     .loadFromFile("sources/shaders/player/player.vert",         "sources/shaders/player/player.frag"        );
     PortalShader     .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"        );
     PickupItemShader .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag");
+    ArchitectShader  .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"  );
 }
 
 //////////////////////////////////////////////////////////// States

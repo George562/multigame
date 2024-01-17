@@ -14,12 +14,23 @@ public:
     void (*function)(Interactable*);
 
     Interactable() : Rect() {}
+
     void setFunction(void (*func)(Interactable*)) { function = func; }
-    virtual bool isActivated(Circle&, sf::Event&) { return false; }
+
+    virtual bool isActivated(Circle&, sf::Event& event) {
+        if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
+            function((Interactable*)this);
+            return true;
+        }
+        return false;
+    }
+
     virtual bool CanBeActivated(Circle& circle) { return intersect(circle); }
+
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         target.draw(*animation, states);
     }
+
     void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader *shader = nullptr) {
         if (animation != nullptr) {
             delete animation;
@@ -28,7 +39,7 @@ public:
         Rect::setSize(animation->getGlobalSize());
         animation->play();
     };
-    
+
     void setSize(float w, float h) { Rect::setSize(w, h); animation->setSize(sf::Vector2f(w, h)); }
     void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
 
