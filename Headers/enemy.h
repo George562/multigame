@@ -26,7 +26,7 @@ public:
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
 
-        setAnimation(DistortedScientistTexture, 1, 1, sf::seconds(1), &MapShader);
+        setAnimation(Textures::DistortedScientist, 1, 1, sf::seconds(1), &Shaders::Map);
 
         inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
@@ -56,7 +56,7 @@ public:
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
 
-        setAnimation(ScottPilgrimTexture, 8, 2, sf::seconds(1), &MapShader);
+        setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Map);
 
         inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
@@ -87,7 +87,7 @@ public:
         CurWeapon = new Pistol();
         CurWeapon->damage = 0;
 
-        setAnimation(RamonaFlowersTexture, 8, 2, sf::seconds(1), &MapShader);
+        setAnimation(Textures::RamonaFlowers, 8, 2, sf::seconds(1), &Shaders::Map);
 
         inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 

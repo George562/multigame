@@ -15,6 +15,7 @@ namespace Tiles {
     ObjectID box = 1;
     ObjectID portal = 2;
     ObjectID puddle = 3;
+    ObjectID architect = 4;
 }
 
 ////////////////////////////////////////////////////////////
@@ -100,7 +101,7 @@ void Location::BuildWayFrom(sf::Vector2f p) {
     for (int i = 0; i < walls.size(); i++)
         for (int j = 0; j < walls[i].size(); j++) {
             if (!walls[i][j]) continue;
-            
+
             todel = true;
             check = sf::Vector2i{j, i / 2};
             if (UsedAreaRect.contains(check.x, check.y) && EnableTiles[check.y][check.x])
@@ -177,7 +178,7 @@ bool Location::LoadFromFile(sf::String FileName) {
             file >> t;
             walls[i][j] = t;
         }
-    
+
     if (!file.eof()) {
         int k; file >> k;
         objects.resize(k);
@@ -273,7 +274,7 @@ void FindTheWay(Location* where, sf::Vector2f from, sf::Vector2f to, std::vector
             place[check.y][check.x] = cur;
         }
     }
-    
+
     theWay.clear();
     theWay.push_back(to);
     if (sf::Vector2i(to / (float)size) != cur) {
