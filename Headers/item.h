@@ -41,10 +41,10 @@ std::map<ItemID::Type, sf::Time> itemTextureDuration {
 };
 
 std::map<ItemID::Type, sf::Shader *> itemTextureShader {
-    {ItemID::generic, &PickupItemShader},
-    {ItemID::medkit, &PickupItemShader},
-    {ItemID::regenDrug, &PickupItemShader},
-    {ItemID::coin, &PickupItemShader}
+    {ItemID::generic, &Shaders::PickupItem},
+    {ItemID::medkit, &Shaders::PickupItem},
+    {ItemID::regenDrug, &Shaders::PickupItem},
+    {ItemID::coin, &Shaders::PickupItem}
 };
 
 //////////////////////////////////////////////////////////// Pickup Item Animation params
@@ -70,10 +70,10 @@ std::map<ItemID::Type, sf::Time> pickupItemTextureDuration {
 };
 
 std::map<ItemID::Type, sf::Shader *> pickupItemTextureShader {
-    {ItemID::generic, &MapShader},
-    {ItemID::medkit, &MapShader},
-    {ItemID::regenDrug, &MapShader},
-    {ItemID::coin, &MapShader}
+    {ItemID::generic, &Shaders::Map},
+    {ItemID::medkit, &Shaders::Map},
+    {ItemID::regenDrug, &Shaders::Map},
+    {ItemID::coin, &Shaders::Map}
 };
 
 void loadItemTextures() {

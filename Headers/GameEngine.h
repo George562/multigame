@@ -2,7 +2,6 @@
 #include "chat.h"
 #include "contextMenu.h"
 #include "bar.h"
-#include "portal.h"
 #include "puddle.h"
 #include "player.h"
 #include "client.h"
@@ -90,7 +89,7 @@ sf::Mutex mutex;
 bool ClientFuncRun, HostFuncRun;
 
 //////////////////////////////////////////////////////////// Portal
-Portal portal;
+Interactable portal;
 
 //////////////////////////////////////////////////////////// Puddle
 Puddle puddle;
@@ -295,8 +294,8 @@ void drawWalls() {
             if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setTextureRect(sf::IntRect(
-                        (WallTexture.getSize().x - CurLocation->wallsRect[i][j].Width) * random(sf::Vector2f(i, j)),
-                        (WallTexture.getSize().y - CurLocation->wallsRect[i][j].Height) * random(sf::Vector2f(j, i)),
+                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].Width) * random(sf::Vector2f(i, j)),
+                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].Height) * random(sf::Vector2f(j, i)),
                         CurLocation->wallsRect[i][j].Width,
                         CurLocation->wallsRect[i][j].Height));
                 window.draw(WallRect, MapStates);
@@ -418,7 +417,7 @@ void drawInterface() {
                         Panel* bgPanel = new Panel();
                         bgPanel->setPosition(itemX, itemY);
                         bgPanel->setScale(0.5, 0.5);
-                        bgPanel->setTexture(ItemPanelTexture);
+                        bgPanel->setTexture(Textures::ItemPanel);
 
                         drawnItem->setCenter(itemX + 75, itemY + 75);
                         window.draw(*drawnItem);
@@ -475,11 +474,11 @@ void LevelGenerate(int n, int m) {
     listOfBox.clear();
     for (int i = 0; i < 10; i++) {
         listOfBox.push_back(new Box());
-        listOfBox[i]->setAnimation(BoxTexture, 1, 1, sf::seconds(1.f), &MapShader);
+        listOfBox[i]->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
         listOfBox[i]->setSize(listOfBox[i]->getSize() / 4.f);
         do {
             listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
-            sf::Vector2f(rand() % (size - BoxTexture.getSize().x / 4), rand() % (size - BoxTexture.getSize().y / 4)));
+            sf::Vector2f(rand() % (size - Textures::Box.getSize().x / 4), rand() % (size - Textures::Box.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
         //listOfBox[i]->setFillingScale({0.f, 0.f, 0.f});
         listOfBox[i]->setFunction([](Interactable* i){
@@ -557,9 +556,9 @@ void LoadMainMenu() {
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
         MiniMapView.setCenter(player.getPosition() * ScaleParam);
 
-        MainMenuMusic.pause();
-        if (FightMusic1.getStatus() != sf::Music::Playing && FightMusic2.getStatus() != sf::Music::Playing) {
-            FightMusic1.play();
+        Musics::MainMenu.pause();
+        if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
+            Musics::Fight1.play();
         }
 
         CurLocation = &LabyrinthLocation;
@@ -596,9 +595,9 @@ void LoadMainMenu() {
     MiniMapView.setCenter(player.getPosition() * ScaleParam);
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
-    FightMusic1.stop();
-    FightMusic2.stop();
-    MainMenuMusic.play();
+    Musics::Fight1.stop();
+    Musics::Fight2.stop();
+    Musics::MainMenu.play();
 
     DrawableStuff.clear();
     DrawableStuff.push_back(&player);
@@ -612,7 +611,7 @@ void LoadMainMenu() {
     InteractibeStuff.push_back(&architect);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
-    newItem->setAnimation(*itemTextureName[ItemID::regenDrug], 1, 1, sf::seconds(1), &MapShader);
+    newItem->setAnimation(*itemTextureName[ItemID::regenDrug], 1, 1, sf::seconds(1), &Shaders::Map);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
@@ -623,11 +622,11 @@ void LoadMainMenu() {
 
 void CreateImage() {
     sf::Image img, res;
-    img.loadFromFile("sources/floor3x.png");
-    res.create(96 * 100, 96 * 100);
+    img.loadFromFile("sources/floor1x.png");
+    res.create(32 * 100, 32 * 100);
     for (int y = 0; y < 100; y++) {
         for (int x = 0; x < 100; x++) {
-            res.copy(img, x * 96, y * 96, {(rand() % 5) * 96, 0, 96, 96});
+            res.copy(img, x * 32, y * 32, {(rand() % 5) * 32, 0, 32, 32});
         }
     }
     res.saveToFile("sources/res.png");
@@ -653,37 +652,37 @@ void init() {
     loadShaders();
     loadMusics();
 
-    MainMenuMusic.setLoop(true);
-    MainMenuMusic.setVolume(0);
-    FightMusic1.setVolume(0);
-    FightMusic2.setVolume(0);
+    Musics::MainMenu.setLoop(true);
+    Musics::MainMenu.setVolume(20);
+    Musics::Fight1.setVolume(20);
+    Musics::Fight2.setVolume(20);
 
-    portal.setAnimation(PortalAnimation2Texture, 9, 1, sf::seconds(1), &PortalShader);
+    portal.setAnimation(Textures::PortalAnimation2, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
-    player.setAnimation(PlayerTexture, 1, 1, sf::seconds(1), &PlayerShader);
-    puddle.setAnimation(PuddleTexture, 1, 1, sf::seconds(1), &MapShader);
+    player.setAnimation(Textures::Player, 1, 1, sf::seconds(1), &Shaders::Player);
+    puddle.setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
     puddle.setSize(90.f, 90.f);
-    architect.setAnimation(ArchitectTexture, 1, 1, sf::seconds(1), &ArchitectShader);
+    architect.setAnimation(Textures::Architect, 1, 1, sf::seconds(1), &Shaders::Architect);
     architect.setSize(150.f, 150.f);
 
-    MapShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
-    MapShader.setUniform("u_playerRadius", player.Radius);
+    Shaders::Map.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Map.setUniform("u_playerRadius", player.Radius);
 
-    PlayerShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Player.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
 
-    PortalShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
-    PortalShader.setUniform("u_playerRadius", player.Radius);
+    Shaders::Portal.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Portal.setUniform("u_playerRadius", player.Radius);
 
-    ArchitectShader.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
-    ArchitectShader.setUniform("u_playerRadius", player.Radius);
+    Shaders::Architect.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Architect.setUniform("u_playerRadius", player.Radius);
 
-    IPPanel       .setTexture(YellowPanelTexture);
-    ListOfPlayers .setTexture(SteelFrameTexture);
+    IPPanel       .setTexture(Textures::YellowPanel);
+    ListOfPlayers .setTexture(Textures::SteelFrame);
 
-    EscapeButton .setTexture(RedPanelTexture, RedPanelPushedTexture);
-    HostButton   .setTexture(GreenPanelTexture, GreenPanelPushedTexture);
+    EscapeButton .setTexture(Textures::RedPanel, Textures::RedPanelPushed);
+    HostButton   .setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
 
-    WallRect.setTexture(WallTexture);
+    WallRect.setTexture(Textures::Wall);
 
     CurWeapon.looped = true;
 
@@ -725,13 +724,13 @@ void init() {
     ReloadWeaponText.setFillColor(sf::Color(255, 20, 20));
     ReloadWeaponText.setCharacterSize(100);
 
-    XButtonSprite.setTexture(XButtonTexture);
+    XButtonSprite.setTexture(Textures::XButton);
     XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
 
     MMPortalRect.setSize(portal.getSize() * ScaleParam);
     MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
 
-    MMBoxRect.setSize(sf::Vector2f(BoxTexture.getSize() / 4u) * ScaleParam);
+    MMBoxRect.setSize(sf::Vector2f(Textures::Box.getSize() / 4u) * ScaleParam);
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
 
     MMPuddleRect.setSize(puddle.getSize() * ScaleParam);
@@ -743,18 +742,18 @@ void init() {
 }
 
 void initInventory() {
-    craftButton.setTexture(YellowPanelTexture, YellowPanelPushedTexture);
+    craftButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     craftButton.setCharacterSize(32);
     craftButton.setPosition(3 * scw / 4, 3 * sch / 4);
     craftButton.setSize(300, 150);
 
-    statsPlayerImage.setTexture(PlayerTexture);
+    statsPlayerImage.setTexture(Textures::Player);
     statsPlayerImage.setCenter(5 * scw / 6, sch / 2);
 
     itemListBG.setPosition(0, 0);
-    itemListBG.setTexture(Frame4Texture);
-    itemListBG.setScale(InventoryItemListView.getSize().x / Frame4Texture.getSize().x,
-                        InventoryItemListView.getSize().y / Frame4Texture.getSize().y);
+    itemListBG.setTexture(Textures::Frame4);
+    itemListBG.setScale(InventoryItemListView.getSize().x / Textures::Frame4.getSize().x,
+                        InventoryItemListView.getSize().y / Textures::Frame4.getSize().y);
 
     InventoryItemListView.setBG(itemListBG);
 
@@ -767,37 +766,37 @@ void initInventory() {
     inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
 
 
-    backButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
+    backButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     backButton.setCharacterSize(52);
     backButton.setPosition(0, 0);
     backButton.setSize(300, 150);
 
-    craftingPageButton.setTexture(YellowPanelTexture, YellowPanelPushedTexture);
+    craftingPageButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     craftingPageButton.setCharacterSize(32);
     craftingPageButton.setPosition(0 * scw / 5, 9 * sch / 10);
     craftingPageButton.setSize(scw / 5, sch / 10);
 
-    weaponsPageButton.setTexture(RedPanelTexture, RedPanelPushedTexture);
+    weaponsPageButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     weaponsPageButton.setCharacterSize(32);
     weaponsPageButton.setPosition(1 * scw / 5, 9 * sch / 10);
     weaponsPageButton.setSize(scw / 5, sch / 10);
 
-    equipablesPageButton.setTexture(GreenPanelTexture, GreenPanelPushedTexture);
+    equipablesPageButton.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
     equipablesPageButton.setCharacterSize(32);
     equipablesPageButton.setPosition(2 * scw / 5, 9 * sch / 10);
     equipablesPageButton.setSize(scw / 5, sch / 10);
 
-    perksPageButton.setTexture(BluePanelTexture, BluePanelPushedTexture);
+    perksPageButton.setTexture(Textures::BluePanel, Textures::BluePanelPushed);
     perksPageButton.setCharacterSize(32);
     perksPageButton.setPosition(3 * scw / 5, 9 * sch / 10);
     perksPageButton.setSize(scw / 5, sch / 10);
 
-    statsPageButton.setTexture(ItemPanelTexture, ItemPanelTexture);
+    statsPageButton.setTexture(Textures::ItemPanel, Textures::ItemPanel);
     statsPageButton.setCharacterSize(32);
     statsPageButton.setPosition(4 * scw / 5, 9 * sch / 10);
     statsPageButton.setSize(scw / 5, sch / 10);
 
-    invBackground.setTexture(SteelFrameTexture);
+    invBackground.setTexture(Textures::SteelFrame);
     invBackground.setScale(scw, sch);
     invBackground.setPosition(0, 0);
 
@@ -910,7 +909,7 @@ void EventHandler() {
                 case screens::MainRoom:
                     if (event.type == sf::Event::KeyPressed) {
                         if (event.key.code == sf::Keyboard::Escape) {
-                            MainMenuMusic.pause();
+                            Musics::MainMenu.pause();
                             window.close();
                         }
                     }
@@ -1078,11 +1077,11 @@ void MainLoop() {
 
         player.UpdateState();
         if (screen == screens::Dungeon) {
-            if (FightMusic1.getDuration() - FightMusic1.getPlayingOffset() < sf::seconds(0.3f)) {
-                FightMusic2.play();
+            if (Musics::Fight1.getDuration() - Musics::Fight1.getPlayingOffset() < sf::seconds(0.3f)) {
+                Musics::Fight2.play();
             }
-            if (FightMusic2.getDuration() - FightMusic2.getPlayingOffset() < sf::seconds(0.3f)) {
-                FightMusic1.play();
+            if (Musics::Fight2.getDuration() - Musics::Fight2.getPlayingOffset() < sf::seconds(0.3f)) {
+                Musics::Fight1.play();
             }
         }
         if (!window.hasFocus()) {
@@ -1188,7 +1187,7 @@ bool IsSomeOneCanBeActivated() {
 }
 
 void FillFloorRects() {
-    sf::Image res, src = floor1xTexture.copyToImage();
+    sf::Image res, src = Textures::floor1x.copyToImage();
     auto CreateOneFLoor = [&src](sf::Image& res){
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 5; x++) {
@@ -1210,40 +1209,39 @@ void FillFloorRects() {
 }
 
 void updateShaders() {
-    MapShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-    MapShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-    MapShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    Shaders::Map.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+    Shaders::Map.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    Shaders::Map.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
 
-    PlayerShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-    PlayerShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-    PlayerShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    Shaders::Player.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+    Shaders::Player.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    Shaders::Player.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
 
-    PortalShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-    PortalShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-    PortalShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    Shaders::Portal.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+    Shaders::Portal.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    Shaders::Portal.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
 
-    ArchitectShader.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-    ArchitectShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-    ArchitectShader.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    Shaders::Architect.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
+    Shaders::Architect.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    Shaders::Architect.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
 
-    PickupItemShader.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    Shaders::PickupItem.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
 }
 
 void processEffects() {
     Effect* effect;
     for (int i = 0; i < AllEffects.size(); i++) {
         effect = AllEffects[i];
+        effect->tacts--;
         switch (effect->type) {
-            case EffectType::Damage :
+            case EffectType::Damage:
                 if (effect->tacts != 0) {
-                    --effect->tacts;
                     effect->owner->getDamage(effect->parameter);
                 }
                 break;
-            case EffectType::Heal :
+            case EffectType::Heal:
                 if (effect->tacts != 0) {
-                    --effect->tacts;
-                    effect->owner->Health += (float)effect->parameter;
+                    effect->owner->getDamage(-effect->parameter);
                 }
                 break;
             default:
@@ -1254,7 +1252,6 @@ void processEffects() {
             AllEffects.erase(AllEffects.begin() + i--);
         }
     }
-    effect = nullptr;
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions

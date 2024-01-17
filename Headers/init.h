@@ -85,91 +85,96 @@ ScrollView InventoryItemListView(100, 200, scw / 2.0f, sch / 2.0f, sf::FloatRect
 
 sf::Clock* GameClock;
 
+namespace Textures {
 //////////////////////////////////////////////////////////// Textures
-sf::Texture ScottPilgrimTexture,
-            RamonaFlowersTexture,
-            DistortedScientistTexture,
-            PlayerTexture,
-            PortalTexture,
-            PortalAnimation2Texture,
-            WallTexture,
-            XButtonTexture,
-            BoxTexture,
-            floor1xTexture,
-            PuddleTexture,
-            FireTexture,
-            ArchitectTexture,
+    sf::Texture ScottPilgrim,
+                RamonaFlowers,
+                DistortedScientist,
+                Player,
+                Portal,
+                PortalAnimation2,
+                Wall,
+                XButton,
+                Box,
+                floor1x,
+                Puddle,
+                Fire,
+                Architect,
 //////////////////////////////////////////////////////////// Panel Tetures
-            GreenPanelTexture,
-            GreenPanelPushedTexture,
-            RedPanelTexture,
-            RedPanelPushedTexture,
-            BluePanelTexture,
-            BluePanelPushedTexture,
-            YellowPanelTexture,
-            YellowPanelPushedTexture,
-            SteelFrameTexture,
-            ItemPanelTexture,
-            Frame4Texture
-            ;
-
-void loadTextures() {
-    ScottPilgrimTexture       .loadFromFile("sources/textures/scottpilgrim_multiple.png");
-    RamonaFlowersTexture      .loadFromFile("sources/textures/ramonaflowers_multiple_corrupted.png");
-    DistortedScientistTexture .loadFromFile("sources/textures/DistortedScientist.png");
-    PlayerTexture             .loadFromFile("sources/textures/Player.png");
-    PortalTexture             .loadFromFile("sources/textures/Portal.png");
-    PortalAnimation2Texture   .loadFromFile("sources/textures/PortalAnimation2.png");
-    WallTexture               .loadFromFile("sources/textures/wall.png");
-    XButtonTexture            .loadFromFile("sources/textures/XButton.png");
-    BoxTexture                .loadFromFile("sources/textures/Box.png");
-    floor1xTexture            .loadFromFile("sources/textures/floors/floor1x.png");
-    PuddleTexture             .loadFromFile("sources/textures/Puddle.png");
-    FireTexture               .loadFromFile("sources/textures/Fire.png");
-    ArchitectTexture          .loadFromFile("sources/textures/Architect.png");
-
-    GreenPanelTexture        .loadFromFile("sources/textures/Panels/GreenPanel.png");
-    GreenPanelPushedTexture  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
-    RedPanelTexture          .loadFromFile("sources/textures/Panels/RedPanel.png");
-    RedPanelPushedTexture    .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
-    BluePanelTexture         .loadFromFile("sources/textures/Panels/BluePanel.png");
-    BluePanelPushedTexture   .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
-    YellowPanelTexture       .loadFromFile("sources/textures/Panels/YellowPanel.png");
-    YellowPanelPushedTexture .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
-    SteelFrameTexture        .loadFromFile("sources/textures/Panels/SteelFrame.png");
-    ItemPanelTexture         .loadFromFile("sources/textures/Panels/ItemPanel.png");
-    Frame4Texture            .loadFromFile("sources/textures/Panels/frame4.png");
+                GreenPanel,
+                GreenPanelPushed,
+                RedPanel,
+                RedPanelPushed,
+                BluePanel,
+                BluePanelPushed,
+                YellowPanel,
+                YellowPanelPushed,
+                SteelFrame,
+                ItemPanel,
+                Frame4
+                ;
 }
 
+void loadTextures() {
+    Textures::ScottPilgrim       .loadFromFile("sources/textures/scottpilgrim_multiple.png");
+    Textures::RamonaFlowers      .loadFromFile("sources/textures/ramonaflowers_multiple_corrupted.png");
+    Textures::DistortedScientist .loadFromFile("sources/textures/DistortedScientist.png");
+    Textures::Player             .loadFromFile("sources/textures/Player.png");
+    Textures::Portal             .loadFromFile("sources/textures/Portal.png");
+    Textures::PortalAnimation2   .loadFromFile("sources/textures/PortalAnimation2.png");
+    Textures::Wall               .loadFromFile("sources/textures/wall.png");
+    Textures::XButton            .loadFromFile("sources/textures/XButton.png");
+    Textures::Box                .loadFromFile("sources/textures/Box.png");
+    Textures::floor1x            .loadFromFile("sources/textures/floors/floor1x.png");
+    Textures::Puddle             .loadFromFile("sources/textures/Puddle.png");
+    Textures::Fire               .loadFromFile("sources/textures/Fire.png");
+    Textures::Architect          .loadFromFile("sources/textures/Architect.png");
+
+    Textures::GreenPanel        .loadFromFile("sources/textures/Panels/GreenPanel.png");
+    Textures::GreenPanelPushed  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
+    Textures::RedPanel          .loadFromFile("sources/textures/Panels/RedPanel.png");
+    Textures::RedPanelPushed    .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
+    Textures::BluePanel         .loadFromFile("sources/textures/Panels/BluePanel.png");
+    Textures::BluePanelPushed   .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
+    Textures::YellowPanel       .loadFromFile("sources/textures/Panels/YellowPanel.png");
+    Textures::YellowPanelPushed .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
+    Textures::SteelFrame        .loadFromFile("sources/textures/Panels/SteelFrame.png");
+    Textures::ItemPanel         .loadFromFile("sources/textures/Panels/ItemPanel.png");
+    Textures::Frame4            .loadFromFile("sources/textures/Panels/frame4.png");
+}
+
+namespace Shaders {
 //////////////////////////////////////////////////////////// Shaders
-sf::Shader MapShader,
-           PlayerShader,
-           PortalShader,
-           PickupItemShader,
-           ArchitectShader
-           ;
+    sf::Shader Map,
+               Player,
+               Portal,
+               PickupItem,
+               Architect
+               ;   
+}
 
 void loadShaders() {
-    MapShader        .loadFromFile("sources/shaders/terrain.vert",               "sources/shaders/terrain.frag"              );
-    PlayerShader     .loadFromFile("sources/shaders/player/player.vert",         "sources/shaders/player/player.frag"        );
-    PortalShader     .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"        );
-    PickupItemShader .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag");
-    ArchitectShader  .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"  );
+    Shaders::Map        .loadFromFile("sources/shaders/terrain.vert",               "sources/shaders/terrain.frag"              );
+    Shaders::Player     .loadFromFile("sources/shaders/player/player.vert",         "sources/shaders/player/player.frag"        );
+    Shaders::Portal     .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"        );
+    Shaders::PickupItem .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag");
+    Shaders::Architect  .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"  );
 }
 
 //////////////////////////////////////////////////////////// States
-sf::RenderStates MapStates(&MapShader);
+sf::RenderStates MapStates(&Shaders::Map);
 
+namespace Musics {
 //////////////////////////////////////////////////////////// Music
-sf::Music MainMenuMusic,
-          FightMusic1,
-          FightMusic2
-          ;
+    sf::Music MainMenu,
+              Fight1, Fight2
+              ;
+}
 
 void loadMusics() {
-    MainMenuMusic .openFromFile("sources/music/MainMenuMusic.wav");
-    FightMusic1   .openFromFile("sources/music/FightMusic1.flac");
-    FightMusic2   .openFromFile("sources/music/FightMusic2.flac");
+    Musics::MainMenu .openFromFile("sources/music/MainMenu.wav");
+    Musics::Fight1   .openFromFile("sources/music/Fight1.flac");
+    Musics::Fight2   .openFromFile("sources/music/Fight2.flac");
 }
 
 bool Rect::intersect(Circle& circle) {

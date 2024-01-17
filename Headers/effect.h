@@ -10,10 +10,10 @@ class Effect {
 public:
     Creature* owner;
     EffectType type;
-    double parameter;
+    float parameter;
     int tacts;
 
-    Effect(Creature* owner, EffectType type, double parameter, int tacts) {
+    Effect(Creature* owner, EffectType type, float parameter, int tacts) {
         this->owner = owner;
         this->type = type;
         this->parameter = parameter;

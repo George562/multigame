@@ -1,5 +1,4 @@
 #pragma once
-
 #include "rect.h"
 #include "animation.h"
 #include "init.h"
@@ -19,15 +18,15 @@ public:
         this->Width = Width;
         this->Height = Height;
         this->tacts = tacts;
-        setAnimation(FireTexture, 1, 1, sf::seconds(1), &MapShader);
+        setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
     }
 
     void Propagation() {
-        double dist = 3*Width/2;
-        double angle = (rand() % 361) * M_PI / 180;
-        descendant1 = new Fire(PosX + dist*std::sin(angle), PosY + dist*std::cos(angle), Width, Height, rand() % 1000 + 1);
-        angle = (rand() % 361) * M_PI / 180;
-        descendant2 = new Fire(PosX + dist*std::sin(angle), PosY + dist*std::cos(angle), Width, Height, rand() % 1000 + 1);
+        float dist = 3 * Width / 2;
+        float angle = (rand() % 361) * M_PI / 180;
+        descendant1 = new Fire(PosX + dist * std::sin(angle), PosY + dist * std::cos(angle), Width, Height, rand() % 1000 + 1);
+        angle = (rand() % 360) * M_PI / 180;
+        descendant2 = new Fire(PosX + dist * std::sin(angle), PosY + dist * std::cos(angle), Width, Height, rand() % 1000 + 1);
     }
 
     void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader *shader = nullptr) {
