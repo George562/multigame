@@ -97,7 +97,6 @@ public:
 
     void AddItem(Item* item) {
         inventory.addItem(item);
-        item->picked();
     }
 };
 #pragma pack(pop)

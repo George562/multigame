@@ -35,6 +35,7 @@ public:
             return false;
         if (!dropableItems[item->id]) {
             dropableItems[item->id] = new Item(*item);
+            dropableItems[item->id]->picked();
         } else {
             *(dropableItems[item->id]) += *item;
         }
@@ -46,6 +47,7 @@ public:
             return false;
         if (!safeItems[item->id]) {
             safeItems[item->id] = new Item(*item);
+            safeItems[item->id]->picked();
         } else {
             *(safeItems[item->id]) += *item;
         }
@@ -57,6 +59,7 @@ public:
             return false;
         if (!keyItems[item->id]) {
             keyItems[item->id] = new Item(*item);
+            keyItems[item->id]->picked();
         } else {
             *(keyItems[item->id]) += *item;
         }
@@ -68,6 +71,7 @@ public:
             return false;
         if (!equipItems[item->id]) {
             equipItems[item->id] = new Item(*item);
+            equipItems[item->id]->picked();
         } else {
             *(equipItems[item->id]) += *item;
         }

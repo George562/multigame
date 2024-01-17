@@ -16,6 +16,13 @@ namespace ItemID {
     };
 }
 
+///////////////////////////////////////////////////////////// PLACEHOLDER
+std::map<ItemID::Type, std::string> itemDesc {
+    {ItemID::regenDrug, "The so called \"Portal straight to St. Petersburg\"\nGives +1 HP/s for the next 10 seconds"},
+    {ItemID::coin, "Moneh :D"}
+};
+//////////////////////////////////////////////////////////////////////
+
 //////////////////////////////////////////////////////////// Item Animation params
 std::map<ItemID::Type, sf::Texture*> itemTextureName {
     {ItemID::gunParts, new sf::Texture},
@@ -139,6 +146,14 @@ bool Item::CanBeActivated(Circle& player) {
 bool Item::isActivated(Circle& player, sf::Event& event) {
     if (pickupable && !isInInventory)
         return intersect(player);
+    if(isInInventory) {
+        if((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
+           (event.mouseButton.button == sf::Mouse::Button::Right || event.mouseButton.button == sf::Mouse::Button::Left))
+            return contains(event.mouseButton.x, event.mouseButton.y);
+        if(event.type == sf::Event::MouseMoved)
+            return contains(event.mouseMove.x, event.mouseMove.y);
+        return false;
+    }
     return false;
 }
 
