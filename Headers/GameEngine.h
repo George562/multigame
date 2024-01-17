@@ -145,7 +145,7 @@ Scale<int> CurWeapon{0, 4, 0};
 std::vector<Enemy*> Enemies;
 
 //////////////////////////////////////////////////////////// Effects
-std::queue<Effect> QueueEffects;
+std::vector<Effect*> AllEffects;
 
 //////////////////////////////////////////////////////////// functions
 void draw();
@@ -1056,10 +1056,22 @@ void MainLoop() {
             FireSet[i]->tacts--;
             if (FireSet[i]->tacts == 0) {
                 FireSet[i]->Propagation();
-                FireSet.push_back(FireSet[i]->descendant1);
-                FireSet.push_back(FireSet[i]->descendant2);
-                DrawableStuff.push_back(FireSet[i]->descendant1);
-                DrawableStuff.push_back(FireSet[i]->descendant2);
+                bool add1 = true;
+                bool add2 = true;
+                for (int j = 0; j < FireSet.size(); j++) {
+                    if (FireSet[i]->descendant1->intersect(*FireSet[j])) add1 = false;
+                    if (FireSet[i]->descendant2->intersect(*FireSet[j])) add2 = false;
+                }
+                if (add1) {
+                    FireSet.push_back(FireSet[i]->descendant1);
+                    DrawableStuff.push_back(FireSet[i]->descendant1);
+                }
+                else delete FireSet[i]->descendant1;
+                if (add2) {
+                    FireSet.push_back(FireSet[i]->descendant2);
+                    DrawableStuff.push_back(FireSet[i]->descendant2);
+                }
+                else delete FireSet[i]->descendant2;
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
                 delete FireSet[i];
                 FireSet.erase(FireSet.begin() + i--);
@@ -1156,11 +1168,11 @@ void MainLoop() {
         draw();
 
         if (puddle.intersect(player))
-            QueueEffects.push(Effect(&player, EffectType::Damage, 0.5, 1));
+            AllEffects.push_back(new Effect(&player, EffectType::Damage, 0, 1));
 
         for (Fire* &fire: FireSet) {
             if (fire->intersect(player))
-                QueueEffects.push(Effect(&player, EffectType::Damage, 0.05, 2));
+                AllEffects.push_back(new Effect(&player, EffectType::Damage, 0, 1));
         }
         processEffects();
 
@@ -1220,29 +1232,31 @@ void updateShaders() {
 }
 
 void processEffects() {
-    int size = QueueEffects.size();
-    for (int i = 0; i < size; i++) {
-        Effect effect = QueueEffects.front();
-        switch (effect.type) {
+    Effect* effect;
+    for (int i = 0; i < AllEffects.size(); i++) {
+        effect = AllEffects[i];
+        switch (effect->type) {
             case EffectType::Damage :
-                if (effect.tacts != 0) {
-                    --effect.tacts;
-                    effect.owner->getDamage(effect.parameter);
+                if (effect->tacts != 0) {
+                    --effect->tacts;
+                    effect->owner->getDamage(effect->parameter);
                 }
                 break;
             case EffectType::Heal :
-                if (effect.tacts != 0) {
-                    --effect.tacts;
-                    effect.owner->Health += (float)effect.parameter;
+                if (effect->tacts != 0) {
+                    --effect->tacts;
+                    effect->owner->Health += (float)effect->parameter;
                 }
                 break;
             default:
                 break;
         }
-        QueueEffects.pop();
-        if (effect.tacts != 0)
-            QueueEffects.push(effect);
+        if (effect->tacts == 0) {
+            delete AllEffects[i];
+            AllEffects.erase(AllEffects.begin() + i--);
+        }
     }
+    effect = nullptr;
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions
