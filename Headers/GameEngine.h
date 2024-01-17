@@ -585,12 +585,10 @@ void LoadMainMenu() {
 
     puddle.setFunction([](Interactable* i){
         player.getDamage(5.f);
-        std::cout << "bruh\n";
     });
 
     architect.setFunction([](Interactable* i){
         player.Health.top += 20.f;
-        std::cout << "bruh\n";
     });
 
     // Set cameras
