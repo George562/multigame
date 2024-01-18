@@ -11,8 +11,6 @@
 #include "scale.h"
 #include "rect.h"
 #include "circle.h"
-#include "animation.h"
-#include "text.h"
 
 namespace faction {
     using Type = sf::Uint8;

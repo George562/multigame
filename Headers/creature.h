@@ -1,6 +1,7 @@
 #pragma once
 #include "weapon.h"
 #include "inventory.h"
+#include "text.h"
 
 ////////////////////////////////////////////////////////////
 // Class
