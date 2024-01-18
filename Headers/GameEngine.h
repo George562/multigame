@@ -68,11 +68,13 @@ Panel itemListBG;
 
 std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
 std::vector<sf::Drawable*> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
+std::map<ItemID::Type, Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
 Panel statsPlayerImage;
 
 bool isItemDescDrawn = false;
 PlacedText itemDescText;
+ItemID::Type prevItemDescID;
 
 //////////////////////////////////////////////////////////// Animations
 
@@ -157,7 +159,7 @@ void LoadMainMenu();
 void init();
 void initInventory();
 void EventHandler();
-void useItem(ItemID::Type);
+bool useItem(ItemID::Type);
 void updateBullets();
 void MainLoop();
 bool IsSomeOneCanBeActivated();
@@ -421,19 +423,31 @@ void drawInventory() {
         &player.inventory.dropableItems
     };
 
-    for (sf::Drawable* &elem : itemSlotsElements) {
+    for (sf::Drawable* &elem : itemSlotsElements)
         delete elem;
-    }
     itemSlotsElements.clear();
+
+    if (!itemSlotsRects.empty())
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++)
+            if (itemSlotsRects.find(id) != itemSlotsRects.end())
+                delete itemSlotsRects[id];
+    itemSlotsRects.clear();
 
     for (int i = 0; i < 4; i++) {
         if (player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
             int slotNumber = 0;
             for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                if ((currInventory[i]->find(id) != currInventory[i]->end()) && (*currInventory[i])[id]->amount > 0) {
+                if ((currInventory[i]->find(id) != currInventory[i]->end()) &&
+                    (*currInventory[i])[id]->amount > 0) {
+
                     Item* drawnItem = (*currInventory[i])[id];
-                    float itemX = int(slotNumber % 4) * 150 + itemListBG.getPosition().x + 50;
-                    float itemY = int(slotNumber / 4) * 150 + itemListBG.getPosition().y + 50;
+                    float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
+                    float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
+
+                    Rect* itemActivationRect = new Rect();
+                    itemActivationRect->setPosition(itemX, itemY);
+                    itemActivationRect->setSize(Textures::ItemPanel.getSize().x / 2.0f, Textures::ItemPanel.getSize().y / 2.0f);
+                    itemSlotsRects[id] = itemActivationRect;
 
                     Panel* bgPanel = new Panel();
                     bgPanel->setPosition(itemX, itemY);
@@ -837,8 +851,9 @@ void EventHandler() {
             }
         } else if (IsDrawInventory) {
 
-            if (event.key.code == sf::Keyboard::Escape)
+            if (event.key.code == sf::Keyboard::Escape) {
                 IsDrawInventory = false;
+            }
             backButton.isActivated(event);
             itemsPageButton.isActivated(event);
             weaponsPageButton.isActivated(event);
@@ -853,31 +868,45 @@ void EventHandler() {
                 &player.inventory.equipItems,
                 &player.inventory.dropableItems
             };
-
+            
+            bool isAnythingHovered = false;
             for (int i = 0; i < 4; i++) {
-                if (player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
+                if (player.inventory.itemAmount() != 0 &&
+                    activeInventoryPage != inventoryPage::Stats) {
                     for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                        if ((currInventory[i]->find(id) != currInventory[i]->end()) && (*currInventory[i])[id]->amount > 0) {
-
-                            if ((*currInventory[i])[id]->isActivated(player, event)) {
-                                if ((event.type == sf::Event::MouseButtonPressed) || (event.type == sf::Event::MouseButtonReleased))
-                                {
+                        if ((currInventory[i]->find(id) != currInventory[i]->end()) &&
+                            (*currInventory[i])[id]->amount > 0) {
+                            if (!itemSlotsRects.empty() &&
+                                itemSlotsRects.find(id) != itemSlotsRects.end() &&
+                                itemSlotsRects[id]->contains(sf::Mouse::getPosition().x, sf::Mouse::getPosition().y)) {
+                                if (id != prevItemDescID) {
+                                    prevItemDescID = ItemID::NONE;
+                                    isItemDescDrawn = false;
+                                }
+                                isAnythingHovered = true;
+                                if ((event.type == sf::Event::MouseButtonPressed) ||
+                                    (event.type == sf::Event::MouseButtonReleased)) {
                                     if (event.mouseButton.button == sf::Mouse::Button::Right) {
                                         isItemDescDrawn = true;
                                         itemDescText.setString(itemDesc[id]);
+                                        prevItemDescID = id;
                                     }
-                                    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left) {
-                                        useItem(id);
-                                        (*currInventory[i])[id]->amount = ((*currInventory[i])[id]->amount == 1) ? 0 : (*currInventory[i])[id]->amount - 1;
-                                        isItemDescDrawn = false;
+                                    if (event.type == sf::Event::MouseButtonPressed &&
+                                        event.mouseButton.button == sf::Mouse::Button::Left) {
+                                        bool itemUsed = useItem(id);
+                                        if (itemUsed) {
+                                            (*currInventory[i])[id]->amount = ((*currInventory[i])[id]->amount == 1) ? 0 : (*currInventory[i])[id]->amount - 1;
+                                            isItemDescDrawn = false;
+                                        }
                                     }
                                 }
                             }
-                            else isItemDescDrawn = false;
                         }
                     }
                 }
             }
+            if (!isAnythingHovered)
+                isItemDescDrawn = false;
 
         } else {
             if (event.type == sf::Event::KeyPressed) {
@@ -1033,10 +1062,17 @@ void EventHandler() {
     }
 }
 
-void useItem(ItemID::Type id) {
+bool useItem(ItemID::Type id) {
     ///////////////////////////////////// PLACEHOLDER ACTIONS. ALL ITEM FUNCTIONS ARE NOT FINAL
-    if (id == ItemID::regenDrug)
+    switch (id)
+    {
+    case ItemID::regenDrug:
         player.HealthRecovery += 1;
+        return true;
+    
+    default:
+        return false;
+    }
 }
 
 void updateBullets() {
