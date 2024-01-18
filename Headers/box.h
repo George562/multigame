@@ -9,9 +9,9 @@
 class Box : public Interactable {
 public:
     Box() : Interactable() {}
-    void setFillingScale(Scale<float> s);
+    void setFillingScale(Scale<float>);
 
-    Scale<float> fillingScale; // you need to pour in mana to open (at future)
+    Scale<float> fillingScale; // you need to pour in mana to open
 };
 
 ////////////////////////////////////////////////////////////

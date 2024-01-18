@@ -289,8 +289,9 @@ void drawFloor() {
     }
 }
 
+sf::Vector2f CameraPos;
 void drawWalls() {
-    sf::Vector2f CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
+    CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
     for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
             i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++) {
         for (int j = std::max(0, int(CameraPos.x / size) - 1);
@@ -397,10 +398,9 @@ void drawInterface() {
     }
 
     FPSCounter++;
-    if (ClockFPS.getElapsedTime() >= sf::seconds(1)) {
+    if (ClockFPS.restart() >= sf::seconds(1)) {
         TextFPS.setString(std::to_string(FPSCounter));
         FPSCounter = 0;
-        ClockFPS.restart();
     }
     window.draw(TextFPS);
 
@@ -506,14 +506,17 @@ void LevelGenerate(int n, int m) {
             listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
             sf::Vector2f(rand() % (size - Textures::Box.getSize().x / 4), rand() % (size - Textures::Box.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
-        //listOfBox[i]->setFillingScale({0.f, 0.f, 0.f});
+        listOfBox[i]->setFillingScale({0.f, 20.f, 0.f});
         listOfBox[i]->setFunction([](Interactable* i){
-            player.AddItem(new Item(ItemID::coin, rand() % 5));
-            DeleteFromVector(listOfBox, (Box*)i);
-            DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
-            DeleteFromVector(InteractibeStuff, i);
-            LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
-            delete i;
+            if (player.Mana.cur >= 20) {
+                player.Mana -= 20.f;
+                player.AddItem(new Item(ItemID::coin, rand() % 5));
+                DeleteFromVector(listOfBox, (Box*)i);
+                DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
+                DeleteFromVector(InteractibeStuff, i);
+                LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
+                delete i;
+            }
         });
 
         LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
@@ -649,13 +652,17 @@ void LoadMainMenu() {
     listOfBox[0]->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
     listOfBox[0]->setSize(listOfBox[0]->getSize() / 4.f);
     listOfBox[0]->setPosition(1912.5, 1545);
+    listOfBox[0]->setFillingScale({0.f, 20.f, 0.f});
     listOfBox[0]->setFunction([](Interactable* i){
-        player.AddItem(new Item(ItemID::coin, 1 + rand() % 5));
-        DeleteFromVector(listOfBox, (Box*)i);
-        DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
-        DeleteFromVector(InteractibeStuff, i);
-        CurLocation->DelObject({Tiles::box, i->getPosition()});
-        delete i;
+        if (player.Mana.cur >= 20) {
+            player.Mana -= 20.f;
+            player.AddItem(new Item(ItemID::coin, 1 + rand() % 5));
+            DeleteFromVector(listOfBox, (Box*)i);
+            DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
+            DeleteFromVector(InteractibeStuff, i);
+            CurLocation->DelObject({Tiles::box, i->getPosition()});
+            delete i;
+        }
     });
 
     InteractibeStuff.push_back(listOfBox[0]);
@@ -868,7 +875,7 @@ void EventHandler() {
                 &player.inventory.equipItems,
                 &player.inventory.dropableItems
             };
-            
+
             bool isAnythingHovered = false;
             for (int i = 0; i < 4; i++) {
                 if (player.inventory.itemAmount() != 0 &&
@@ -1064,14 +1071,13 @@ void EventHandler() {
 
 bool useItem(ItemID::Type id) {
     ///////////////////////////////////// PLACEHOLDER ACTIONS. ALL ITEM FUNCTIONS ARE NOT FINAL
-    switch (id)
-    {
-    case ItemID::regenDrug:
-        player.HealthRecovery += 1;
-        return true;
-    
-    default:
-        return false;
+    switch (id) {
+        case ItemID::regenDrug:
+            player.HealthRecovery += 1;
+            return true;
+
+        default:
+            return false;
     }
 }
 
