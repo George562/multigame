@@ -148,7 +148,7 @@ namespace Shaders {
                Portal,
                PickupItem,
                Architect
-               ;   
+               ;
 }
 
 void loadShaders() {

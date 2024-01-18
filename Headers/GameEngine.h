@@ -159,6 +159,7 @@ void init();
 void initInventory();
 void EventHandler();
 void useItem(ItemID::Type);
+void updateBullets();
 void MainLoop();
 bool IsSomeOneCanBeActivated();
 void FillFloorRects();
@@ -405,8 +406,7 @@ void drawInterface() {
     window.setView(GameView);
 }
 
-void drawInventory()
-{
+void drawInventory() {
     window.setView(InventoryView);
     for (sf::Drawable* elem : inventoryElements)
         window.draw(*elem);
@@ -459,7 +459,7 @@ void drawInventory()
             }
         }
     }
-    
+
     if (isItemDescDrawn) {
         itemDescText.setPosition(sf::Mouse::getPosition(window).x + 100, sf::Mouse::getPosition(window).y);
         window.draw(itemDescText);
@@ -495,6 +495,7 @@ void LevelGenerate(int n, int m) {
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
         //listOfBox[i]->setFillingScale({0.f, 0.f, 0.f});
         listOfBox[i]->setFunction([](Interactable* i){
+            player.AddItem(new Item(ItemID::coin, rand() % 5));
             DeleteFromVector(listOfBox, (Box*)i);
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);
@@ -515,6 +516,7 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < 1; i++) {
         FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x,
                                    (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f, 1000));
+        FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
     }
 
     for (int i = 0; i < Enemies.size(); i++) {
@@ -622,6 +624,7 @@ void LoadMainMenu() {
 
     InteractibeStuff.push_back(&portal);
     InteractibeStuff.push_back(&architect);
+    InteractibeStuff.push_back(&puddle);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
     newItem->setAnimation(*itemTextureName[ItemID::regenDrug], 1, 1, sf::seconds(1), &Shaders::Map);
@@ -629,20 +632,23 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
 
+    listOfBox.push_back(new Box());
+    listOfBox[0]->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
+    listOfBox[0]->setSize(listOfBox[0]->getSize() / 4.f);
+    listOfBox[0]->setPosition(1912.5, 1545);
+    listOfBox[0]->setFunction([](Interactable* i){
+        player.AddItem(new Item(ItemID::coin, 1 + rand() % 5));
+        DeleteFromVector(listOfBox, (Box*)i);
+        DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
+        DeleteFromVector(InteractibeStuff, i);
+        CurLocation->DelObject({Tiles::box, i->getPosition()});
+        delete i;
+    });
+
+    InteractibeStuff.push_back(listOfBox[0]);
+    DrawableStuff.push_back(listOfBox[0]);
+
     FillFloorRectsThread.wait();
-}
-
-
-void CreateImage() {
-    sf::Image img, res;
-    img.loadFromFile("sources/floor1x.png");
-    res.create(32 * 100, 32 * 100);
-    for (int y = 0; y < 100; y++) {
-        for (int x = 0; x < 100; x++) {
-            res.copy(img, x * 32, y * 32, {(rand() % 5) * 32, 0, 32, 32});
-        }
-    }
-    res.saveToFile("sources/res.png");
 }
 
 void init() {

@@ -63,7 +63,7 @@ public:
 // Pistol
 class Pistol : public Weapon {
 public:
-    Pistol() : Weapon("Pistol", 9, 1, 1, 2) { BulletVelocity = 10; NumberOfBulletsPerShot = 1;  scatter = 20; }
+    Pistol() : Weapon("Pistol", 9, 1, 0.4, 2) { BulletVelocity = 10; NumberOfBulletsPerShot = 1;  scatter = 20; }
 };
 
 // Revolver

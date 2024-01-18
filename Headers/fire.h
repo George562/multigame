@@ -1,10 +1,11 @@
 #pragma once
 #include "rect.h"
 #include "animation.h"
-#include "init.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 class Fire : public Rect, public sf::Drawable {
-public:    
+public:
     Animation* animation = nullptr;
     // fire propagation
     int tacts;
@@ -18,7 +19,6 @@ public:
         this->Width = Width;
         this->Height = Height;
         this->tacts = tacts;
-        setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
     }
 
     void Propagation() {

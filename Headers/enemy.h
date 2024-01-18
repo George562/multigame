@@ -24,7 +24,7 @@ public:
         Acceleration = MaxVelocity / 0.6f;
         Radius = 60.f;
         CurWeapon = new Pistol();
-        CurWeapon->damage = 0;
+        // CurWeapon->damage = 0;
 
         setAnimation(Textures::DistortedScientist, 1, 1, sf::seconds(1), &Shaders::Map);
 
@@ -54,7 +54,7 @@ public:
         Acceleration = MaxVelocity / 0.6f;
         Radius = 60.f;
         CurWeapon = new Pistol();
-        CurWeapon->damage = 0;
+        // CurWeapon->damage = 0;
 
         setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Map);
 
@@ -85,7 +85,7 @@ public:
         Acceleration = MaxVelocity / 0.6f;
         Radius = 60.f;
         CurWeapon = new Pistol();
-        CurWeapon->damage = 0;
+        // CurWeapon->damage = 0;
 
         setAnimation(Textures::RamonaFlowers, 8, 2, sf::seconds(1), &Shaders::Map);
 

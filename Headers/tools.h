@@ -1,6 +1,18 @@
 #pragma once
 #include "init.h"
 
+void CreateImage() {
+    sf::Image img, res;
+    img.loadFromFile("sources/textures/floor1x.png");
+    res.create(32 * 100, 32 * 100);
+    for (int y = 0; y < 100; y++) {
+        for (int x = 0; x < 100; x++) {
+            res.copy(img, x * 32, y * 32, {(rand() % 5) * 32, 0, 32, 32});
+        }
+    }
+    res.saveToFile("sources/other/res.png");
+}
+
 template <typename T>
 bool in(std::vector<T>& arr, T x) {
     for (T& y: arr) if (y == x) return true;
@@ -22,7 +34,7 @@ template <typename Obj>
 sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f Velocity) {
     int y = int(obj.PosY) / size, x = int(obj.PosX) / size;
     sf::Vector2i res = {-1, -1};
-    
+
     obj.PosY += Velocity.y;
     if (Velocity.y < 0) {
         if ((y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(obj)) &&
