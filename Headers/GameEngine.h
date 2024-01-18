@@ -2,7 +2,6 @@
 #include "chat.h"
 #include "contextMenu.h"
 #include "bar.h"
-#include "puddle.h"
 #include "player.h"
 #include "client.h"
 #include "box.h"
@@ -92,7 +91,7 @@ bool ClientFuncRun, HostFuncRun;
 Interactable portal;
 
 //////////////////////////////////////////////////////////// Puddle
-Puddle puddle;
+Interactable puddle;
 
 //////////////////////////////////////////////////////////// Puddle
 Interactable architect;
@@ -1036,7 +1035,7 @@ void EventHandler() {
 
 void useItem(ItemID::Type id) {
     ///////////////////////////////////// PLACEHOLDER ACTIONS. ALL ITEM FUNCTIONS ARE NOT FINAL
-    if (id == ItemID::medkit)
+    if (id == ItemID::regenDrug)
         player.HealthRecovery += 1;
 }
 
@@ -1105,11 +1104,13 @@ void MainLoop() {
                 }
                 if (add1) {
                     FireSet.push_back(FireSet[i]->descendant1);
+                    FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
                     DrawableStuff.push_back(FireSet[i]->descendant1);
                 }
                 else delete FireSet[i]->descendant1;
                 if (add2) {
                     FireSet.push_back(FireSet[i]->descendant2);
+                    FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
                     DrawableStuff.push_back(FireSet[i]->descendant2);
                 }
                 else delete FireSet[i]->descendant2;
