@@ -4,7 +4,6 @@
 #include "bar.h"
 #include "player.h"
 #include "client.h"
-#include "box.h"
 #include "effect.h"
 #include "fire.h"
 
@@ -102,7 +101,7 @@ Interactable architect;
 std::vector<Fire*> FireSet;
 
 //////////////////////////////////////////////////////////// Box
-std::vector<Box*> listOfBox;
+std::vector<Interactable*> listOfBox;
 
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
@@ -499,19 +498,18 @@ void LevelGenerate(int n, int m) {
     }
     listOfBox.clear();
     for (int i = 0; i < 10; i++) {
-        listOfBox.push_back(new Box());
+        listOfBox.push_back(new Interactable());
         listOfBox[i]->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
         listOfBox[i]->setSize(listOfBox[i]->getSize() / 4.f);
         do {
             listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
             sf::Vector2f(rand() % (size - Textures::Box.getSize().x / 4), rand() % (size - Textures::Box.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
-        listOfBox[i]->setFillingScale({0.f, 20.f, 0.f});
         listOfBox[i]->setFunction([](Interactable* i){
             if (player.Mana.cur >= 20) {
                 player.Mana -= 20.f;
                 player.AddItem(new Item(ItemID::coin, rand() % 5));
-                DeleteFromVector(listOfBox, (Box*)i);
+                DeleteFromVector(listOfBox, i);
                 DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
                 DeleteFromVector(InteractibeStuff, i);
                 LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
@@ -648,16 +646,15 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
 
-    listOfBox.push_back(new Box());
+    listOfBox.push_back(new Interactable());
     listOfBox[0]->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
     listOfBox[0]->setSize(listOfBox[0]->getSize() / 4.f);
     listOfBox[0]->setPosition(1912.5, 1545);
-    listOfBox[0]->setFillingScale({0.f, 20.f, 0.f});
     listOfBox[0]->setFunction([](Interactable* i){
         if (player.Mana.cur >= 20) {
             player.Mana -= 20.f;
             player.AddItem(new Item(ItemID::coin, 1 + rand() % 5));
-            DeleteFromVector(listOfBox, (Box*)i);
+            DeleteFromVector(listOfBox, i);
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);
             CurLocation->DelObject({Tiles::box, i->getPosition()});
