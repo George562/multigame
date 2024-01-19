@@ -125,10 +125,10 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Item::Item(ItemID::Type _id, int _amount, bool _pickapable, bool _isInInventory, bool _isDropable, bool _isKeyItem, bool _isEquippable) {
+Item::Item(ItemID::Type _id, int _amount, bool _pickupable, bool _isInInventory, bool _isDropable, bool _isKeyItem, bool _isEquippable) {
     id            = _id;
     amount        = _amount;
-    pickupable    = _pickapable;
+    pickupable    = _pickupable;
     isDropable    = _isDropable;
     isInInventory = _isInInventory;
     isEquippable  = _isEquippable;

@@ -67,7 +67,7 @@ Panel invBackground;
 Panel itemListBG;
 
 std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
-std::vector<sf::Drawable*> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
+std::map<ItemID::Type, std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 std::map<ItemID::Type, Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
 Panel statsPlayerImage;
@@ -160,6 +160,7 @@ void init();
 void initInventory();
 void EventHandler();
 bool useItem(ItemID::Type);
+void createSlotRects();
 void updateBullets();
 void MainLoop();
 bool IsSomeOneCanBeActivated();
@@ -423,15 +424,16 @@ void drawInventory() {
         &player.inventory.dropableItems
     };
 
-    for (sf::Drawable* &elem : itemSlotsElements)
-        delete elem;
+    if (!itemSlotsElements.empty()) {
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+            if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
+                for (sf::Drawable* &elem : itemSlotsElements[id])
+                    delete elem;
+                itemSlotsElements[id].clear();
+            }
+        }
+    }
     itemSlotsElements.clear();
-
-    if (!itemSlotsRects.empty())
-        for (ItemID::Type id = 0; id != ItemID::NONE; id++)
-            if (itemSlotsRects.find(id) != itemSlotsRects.end())
-                delete itemSlotsRects[id];
-    itemSlotsRects.clear();
 
     for (int i = 0; i < 4; i++) {
         if (player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
@@ -444,17 +446,11 @@ void drawInventory() {
                     float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
                     float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
 
-                    Rect* itemActivationRect = new Rect();
-                    itemActivationRect->setPosition(itemX, itemY);
-                    itemActivationRect->setSize(Textures::ItemPanel.getSize().x / 2.0f, Textures::ItemPanel.getSize().y / 2.0f);
-                    itemSlotsRects[id] = itemActivationRect;
-
                     Panel* bgPanel = new Panel();
                     bgPanel->setPosition(itemX, itemY);
                     bgPanel->setScale(0.5, 0.5);
                     bgPanel->setTexture(Textures::ItemPanel);
-                    itemSlotsElements.push_back(bgPanel);
-                    window.draw(*itemSlotsElements[slotNumber * 2]);
+                    itemSlotsElements[id].push_back(bgPanel);
 
                     drawnItem->setCenter(itemX + 75, itemY + 75);
                     window.draw(*drawnItem);
@@ -463,12 +459,16 @@ void drawInventory() {
                     itemAmountText->setCharacterSize(16);
                     itemAmountText->setString(std::to_string(drawnItem->amount));
                     itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
-                    itemSlotsElements.push_back(itemAmountText);
 
                     if (drawnItem->amount > 1)
-                        window.draw(*itemSlotsElements[slotNumber * 2 + 1]);
+                        itemSlotsElements[id].push_back(itemAmountText);
                     slotNumber++;
+                    
+                    for (sf::Drawable* &elem : itemSlotsElements[id])
+                        window.draw(*elem);
+                    window.draw(*drawnItem);
                 }
+                
             }
         }
     }
@@ -904,6 +904,7 @@ void EventHandler() {
                                         if (itemUsed) {
                                             (*currInventory[i])[id]->amount = ((*currInventory[i])[id]->amount == 1) ? 0 : (*currInventory[i])[id]->amount - 1;
                                             isItemDescDrawn = false;
+                                            createSlotRects();
                                         }
                                     }
                                 }
@@ -937,7 +938,9 @@ void EventHandler() {
                     }
                 }
                 if (event.key.code == sf::Keyboard::Tilde) {
+
                     IsDrawInventory = true;
+                    createSlotRects();
                 }
             }
             if (event.type == sf::Event::MouseWheelMoved) {
@@ -1073,11 +1076,47 @@ bool useItem(ItemID::Type id) {
     ///////////////////////////////////// PLACEHOLDER ACTIONS. ALL ITEM FUNCTIONS ARE NOT FINAL
     switch (id) {
         case ItemID::regenDrug:
-            player.HealthRecovery += 1;
+            AllEffects.push_back(new Effect(&player, EffectType::Heal, 1.0f, 600));
             return true;
 
         default:
             return false;
+    }
+}
+
+void createSlotRects() {
+    std::vector<std::map<ItemID::Type, Item*>*> currInventory
+    {
+        &player.inventory.keyItems,
+        &player.inventory.safeItems,
+        &player.inventory.equipItems,
+        &player.inventory.dropableItems
+    };
+
+    if (!itemSlotsRects.empty()) {
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++)
+            if (itemSlotsRects.find(id) != itemSlotsRects.end())
+                    delete itemSlotsRects[id];
+        itemSlotsRects.clear();
+    }
+
+    for (int i = 0; i < 4; i++) {
+        int slotNumber = 0;
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+            if ((currInventory[i]->find(id) != currInventory[i]->end()) &&
+                (*currInventory[i])[id]->amount > 0) {
+                
+                float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
+                float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;                    
+
+                Rect* itemActivationRect = new Rect();
+                itemActivationRect->setPosition(itemX, itemY);
+                itemActivationRect->setSize(Textures::ItemPanel.getSize().x / 2.0f, Textures::ItemPanel.getSize().y / 2.0f);
+                itemSlotsRects[id] = itemActivationRect;
+
+                slotNumber++;
+            }
+        }
     }
 }
 
