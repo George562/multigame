@@ -398,9 +398,10 @@ void drawInterface() {
     }
 
     FPSCounter++;
-    if (ClockFPS.restart() >= sf::seconds(1)) {
-        TextFPS.setString(std::to_string(FPSCounter));
+    if (ClockFPS.getElapsedTime() >= sf::seconds(1)) {
+        TextFPS.setString(std::to_string(FPSCounter) + " FPS");
         FPSCounter = 0;
+        ClockFPS.restart();
     }
     window.draw(TextFPS);
 
