@@ -1,6 +1,7 @@
 #pragma once
 #include "animation.h"
 #include "rect.h"
+#include "circle.h"
 
 #define ActivationButton sf::Keyboard::X
 
@@ -19,7 +20,7 @@ public:
 
     virtual bool isActivated(Circle&, sf::Event& event) {
         if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
-            function((Interactable*)this);
+            function(this);
             return true;
         }
         return false;
