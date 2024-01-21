@@ -531,7 +531,7 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < 1; i++) {
         FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x,
                                    (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f,
-                                   sf::Clock(), sf::seconds(1)));
+                                   sf::seconds(1)));
         FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
     }
 
@@ -1075,7 +1075,7 @@ bool useItem(ItemID::Type id) {
     ///////////////////////////////////// PLACEHOLDER ACTIONS. ALL ITEM FUNCTIONS ARE NOT FINAL
     switch (id) {
         case ItemID::regenDrug:
-            AllEffects.push_back(new Effect(&player, EffectType::Heal, 1.0f, sf::Clock(), sf::seconds(1)));
+            AllEffects.push_back(new Effect(&player, Effects::Heal, 60.f, sf::seconds(1.f)));
             return true;
 
         default:
@@ -1173,7 +1173,7 @@ void MainLoop() {
         }
 
         for (int i = 0; i < FireSet.size(); i++) {
-            if (FireSet[i]->clock.getElapsedTime() >= FireSet[i]->secs) {
+            if (FireSet[i]->clock->getElapsedTime() >= FireSet[i]->secs) {
                 FireSet[i]->Propagation();
                 bool add1 = true;
                 bool add2 = true;
@@ -1185,14 +1185,16 @@ void MainLoop() {
                     FireSet.push_back(FireSet[i]->descendant1);
                     FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
                     DrawableStuff.push_back(FireSet[i]->descendant1);
+                } else {
+                    delete FireSet[i]->descendant1;
                 }
-                else delete FireSet[i]->descendant1;
                 if (add2) {
                     FireSet.push_back(FireSet[i]->descendant2);
                     FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
                     DrawableStuff.push_back(FireSet[i]->descendant2);
+                } else {
+                    delete FireSet[i]->descendant2;
                 }
-                else delete FireSet[i]->descendant2;
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
                 delete FireSet[i];
                 FireSet.erase(FireSet.begin() + i--);
@@ -1289,11 +1291,11 @@ void MainLoop() {
         draw();
 
         if (puddle.intersect(player))
-            AllEffects.push_back(new Effect(&player, EffectType::Heal, 0.5, sf::Clock(), sf::seconds(0.5f)));
+            AllEffects.push_back(new Effect(&player, Effects::Heal, 30.f, sf::seconds(0.5f)));
 
         for (Fire* &fire: FireSet) {
             if (fire->intersect(player))
-                AllEffects.push_back(new Effect(&player, EffectType::Damage, 0.1, sf::Clock(), sf::seconds(2)));
+                AllEffects.push_back(new Effect(&player, Effects::Damage, 5.f, sf::seconds(3.f)));
         }
         processEffects();
 
@@ -1333,46 +1335,49 @@ void FillFloorRects() {
 }
 
 void updateShaders() {
-    Shaders::Map.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-    Shaders::Map.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-    Shaders::Map.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    sf::Vector2f u_mouse(sf::Mouse::getPosition());
+    float u_time = GameClock->getElapsedTime().asSeconds();
+    sf::Vector2f u_playerPosition(window.mapCoordsToPixel(player.getPosition()));
 
-    Shaders::Player.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-    Shaders::Player.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-    Shaders::Player.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    Shaders::Map.setUniform("u_mouse", u_mouse);
+    Shaders::Map.setUniform("u_time", u_time);
+    Shaders::Map.setUniform("u_playerPosition", u_playerPosition);
 
-    Shaders::Portal.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-    Shaders::Portal.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-    Shaders::Portal.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    Shaders::Player.setUniform("u_mouse", u_mouse);
+    Shaders::Player.setUniform("u_time", u_time);
+    Shaders::Player.setUniform("u_playerPosition", u_playerPosition);
 
-    Shaders::Architect.setUniform("u_mouse", static_cast<sf::Vector2f>(sf::Mouse::getPosition()));
-    Shaders::Architect.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
-    Shaders::Architect.setUniform("u_playerPosition", static_cast<sf::Vector2f>(window.mapCoordsToPixel(player.getPosition())));
+    Shaders::Portal.setUniform("u_mouse", u_mouse);
+    Shaders::Portal.setUniform("u_time", u_time);
+    Shaders::Portal.setUniform("u_playerPosition", u_playerPosition);
 
-    Shaders::PickupItem.setUniform("u_time", GameClock->getElapsedTime().asSeconds());
+    Shaders::Architect.setUniform("u_mouse", u_mouse);
+    Shaders::Architect.setUniform("u_time", u_time);
+    Shaders::Architect.setUniform("u_playerPosition", u_playerPosition);
+
+    Shaders::PickupItem.setUniform("u_time", u_time);
 }
 
 void processEffects() {
-    Effect* effect;
-    for (int i = 0; i < AllEffects.size(); i++) {
-        effect = AllEffects[i];
-        switch (effect->type) {
-            case EffectType::Damage:
-                if (effect->clock.getElapsedTime() < effect->secs) {
-                    effect->owner->getDamage(effect->parameter);
-                }
-                break;
-            case EffectType::Heal:
-                if (effect->clock.getElapsedTime() < effect->secs) {
-                    effect->owner->getDamage(-effect->parameter);
-                }
-                break;
-            default:
-                break;
-        }
-        if (effect->clock.getElapsedTime() >= effect->secs) {
+    float t;
+    for (int i = AllEffects.size() - 1; i >= 0; i--) {
+        if (AllEffects[i]->secs <= sf::Time::Zero) {
             delete AllEffects[i];
-            AllEffects.erase(AllEffects.begin() + i--);
+            std::swap(AllEffects[i], AllEffects[AllEffects.size() - 1]);
+            AllEffects.pop_back();
+        } else {
+            t = std::min(AllEffects[i]->clock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
+            AllEffects[i]->secs -= sf::seconds(t);
+            switch (AllEffects[i]->type) {
+                case Effects::Damage:
+                    AllEffects[i]->owner->getDamage(AllEffects[i]->parameter * t);
+                    break;
+                case Effects::Heal:
+                    AllEffects[i]->owner->getDamage(-AllEffects[i]->parameter * t);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

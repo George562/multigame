@@ -20,7 +20,7 @@ public:
 ////////////////////////////////////////////////////////////
 
 Player::Player() : Creature("Player", faction::Player) {
-    Health = {0.f, MAX_HEALTH, MAX_HEALTH}; HealthRecovery = 10.f;
+    Health = {0.f, MAX_HEALTH, MAX_HEALTH}; HealthRecovery = 7.f;
     Mana = {0.f, MAX_MANA, MAX_MANA}; ManaRecovery = 10.5f;
     Armor = {0.f, 0.f, 0.f};
     Money = 0.f;
