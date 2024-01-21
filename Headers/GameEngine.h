@@ -530,7 +530,8 @@ void LevelGenerate(int n, int m) {
 
     for (int i = 0; i < 1; i++) {
         FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x,
-                                   (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f, 1000));
+                                   (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f,
+                                   sf::Clock(), sf::seconds(1)));
         FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
     }
 
@@ -1074,7 +1075,7 @@ bool useItem(ItemID::Type id) {
     ///////////////////////////////////// PLACEHOLDER ACTIONS. ALL ITEM FUNCTIONS ARE NOT FINAL
     switch (id) {
         case ItemID::regenDrug:
-            AllEffects.push_back(new Effect(&player, EffectType::Heal, 1.0f, 600));
+            AllEffects.push_back(new Effect(&player, EffectType::Heal, 1.0f, sf::Clock(), sf::seconds(1)));
             return true;
 
         default:
@@ -1172,8 +1173,7 @@ void MainLoop() {
         }
 
         for (int i = 0; i < FireSet.size(); i++) {
-            FireSet[i]->tacts--;
-            if (FireSet[i]->tacts == 0) {
+            if (FireSet[i]->clock.getElapsedTime() >= FireSet[i]->secs) {
                 FireSet[i]->Propagation();
                 bool add1 = true;
                 bool add2 = true;
@@ -1289,11 +1289,11 @@ void MainLoop() {
         draw();
 
         if (puddle.intersect(player))
-            AllEffects.push_back(new Effect(&player, EffectType::Damage, 0, 1));
+            AllEffects.push_back(new Effect(&player, EffectType::Heal, 0.5, sf::Clock(), sf::seconds(0.5f)));
 
         for (Fire* &fire: FireSet) {
             if (fire->intersect(player))
-                AllEffects.push_back(new Effect(&player, EffectType::Damage, 0, 1));
+                AllEffects.push_back(new Effect(&player, EffectType::Damage, 0.1, sf::Clock(), sf::seconds(2)));
         }
         processEffects();
 
@@ -1356,22 +1356,21 @@ void processEffects() {
     Effect* effect;
     for (int i = 0; i < AllEffects.size(); i++) {
         effect = AllEffects[i];
-        effect->tacts--;
         switch (effect->type) {
             case EffectType::Damage:
-                if (effect->tacts != 0) {
+                if (effect->clock.getElapsedTime() < effect->secs) {
                     effect->owner->getDamage(effect->parameter);
                 }
                 break;
             case EffectType::Heal:
-                if (effect->tacts != 0) {
+                if (effect->clock.getElapsedTime() < effect->secs) {
                     effect->owner->getDamage(-effect->parameter);
                 }
                 break;
             default:
                 break;
         }
-        if (effect->tacts == 0) {
+        if (effect->clock.getElapsedTime() >= effect->secs) {
             delete AllEffects[i];
             AllEffects.erase(AllEffects.begin() + i--);
         }
