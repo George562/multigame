@@ -218,6 +218,7 @@ Button EscapeButton("Exit", [](){
         delete FireSet[i];
     }
     FireSet.clear();
+    player.CurWeapon->lock = true;
     LoadMainMenu();
 });
 
@@ -306,7 +307,9 @@ void drawWalls() {
 
 void drawMiniMap() {
     if (MiniMapHoldOnPlayer) {
-        MiniMapView.setCenter(player.getPosition() * ScaleParam);
+        if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            MiniMapView.setCenter(player.getPosition() * ScaleParam);
+        }
     }
 
     // draw walls
@@ -852,11 +855,6 @@ void EventHandler() {
                 SendPacket.clear();
                 mutex.unlock();
             }
-        } else if (MiniMapActivated) {
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
-                MiniMapActivated = false;
-                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-            }
         } else if (EscapeMenuActivated) {
             EscapeButton.isActivated(event);
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
@@ -928,6 +926,7 @@ void EventHandler() {
                     if (MiniMapActivated) {
                         MiniMapActivated = false;
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                        continue;
                     }
                 }
                 if (event.key.code == sf::Keyboard::Tab) {
