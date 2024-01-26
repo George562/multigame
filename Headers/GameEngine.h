@@ -544,7 +544,7 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < 1; i++) {
         FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x,
                                    (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f,
-                                   sf::seconds(1)));
+                                   sf::seconds(5.f)));
         FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
     }
 
