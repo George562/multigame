@@ -15,7 +15,7 @@ namespace Tiles {
     ObjectID box = 1;
     ObjectID portal = 2;
     ObjectID puddle = 3;
-    ObjectID architect = 4;
+    ObjectID artifact = 4;
 }
 
 ////////////////////////////////////////////////////////////

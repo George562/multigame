@@ -40,7 +40,7 @@ public:
 ////////////////////////////////////////////////////////////
 
 Chat::Chat(int scw, int sch) : inputted(false), start(0), len(11) {
-    PosX = 250; PosY = sch - SPACE_BETWEEN_LINES_IN_PIXELS * (len + 2);
+    PosX = 350; PosY = sch - SPACE_BETWEEN_LINES_IN_PIXELS * (len + 2);
     Width = scw - PosX * 2; Height = 35;
 
     for (int i = 0; i < len; i++) {
@@ -88,10 +88,12 @@ bool Chat::InputText(sf::Event& event) {
         lines[start].insert(cursorPos, buffer);
         cursorPos++;
     }
-    
+
     if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::Escape)
+        if (inputted && event.key.code == sf::Keyboard::Escape) {
             inputted = false;
+            return true;
+        }
         if (event.key.code == sf::Keyboard::Enter)
             Entered();
 

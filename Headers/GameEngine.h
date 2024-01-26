@@ -6,6 +6,7 @@
 #include "client.h"
 #include "effect.h"
 #include "fire.h"
+#include "templeText.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
@@ -28,10 +29,11 @@ std::vector<Item*> PickupStuff;
 sf::Sprite WallRect, FLoorTileSprite;
 std::vector<sf::Texture> FloorTextureRects;
 sf::CircleShape circleShape;
+std::vector<TempleText*> TempleTexts;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
-sf::RectangleShape MMPortalRect, MMBoxRect, MMPuddleRect;
+sf::RectangleShape MMPortalRect, MMBoxRect, MMPuddleRect, MMArtifact;
 
 //////////////////////////////////////////////////////////// InterfaceStuff
 Bar<float> ManaBar, HpBar;
@@ -75,8 +77,6 @@ bool isItemDescDrawn = false;
 PlacedText itemDescText;
 ItemID::Type prevItemDescID;
 
-//////////////////////////////////////////////////////////// Animations
-
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
 sf::Packet ReceivePacket, SendPacket;
@@ -88,20 +88,14 @@ sf::Int32 ComputerID;
 sf::Mutex mutex;
 bool ClientFuncRun, HostFuncRun;
 
-//////////////////////////////////////////////////////////// Portal
-Interactable portal;
-
-//////////////////////////////////////////////////////////// Puddle
-Interactable puddle;
-
-//////////////////////////////////////////////////////////// Puddle
-Interactable architect;
+//////////////////////////////////////////////////////////// Interactables
+Interactable portal,
+             puddle;
+std::vector<Interactable*> listOfBox,
+                           listOfArtifact;
 
 //////////////////////////////////////////////////////////// Fire
 std::vector<Fire*> FireSet;
-
-//////////////////////////////////////////////////////////// Box
-std::vector<Interactable*> listOfBox;
 
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
@@ -166,6 +160,8 @@ bool IsSomeOneCanBeActivated();
 void FillFloorRects();
 void updateShaders();
 void processEffects();
+void setBox(Interactable*&);
+void setArtifact(Interactable*&);
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -243,10 +239,6 @@ void draw() {
         if (CurLocation->objects[i].id == Tiles::puddle) {
             puddle.setPosition(CurLocation->objects[i].pos);
             window.draw(puddle, MapStates);
-        }
-        if (CurLocation->objects[i].id == Tiles::architect) {
-            architect.setPosition(CurLocation->objects[i].pos);
-            window.draw(architect);
         }
     }
 
@@ -349,6 +341,10 @@ void drawMiniMap() {
             MMPuddleRect.setPosition(CurLocation->objects[i].pos * ScaleParam);
             window.draw(MMPuddleRect);
         }
+        if (CurLocation->objects[i].id == Tiles::artifact) {
+            MMArtifact.setPosition(CurLocation->objects[i].pos * ScaleParam);
+            window.draw(MMArtifact);
+        }
     }
 
     // draw players
@@ -404,6 +400,15 @@ void drawInterface() {
         ClockFPS.restart();
     }
     window.draw(TextFPS);
+
+    for (TempleText* d: TempleTexts) {
+        if (d->localClock->getElapsedTime() < d->howLongToExist) {
+            window.draw(*d);
+        } else {
+            DeleteFromVector(TempleTexts, d);
+            delete d;
+        }
+    }
 
     window.setView(GameView);
 }
@@ -463,12 +468,12 @@ void drawInventory() {
                     if (drawnItem->amount > 1)
                         itemSlotsElements[id].push_back(itemAmountText);
                     slotNumber++;
-                    
+
                     for (sf::Drawable* &elem : itemSlotsElements[id])
                         window.draw(*elem);
                     window.draw(*drawnItem);
                 }
-                
+
             }
         }
     }
@@ -500,27 +505,32 @@ void LevelGenerate(int n, int m) {
     listOfBox.clear();
     for (int i = 0; i < 10; i++) {
         listOfBox.push_back(new Interactable());
-        listOfBox[i]->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
-        listOfBox[i]->setSize(listOfBox[i]->getSize() / 4.f);
+        setBox(listOfBox[i]);
         do {
             listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
             sf::Vector2f(rand() % (size - Textures::Box.getSize().x / 4), rand() % (size - Textures::Box.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
-        listOfBox[i]->setFunction([](Interactable* i){
-            if (player.Mana.cur >= 20) {
-                player.Mana -= 20.f;
-                player.AddItem(new Item(ItemID::coin, rand() % 5));
-                DeleteFromVector(listOfBox, i);
-                DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
-                DeleteFromVector(InteractibeStuff, i);
-                LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
-                delete i;
-            }
-        });
 
         LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
         InteractibeStuff.push_back(listOfBox[i]);
         DrawableStuff.push_back(listOfBox[i]);
+    }
+
+    for (int i = 0; i < listOfArtifact.size(); i++) {
+        delete listOfArtifact[i];
+    }
+    listOfArtifact.clear();
+    for (int i = 0; i < 10; i++) {
+        listOfArtifact.push_back(new Interactable());
+        setArtifact(listOfArtifact[i]);
+        do {
+            listOfArtifact[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
+            sf::Vector2f(rand() % (size - Textures::Box.getSize().x / 4), rand() % (size - Textures::Box.getSize().y / 4)));
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->PosY / size][(int)listOfArtifact[i]->PosX / size]);
+
+        LabyrinthLocation.AddObject({Tiles::artifact, listOfArtifact[i]->getPosition()});
+        InteractibeStuff.push_back(listOfArtifact[i]);
+        DrawableStuff.push_back(listOfArtifact[i]);
     }
 
     for (int i = 0; i < FireSet.size(); i++) {
@@ -540,7 +550,7 @@ void LevelGenerate(int n, int m) {
     }
     Enemies.clear();
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
         Enemies.push_back(new DistortedScientist());
         Enemies.push_back(new ScottPilgrim());
         Enemies.push_back(new RamonaFlowers());
@@ -593,7 +603,7 @@ void LoadMainMenu() {
         }
 
         CurLocation = &LabyrinthLocation;
-        LevelGenerate(START_N, START_M);
+        LevelGenerate(START_N++, START_M++);
         FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);
@@ -617,10 +627,6 @@ void LoadMainMenu() {
         player.getDamage(5.f);
     });
 
-    architect.setFunction([](Interactable* i){
-        player.Health.top += 20.f;
-    });
-
     // Set cameras
     GameView.setCenter(player.getPosition());
     MiniMapView.setCenter(player.getPosition() * ScaleParam);
@@ -639,7 +645,6 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&chat);
 
     InteractibeStuff.push_back(&portal);
-    InteractibeStuff.push_back(&architect);
     InteractibeStuff.push_back(&puddle);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
@@ -649,23 +654,19 @@ void LoadMainMenu() {
     PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
 
     listOfBox.push_back(new Interactable());
-    listOfBox[0]->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
-    listOfBox[0]->setSize(listOfBox[0]->getSize() / 4.f);
+    setBox(listOfBox[0]);
     listOfBox[0]->setPosition(1912.5, 1545);
-    listOfBox[0]->setFunction([](Interactable* i){
-        if (player.Mana.cur >= 20) {
-            player.Mana -= 20.f;
-            player.AddItem(new Item(ItemID::coin, 1 + rand() % 5));
-            DeleteFromVector(listOfBox, i);
-            DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
-            DeleteFromVector(InteractibeStuff, i);
-            CurLocation->DelObject({Tiles::box, i->getPosition()});
-            delete i;
-        }
-    });
 
     InteractibeStuff.push_back(listOfBox[0]);
     DrawableStuff.push_back(listOfBox[0]);
+
+    listOfArtifact.push_back(new Interactable());
+    setArtifact(listOfArtifact[0]);
+    listOfArtifact[0]->setPosition(1312.5, 1545);
+
+    InteractibeStuff.push_back(listOfArtifact[0]);
+    DrawableStuff.push_back(listOfArtifact[0]);
+
 
     FillFloorRectsThread.wait();
 }
@@ -700,8 +701,6 @@ void init() {
     player.setAnimation(Textures::Player, 1, 1, sf::seconds(1), &Shaders::Player);
     puddle.setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
     puddle.setSize(90.f, 90.f);
-    architect.setAnimation(Textures::Architect, 1, 1, sf::seconds(1), &Shaders::Architect);
-    architect.setSize(150.f, 150.f);
 
     Shaders::Map.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     Shaders::Map.setUniform("u_playerRadius", player.Radius);
@@ -773,6 +772,9 @@ void init() {
 
     MMPuddleRect.setSize(puddle.getSize() * ScaleParam);
     MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
+
+    MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
+    MMArtifact.setFillColor(sf::Color::White);
 
     initInventory();
 
@@ -849,6 +851,11 @@ void EventHandler() {
                 }
                 SendPacket.clear();
                 mutex.unlock();
+            }
+        } else if (MiniMapActivated) {
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+                MiniMapActivated = false;
+                MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
             }
         } else if (EscapeMenuActivated) {
             EscapeButton.isActivated(event);
@@ -1104,9 +1111,9 @@ void createSlotRects() {
         for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
             if ((currInventory[i]->find(id) != currInventory[i]->end()) &&
                 (*currInventory[i])[id]->amount > 0) {
-                
+
                 float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
-                float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;                    
+                float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
 
                 Rect* itemActivationRect = new Rect();
                 itemActivationRect->setPosition(itemX, itemY);
@@ -1291,11 +1298,11 @@ void MainLoop() {
         draw();
 
         if (puddle.intersect(player))
-            AllEffects.push_back(new Effect(&player, Effects::Heal, 30.f, sf::seconds(0.5f)));
+            AllEffects.push_back(new Effect(&player, Effects::Heal, 30.f, sf::seconds(1.5f)));
 
         for (Fire* &fire: FireSet) {
             if (fire->intersect(player))
-                AllEffects.push_back(new Effect(&player, Effects::Damage, 5.f, sf::seconds(3.f)));
+                AllEffects.push_back(new Effect(&player, Effects::Damage, 0.1f, sf::seconds(2.f)));
         }
         processEffects();
 
@@ -1359,14 +1366,13 @@ void updateShaders() {
 }
 
 void processEffects() {
-    float t;
     for (int i = AllEffects.size() - 1; i >= 0; i--) {
         if (AllEffects[i]->secs <= sf::Time::Zero) {
             delete AllEffects[i];
             std::swap(AllEffects[i], AllEffects[AllEffects.size() - 1]);
             AllEffects.pop_back();
         } else {
-            t = std::min(AllEffects[i]->clock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
+            float t = std::min(AllEffects[i]->clock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
             AllEffects[i]->secs -= sf::seconds(t);
             switch (AllEffects[i]->type) {
                 case Effects::Damage:
@@ -1380,6 +1386,64 @@ void processEffects() {
             }
         }
     }
+}
+
+void setBox(Interactable*& box) {
+    box->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
+    box->setSize(box->getSize() / 4.f);
+    box->setFunction([](Interactable* i){
+        if (player.Mana.cur >= 20) {
+            player.Mana -= 20.f;
+            player.AddItem(new Item(ItemID::coin, rand() % 5));
+            DeleteFromVector(listOfBox, i);
+            DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
+            DeleteFromVector(InteractibeStuff, i);
+            LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
+            delete i;
+        }
+    });
+}
+
+void setArtifact(Interactable*& artifact) {
+    artifact->setAnimation(Textures::Architect, 1, 1, sf::seconds(1), &Shaders::Architect);
+    artifact->setSize(150.f, 150.f);
+    artifact->setFunction([](Interactable* i){
+        TempleText* templeText = new TempleText(sf::seconds(2.5f));
+        templeText->setCharacterSize(50);
+        templeText->setOutlineColor(sf::Color::White);
+        templeText->setOutlineThickness(3);
+        switch (rand() % 4) {
+            case 0:
+                player.Health.top += 20;
+                templeText->setString("You find Artifact\nHealth increased");
+                templeText->setFillColor(sf::Color(250, 50, 50));
+                break;
+            case 1:
+                player.Mana.top += 20;
+                templeText->setString("You find Artifact\nMana increased");
+                templeText->setFillColor(sf::Color(50, 50, 250));
+                break;
+            case 2:
+                player.HealthRecovery += 2;
+                templeText->setString("You find Artifact\nHealth Recovery increased");
+                templeText->setFillColor(sf::Color(250, 50, 50));
+                break;
+            case 3:
+                player.ManaRecovery += 2;
+                templeText->setString("You find Artifact\nMana Recovery increased");
+                templeText->setFillColor(sf::Color(50, 50, 250, 200));
+                break;
+            default: break;
+        }
+        templeText->setCenter(scw / 2.f, sch / 2.f - 165.f);
+
+        TempleTexts.push_back(templeText);
+        DeleteFromVector(listOfArtifact, i);
+        DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
+        DeleteFromVector(InteractibeStuff, i);
+        CurLocation->DelObject({Tiles::artifact, i->getPosition()});
+        delete i;
+    });
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions
