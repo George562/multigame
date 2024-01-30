@@ -741,17 +741,17 @@ void init() {
     player.FirstWeapon  = &pistol;
     player.SecondWeapon = &shotgun;
 
-    HpBar.setWidth(360);
+    HpBar.setSize(360, 50);
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
     HpBar.setValue(player.Health);
     HpBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
 
-    ManaBar.setWidth(240);
+    ManaBar.setSize(240, 50);
     ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
     ManaBar.setValue(player.Mana);
     ManaBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
 
-    AmmoBar.setWidth(160);
+    AmmoBar.setSize(160, 50);
     AmmoBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(128, 128, 128, 160), sf::Color(32, 32, 32, 160));
 
     WeaponNameText.setFillColor(sf::Color(25, 192, 25, 160));
@@ -777,7 +777,7 @@ void init() {
 
     EnemyHealthBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
     EnemyHealthBar.setSize(125.f, 15.f);
-    EnemyHealthBar.setWallWidth(2);
+    EnemyHealthBar.setWallWidth(1);
     EnemyHealthBar.ShowText = false;
 
     initInventory();
