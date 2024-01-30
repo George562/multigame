@@ -29,7 +29,7 @@ std::vector<Item*> PickupStuff;
 sf::Sprite WallRect, FLoorTileSprite;
 std::vector<sf::Texture> FloorTextureRects;
 sf::CircleShape circleShape;
-std::vector<TempleText*> TempleTexts;
+std::vector<TempleText*> TempleTextsOnScreen, TempleTextsOnGround;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
@@ -162,6 +162,7 @@ void updateShaders();
 void processEffects();
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
+template <typename T> void clearVectorOfPointer(std::vector<T>&);
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -210,14 +211,10 @@ Button EscapeButton("Exit", [](){
     EscapeMenuActivated = false;
     ListOfPlayers.clear();
     Bullets.clear();
-    for (int i = 0; i < Enemies.size(); i++) {
-        delete Enemies[i];
-    }
-    Enemies.clear();
-    for (int i = 0; i < FireSet.size(); i++) {
-        delete FireSet[i];
-    }
-    FireSet.clear();
+    clearVectorOfPointer(Enemies);
+    clearVectorOfPointer(FireSet);
+    clearVectorOfPointer(TempleTextsOnGround);
+    clearVectorOfPointer(TempleTextsOnScreen);
     player.CurWeapon->lock = true;
     LoadMainMenu();
 });
@@ -253,6 +250,15 @@ void draw() {
         circleShape.setPosition(Bullets[i].getPosition());
         circleShape.setOrigin(Bullets[i].Radius, Bullets[i].Radius);
         window.draw(circleShape);
+    }
+
+    for (TempleText* d: TempleTextsOnGround) {
+        if (d->localClock->getElapsedTime() < d->howLongToExist) {
+            window.draw(*d);
+        } else {
+            DeleteFromVector(TempleTextsOnGround, d);
+            delete d;
+        }
     }
 
     if (IsDrawMinimap) {
@@ -404,11 +410,11 @@ void drawInterface() {
     }
     window.draw(TextFPS);
 
-    for (TempleText* d: TempleTexts) {
+    for (TempleText* d: TempleTextsOnScreen) {
         if (d->localClock->getElapsedTime() < d->howLongToExist) {
             window.draw(*d);
         } else {
-            DeleteFromVector(TempleTexts, d);
+            DeleteFromVector(TempleTextsOnScreen, d);
             delete d;
         }
     }
@@ -502,10 +508,7 @@ void LevelGenerate(int n, int m) {
     LabyrinthLocation.AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
     LabyrinthLocation.AddObject({Tiles::puddle, player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)});
 
-    for (int i = 0; i < listOfBox.size(); i++) {
-        delete listOfBox[i];
-    }
-    listOfBox.clear();
+    clearVectorOfPointer(listOfBox);
     for (int i = 0; i < 10; i++) {
         listOfBox.push_back(new Interactable());
         setBox(listOfBox[i]);
@@ -519,10 +522,7 @@ void LevelGenerate(int n, int m) {
         DrawableStuff.push_back(listOfBox[i]);
     }
 
-    for (int i = 0; i < listOfArtifact.size(); i++) {
-        delete listOfArtifact[i];
-    }
-    listOfArtifact.clear();
+    clearVectorOfPointer(listOfArtifact);
     for (int i = 0; i < 10; i++) {
         listOfArtifact.push_back(new Interactable());
         setArtifact(listOfArtifact[i]);
@@ -536,11 +536,7 @@ void LevelGenerate(int n, int m) {
         DrawableStuff.push_back(listOfArtifact[i]);
     }
 
-    for (int i = 0; i < FireSet.size(); i++) {
-        delete FireSet[i];
-    }
-    FireSet.clear();
-
+    clearVectorOfPointer(FireSet);
     for (int i = 0; i < 1; i++) {
         FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x,
                                    (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f,
@@ -548,11 +544,7 @@ void LevelGenerate(int n, int m) {
         FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
     }
 
-    for (int i = 0; i < Enemies.size(); i++) {
-        delete Enemies[i];
-    }
-    Enemies.clear();
-
+    clearVectorOfPointer(Enemies);
     for (int i = 0; i < 5; i++) {
         Enemies.push_back(new DistortedScientist());
         Enemies.push_back(new ScottPilgrim());
@@ -580,14 +572,11 @@ void LoadMainMenu() {
     FillFloorRectsThread.launch();
 
     portal.setFunction([](Interactable* i){
-        for (Item* &item: PickupStuff) {
-            delete item;
-        }
+        clearVectorOfPointer(PickupStuff);
 
         DrawableStuff.clear();
         InterfaceStuff.clear();
         InteractibeStuff.clear();
-        PickupStuff.clear();
 
         player.setPosition(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
         player.ChangeWeapon(weapons[CurWeapon.cur]);
@@ -1099,9 +1088,11 @@ void createSlotRects() {
     };
 
     if (!itemSlotsRects.empty()) {
-        for (ItemID::Type id = 0; id != ItemID::NONE; id++)
-            if (itemSlotsRects.find(id) != itemSlotsRects.end())
-                    delete itemSlotsRects[id];
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+            if (itemSlotsRects.find(id) != itemSlotsRects.end()) {
+                delete itemSlotsRects[id];
+            }
+        }
         itemSlotsRects.clear();
     }
 
@@ -1139,6 +1130,14 @@ void updateBullets() {
                 if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
+                    TempleText* templeText = new TempleText(sf::seconds(1.5f));
+                    templeText->setCharacterSize(30);
+                    templeText->setOutlineColor(sf::Color::White);
+                    templeText->setOutlineThickness(3);
+                    templeText->setString(std::to_string(int(Bullets[i].damage)));
+                    templeText->setFillColor(sf::Color(250, 50, 50, 200));
+                    templeText->setCenter(enemy->getPosition());
+                    TempleTextsOnGround.push_back(templeText);
                 }
             }
         }
@@ -1436,13 +1435,20 @@ void setArtifact(Interactable*& artifact) {
         }
         templeText->setCenter(scw / 2.f, sch / 2.f - 165.f);
 
-        TempleTexts.push_back(templeText);
+        TempleTextsOnScreen.push_back(templeText);
         DeleteFromVector(listOfArtifact, i);
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
         DeleteFromVector(InteractibeStuff, i);
         CurLocation->DelObject({Tiles::artifact, i->getPosition()});
         delete i;
     });
+}
+
+template <typename T> void clearVectorOfPointer(std::vector<T>& arr) {
+    for (size_t i = 0; i < arr.size(); i++) {
+        delete arr[i];
+    }
+    arr.clear();
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions
