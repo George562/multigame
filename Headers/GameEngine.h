@@ -30,6 +30,7 @@ sf::Sprite WallRect, FLoorTileSprite;
 std::vector<sf::Texture> FloorTextureRects;
 sf::CircleShape circleShape;
 std::vector<TempleText*> TempleTextsOnScreen, TempleTextsOnGround;
+Bar<float> EnemyHealthBar;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
@@ -242,6 +243,12 @@ void draw() {
 
     for (sf::Drawable* d: DrawableStuff) {
         window.draw(*d);
+    }
+
+    for (Enemy*& enemy: Enemies) {
+        EnemyHealthBar.setPosition(enemy->getPosition() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->getRadius() + 50.f));
+        EnemyHealthBar.setValue(enemy->Health);
+        window.draw(EnemyHealthBar);
     }
 
     for (int i = 0; i < Bullets.size(); i++) {
@@ -514,7 +521,7 @@ void LevelGenerate(int n, int m) {
         setBox(listOfBox[i]);
         do {
             listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
-            sf::Vector2f(rand() % (size - Textures::Box.getSize().x / 4), rand() % (size - Textures::Box.getSize().y / 4)));
+            sf::Vector2f(rand() % int(size - listOfBox[i]->getSize().x), rand() % int(size - listOfBox[i]->getSize().y)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
 
         LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
@@ -540,7 +547,7 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < 1; i++) {
         FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x,
                                    (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f,
-                                   sf::seconds(5.f)));
+                                   sf::seconds(10.f)));
         FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
     }
 
@@ -759,7 +766,7 @@ void init() {
     MMPortalRect.setSize(portal.getSize() * ScaleParam);
     MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
 
-    MMBoxRect.setSize(sf::Vector2f(Textures::Box.getSize() / 4u) * ScaleParam);
+    MMBoxRect.setSize(sf::Vector2f(105.f, 117.f) * ScaleParam);
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
 
     MMPuddleRect.setSize(puddle.getSize() * ScaleParam);
@@ -767,6 +774,11 @@ void init() {
 
     MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
     MMArtifact.setFillColor(sf::Color::White);
+
+    EnemyHealthBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
+    EnemyHealthBar.setSize(125.f, 15.f);
+    EnemyHealthBar.setWallWidth(2);
+    EnemyHealthBar.ShowText = false;
 
     initInventory();
 
@@ -1388,7 +1400,7 @@ void processEffects() {
 
 void setBox(Interactable*& box) {
     box->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
-    box->setSize(box->getSize() / 4.f);
+    box->setSize(105.f, 117.f);
     box->setFunction([](Interactable* i){
         if (player.Mana.cur >= 20) {
             player.Mana -= 20.f;

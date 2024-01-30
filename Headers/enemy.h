@@ -24,7 +24,6 @@ public:
         Acceleration = MaxVelocity / 0.6f;
         Radius = 60.f;
         CurWeapon = new Pistol();
-        // CurWeapon->damage = 0;
 
         setAnimation(Textures::DistortedScientist, 1, 1, sf::seconds(1), &Shaders::Map);
 
@@ -54,7 +53,6 @@ public:
         Acceleration = MaxVelocity / 0.6f;
         Radius = 60.f;
         CurWeapon = new Pistol();
-        // CurWeapon->damage = 0;
 
         setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Map);
 
@@ -85,13 +83,12 @@ public:
         Acceleration = MaxVelocity / 0.6f;
         Radius = 60.f;
         CurWeapon = new Pistol();
-        // CurWeapon->damage = 0;
 
         setAnimation(Textures::RamonaFlowers, 8, 2, sf::seconds(1), &Shaders::Map);
 
         inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
-        // Name.ShowText = true;
+        Name.ShowText = true;
     }
 
     void move(Location* location) override {

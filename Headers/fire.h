@@ -26,9 +26,9 @@ public:
     void Propagation() {
         float dist = 3 * Width / 2;
         float angle = (rand() % 361) * M_PI / 180;
-        descendant1 = new Fire(PosX + dist * std::sin(angle), PosY + dist * std::cos(angle), Width, Height, sf::seconds(rand() % 4 + 5));
+        descendant1 = new Fire(PosX + dist * std::sin(angle), PosY + dist * std::cos(angle), Width, Height, sf::seconds(rand() % 4 + 10.f));
         angle = (rand() % 360) * M_PI / 180;
-        descendant2 = new Fire(PosX + dist * std::sin(angle), PosY + dist * std::cos(angle), Width, Height, sf::seconds(rand() % 4 + 5));
+        descendant2 = new Fire(PosX + dist * std::sin(angle), PosY + dist * std::cos(angle), Width, Height, sf::seconds(rand() % 4 + 10.f));
     }
 
     void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader *shader = nullptr) {

@@ -3,7 +3,6 @@
 #include "scale.h"
 
 #define STANDART_BAR_HEIGHT 50
-#define STANDART_BAR_WALL_WIDTH 10
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -16,14 +15,17 @@ public:
     mutable PlacedText ValueText;
     Scale<T>* value = nullptr;
     bool ShowWall = true, ShowBackground = true, ShowForeground = true, ShowText = true;
+    float wallWidth = 10;
 
     Bar() {}
     void setValue(Scale<T>& v) { value = &v; }
     sf::Vector2f getSize() const { return wall.getSize(); }
-    void setWidth(float);
-    void setSize(float, float);
+    void setWallWidth(float w);
+    void setWidth(float w) { setSize(w, STANDART_BAR_HEIGHT); }
+    void setSize(float w, float h);
     sf::Vector2f getPosition() const { return wall.getPosition(); }
-    void setPosition(float, float);
+    void setPosition(float x, float y);
+    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
     void setColors(sf::Color wallColor, sf::Color foregroundColor, sf::Color backgroundColor);
     void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
 };
@@ -33,23 +35,23 @@ public:
 ////////////////////////////////////////////////////////////
 
 template <typename T>
-void Bar<T>::setWidth(float w) {
-    wall.setSize({w, STANDART_BAR_HEIGHT});
-    background.setSize({w - STANDART_BAR_WALL_WIDTH, STANDART_BAR_HEIGHT - STANDART_BAR_WALL_WIDTH});
-    foreground.setSize({w - STANDART_BAR_WALL_WIDTH, STANDART_BAR_HEIGHT - STANDART_BAR_WALL_WIDTH});
+void Bar<T>::setWallWidth(float w) {
+    wallWidth = w;
+    setSize(wall.getLocalBounds().width, wall.getLocalBounds().height);
 }
+
 template <typename T>
 void Bar<T>::setSize(float w, float h) {
     wall.setSize({w, h});
-    background.setSize({w - STANDART_BAR_WALL_WIDTH, h - STANDART_BAR_WALL_WIDTH});
-    foreground.setSize({w - STANDART_BAR_WALL_WIDTH, h - STANDART_BAR_WALL_WIDTH});
+    background.setSize({w - wallWidth, h - wallWidth});
+    foreground.setSize({w - wallWidth, h - wallWidth});
 }
 
 template <typename T>
 void Bar<T>::setPosition(float x, float y) {
     wall.setPosition(x, y);
-    background.setPosition(x + 5, y + 5);
-    foreground.setPosition(x + 5, y + 5);
+    background.setPosition(x + wallWidth / 2.f, y + wallWidth / 2.f);
+    foreground.setPosition(x + wallWidth / 2.f, y + wallWidth / 2.f);
     ValueText.setCenter(getPosition() + getSize() / 2.f);
 }
 
