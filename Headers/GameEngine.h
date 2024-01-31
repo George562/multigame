@@ -438,7 +438,7 @@ void drawInventory() {
     for (sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
         window.draw(*elem);
     
-    if (!isInventoryUpToDate) {
+    if (!isInventoryUpToDate) { // ToDo: make invectory update as function that call when inventory need to update
         std::cout << "Inventory needs update. Clearing items\n";
         if (!itemSlotsElements.empty()) {
             for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
@@ -460,7 +460,7 @@ void drawInventory() {
 
                 Item* drawnItem = player.inventory.items[id];
 
-                if (!isInventoryUpToDate) {
+                if (!isInventoryUpToDate) { // not everytime you draw
                     float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
                     float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
                     drawnItem->setCenter(itemX + 75, itemY + 75);
@@ -478,7 +478,6 @@ void drawInventory() {
 
                     if (drawnItem->amount > 1)
                         itemSlotsElements[id].push_back(itemAmountText);
-                    
                 }
 
                 for (sf::Drawable* &elem : itemSlotsElements[id])
@@ -663,7 +662,6 @@ void LoadMainMenu() {
 
     InteractibeStuff.push_back(listOfArtifact[0]);
     DrawableStuff.push_back(listOfArtifact[0]);
-
 
     FillFloorRectsThread.wait();
 }
@@ -860,7 +858,6 @@ void EventHandler() {
                 EscapeMenuActivated = !EscapeMenuActivated;
             }
         } else if (IsDrawInventory) {
-
             if (event.key.code == sf::Keyboard::Escape) {
                 IsDrawInventory = false;
             }
@@ -872,46 +869,34 @@ void EventHandler() {
             statsPageButton.isActivated(event);
 
             bool isAnythingHovered = false;
-            for (int i = 0; i < 4; i++) {
-                if (player.inventory.items.size() != 0 &&
-                    activeInventoryPage != inventoryPage::Stats) {
-                    for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                        if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
-                            player.inventory.items[id]->amount > 0) {
-                            if (!itemSlotsRects.empty() &&
-                                itemSlotsRects.find(id) != itemSlotsRects.end() &&
-                                itemSlotsRects[id]->contains(sf::Mouse::getPosition().x, sf::Mouse::getPosition().y)) {
-                                if (id != prevItemDescID) {
-                                    prevItemDescID = ItemID::NONE;
-                                    isItemDescDrawn = false;
-                                }
-                                isAnythingHovered = true;
-                                if ((event.type == sf::Event::MouseButtonPressed) ||
-                                    (event.type == sf::Event::MouseButtonReleased)) {
-                                    if (event.mouseButton.button == sf::Mouse::Button::Right) {
-                                        isItemDescDrawn = true;
-                                        itemDescText.setString(itemDesc[id]);
-                                        prevItemDescID = id;
-                                    }
-                                    if (event.type == sf::Event::MouseButtonPressed &&
-                                        event.mouseButton.button == sf::Mouse::Button::Left) {
-                                        bool itemUsed = useItem(id);
-                                        if (itemUsed) {
-                                            player.inventory.items[id]->amount = (player.inventory.items[id]->amount == 1) ? 0 :player.inventory.items[id]->amount - 1;
-                                            isItemDescDrawn = false;
-                                            isInventoryUpToDate = false;
-                                            createSlotRects();
-                                        }
-                                    }
-                                }
-                            }
+            if (player.inventory.items.size() != 0 &&
+                activeInventoryPage != inventoryPage::Stats) {
+                for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+                    if (player.inventory.items.find(id) != player.inventory.items.end() &&
+                        player.inventory.items[id]->amount > 0 &&
+                        !itemSlotsRects.empty() && itemSlotsRects.find(id) != itemSlotsRects.end() &&
+                        itemSlotsRects[id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
+                        if (id != prevItemDescID) {
+                            prevItemDescID = ItemID::NONE;
+                            isItemDescDrawn = false;
+                        }
+                        isAnythingHovered = true;
+                        if (event.mouseButton.button == sf::Mouse::Button::Right) {
+                            isItemDescDrawn = true;
+                            itemDescText.setString(itemDesc[id]);
+                            prevItemDescID = id;
+                        }
+                        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(id)) {
+                            player.inventory.items[id]->amount = (player.inventory.items[id]->amount == 1) ? 0 : player.inventory.items[id]->amount - 1;
+                            isItemDescDrawn = false;
+                            isInventoryUpToDate = false;
+                            createSlotRects();
                         }
                     }
                 }
             }
             if (!isAnythingHovered)
                 isItemDescDrawn = false;
-
         } else {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) {

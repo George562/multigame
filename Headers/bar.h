@@ -54,15 +54,14 @@ void Bar<T>::setColors(sf::Color wallColor, sf::Color foregroundColor, sf::Color
 
 template <typename T>
 void Bar<T>::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    if (value) {
+        foreground.setScale(value->filling(), 1);
+        ValueText.setString(std::to_string((int)value->cur) + " / " + std::to_string((int)value->top));
+        ValueText.setCenter(getSize() / 2.f);
+    }
     states.transform *= getTransform();
     if (ShowWall) target.draw(wall, states);
     if (ShowBackground) target.draw(background, states);
     if (ShowForeground) target.draw(foreground, states);
-
-    if (value && ShowText) {
-        foreground.setScale(value->filling(), 1);
-        ValueText.setString(std::to_string((int)value->cur) + " / " + std::to_string((int)value->top));
-        ValueText.setCenter(getSize() / 2.f);
-        target.draw(ValueText, states);
-    }
+    if (ShowText) target.draw(ValueText, states);
 }

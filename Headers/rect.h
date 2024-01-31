@@ -54,7 +54,7 @@ struct Rect {
     bool contains(float x, float y) const {
         return PosX <= x && x <= PosX + Width && PosY <= y && y <= PosY + Height;
     }
-    bool contains(sf::Vector2f& point) const { return contains(point.x, point.y); }
+    bool contains(sf::Vector2f point) const { return contains(point.x, point.y); }
 
     bool intersect(Circle& circle);
 };
