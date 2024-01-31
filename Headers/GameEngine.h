@@ -72,8 +72,6 @@ std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements;
 std::map<ItemID::Type, std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 std::map<ItemID::Type, Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
-std::vector<std::map<ItemID::Type, Item*>*> currInventory; // Basically a cache for the inventory. Updates only when a change happens for a player, e.g. picking or using an item
-
 Panel statsPlayerImage;
 
 bool isItemDescDrawn = false;
@@ -439,15 +437,7 @@ void drawInventory() {
 
     for (sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
         window.draw(*elem);
-
-    std::vector<std::map<ItemID::Type, Item*>*> currInventory
-    {
-        &player.inventory.keyItems,
-        &player.inventory.safeItems,
-        &player.inventory.equipItems,
-        &player.inventory.dropableItems
-    };
-
+    
     if (!isInventoryUpToDate) {
         std::cout << "Inventory needs update. Clearing items\n";
         if (!itemSlotsElements.empty()) {
@@ -462,42 +452,40 @@ void drawInventory() {
         itemSlotsElements.clear();
     }
 
-    for (int i = 0; i < 4; i++) {
-        if (player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
-            int slotNumber = 0;
-            for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                if ((currInventory[i]->find(id) != currInventory[i]->end()) &&
-                    (*currInventory[i])[id]->amount > 0) {
+    if (player.inventory.items.size() != 0 && activeInventoryPage != inventoryPage::Stats) {
+        int slotNumber = 0;
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+            if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
+                player.inventory.items[id]->amount > 0) {
 
-                    Item* drawnItem = (*currInventory[i])[id];
+                Item* drawnItem = player.inventory.items[id];
 
-                    if (!isInventoryUpToDate) {
-                        float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
-                        float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
-                        drawnItem->setCenter(itemX + 75, itemY + 75);
+                if (!isInventoryUpToDate) {
+                    float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
+                    float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
+                    drawnItem->setCenter(itemX + 75, itemY + 75);
 
-                        Panel* bgPanel = new Panel();
-                        bgPanel->setPosition(itemX, itemY);
-                        bgPanel->setScale(0.5, 0.5);
-                        bgPanel->setTexture(Textures::ItemPanel);
-                        itemSlotsElements[id].push_back(bgPanel);
+                    Panel* bgPanel = new Panel();
+                    bgPanel->setPosition(itemX, itemY);
+                    bgPanel->setScale(0.5, 0.5);
+                    bgPanel->setTexture(Textures::ItemPanel);
+                    itemSlotsElements[id].push_back(bgPanel);
 
-                        PlacedText* itemAmountText = new PlacedText();
-                        itemAmountText->setCharacterSize(16);
-                        itemAmountText->setString(std::to_string(drawnItem->amount));
-                        itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
+                    PlacedText* itemAmountText = new PlacedText();
+                    itemAmountText->setCharacterSize(16);
+                    itemAmountText->setString(std::to_string(drawnItem->amount));
+                    itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
 
-                        if (drawnItem->amount > 1)
-                            itemSlotsElements[id].push_back(itemAmountText);
-                        
-                    }
-
-                    for (sf::Drawable* &elem : itemSlotsElements[id])
-                        window.draw(*elem);
-                    window.draw(*drawnItem);
-
-                    slotNumber++;
+                    if (drawnItem->amount > 1)
+                        itemSlotsElements[id].push_back(itemAmountText);
+                    
                 }
+
+                for (sf::Drawable* &elem : itemSlotsElements[id])
+                    window.draw(*elem);
+                window.draw(*drawnItem);
+
+                slotNumber++;
             }
         }
     }
@@ -883,21 +871,13 @@ void EventHandler() {
             perksPageButton.isActivated(event);
             statsPageButton.isActivated(event);
 
-            std::vector<std::map<ItemID::Type, Item*>*> currInventory
-            {
-                &player.inventory.keyItems,
-                &player.inventory.safeItems,
-                &player.inventory.equipItems,
-                &player.inventory.dropableItems
-            };
-
             bool isAnythingHovered = false;
             for (int i = 0; i < 4; i++) {
-                if (player.inventory.itemAmount() != 0 &&
+                if (player.inventory.items.size() != 0 &&
                     activeInventoryPage != inventoryPage::Stats) {
                     for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                        if ((currInventory[i]->find(id) != currInventory[i]->end()) &&
-                            (*currInventory[i])[id]->amount > 0) {
+                        if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
+                            player.inventory.items[id]->amount > 0) {
                             if (!itemSlotsRects.empty() &&
                                 itemSlotsRects.find(id) != itemSlotsRects.end() &&
                                 itemSlotsRects[id]->contains(sf::Mouse::getPosition().x, sf::Mouse::getPosition().y)) {
@@ -917,7 +897,7 @@ void EventHandler() {
                                         event.mouseButton.button == sf::Mouse::Button::Left) {
                                         bool itemUsed = useItem(id);
                                         if (itemUsed) {
-                                            (*currInventory[i])[id]->amount = ((*currInventory[i])[id]->amount == 1) ? 0 : (*currInventory[i])[id]->amount - 1;
+                                            player.inventory.items[id]->amount = (player.inventory.items[id]->amount == 1) ? 0 :player.inventory.items[id]->amount - 1;
                                             isItemDescDrawn = false;
                                             isInventoryUpToDate = false;
                                             createSlotRects();
@@ -1103,14 +1083,6 @@ bool useItem(ItemID::Type id) {
 }
 
 void createSlotRects() {
-    std::vector<std::map<ItemID::Type, Item*>*> currInventory
-    {
-        &player.inventory.keyItems,
-        &player.inventory.safeItems,
-        &player.inventory.equipItems,
-        &player.inventory.dropableItems
-    };
-
     if (!itemSlotsRects.empty()) {
         for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
             if (itemSlotsRects.find(id) != itemSlotsRects.end()) {
@@ -1123,8 +1095,8 @@ void createSlotRects() {
     for (int i = 0; i < 4; i++) {
         int slotNumber = 0;
         for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-            if ((currInventory[i]->find(id) != currInventory[i]->end()) &&
-                (*currInventory[i])[id]->amount > 0) {
+            if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
+                player.inventory.items[id]->amount > 0) {
 
                 float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
                 float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
@@ -1178,15 +1150,15 @@ void MainLoop() {
         for (int i = 0; i < Enemies.size(); i++) {
             if (Enemies[i]->Health.toBottom() == 0) {
                 if (Enemies[i]->dropInventory) {
-                    for (std::map<ItemID::Type, Item*>::iterator it = Enemies[i]->inventory.dropableItems.begin();
-                        it != Enemies[i]->inventory.dropableItems.end(); it++) {
+                    for (std::map<ItemID::Type, Item*>::iterator it = Enemies[i]->inventory.items.begin();
+                        it != Enemies[i]->inventory.items.end(); it++) {
                         it->second->dropTo(Enemies[i]->getPosition());
 
                         PickupStuff.push_back(it->second);
                         DrawableStuff.push_back(it->second);
                     }
                 }
-                Enemies[i]->inventory.dropableItems.clear();
+                Enemies[i]->inventory.items.clear();
 
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
                 delete Enemies[i];

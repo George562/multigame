@@ -27,7 +27,7 @@ public:
 
         setAnimation(Textures::DistortedScientist, 1, 1, sf::seconds(1), &Shaders::Map);
 
-        inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
+        inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
         Name.ShowText = true;
     }
@@ -56,7 +56,7 @@ public:
 
         setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Map);
 
-        inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
+        inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
         Name.ShowText = true;
     }
@@ -86,7 +86,7 @@ public:
 
         setAnimation(Textures::RamonaFlowers, 8, 2, sf::seconds(1), &Shaders::Map);
 
-        inventory.dropableItems[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
+        inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
         Name.ShowText = true;
     }
