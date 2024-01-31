@@ -6,7 +6,7 @@
 #include "client.h"
 #include "effect.h"
 #include "fire.h"
-#include "templeText.h"
+#include "tempText.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
@@ -29,7 +29,7 @@ std::vector<Item*> PickupStuff;
 sf::Sprite WallRect, FLoorTileSprite;
 std::vector<sf::Texture> FloorTextureRects;
 sf::CircleShape circleShape;
-std::vector<TempleText*> TempleTextsOnScreen, TempleTextsOnGround;
+std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround;
 Bar<float> EnemyHealthBar;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
@@ -72,9 +72,12 @@ std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements;
 std::map<ItemID::Type, std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 std::map<ItemID::Type, Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
+std::vector<std::map<ItemID::Type, Item*>*> currInventory; // Basically a cache for the inventory. Updates only when a change happens for a player, e.g. picking or using an item
+
 Panel statsPlayerImage;
 
 bool isItemDescDrawn = false;
+bool isInventoryUpToDate = true;
 PlacedText itemDescText;
 ItemID::Type prevItemDescID;
 
@@ -214,8 +217,8 @@ Button EscapeButton("Exit", [](){
     Bullets.clear();
     clearVectorOfPointer(Enemies);
     clearVectorOfPointer(FireSet);
-    clearVectorOfPointer(TempleTextsOnGround);
-    clearVectorOfPointer(TempleTextsOnScreen);
+    clearVectorOfPointer(TempTextsOnGround);
+    clearVectorOfPointer(TempTextsOnScreen);
     player.CurWeapon->lock = true;
     LoadMainMenu();
 });
@@ -259,11 +262,11 @@ void draw() {
         window.draw(circleShape);
     }
 
-    for (TempleText* d: TempleTextsOnGround) {
+    for (TempText* d: TempTextsOnGround) {
         if (d->localClock->getElapsedTime() < d->howLongToExist) {
             window.draw(*d);
         } else {
-            DeleteFromVector(TempleTextsOnGround, d);
+            DeleteFromVector(TempTextsOnGround, d);
             delete d;
         }
     }
@@ -417,11 +420,11 @@ void drawInterface() {
     }
     window.draw(TextFPS);
 
-    for (TempleText* d: TempleTextsOnScreen) {
+    for (TempText* d: TempTextsOnScreen) {
         if (d->localClock->getElapsedTime() < d->howLongToExist) {
             window.draw(*d);
         } else {
-            DeleteFromVector(TempleTextsOnScreen, d);
+            DeleteFromVector(TempTextsOnScreen, d);
             delete d;
         }
     }
@@ -445,16 +448,19 @@ void drawInventory() {
         &player.inventory.dropableItems
     };
 
-    if (!itemSlotsElements.empty()) {
-        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-            if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
-                for (sf::Drawable* &elem : itemSlotsElements[id])
-                    delete elem;
-                itemSlotsElements[id].clear();
+    if (!isInventoryUpToDate) {
+        std::cout << "Inventory needs update. Clearing items\n";
+        if (!itemSlotsElements.empty()) {
+            for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+                if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
+                    for (sf::Drawable* &elem : itemSlotsElements[id])
+                        delete elem;
+                    itemSlotsElements[id].clear();
+                }
             }
         }
+        itemSlotsElements.clear();
     }
-    itemSlotsElements.clear();
 
     for (int i = 0; i < 4; i++) {
         if (player.inventory.itemAmount() != 0 && activeInventoryPage != inventoryPage::Stats) {
@@ -464,35 +470,39 @@ void drawInventory() {
                     (*currInventory[i])[id]->amount > 0) {
 
                     Item* drawnItem = (*currInventory[i])[id];
-                    float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
-                    float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
 
-                    Panel* bgPanel = new Panel();
-                    bgPanel->setPosition(itemX, itemY);
-                    bgPanel->setScale(0.5, 0.5);
-                    bgPanel->setTexture(Textures::ItemPanel);
-                    itemSlotsElements[id].push_back(bgPanel);
+                    if (!isInventoryUpToDate) {
+                        float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
+                        float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
+                        drawnItem->setCenter(itemX + 75, itemY + 75);
 
-                    drawnItem->setCenter(itemX + 75, itemY + 75);
-                    window.draw(*drawnItem);
+                        Panel* bgPanel = new Panel();
+                        bgPanel->setPosition(itemX, itemY);
+                        bgPanel->setScale(0.5, 0.5);
+                        bgPanel->setTexture(Textures::ItemPanel);
+                        itemSlotsElements[id].push_back(bgPanel);
 
-                    PlacedText* itemAmountText = new PlacedText();
-                    itemAmountText->setCharacterSize(16);
-                    itemAmountText->setString(std::to_string(drawnItem->amount));
-                    itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
+                        PlacedText* itemAmountText = new PlacedText();
+                        itemAmountText->setCharacterSize(16);
+                        itemAmountText->setString(std::to_string(drawnItem->amount));
+                        itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
 
-                    if (drawnItem->amount > 1)
-                        itemSlotsElements[id].push_back(itemAmountText);
-                    slotNumber++;
+                        if (drawnItem->amount > 1)
+                            itemSlotsElements[id].push_back(itemAmountText);
+                        
+                    }
 
                     for (sf::Drawable* &elem : itemSlotsElements[id])
                         window.draw(*elem);
                     window.draw(*drawnItem);
-                }
 
+                    slotNumber++;
+                }
             }
         }
     }
+
+    isInventoryUpToDate = true;
 
     if (isItemDescDrawn) {
         itemDescText.setPosition(sf::Mouse::getPosition(window).x + 100, sf::Mouse::getPosition(window).y);
@@ -909,6 +919,7 @@ void EventHandler() {
                                         if (itemUsed) {
                                             (*currInventory[i])[id]->amount = ((*currInventory[i])[id]->amount == 1) ? 0 : (*currInventory[i])[id]->amount - 1;
                                             isItemDescDrawn = false;
+                                            isInventoryUpToDate = false;
                                             createSlotRects();
                                         }
                                     }
@@ -980,6 +991,7 @@ void EventHandler() {
                 if (PickupStuff[i]->CanBeActivated(player)) {
                     if (PickupStuff[i]->isActivated(player, event)) {
                         player.AddItem(PickupStuff[i]);
+                        isInventoryUpToDate = false;
                         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
                         delete PickupStuff[i];
                         PickupStuff.erase(PickupStuff.begin() + i--);
@@ -1142,14 +1154,14 @@ void updateBullets() {
                 if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
-                    TempleText* templeText = new TempleText(sf::seconds(1.5f));
-                    templeText->setCharacterSize(30);
-                    templeText->setOutlineColor(sf::Color::White);
-                    templeText->setOutlineThickness(3);
-                    templeText->setString(std::to_string(int(Bullets[i].damage)));
-                    templeText->setFillColor(sf::Color(250, 50, 50, 200));
-                    templeText->setCenter(enemy->getPosition());
-                    TempleTextsOnGround.push_back(templeText);
+                    TempText* tempText = new TempText(sf::seconds(1.5f));
+                    tempText->setCharacterSize(30);
+                    tempText->setOutlineColor(sf::Color::White);
+                    tempText->setOutlineThickness(3);
+                    tempText->setString(std::to_string(int(Bullets[i].damage)));
+                    tempText->setFillColor(sf::Color(250, 50, 50, 200));
+                    tempText->setCenter(enemy->getPosition());
+                    TempTextsOnGround.push_back(tempText);
                 }
             }
         }
@@ -1405,6 +1417,7 @@ void setBox(Interactable*& box) {
         if (player.Mana.cur >= 20) {
             player.Mana -= 20.f;
             player.AddItem(new Item(ItemID::coin, rand() % 5));
+            isInventoryUpToDate = false;
             DeleteFromVector(listOfBox, i);
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);
@@ -1418,36 +1431,36 @@ void setArtifact(Interactable*& artifact) {
     artifact->setAnimation(Textures::Architect, 1, 1, sf::seconds(1), &Shaders::Architect);
     artifact->setSize(150.f, 150.f);
     artifact->setFunction([](Interactable* i){
-        TempleText* templeText = new TempleText(sf::seconds(2.5f));
-        templeText->setCharacterSize(50);
-        templeText->setOutlineColor(sf::Color::White);
-        templeText->setOutlineThickness(3);
+        TempText* tempText = new TempText(sf::seconds(2.5f));
+        tempText->setCharacterSize(50);
+        tempText->setOutlineColor(sf::Color::White);
+        tempText->setOutlineThickness(3);
         switch (rand() % 4) {
             case 0:
                 player.Health.top += 20;
-                templeText->setString("You find Artifact\nHealth increased");
-                templeText->setFillColor(sf::Color(250, 50, 50));
+                tempText->setString("You have found an Artifact\nHealth increased");
+                tempText->setFillColor(sf::Color(250, 50, 50));
                 break;
             case 1:
                 player.Mana.top += 20;
-                templeText->setString("You find Artifact\nMana increased");
-                templeText->setFillColor(sf::Color(50, 50, 250));
+                tempText->setString("You have found an Artifact\nMana increased");
+                tempText->setFillColor(sf::Color(50, 50, 250));
                 break;
             case 2:
                 player.HealthRecovery += 2;
-                templeText->setString("You find Artifact\nHealth Recovery increased");
-                templeText->setFillColor(sf::Color(250, 50, 50));
+                tempText->setString("You have found an Artifact\nHealth Recovery increased");
+                tempText->setFillColor(sf::Color(250, 50, 50));
                 break;
             case 3:
                 player.ManaRecovery += 2;
-                templeText->setString("You find Artifact\nMana Recovery increased");
-                templeText->setFillColor(sf::Color(50, 50, 250, 200));
+                tempText->setString("You have found an Artifact\nMana Recovery increased");
+                tempText->setFillColor(sf::Color(50, 50, 250, 200));
                 break;
             default: break;
         }
-        templeText->setCenter(scw / 2.f, sch / 2.f - 165.f);
+        tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
 
-        TempleTextsOnScreen.push_back(templeText);
+        TempTextsOnScreen.push_back(tempText);
         DeleteFromVector(listOfArtifact, i);
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
         DeleteFromVector(InteractibeStuff, i);

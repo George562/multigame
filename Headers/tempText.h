@@ -1,21 +1,21 @@
 #pragma once
 #include "text.h"
 
-class TempleText : public PlacedText {
+class TempText : public PlacedText {
 public:
     sf::Time howLongToExist;
     sf::Clock* localClock = nullptr;
 
-    TempleText(sf::Time);
-    ~TempleText();
+    TempText(sf::Time);
+    ~TempText();
 };
 
-TempleText::TempleText(sf::Time howLongToExist) : PlacedText() {
+TempText::TempText(sf::Time howLongToExist) : PlacedText() {
     localClock = new sf::Clock();
     this->howLongToExist = howLongToExist;
 }
 
-TempleText::~TempleText() {
+TempText::~TempText() {
     if (localClock) {
         delete localClock;
     }
