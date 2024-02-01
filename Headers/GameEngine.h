@@ -18,7 +18,7 @@ sf::ContextSettings settings;
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 float MiniMapZoom = 1.f;
-bool MiniMapActivated, EscapeMenuActivated, IsDrawInventory;
+bool MiniMapActivated, EscapeMenuActivated, isDrawInventory;
 screens::Type screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactable*> InteractibeStuff;
@@ -48,7 +48,7 @@ inventoryPage::Type activeInventoryPage = inventoryPage::Items;
 std::vector<sf::Drawable*> inventoryElements; // These elements appear on every page
 
 Button backButton("Back", [](){
-    IsDrawInventory = false;
+    isDrawInventory = false;
 });
 Button itemsPageButton("Items", [](){
     activeInventoryPage = inventoryPage::Items;
@@ -149,11 +149,13 @@ void drawWalls();
 void drawMiniMap();
 void drawInterface();
 void drawInventory();
+void updateInventoryUI();
 void LevelGenerate(int, int);
 void LoadMainMenu();
 void init();
 void initInventory();
 void EventHandler();
+void inventoryHandler(sf::Event&);
 bool useItem(ItemID::Type);
 void createSlotRects();
 void updateBullets();
@@ -275,7 +277,7 @@ void draw() {
     if (IsDrawInterface) {
         drawInterface();
     }
-    if (IsDrawInventory) {
+    if (isDrawInventory) {
         drawInventory();
     }
     window.display();
@@ -437,20 +439,6 @@ void drawInventory() {
 
     for (sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
         window.draw(*elem);
-    
-    if (!isInventoryUpToDate) { // ToDo: make invectory update as function that call when inventory need to update
-        std::cout << "Inventory needs update. Clearing items\n";
-        if (!itemSlotsElements.empty()) {
-            for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
-                    for (sf::Drawable* &elem : itemSlotsElements[id])
-                        delete elem;
-                    itemSlotsElements[id].clear();
-                }
-            }
-        }
-        itemSlotsElements.clear();
-    }
 
     if (player.inventory.items.size() != 0 && activeInventoryPage != inventoryPage::Stats) {
         int slotNumber = 0;
@@ -459,26 +447,6 @@ void drawInventory() {
                 player.inventory.items[id]->amount > 0) {
 
                 Item* drawnItem = player.inventory.items[id];
-
-                if (!isInventoryUpToDate) { // not everytime you draw
-                    float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
-                    float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
-                    drawnItem->setCenter(itemX + 75, itemY + 75);
-
-                    Panel* bgPanel = new Panel();
-                    bgPanel->setPosition(itemX, itemY);
-                    bgPanel->setScale(0.5, 0.5);
-                    bgPanel->setTexture(Textures::ItemPanel);
-                    itemSlotsElements[id].push_back(bgPanel);
-
-                    PlacedText* itemAmountText = new PlacedText();
-                    itemAmountText->setCharacterSize(16);
-                    itemAmountText->setString(std::to_string(drawnItem->amount));
-                    itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
-
-                    if (drawnItem->amount > 1)
-                        itemSlotsElements[id].push_back(itemAmountText);
-                }
 
                 for (sf::Drawable* &elem : itemSlotsElements[id])
                     window.draw(*elem);
@@ -489,14 +457,53 @@ void drawInventory() {
         }
     }
 
-    isInventoryUpToDate = true;
-
     if (isItemDescDrawn) {
         itemDescText.setPosition(sf::Mouse::getPosition(window).x + 100, sf::Mouse::getPosition(window).y);
         window.draw(itemDescText);
     }
 
     window.setView(InterfaceView);
+}
+
+void updateInventoryUI() {
+    if (!itemSlotsElements.empty()) {
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+            if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
+                for (sf::Drawable* &elem : itemSlotsElements[id])
+                    delete elem;
+                itemSlotsElements[id].clear();
+            }
+        }
+    }
+    itemSlotsElements.clear();
+
+    int slotNumber = 0;
+    for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+        if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
+            player.inventory.items[id]->amount > 0) {
+            Item* drawnItem = player.inventory.items[id];
+
+            float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
+            float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
+            drawnItem->setCenter(itemX + 75, itemY + 75);
+
+            Panel* bgPanel = new Panel();
+            bgPanel->setPosition(itemX, itemY);
+            bgPanel->setScale(0.5, 0.5);
+            bgPanel->setTexture(Textures::ItemPanel);
+            itemSlotsElements[id].push_back(bgPanel);
+
+            PlacedText* itemAmountText = new PlacedText();
+            itemAmountText->setCharacterSize(16);
+            itemAmountText->setString(std::to_string(drawnItem->amount));
+            itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
+
+            if (drawnItem->amount > 1)
+                itemSlotsElements[id].push_back(itemAmountText);
+
+            slotNumber++;
+        }
+    }
 }
 
 void LevelGenerate(int n, int m) {
@@ -857,46 +864,8 @@ void EventHandler() {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
                 EscapeMenuActivated = !EscapeMenuActivated;
             }
-        } else if (IsDrawInventory) {
-            if (event.key.code == sf::Keyboard::Escape) {
-                IsDrawInventory = false;
-            }
-            backButton.isActivated(event);
-            itemsPageButton.isActivated(event);
-            weaponsPageButton.isActivated(event);
-            equipablesPageButton.isActivated(event);
-            perksPageButton.isActivated(event);
-            statsPageButton.isActivated(event);
-
-            bool isAnythingHovered = false;
-            if (player.inventory.items.size() != 0 &&
-                activeInventoryPage != inventoryPage::Stats) {
-                for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                    if (player.inventory.items.find(id) != player.inventory.items.end() &&
-                        player.inventory.items[id]->amount > 0 &&
-                        !itemSlotsRects.empty() && itemSlotsRects.find(id) != itemSlotsRects.end() &&
-                        itemSlotsRects[id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
-                        if (id != prevItemDescID) {
-                            prevItemDescID = ItemID::NONE;
-                            isItemDescDrawn = false;
-                        }
-                        isAnythingHovered = true;
-                        if (event.mouseButton.button == sf::Mouse::Button::Right) {
-                            isItemDescDrawn = true;
-                            itemDescText.setString(itemDesc[id]);
-                            prevItemDescID = id;
-                        }
-                        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(id)) {
-                            player.inventory.items[id]->amount = (player.inventory.items[id]->amount == 1) ? 0 : player.inventory.items[id]->amount - 1;
-                            isItemDescDrawn = false;
-                            isInventoryUpToDate = false;
-                            createSlotRects();
-                        }
-                    }
-                }
-            }
-            if (!isAnythingHovered)
-                isItemDescDrawn = false;
+        } else if (isDrawInventory) {
+            inventoryHandler(event);
         } else {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) {
@@ -920,8 +889,11 @@ void EventHandler() {
                     }
                 }
                 if (event.key.code == sf::Keyboard::Tilde) {
-
-                    IsDrawInventory = true;
+                    isDrawInventory = true;
+                    if (!isInventoryUpToDate) {
+                        updateInventoryUI();
+                        isInventoryUpToDate = true;
+                    }
                     createSlotRects();
                 }
             }
@@ -1053,6 +1025,48 @@ void EventHandler() {
                 }
         }
     }
+}
+
+void inventoryHandler(sf::Event& event) {
+    if (event.key.code == sf::Keyboard::Escape) {
+        isDrawInventory = false;
+    }
+    backButton.isActivated(event);
+    itemsPageButton.isActivated(event);
+    weaponsPageButton.isActivated(event);
+    equipablesPageButton.isActivated(event);
+    perksPageButton.isActivated(event);
+    statsPageButton.isActivated(event);
+
+    bool isAnythingHovered = false;
+    if (player.inventory.items.size() != 0 &&
+        activeInventoryPage != inventoryPage::Stats) {
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+            if (player.inventory.items.find(id) != player.inventory.items.end() &&
+                player.inventory.items[id]->amount > 0 &&
+                !itemSlotsRects.empty() && itemSlotsRects.find(id) != itemSlotsRects.end() &&
+                itemSlotsRects[id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
+                if (id != prevItemDescID) {
+                    prevItemDescID = ItemID::NONE;
+                    isItemDescDrawn = false;
+                }
+                isAnythingHovered = true;
+                if (event.mouseButton.button == sf::Mouse::Button::Right) {
+                    isItemDescDrawn = true;
+                    itemDescText.setString(itemDesc[id]);
+                    prevItemDescID = id;
+                }
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(id)) {
+                    player.inventory.items[id]->amount = (player.inventory.items[id]->amount == 1) ? 0 : player.inventory.items[id]->amount - 1;
+                    isItemDescDrawn = false;
+                    updateInventoryUI();
+                    createSlotRects();
+                }
+            }
+        }
+    }
+    if (!isAnythingHovered)
+        isItemDescDrawn = false;
 }
 
 bool useItem(ItemID::Type id) {
@@ -1216,7 +1230,7 @@ void MainLoop() {
                 mutex.unlock();
             }
         } else {
-            if (!chat.inputted) {
+            if (!chat.inputted && !isDrawInventory) {
                 player.move(CurLocation);
                 GameView.setCenter(player.getPosition() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i{scw, sch} / 2) / 8));
                 FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
