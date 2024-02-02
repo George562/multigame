@@ -542,10 +542,12 @@ void LevelGenerate(int n, int m) {
 
     clearVectorOfPointer(FireSet);
     for (int i = 0; i < 1; i++) {
-        FireSet.push_back(new Fire((player.getPosition() - portal.getSize() / 2.f - sf::Vector2f(size, size)).x,
-                                   (player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)).y, 90.f, 90.f,
-                                   sf::seconds(10.f)));
-        FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
+        FireSet.push_back(new Fire(sf::seconds(100.f), &LabyrinthLocation));
+        FireSet[i]->setSize(50.f, 50.f);
+        do {
+            FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
+            FireSet[i]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
+        } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
     }
 
     clearVectorOfPointer(Enemies);
