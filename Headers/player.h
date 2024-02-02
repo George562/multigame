@@ -2,7 +2,7 @@
 #include "creature.h"
 
 #define MAX_MANA 75.f
-#define MAX_HEALTH 10.f
+#define MAX_HEALTH 1000.f
 
 ////////////////////////////////////////////////////////////
 // Class

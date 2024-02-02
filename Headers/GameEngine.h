@@ -549,7 +549,7 @@ void LevelGenerate(int n, int m) {
 
     clearVectorOfPointer(FireSet);
     for (int i = 0; i < 1; i++) {
-        FireSet.push_back(new Fire(sf::seconds(100.f), &LabyrinthLocation));
+        FireSet.push_back(new Fire(sf::seconds(5.f), &LabyrinthLocation));
         FireSet[i]->setSize(50.f, 50.f);
         do {
             FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
@@ -1127,14 +1127,14 @@ void updateBullets() {
                 if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
-                    TempText* tempText = new TempText(sf::seconds(1.5f));
-                    tempText->setCharacterSize(30);
-                    tempText->setOutlineColor(sf::Color::White);
-                    tempText->setOutlineThickness(3);
-                    tempText->setString(std::to_string(int(Bullets[i].damage)));
-                    tempText->setFillColor(sf::Color(250, 50, 50, 200));
-                    tempText->setCenter(enemy->getPosition());
-                    TempTextsOnGround.push_back(tempText);
+                    // TempText* tempText = new TempText(sf::seconds(1.5f));
+                    // tempText->setCharacterSize(30);
+                    // tempText->setOutlineColor(sf::Color::White);
+                    // tempText->setOutlineThickness(3);
+                    // tempText->setString(std::to_string(int(Bullets[i].damage)));
+                    // tempText->setFillColor(sf::Color(250, 50, 50, 200));
+                    // tempText->setCenter(enemy->getPosition());
+                    // TempTextsOnGround.push_back(tempText);
                 }
             }
         }
