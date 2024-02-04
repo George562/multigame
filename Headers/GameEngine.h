@@ -219,6 +219,9 @@ Button EscapeButton("Exit", [](){
     clearVectorOfPointer(FireSet);
     clearVectorOfPointer(TempTextsOnGround);
     clearVectorOfPointer(TempTextsOnScreen);
+    clearVectorOfPointer(listOfBox);
+    clearVectorOfPointer(listOfArtifact);
+    clearVectorOfPointer(PickupStuff);
     player.CurWeapon->lock = true;
     LoadMainMenu();
 });
@@ -539,7 +542,7 @@ void LevelGenerate(int n, int m) {
         setArtifact(listOfArtifact[i]);
         do {
             listOfArtifact[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
-            sf::Vector2f(rand() % (size - Textures::Box.getSize().x / 4), rand() % (size - Textures::Box.getSize().y / 4)));
+            sf::Vector2f(rand() % (size - Textures::Architect.getSize().x / 4), rand() % (size - Textures::Architect.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->PosY / size][(int)listOfArtifact[i]->PosX / size]);
 
         LabyrinthLocation.AddObject({Tiles::artifact, listOfArtifact[i]->getPosition()});
@@ -1127,14 +1130,14 @@ void updateBullets() {
                 if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
-                    // TempText* tempText = new TempText(sf::seconds(1.5f));
-                    // tempText->setCharacterSize(30);
-                    // tempText->setOutlineColor(sf::Color::White);
-                    // tempText->setOutlineThickness(3);
-                    // tempText->setString(std::to_string(int(Bullets[i].damage)));
-                    // tempText->setFillColor(sf::Color(250, 50, 50, 200));
-                    // tempText->setCenter(enemy->getPosition());
-                    // TempTextsOnGround.push_back(tempText);
+                    TempText* tempText = new TempText(sf::seconds(1.5f));
+                    tempText->setCharacterSize(30);
+                    tempText->setOutlineColor(sf::Color::White);
+                    tempText->setOutlineThickness(3);
+                    tempText->setString(std::to_string(int(Bullets[i].damage)));
+                    tempText->setFillColor(sf::Color(250, 50, 50, 200));
+                    tempText->setCenter(enemy->getPosition());
+                    TempTextsOnGround.push_back(tempText);
                 }
             }
         }
