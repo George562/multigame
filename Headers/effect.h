@@ -15,14 +15,16 @@ public:
     Effects::Type type;
     float parameter;
 
-    sf::Clock* clock;
+    sf::Clock* localClock = nullptr;
     sf::Time secs;
 
     Effect(Creature* owner, Effects::Type type, float parameter, sf::Time secs) {
         this->owner = owner;
         this->type = type;
         this->parameter = parameter;
-        this->clock = new sf::Clock();
+        this->localClock = new sf::Clock();
         this->secs = secs;
     }
+    
+    ~Effect() { if (localClock) delete localClock; }
 };

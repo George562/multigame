@@ -167,6 +167,8 @@ void processEffects();
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
 template <typename T> void clearVectorOfPointer(std::vector<T>&);
+bool firePropagationAllowed(sf::Vector2i, sf::Vector2i);
+void fireUpdate();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -552,7 +554,7 @@ void LevelGenerate(int n, int m) {
 
     clearVectorOfPointer(FireSet);
     for (int i = 0; i < 1; i++) {
-        FireSet.push_back(new Fire(sf::seconds(1.f)));
+        FireSet.push_back(new Fire(sf::seconds(15.f)));
         FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
         FireSet[i]->setSize(50.f, 50.f);
         do {
@@ -1179,56 +1181,7 @@ void MainLoop() {
             }
         }
 
-        float angle;
-        int y, x;
-        for (int i = 0; i < FireSet.size(); i++) {
-            if (FireSet[i]->clock->getElapsedTime() >= FireSet[i]->secs) {
-
-                float dist = 3 * FireSet[i]->Width / 2;
-                Fire* descendant1 = new Fire(sf::seconds(rand() % 4 + 1.f));
-                descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
-                descendant1->setSize(FireSet[i]->Width, FireSet[i]->Height);
-                do {
-                    angle = (rand() % 360) * M_PI / 180;
-                    descendant1->setPosition(FireSet[i]->PosX + dist * std::sin(angle), FireSet[i]->PosY + dist * std::cos(angle));
-                    y = (int)descendant1->PosY / size; x = (int)descendant1->PosX / size;
-                } while (!CurLocation->EnableTiles[y][x] ||
-                         !Fire::PropagationAllowed((int)FireSet[i]->PosY / size, (int)FireSet[i]->PosX / size,
-                                                    descendant1->PosY, descendant1->PosX, CurLocation->walls));
-
-                Fire* descendant2 = new Fire(sf::seconds(rand() % 4 + 1.f));
-                descendant2->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
-                descendant2->setSize(FireSet[i]->Width, FireSet[i]->Height);
-                do {
-                    angle = (rand() % 360) * M_PI / 180;
-                    descendant2->setPosition(FireSet[i]->PosX + dist * std::sin(angle), FireSet[i]->PosY + dist * std::cos(angle));
-                    y = (int)descendant2->PosY / size; x = (int)descendant2->PosX / size;
-                } while (!CurLocation->EnableTiles[y][x] ||
-                         !Fire::PropagationAllowed((int)FireSet[i]->PosY / size, (int)FireSet[i]->PosX / size,
-                                                    descendant2->PosY, descendant2->PosX, CurLocation->walls));
-                bool add1 = true;
-                bool add2 = true;
-                for (int j = 0; j < FireSet.size(); j++) {
-                    if (descendant1->intersect(*FireSet[j])) add1 = false;
-                    if (descendant2->intersect(*FireSet[j])) add2 = false;
-                }
-                if (add1) {
-                    FireSet.push_back(descendant1);
-                    DrawableStuff.push_back(descendant1);
-                } else {
-                    delete descendant1;
-                }
-                if (add2) {
-                    FireSet.push_back(descendant2);
-                    DrawableStuff.push_back(descendant2);
-                } else {
-                    delete descendant2;
-                }
-                DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
-                delete FireSet[i];
-                FireSet.erase(FireSet.begin() + i--);
-            }
-        }
+        fireUpdate();
 
         player.UpdateState();
         if (screen == screens::Dungeon) {
@@ -1394,7 +1347,7 @@ void processEffects() {
             std::swap(AllEffects[i], AllEffects[AllEffects.size() - 1]);
             AllEffects.pop_back();
         } else {
-            float t = std::min(AllEffects[i]->clock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
+            float t = std::min(AllEffects[i]->localClock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
             AllEffects[i]->secs -= sf::seconds(t);
             switch (AllEffects[i]->type) {
                 case Effects::Damage:
@@ -1474,6 +1427,41 @@ template <typename T> void clearVectorOfPointer(std::vector<T>& arr) {
         delete arr[i];
     }
     arr.clear();
+}
+
+bool firePropagationAllowed(sf::Vector2i ancestor, sf::Vector2i pos) {
+    if (pos.y < 0 || pos.x < 0) return false; // если огонь пытается пересечь самые левые или самые верхние стены
+    ancestor /= size;
+    pos /= size;
+    if (ancestor.y == pos.y && ancestor.x == pos.x) return true; // одинаковые тайлы
+    // проверка на стену между тайлами
+    return ancestor.y == pos.y && !CurLocation->walls[pos.y * 2 + 1][std::max(ancestor.x, pos.x)] || // соседние тайлы по горизонтали
+           ancestor.x == pos.x && !CurLocation->walls[std::max(ancestor.y, pos.y) * 2][pos.x];       // соседние тайлы по вертикали
+}
+
+void fireUpdate() {
+    float angle;
+    for (int i = 0; i < FireSet.size(); i++) {
+        float dist = 2.5 * FireSet[i]->Width;
+        if (FireSet[i]->localClock->getElapsedTime() >= FireSet[i]->secs) {
+            FireSet[i]->localClock->restart();
+            FireSet[i]->secs = sf::seconds(rand() % 4 + 15.f);
+
+            Fire* descendant1 = new Fire(sf::seconds(rand() % 4 + 15.f));
+            descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
+            descendant1->setSize(50.f, 50.f);
+            sf::Vector2i posFather = sf::Vector2i(FireSet[i]->getCenter());
+            sf::Vector2f posSon = descendant1->getCenter();
+            do {
+                angle = (rand() % 360) * M_PI / 180;
+                posSon = posSon + dist * sf::Vector2f(std::sin(angle), std::cos(angle));
+            } while (!CurLocation->EnableTiles[descendant1->PosY / size][descendant1->PosX / size] ||
+                     !firePropagationAllowed(posFather, sf::Vector2i(posSon)));
+            descendant1->setCenter(posSon);
+            FireSet.push_back(descendant1);
+            DrawableStuff.push_back(descendant1);
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////// Server-Client functions
