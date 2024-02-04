@@ -247,7 +247,7 @@ void draw() {
         }
     }
 
-    for (sf::Drawable* d: DrawableStuff) {
+    for (sf::Drawable*& d: DrawableStuff) {
         window.draw(*d);
     }
 
@@ -265,12 +265,12 @@ void draw() {
         window.draw(circleShape);
     }
 
-    for (TempText* d: TempTextsOnGround) {
-        if (d->localClock->getElapsedTime() < d->howLongToExist) {
-            window.draw(*d);
+    for (size_t i = 0; i < TempTextsOnGround.size(); i++) {
+        if (TempTextsOnGround[i]->localClock->getElapsedTime() < TempTextsOnGround[i]->howLongToExist) {
+            window.draw(*TempTextsOnGround[i]);
         } else {
-            DeleteFromVector(TempTextsOnGround, d);
-            delete d;
+            delete TempTextsOnGround[i];
+            TempTextsOnGround.erase(TempTextsOnGround.begin() + i--);
         }
     }
 
@@ -386,7 +386,7 @@ sf::Clock ClockFPS; int FPSCounter;
 PlacedText TextFPS;
 void drawInterface() {
     window.setView(InterfaceView);
-    for (sf::Drawable* d: InterfaceStuff) {
+    for (sf::Drawable*& d: InterfaceStuff) {
         window.draw(*d);
     }
 
@@ -423,12 +423,12 @@ void drawInterface() {
     }
     window.draw(TextFPS);
 
-    for (TempText* d: TempTextsOnScreen) {
-        if (d->localClock->getElapsedTime() < d->howLongToExist) {
-            window.draw(*d);
+    for (size_t i = 0; i < TempTextsOnScreen.size(); i++) {
+        if (TempTextsOnScreen[i]->localClock->getElapsedTime() < TempTextsOnScreen[i]->howLongToExist) {
+            window.draw(*TempTextsOnScreen[i]);
         } else {
-            DeleteFromVector(TempTextsOnScreen, d);
-            delete d;
+            delete TempTextsOnScreen[i];
+            TempTextsOnScreen.erase(TempTextsOnScreen.begin() + i--);
         }
     }
 
@@ -437,10 +437,10 @@ void drawInterface() {
 
 void drawInventory() {
     window.setView(InventoryView);
-    for (sf::Drawable* elem : inventoryElements)
+    for (sf::Drawable*& elem : inventoryElements)
         window.draw(*elem);
 
-    for (sf::Drawable* elem : inventoryPageElements[activeInventoryPage])
+    for (sf::Drawable*& elem : inventoryPageElements[activeInventoryPage])
         window.draw(*elem);
 
     if (player.inventory.items.size() != 0 && activeInventoryPage != inventoryPage::Stats) {
@@ -451,7 +451,7 @@ void drawInventory() {
 
                 Item* drawnItem = player.inventory.items[id];
 
-                for (sf::Drawable* &elem : itemSlotsElements[id])
+                for (sf::Drawable*& elem : itemSlotsElements[id])
                     window.draw(*elem);
                 window.draw(*drawnItem);
 
@@ -472,7 +472,7 @@ void updateInventoryUI() {
     if (!itemSlotsElements.empty()) {
         for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
             if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
-                for (sf::Drawable* &elem : itemSlotsElements[id])
+                for (sf::Drawable*& elem : itemSlotsElements[id])
                     delete elem;
                 itemSlotsElements[id].clear();
             }
@@ -652,6 +652,7 @@ void LoadMainMenu() {
     InterfaceStuff.push_back(&HpBar);
     InterfaceStuff.push_back(&chat);
 
+    InteractibeStuff.clear();
     InteractibeStuff.push_back(&portal);
     InteractibeStuff.push_back(&puddle);
 
@@ -1126,7 +1127,7 @@ void updateBullets() {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
-            for (Enemy* &enemy: Enemies) {
+            for (Enemy*& enemy: Enemies) {
                 if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
                     enemy->getDamage(Bullets[i].damage);
                     Bullets[i].penetration--;
@@ -1138,6 +1139,7 @@ void updateBullets() {
                     tempText->setFillColor(sf::Color(250, 50, 50, 200));
                     tempText->setCenter(enemy->getPosition());
                     TempTextsOnGround.push_back(tempText);
+                    break;
                 }
             }
         }
@@ -1298,7 +1300,7 @@ void MainLoop() {
         if (puddle.intersect(player))
             AllEffects.push_back(new Effect(&player, Effects::Heal, 30.f, sf::seconds(1.5f)));
 
-        for (Fire* &fire: FireSet) {
+        for (Fire*& fire: FireSet) {
             if (fire->intersect(player))
                 AllEffects.push_back(new Effect(&player, Effects::Damage, 0.1f, sf::seconds(2.f)));
         }
