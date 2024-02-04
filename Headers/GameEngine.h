@@ -552,11 +552,11 @@ void LevelGenerate(int n, int m) {
 
     clearVectorOfPointer(FireSet);
     for (int i = 0; i < 1; i++) {
-        FireSet.push_back(new Fire(sf::seconds(5.f), &LabyrinthLocation));
+        FireSet.push_back(new Fire(sf::seconds(1.f)));
+        FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
         FireSet[i]->setSize(50.f, 50.f);
         do {
             FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
-            FireSet[i]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
         } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
     }
 
@@ -1179,28 +1179,50 @@ void MainLoop() {
             }
         }
 
+        float angle;
+        int y, x;
         for (int i = 0; i < FireSet.size(); i++) {
             if (FireSet[i]->clock->getElapsedTime() >= FireSet[i]->secs) {
-                FireSet[i]->Propagation();
+
+                float dist = 3 * FireSet[i]->Width / 2;
+                Fire* descendant1 = new Fire(sf::seconds(rand() % 4 + 1.f));
+                descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
+                descendant1->setSize(FireSet[i]->Width, FireSet[i]->Height);
+                do {
+                    angle = (rand() % 360) * M_PI / 180;
+                    descendant1->setPosition(FireSet[i]->PosX + dist * std::sin(angle), FireSet[i]->PosY + dist * std::cos(angle));
+                    y = (int)descendant1->PosY / size; x = (int)descendant1->PosX / size;
+                } while (!CurLocation->EnableTiles[y][x] ||
+                         !Fire::PropagationAllowed((int)FireSet[i]->PosY / size, (int)FireSet[i]->PosX / size,
+                                                    descendant1->PosY, descendant1->PosX, CurLocation->walls));
+
+                Fire* descendant2 = new Fire(sf::seconds(rand() % 4 + 1.f));
+                descendant2->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
+                descendant2->setSize(FireSet[i]->Width, FireSet[i]->Height);
+                do {
+                    angle = (rand() % 360) * M_PI / 180;
+                    descendant2->setPosition(FireSet[i]->PosX + dist * std::sin(angle), FireSet[i]->PosY + dist * std::cos(angle));
+                    y = (int)descendant2->PosY / size; x = (int)descendant2->PosX / size;
+                } while (!CurLocation->EnableTiles[y][x] ||
+                         !Fire::PropagationAllowed((int)FireSet[i]->PosY / size, (int)FireSet[i]->PosX / size,
+                                                    descendant2->PosY, descendant2->PosX, CurLocation->walls));
                 bool add1 = true;
                 bool add2 = true;
                 for (int j = 0; j < FireSet.size(); j++) {
-                    if (FireSet[i]->descendant1->intersect(*FireSet[j])) add1 = false;
-                    if (FireSet[i]->descendant2->intersect(*FireSet[j])) add2 = false;
+                    if (descendant1->intersect(*FireSet[j])) add1 = false;
+                    if (descendant2->intersect(*FireSet[j])) add2 = false;
                 }
                 if (add1) {
-                    FireSet.push_back(FireSet[i]->descendant1);
-                    FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
-                    DrawableStuff.push_back(FireSet[i]->descendant1);
+                    FireSet.push_back(descendant1);
+                    DrawableStuff.push_back(descendant1);
                 } else {
-                    delete FireSet[i]->descendant1;
+                    delete descendant1;
                 }
                 if (add2) {
-                    FireSet.push_back(FireSet[i]->descendant2);
-                    FireSet[FireSet.size() - 1]->setAnimation(Textures::Fire, 1, 1, sf::seconds(1), &Shaders::Map);
-                    DrawableStuff.push_back(FireSet[i]->descendant2);
+                    FireSet.push_back(descendant2);
+                    DrawableStuff.push_back(descendant2);
                 } else {
-                    delete FireSet[i]->descendant2;
+                    delete descendant2;
                 }
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
                 delete FireSet[i];
