@@ -7,6 +7,7 @@
 #include "effect.h"
 #include "fire.h"
 #include "tempText.h"
+#include "waterParticle.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
@@ -99,6 +100,9 @@ std::vector<Interactable*> listOfBox,
 //////////////////////////////////////////////////////////// Fire
 std::vector<Fire*> FireSet;
 
+//////////////////////////////////////////////////////////// Water Particles
+std::vector<WaterParticle*> WPs;
+
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
 Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
@@ -169,6 +173,7 @@ void setArtifact(Interactable*&);
 template <typename T> void clearVectorOfPointer(std::vector<T>&);
 bool firePropagationAllowed(sf::Vector2i, sf::Vector2i);
 void fireUpdate();
+void wpUpdate();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -664,6 +669,12 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
 
+    Item* fireHose = new Item(ItemID::fireHose, 1);
+    fireHose->setAnimation(*itemTextureName[ItemID::fireHose], 1, 1, sf::seconds(1), &Shaders::Map);
+    PickupStuff.push_back(fireHose);
+    DrawableStuff.push_back(PickupStuff[1]);
+    PickupStuff[1]->dropTo(player.getPosition() + sf::Vector2f(400, 300));
+
     listOfBox.push_back(new Interactable());
     setBox(listOfBox[0]);
     listOfBox[0]->setPosition(1912.5, 1545);
@@ -916,6 +927,17 @@ void EventHandler() {
                     }
                 }
             }
+            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right
+                                                            && player.in_the_hands)
+                if ((int)player.hand_item->id == 8) {
+                    WaterParticle* wp = new WaterParticle();
+                    wp->setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
+                    wp->setSize(50.f, 80.f);
+                    wp->setCenter(player.getPosition());
+                    DrawableStuff.push_back(wp);
+                    WPs.push_back(wp);
+                    wp->setTarget(window.mapPixelToCoords(sf::Mouse::getPosition()));
+            }
 
             if (IsSomeOneCanBeActivated()) {
                 if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite)))
@@ -1083,7 +1105,9 @@ bool useItem(ItemID::Type id) {
         case ItemID::regenDrug:
             AllEffects.push_back(new Effect(&player, Effects::Heal, 60.f, sf::seconds(1.f)));
             return true;
-
+        case ItemID::fireHose:
+            player.GiveItem(player.inventory.items[8]);
+            return false;
         default:
             return false;
     }
@@ -1183,6 +1207,8 @@ void MainLoop() {
 
         fireUpdate();
 
+        wpUpdate();
+
         player.UpdateState();
         if (screen == screens::Dungeon) {
             if (Musics::Fight1.getDuration() - Musics::Fight1.getPlayingOffset() < sf::seconds(0.3f)) {
@@ -1275,9 +1301,17 @@ void MainLoop() {
         if (puddle.intersect(player))
             AllEffects.push_back(new Effect(&player, Effects::Heal, 30.f, sf::seconds(1.5f)));
 
-        for (Fire*& fire: FireSet) {
-            if (fire->intersect(player))
+        for (int i = 0; i < FireSet.size(); i++) {
+            if (FireSet[i]->intersect(player))
                 AllEffects.push_back(new Effect(&player, Effects::Damage, 0.1f, sf::seconds(2.f)));
+            for (WaterParticle* &wp: WPs) {
+                if (FireSet[i]->intersect(*wp)) {
+                    DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
+                    delete FireSet[i];
+                    FireSet.erase(FireSet.begin() + i--);
+                    break;
+                }
+            }
         }
         processEffects();
 
@@ -1454,13 +1488,19 @@ void fireUpdate() {
             sf::Vector2f posSon = descendant1->getCenter();
             do {
                 angle = (rand() % 360) * M_PI / 180;
-                posSon = posSon + dist * sf::Vector2f(std::sin(angle), std::cos(angle));
-            } while (!CurLocation->EnableTiles[descendant1->PosY / size][descendant1->PosX / size] ||
+                posSon = sf::Vector2f(posFather) + dist * sf::Vector2f(std::sin(angle), std::cos(angle));
+            } while (!CurLocation->EnableTiles[posSon.y / size][posSon.x / size] ||
                      !firePropagationAllowed(posFather, sf::Vector2i(posSon)));
             descendant1->setCenter(posSon);
             FireSet.push_back(descendant1);
             DrawableStuff.push_back(descendant1);
         }
+    }
+}
+
+void wpUpdate() {
+    for (WaterParticle* &wp: WPs) {
+        wp->move(CurLocation);
     }
 }
 

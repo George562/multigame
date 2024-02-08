@@ -29,7 +29,10 @@ public:
     virtual bool CanBeActivated(Circle& circle) { return intersect(circle); }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
-        target.draw(*animation, states);
+        if (animation != nullptr) {
+            animation->setPosition(getPosition());
+            target.draw(*animation, states);
+        }
     }
 
     void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader *shader = nullptr) {

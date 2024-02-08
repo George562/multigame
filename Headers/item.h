@@ -13,6 +13,7 @@ namespace ItemID {
         medkit,
         regenDrug,
         coin,
+        fireHose,
         NONE
     };
 }
@@ -31,28 +32,32 @@ std::map<ItemID::Type, sf::Texture*> itemTextureName {
     {ItemID::keyCard, new sf::Texture},
     {ItemID::protectiveSuit, new sf::Texture},
     {ItemID::regenDrug, new sf::Texture},
-    {ItemID::coin, new sf::Texture}
+    {ItemID::coin, new sf::Texture},
+    {ItemID::fireHose, new sf::Texture}
 };
 
 std::map<ItemID::Type, int> itemTextureFrameAmount {
     {ItemID::generic, 1},
     {ItemID::medkit, 1},
     {ItemID::regenDrug, 1},
-    {ItemID::coin, 4}
+    {ItemID::coin, 4},
+    {ItemID::fireHose, 1}
 };
 
 std::map<ItemID::Type, sf::Time> itemTextureDuration {
     {ItemID::generic, sf::seconds(1)},
     {ItemID::medkit, sf::seconds(1)},
     {ItemID::regenDrug, sf::seconds(1)},
-    {ItemID::coin, sf::seconds(1)}
+    {ItemID::coin, sf::seconds(1)},
+    {ItemID::fireHose, sf::seconds(1)}
 };
 
 std::map<ItemID::Type, sf::Shader *> itemTextureShader {
     {ItemID::generic, &Shaders::PickupItem},
     {ItemID::medkit, &Shaders::PickupItem},
     {ItemID::regenDrug, &Shaders::PickupItem},
-    {ItemID::coin, &Shaders::PickupItem}
+    {ItemID::coin, &Shaders::PickupItem},
+    {ItemID::fireHose, &Shaders::PickupItem}
 };
 
 //////////////////////////////////////////////////////////// Pickup Item Animation params
@@ -60,28 +65,32 @@ std::map<ItemID::Type, sf::Texture*> pickupItemTextureName {
     {ItemID::generic, new sf::Texture},
     {ItemID::medkit, new sf::Texture},
     {ItemID::regenDrug, new sf::Texture},
-    {ItemID::coin, new sf::Texture}
+    {ItemID::coin, new sf::Texture},
+    {ItemID::fireHose, new sf::Texture}
 };
 
 std::map<ItemID::Type, int> pickupItemTextureFrameAmount {
     {ItemID::generic, 1},
     {ItemID::medkit, 1},
     {ItemID::regenDrug, 1},
-    {ItemID::coin, 4}
+    {ItemID::coin, 4},
+    {ItemID::fireHose, 1}
 };
 
 std::map<ItemID::Type, sf::Time> pickupItemTextureDuration {
     {ItemID::generic, sf::seconds(1)},
     {ItemID::medkit, sf::seconds(1)},
     {ItemID::regenDrug, sf::seconds(1)},
-    {ItemID::coin, sf::seconds(1)}
+    {ItemID::coin, sf::seconds(1)},
+    {ItemID::fireHose, sf::seconds(1)}
 };
 
 std::map<ItemID::Type, sf::Shader *> pickupItemTextureShader {
     {ItemID::generic, &Shaders::Map},
     {ItemID::medkit, &Shaders::Map},
     {ItemID::regenDrug, &Shaders::Map},
-    {ItemID::coin, &Shaders::Map}
+    {ItemID::coin, &Shaders::Map},
+    {ItemID::fireHose, &Shaders::Map}
 };
 
 void loadItemTextures() {
@@ -91,11 +100,13 @@ void loadItemTextures() {
     // itemTextureName[ItemID::protectiveSuit] ->loadFromFile("sources/textures/protectiveSuitItem.png");
     itemTextureName[ItemID::regenDrug]      ->loadFromFile("sources/textures/regenDrugItem.png");
     itemTextureName[ItemID::coin]           ->loadFromFile("sources/textures/coin.png");
+    itemTextureName[ItemID::fireHose]       ->loadFromFile("sources/textures/FireHose.png");
 
     // pickupItemTextureName[ItemID::generic]   ->loadFromFile("sources/textures/genericPickup.png");
     // pickupItemTextureName[ItemID::medkit]    ->loadFromFile("sources/textures/medkitPickup.png");
     pickupItemTextureName[ItemID::regenDrug] ->loadFromFile("sources/textures/regenDrugPickup.png");
     pickupItemTextureName[ItemID::coin]      ->loadFromFile("sources/textures/coin.png");
+    pickupItemTextureName[ItemID::fireHose]  ->loadFromFile("sources/textures/FireHose.png");
 }
 
 ////////////////////////////////////////////////////////////

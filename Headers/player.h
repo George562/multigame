@@ -13,6 +13,11 @@ public:
     Player();
     void move(Location*) override;
     void UpdateState() override;
+
+    bool in_the_hands = false;
+    Item* hand_item = nullptr;
+    void GiveItem(Item* item);
+    Item* TakeItem();
 };
 
 ////////////////////////////////////////////////////////////
@@ -49,6 +54,21 @@ void Player::UpdateState() {
     Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
     Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
     LastStateCheck = localClock->getElapsedTime();
+}
+
+void Player::GiveItem(Item* item) {
+    if (!in_the_hands) {
+        hand_item = item;
+        in_the_hands = true;
+    }
+}
+
+Item* Player::TakeItem() {
+    if (in_the_hands) {
+        in_the_hands = false;
+        return hand_item;
+    }
+    return nullptr;
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Player& a) { return packet << a.PosX << a.PosY; }
