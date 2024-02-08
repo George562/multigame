@@ -929,7 +929,7 @@ void EventHandler() {
             }
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right
                                                             && player.in_the_hands)
-                if ((int)player.hand_item->id == 8) {
+                if (player.hand_item->id == ItemID::fireHose) {
                     WaterParticle* wp = new WaterParticle();
                     wp->setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
                     wp->setSize(50.f, 80.f);

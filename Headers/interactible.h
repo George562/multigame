@@ -30,7 +30,6 @@ public:
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animation != nullptr) {
-            animation->setPosition(getPosition());
             target.draw(*animation, states);
         }
     }

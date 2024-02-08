@@ -32,10 +32,10 @@ void WaterParticle::move(Location* location) {
     float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), 0.0167f) * 60.f;
     sf::Vector2f dist = target - getPosition();
     sf::Vector2f VelocityTarget = {std::clamp(dist.x, -MaxVelocity * VelocityBuff, MaxVelocity * VelocityBuff),
-                                       std::clamp(dist.y, -MaxVelocity * VelocityBuff, MaxVelocity * VelocityBuff)};
+                                   std::clamp(dist.y, -MaxVelocity * VelocityBuff, MaxVelocity * VelocityBuff)};
     sf::Vector2f Vdist = VelocityTarget - Velocity;
     sf::Vector2f Direction = {std::clamp(Vdist.x, -Acceleration, Acceleration),
-                                  std::clamp(Vdist.y, -Acceleration, Acceleration)};
+                              std::clamp(Vdist.y, -Acceleration, Acceleration)};
     Velocity += Direction * ElapsedTimeAsSecond;
 
     sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, *this, Velocity * ElapsedTimeAsSecond);
@@ -45,5 +45,8 @@ void WaterParticle::move(Location* location) {
 
     PosX += Velocity.x * ElapsedTimeAsSecond;
     PosY += Velocity.y * ElapsedTimeAsSecond;
+    if (animation) {
+        animation->setPosition(getPosition());
+    }
     LastMoveCheck = localClock->getElapsedTime();
 };
