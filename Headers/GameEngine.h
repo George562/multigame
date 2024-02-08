@@ -1195,6 +1195,14 @@ void MainLoop() {
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
                 delete Enemies[i];
                 Enemies.erase(Enemies.begin() + i--);
+
+                if (Enemies.size() == 0) {
+                    TempText* enemiesKilledText = new TempText(sf::seconds(10));
+                    enemiesKilledText->setCharacterSize(40);
+                    enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
+                    enemiesKilledText->setString("      All enemies cleared!\nPortal to next area opened.");
+                    TempTextsOnScreen.push_back(enemiesKilledText);
+                }
             } else {
                 Enemies[i]->setTarget(player.getPosition());
                 Enemies[i]->move(CurLocation);
