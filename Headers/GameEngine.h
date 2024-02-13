@@ -563,7 +563,8 @@ void LevelGenerate(int n, int m) {
         FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
         FireSet[i]->setSize(50.f, 50.f);
         do {
-            FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
+            //FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
+            FireSet[i]->setPosition(sf::Vector2f(CurLocation->room.second + 0.5f, CurLocation->room.first + 0.5f) * (float)size);
         } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
     }
 
