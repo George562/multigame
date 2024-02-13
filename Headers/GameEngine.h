@@ -713,9 +713,9 @@ void init() {
     loadMusics();
 
     Musics::MainMenu.setLoop(true);
-    Musics::MainMenu.setVolume(20);
-    Musics::Fight1.setVolume(20);
-    Musics::Fight2.setVolume(20);
+    Musics::MainMenu.setVolume(5);
+    Musics::Fight1.setVolume(5);
+    Musics::Fight2.setVolume(5);
 
     portal.setAnimation(Textures::PortalAnimation2, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
@@ -1202,6 +1202,12 @@ void MainLoop() {
                     enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
                     enemiesKilledText->setString("      All enemies cleared!\nPortal to next area opened.");
                     TempTextsOnScreen.push_back(enemiesKilledText);
+
+                    if (screen == screens::Dungeon) {
+                        if (!in(InteractibeStuff, (Interactable*)&portal)) {
+                            InteractibeStuff.push_back(&portal);
+                        }
+                    }
                 }
             } else {
                 Enemies[i]->setTarget(player.getPosition());
@@ -1296,12 +1302,6 @@ void MainLoop() {
                 }
             }
             MouseBuffer = sf::Mouse::getPosition();
-
-            if (screen == screens::Dungeon) {
-                if (Enemies.size() == 0 && !in(InteractibeStuff, (Interactable*)&portal)) {
-                    InteractibeStuff.push_back(&portal);
-                }
-            }
         }
 
         draw();
