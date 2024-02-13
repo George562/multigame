@@ -18,6 +18,13 @@ namespace Tiles {
     ObjectID artifact = 4;
 }
 
+enum DoorPos {
+    Left,
+    Top,
+    Right,
+    Bottom
+};
+
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
@@ -40,12 +47,17 @@ public:
     vvr wallsRect;
     vvb SeenWalls;
 
+    std::pair<int, int> room;
+    DoorPos door;
+
     Location() { AmountOfEnableTiles = 0; }
     Location(int w, int h) { SetSize(w, h); }
     void SetSize(int w, int h);
     void GenerateLocation(int n, int m, sf::Vector2f RootPoint);
     void BuildWayFrom(sf::Vector2f);
     void WallGenerator(float probability);
+    void RoomGenerator();
+    bool TileHas3Walls(int n_, int m_);
     void FindEnableTilesFrom(sf::Vector2f&);
     void FillWallsRect();
     bool LoadFromFile(sf::String FileName);
@@ -89,6 +101,8 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
         BuildWayFrom(RootPoint);
         CounterOfGenerations++;
     } while (AmountOfEnableTiles < float(n * m) * 0.3f || AmountOfEnableTiles > float(n * m) * 0.7f);
+    RoomGenerator();
+    FillWallsRect();
     std::cout << "Location was generated in " << timer.getElapsedTime().asSeconds() << " seconds with total number of generations = "
               << CounterOfGenerations << "; Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
 }
@@ -127,7 +141,36 @@ void Location::WallGenerator(float probability) {
 
     walls[walls.size() - 1].assign(m, true);
     ClearSeenWalls();
-    FillWallsRect();
+}
+
+void Location::RoomGenerator() {
+    int n_, m_;
+    do {
+        n_ = rand() % (n - 2);
+        m_ = rand() % (m - 2);
+        //std::cout << TileHas3Walls(n_, m_);
+    } while (!EnableTiles[n_][m_] || !TileHas3Walls(n_, m_));
+    std::cout << "Room has been created at " << n_ << " " << m_ << " tile\n";
+    room.first = n_;
+    room.second = m_;
+}
+
+bool Location::TileHas3Walls(int n_, int m_) { 
+    int count = 0;
+
+    if (walls[n_ * 2 + 1][m_]) count++; // стена слева
+    else door = DoorPos::Left;
+
+    if (walls[n_ * 2 + 1][m_ + 1]) count++; // стена справа
+    else door = DoorPos::Right;
+
+    if (walls[n_ * 2][m_]) count++; // стена сверху
+    else door = DoorPos::Top;
+
+    if (walls[(n_ + 1) * 2][m_]) count++; // стена снизу
+    else door = DoorPos::Bottom;
+
+    return count == 3;
 }
 
 void Location::FindEnableTilesFrom(sf::Vector2f& p) {
@@ -158,6 +201,29 @@ void Location::FindEnableTilesFrom(sf::Vector2f& p) {
 
 void Location::FillWallsRect() {
     wallsRect.assign(walls.size(), vr(0));
+
+    int i_, j_;
+    switch (door) {
+    case DoorPos::Left:
+        i_ = room.first * 2 + 1;
+        j_ = room.second;
+        break;
+    case DoorPos::Top:
+        i_ = room.first * 2;
+        j_ = room.second;
+        break;
+    case DoorPos::Right:
+        i_ = room.first * 2 + 1;
+        j_ = room.second + 1;
+        break;
+    case DoorPos::Bottom:
+        i_ = (room.first + 1) * 2;
+        j_ = room.second;
+        break;
+    default:
+        break;
+    }
+
     for (int i = 0; i < walls.size(); i++)
         for (int j = 0; j < walls[i].size(); j++)
             if (walls[i][j]) {
@@ -165,7 +231,17 @@ void Location::FillWallsRect() {
                     wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
                 else // -
                     wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
-            } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
+            } else {
+                if (i == i_ && j == j_) {
+                    walls[i][j] = true;
+                    if (i % 2 == 1) {
+                        wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize/2, WallMaxSize/2});
+                    }    
+                    else {
+                        wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize/2, WallMinSize/2});
+                    }
+                } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
+            }
 }
 
 bool Location::LoadFromFile(sf::String FileName) {
