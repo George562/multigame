@@ -298,9 +298,8 @@ void drawFloor() {
     for (int i = 0; i < CurLocation->n; i++) {
         for (int j = 0; j < CurLocation->m; j++) {
             if (CurLocation->EnableTiles[i][j]) {
-                FLoorTileSprite.setTexture(*it, true);
+                FLoorTileSprite.setTexture(*it);
                 FLoorTileSprite.setPosition(size * j, size * i);
-                FLoorTileSprite.setScale(3.f, 3.f);
                 window.draw(FLoorTileSprite, MapStates);
                 it++;
             }
@@ -562,10 +561,12 @@ void LevelGenerate(int n, int m) {
         FireSet.push_back(new Fire(sf::seconds(15.f)));
         FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
         FireSet[i]->setSize(50.f, 50.f);
-        do {
+        // do {
             //FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
-            FireSet[i]->setPosition(sf::Vector2f(CurLocation->room.second + 0.5f, CurLocation->room.first + 0.5f) * (float)size);
-        } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
+        // } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
+        if (CurLocation->room.x != 0 && CurLocation->room.y != 0) {
+            FireSet[i]->setPosition(sf::Vector2f(CurLocation->room.x + 0.5f, CurLocation->room.y + 0.5f) * (float)size);
+        }
     }
 
     clearVectorOfPointer(Enemies);
@@ -802,6 +803,8 @@ void init() {
     EnemyHealthBar.setSize(125.f, 15.f);
     EnemyHealthBar.setWallWidth(1);
     EnemyHealthBar.ShowText = false;
+
+    FLoorTileSprite.setScale(3.f, 3.f);
 
     initInventory();
 
@@ -1200,8 +1203,8 @@ void MainLoop() {
                 if (Enemies.size() == 0) {
                     TempText* enemiesKilledText = new TempText(sf::seconds(10));
                     enemiesKilledText->setCharacterSize(40);
-                    enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
                     enemiesKilledText->setString("      All enemies cleared!\nPortal to next area opened.");
+                    enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
                     TempTextsOnScreen.push_back(enemiesKilledText);
 
                     if (screen == screens::Dungeon) {
@@ -1255,7 +1258,7 @@ void MainLoop() {
         } else {
             if (!chat.inputted && !isDrawInventory) {
                 player.move(CurLocation);
-                GameView.setCenter(player.getPosition() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i{scw, sch} / 2) / 8));
+                GameView.setCenter(player.getPosition() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
                 FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
             }
             int wasBulletsSize = Bullets.size();

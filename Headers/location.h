@@ -18,12 +18,15 @@ namespace Tiles {
     ObjectID artifact = 4;
 }
 
-enum DoorPos {
-    Left,
-    Top,
-    Right,
-    Bottom
-};
+// namespace Side { может понадобиться, если нужно будет опрделять положение чего-то
+//     using Type = sf::Uint8;
+//     enum : Type {
+//         Left,
+//         Top,
+//         Right,
+//         Bottom
+//     };
+// }
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -47,8 +50,8 @@ public:
     vvr wallsRect;
     vvb SeenWalls;
 
-    std::pair<int, int> room;
-    DoorPos door;
+    sf::Vector2i room;
+    sf::Vector2i doorPos;
 
     Location() { AmountOfEnableTiles = 0; }
     Location(int w, int h) { SetSize(w, h); }
@@ -57,7 +60,8 @@ public:
     void BuildWayFrom(sf::Vector2f);
     void WallGenerator(float probability);
     void RoomGenerator();
-    bool TileHas3Walls(int n_, int m_);
+    bool TileHas3Walls(int _n, int _m);
+    std::vector<sf::Vector2i> getPassages(int _n, int _m);
     void FindEnableTilesFrom(sf::Vector2f&);
     void FillWallsRect();
     bool LoadFromFile(sf::String FileName);
@@ -117,10 +121,10 @@ void Location::BuildWayFrom(sf::Vector2f p) {
             if (!walls[i][j]) continue;
 
             todel = true;
-            check = sf::Vector2i{j, i / 2};
+            check = sf::Vector2i(j, i / 2);
             if (UsedAreaRect.contains(check.x, check.y) && EnableTiles[check.y][check.x])
                 todel = false;
-            check = (i % 2 == 0) ? sf::Vector2i{j, i / 2 - 1} : sf::Vector2i{j - 1, i / 2};
+            check = (i % 2 == 0) ? sf::Vector2i(j, i / 2 - 1) : sf::Vector2i(j - 1, i / 2);
             if (UsedAreaRect.contains(check.x, check.y) && EnableTiles[check.y][check.x])
                 todel = false;
             if (todel) walls[i][j] = false;
@@ -144,39 +148,35 @@ void Location::WallGenerator(float probability) {
 }
 
 void Location::RoomGenerator() {
-    int n_, m_;
-    do {
-        n_ = rand() % (n - 2);
-        m_ = rand() % (m - 2);
-        //std::cout << TileHas3Walls(n_, m_);
-    } while (!EnableTiles[n_][m_] || !TileHas3Walls(n_, m_));
-    std::cout << "Room has been created at " << n_ << " " << m_ << " tile\n";
-    room.first = n_;
-    room.second = m_;
+    std::vector<sf::Vector2i> probabblePositions;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            if (EnableTiles[i][j] && getPassages(i, j).size() == 1)
+                probabblePositions.emplace_back(j, i);
+    if (probabblePositions.size() != 0) {
+        room = probabblePositions[rand() % probabblePositions.size()];
+        doorPos = getPassages(room.y, room.x)[0];
+        std::cout << "Room has been created at y = " << room.y << " x = " << room.x << " tile\n";
+        walls[doorPos.y][doorPos.x] = true;
+    } else {
+        std::cout << "Room hasn't been created\n";
+        room = sf::Vector2i(0, 0);
+    }
 }
 
-bool Location::TileHas3Walls(int n_, int m_) { 
-    int count = 0;
-
-    if (walls[n_ * 2 + 1][m_]) count++; // стена слева
-    else door = DoorPos::Left;
-
-    if (walls[n_ * 2 + 1][m_ + 1]) count++; // стена справа
-    else door = DoorPos::Right;
-
-    if (walls[n_ * 2][m_]) count++; // стена сверху
-    else door = DoorPos::Top;
-
-    if (walls[(n_ + 1) * 2][m_]) count++; // стена снизу
-    else door = DoorPos::Bottom;
-
-    return count == 3;
+std::vector<sf::Vector2i> Location::getPassages(int _n, int _m) {
+    std::vector<sf::Vector2i> passages;
+    if (!walls[_n * 2 + 1][_m    ]) passages.push_back(sf::Vector2i(_m    , _n * 2 + 1)); // стена слева
+    if (!walls[_n * 2 + 1][_m + 1]) passages.push_back(sf::Vector2i(_m + 1, _n * 2 + 1)); // стена справа
+    if (!walls[_n * 2    ][_m    ]) passages.push_back(sf::Vector2i(_m    , _n * 2    )); // стена сверху
+    if (!walls[_n * 2 + 2][_m    ]) passages.push_back(sf::Vector2i(_m    , _n * 2 + 2)); // стена снизу
+    return passages;
 }
 
 void Location::FindEnableTilesFrom(sf::Vector2f& p) {
     EnableTiles.assign(n, vb(m, false));
     AmountOfEnableTiles = 0;
-    std::queue<sf::Vector2i> q; q.push(sf::Vector2i{int(p.x), int(p.y)});
+    std::queue<sf::Vector2i> q; q.push(sf::Vector2i(p));
     sf::Vector2i cur, check;
     Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
     while (!q.empty()) {
@@ -202,28 +202,6 @@ void Location::FindEnableTilesFrom(sf::Vector2f& p) {
 void Location::FillWallsRect() {
     wallsRect.assign(walls.size(), vr(0));
 
-    int i_, j_;
-    switch (door) {
-    case DoorPos::Left:
-        i_ = room.first * 2 + 1;
-        j_ = room.second;
-        break;
-    case DoorPos::Top:
-        i_ = room.first * 2;
-        j_ = room.second;
-        break;
-    case DoorPos::Right:
-        i_ = room.first * 2 + 1;
-        j_ = room.second + 1;
-        break;
-    case DoorPos::Bottom:
-        i_ = (room.first + 1) * 2;
-        j_ = room.second;
-        break;
-    default:
-        break;
-    }
-
     for (int i = 0; i < walls.size(); i++)
         for (int j = 0; j < walls[i].size(); j++)
             if (walls[i][j]) {
@@ -231,17 +209,14 @@ void Location::FillWallsRect() {
                     wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
                 else // -
                     wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
-            } else {
-                if (i == i_ && j == j_) {
-                    walls[i][j] = true;
-                    if (i % 2 == 1) {
-                        wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize/2, WallMaxSize/2});
-                    }    
-                    else {
-                        wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize/2, WallMinSize/2});
-                    }
-                } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
-            }
+            } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
+
+    if (room.x != 0 && room.y != 0) {
+        if (doorPos.y % 2 == 1)
+            wallsRect[doorPos.y][doorPos.x].setSize(WallMinSize / 2, WallMaxSize / 2);
+        else
+            wallsRect[doorPos.y][doorPos.x].setSize(WallMaxSize / 2, WallMinSize / 2);
+    }
 }
 
 bool Location::LoadFromFile(sf::String FileName) {
@@ -319,8 +294,8 @@ sf::Packet& operator<<(sf::Packet& packet, Location& loc) {
 }
 
 void FindTheWay(Location* where, sf::Vector2f from, sf::Vector2f to, std::vector<sf::Vector2f>& theWay) {
-    std::vector<std::vector<sf::Vector2i>> place(where->n, std::vector<sf::Vector2i>(where->m, {-1, -1}));
-    std::queue<sf::Vector2i> q; q.push(sf::Vector2i{int(from.x / size), int(from.y / size)});
+    std::vector<std::vector<sf::Vector2i>> place(where->n, std::vector<sf::Vector2i>(where->m, sf::Vector2i(-1, -1)));
+    std::queue<sf::Vector2i> q; q.push(sf::Vector2i(from.x / size, from.y / size));
     sf::Vector2i cur, check;
     Rect UsedAreaRect{0, 0, float(where->m - 1), float(where->n - 1)};
     vvb used(where->n, vb(where->m, false));
@@ -357,8 +332,8 @@ void FindTheWay(Location* where, sf::Vector2f from, sf::Vector2f to, std::vector
         std::cout << "Don't find the way\n";
         cur = {-1, -1};
     }
-    for (; place[cur.y][cur.x] != sf::Vector2i{-1, -1}; cur = place[cur.y][cur.x])
-        theWay.push_back(((sf::Vector2f)place[cur.y][cur.x] + sf::Vector2f{0.5f, 0.5f}) * (float)size);
+    for (; place[cur.y][cur.x] != sf::Vector2i(-1, -1); cur = place[cur.y][cur.x])
+        theWay.push_back(((sf::Vector2f)place[cur.y][cur.x] + sf::Vector2f(0.5f, 0.5f)) * (float)size);
     if (theWay.size() > 1) theWay.pop_back();
 }
 
@@ -366,7 +341,7 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
     if (theWays.size() != location->n && (theWays.size() == 0 || theWays[0].size() != location->m)) {
         theWays.assign(location->n, std::vector<sf::Vector2f>(location->m, to));
     }
-    std::queue<sf::Vector2i> q; q.push(sf::Vector2i{int(to.x / size), int(to.y / size)});
+    std::queue<sf::Vector2i> q; q.push(sf::Vector2i(to.x / size, to.y / size));
     sf::Vector2i cur, check;
     Rect UsedAreaRect{0, 0, float(location->m - 1), float(location->n - 1)};
     vvb used(location->n, vb(location->m, false));
@@ -377,22 +352,22 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
         check = cur + dirs[0]; // {1, 0}
         if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x]) {
             q.push(check);
-            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
         }
         check = cur + dirs[2]; // {-1, 0}
         if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x + 1]) {
             q.push(check);
-            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
         }
         check = cur + dirs[1]; // {0, 1}
         if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2][check.x]) {
             q.push(check);
-            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
         }
         check = cur + dirs[3]; // {0, -1}
         if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 2][check.x]) {
             q.push(check);
-            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f{0.5f, 0.5f}) * (float)size;
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
         }
     }
     check = (sf::Vector2i)to / size; theWays[check.y][check.x] = to;
@@ -412,7 +387,7 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
 }
 
 ////////////////////////////////////////////////////////////
-// unusable code, but usefull for future perhaps
+// perhaps unusable code, but usefull for future
 ////////////////////////////////////////////////////////////
 
 // void Location::WallGenerator(float probability) {

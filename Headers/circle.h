@@ -29,12 +29,12 @@ struct Circle {
 
     // Check the intersection between two circles
     bool intersect(float x, float y, float r) const { // for future (if this part of game will be most slowed, then "float&")
-        return distance(getPosition(), sf::Vector2f{x, y}) <= Radius + r;
+        return distance(getPosition(), sf::Vector2f(x, y)) <= Radius + r;
     }
     bool intersect(Circle& circle) const { return intersect(circle.PosX, circle.PosY, circle.Radius); }
     
     // Check if a point is inside the circle
-    bool contains(float x, float y) const { return distance(getPosition(), sf::Vector2f{x, y}) <= Radius; }
+    bool contains(float x, float y) const { return distance(getPosition(), sf::Vector2f(x, y)) <= Radius; }
     bool contains(sf::Vector2f point) const { return contains(point.x, point.y); }
 
     bool intersect(Rect& rect);

@@ -25,10 +25,6 @@ void main() {
     vec2 uv = (gl_FragCoord.xy - u_resolution.xy / 2.) / u_resolution.xy;
     vec4 pixel = texture2D(overlay, gl_TexCoord[0].xy);
 
-    float coef = u_time * 300000.;
-    float d = length(coef * uv);
-    float phi = abs(dot(vec2(cos(d), sin(d)), normalize(coef * uv)));
-
     vec2 playerPosition = vec2(u_playerPosition.x, u_resolution.y - u_playerPosition.y);
 
     vec2 lightPosition = gl_FragCoord.xy - playerPosition;
@@ -37,6 +33,6 @@ void main() {
     intensity = clamp(intensity, 0.4, 1.);
 
     // gl_FragColor = gl_Color * vec4(mix(pixel.xyz, pallete(u_time * 0.1), clamp(abs(sin(u_time * 2.)), 0.0, 0.3)) * intensity, pixel.w);
-    // gl_FragColor = gl_Color * pixel * phi;
-    gl_FragColor = gl_Color * vec4(pixel.xyz * random(uv * u_time), pixel.w);
+    // gl_FragColor = gl_Color * vec4(pixel.xyz * random(uv * u_time), pixel.w);
+    gl_FragColor = gl_Color * vec4(mix(pixel.xyz, pallete(u_time * 0.1), clamp(abs(sin(u_time * 2.)), 0.0, 0.3)), pixel.w);
 }

@@ -99,7 +99,7 @@ sf::Vector2f RotateAround(float phi, sf::Vector2f& a, float& X, float& Y) {
 }
 
 sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
-    return sf::Vector2f{a.x * b.x, a.y * b.y};
+    return sf::Vector2f(a.x * b.x, a.y * b.y);
 }
 
 sf::Packet& operator<<(sf::Packet& packet, sf::Vector2i& a) {

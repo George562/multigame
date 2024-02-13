@@ -46,7 +46,7 @@ void Player::move(Location* location) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
         VelocityBuff *= 2;
     
-    setTarget(getPosition() + sf::Vector2f{PressedKeys[3] - PressedKeys[1], PressedKeys[2] - PressedKeys[0]} * MaxVelocity * VelocityBuff);
+    setTarget(getPosition() + sf::Vector2f(PressedKeys[3] - PressedKeys[1], PressedKeys[2] - PressedKeys[0]) * MaxVelocity * VelocityBuff);
     Creature::move(location);
 }
 

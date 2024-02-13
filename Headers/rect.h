@@ -9,9 +9,9 @@ struct Rect {
 
     float getRight() const { return PosX + Width; }
     float getBottom() const { return PosY + Height; }
-    sf::Vector2f getRightTop() const { return sf::Vector2f{PosX + Width, PosY}; }
-    sf::Vector2f getRightBottom() const { return sf::Vector2f{PosX + Width, PosY + Height}; }
-    sf::Vector2f getLeftBottom() const { return sf::Vector2f{PosX, PosY + Height}; }
+    sf::Vector2f getRightTop() const { return sf::Vector2f(PosX + Width, PosY); }
+    sf::Vector2f getRightBottom() const { return sf::Vector2f(PosX + Width, PosY + Height); }
+    sf::Vector2f getLeftBottom() const { return sf::Vector2f(PosX, PosY + Height); }
 
     // Get and set position
     sf::Vector2f getPosition() const { return {PosX, PosY}; }

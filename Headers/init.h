@@ -14,7 +14,6 @@
 
 namespace faction {
     using Type = sf::Uint8;
-
     enum : Type {
         Player,
         Enemy
@@ -56,7 +55,7 @@ namespace pacetStates {
 
 namespace inventoryPage {
     using Type = sf::Uint8;
-    enum : sf::Uint8 {
+    enum : Type {
         Items,
         Weapons,
         Equipables,
@@ -174,8 +173,8 @@ void loadMusics() {
 }
 
 bool Rect::intersect(Circle& circle) {
-    return LenOfVector(sf::Vector2f{std::max(std::abs(circle.PosX - (PosX + Width  / 2)) - Width / 2,  0.f),
-                                    std::max(std::abs(circle.PosY - (PosY + Height / 2)) - Height / 2, 0.f)}) <= circle.Radius;
+    return LenOfVector(sf::Vector2f(std::max(std::abs(circle.PosX - (PosX + Width  / 2)) - Width / 2,  0.f),
+                                    std::max(std::abs(circle.PosY - (PosY + Height / 2)) - Height / 2, 0.f))) <= circle.Radius;
     // explanation: https://www.youtube.com/watch?v=62-pRVZuS5c&ab_channel=InigoQuilez
 }
 
