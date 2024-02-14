@@ -1,6 +1,7 @@
 #pragma once
 #include "location.h"
 #include "tools.h"
+#include "animation.h"
 
 #define COMMON_BULLET_RADIUS 7
 #define COMMON_BULLET_PENETRATION 0
@@ -13,9 +14,12 @@
 struct Bullet : public Circle {
     enum Type : sf::Uint8 {
         Common,
-        Bubble
+        Bubble,
+        WaterParticle
     };
     Bullet::Type type;
+
+    Animation* animation;
 
     bool explode = false;
     bool todel = false;
@@ -29,24 +33,35 @@ struct Bullet : public Circle {
     sf::Color color;
 
     Bullet() {}
-    Bullet(faction::Type f, sf::Vector2f pos, sf::Vector2f v, float dmg, int penetr = COMMON_BULLET_PENETRATION, Bullet::Type t = Bullet::Common, sf::Time time = sf::Time::Zero) {
+    Bullet(faction::Type f, sf::Vector2f pos, sf::Vector2f v, float dmg, int penetr = COMMON_BULLET_PENETRATION, Bullet::Type t = Bullet::Common,
+           sf::Time time = sf::Time::Zero, Animation* anim = nullptr) {
         fromWho = f;
         PosX = pos.x; PosY = pos.y;
         Velocity = v;
-        Radius = COMMON_BULLET_RADIUS;
         penetration = penetr;
         damage = dmg;
         timer = time;
         type = t;
         switch (t) {
             case Bullet::Common:
+                Radius = COMMON_BULLET_RADIUS;
                 color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
                 break;
             case Bullet::Bubble:
+                Radius = COMMON_BULLET_RADIUS;
                 color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
+                break;
+            case Bullet::WaterParticle:
+                Radius = COMMON_BULLET_RADIUS * 3;
+                break;
+            default:
+                Radius = COMMON_BULLET_RADIUS;
                 break;
         }
         localClock = new sf::Clock();
+        
+        if (anim != nullptr)
+            this->animation = anim;     //  DOESN'T WORK FOR NOW. BULLET NEEDS A DRAW FUNCTION
     }
 
     void move(Location* location) {
@@ -77,6 +92,10 @@ struct Bullet : public Circle {
                 break;
             case Bullet::Common:
                 Circle::move(Velocity);
+                break;
+            case Bullet::WaterParticle:
+                Circle::move(Velocity);
+                break;
         }
     }
 };

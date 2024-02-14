@@ -21,7 +21,11 @@ namespace ItemID {
 ///////////////////////////////////////////////////////////// PLACEHOLDER
 std::map<ItemID::Type, std::string> itemDesc {
     {ItemID::regenDrug, "The so called \"Portal straight to St. Petersburg\"\nGives +1 HP/s for the next 10 seconds"},
-    {ItemID::coin, "Moneh :D"}
+    {ItemID::coin, "Moneh :D"},
+    {ItemID::fireHose, "Used to put out fires.\n" \
+                       "Use this item to gain the ability\n" \
+                       "to shoot water particles, that put out fire.\n" \
+                       "I have absolutely no idea how it works by itself what the fuck where does the water come from?????"}
 };
 //////////////////////////////////////////////////////////////////////
 

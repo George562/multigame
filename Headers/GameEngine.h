@@ -131,12 +131,13 @@ Rifle rifle;
 Bubblegun bubblegun;
 Armageddon armageddon;
 Chaotic chaotic;
+FireHose fireHose;
 std::vector<Weapon*> weapons = {
     &pistol,
     &shotgun,
     &revolver,
     &rifle,
-    &bubblegun
+    &bubblegun,
 };
 Scale<int> CurWeapon{0, 4, 0};
 
@@ -173,7 +174,7 @@ void setArtifact(Interactable*&);
 template <typename T> void clearVectorOfPointer(std::vector<T>&);
 bool firePropagationAllowed(sf::Vector2i, sf::Vector2i);
 void fireUpdate();
-void wpUpdate();
+// void wpUpdate();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -396,7 +397,7 @@ void drawInterface() {
         window.draw(*d);
     }
 
-    if (player.CurWeapon != nullptr && player.CurWeapon->AmountOfAmmunition.toBottom() <= 0) {
+    if (player.CurWeapon != nullptr && CurWeapon.fromTop() != 0 && player.CurWeapon->AmountOfAmmunition.toBottom() <= 0) {
         window.draw(ReloadWeaponText);
     }
 
@@ -671,11 +672,13 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
 
-    Item* fireHose = new Item(ItemID::fireHose, 1);
-    fireHose->setAnimation(*itemTextureName[ItemID::fireHose], 1, 1, sf::seconds(1), &Shaders::Map);
-    PickupStuff.push_back(fireHose);
+    Item* fireHosePickup = new Item(ItemID::fireHose, 1);
+    fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose], 1, 1, sf::seconds(1), &Shaders::Map);
+    PickupStuff.push_back(fireHosePickup);
     DrawableStuff.push_back(PickupStuff[1]);
     PickupStuff[1]->dropTo(player.getPosition() + sf::Vector2f(400, 300));
+
+    fireHose.AmountOfAmmunition = 0;
 
     listOfBox.push_back(new Interactable());
     setBox(listOfBox[0]);
@@ -931,17 +934,6 @@ void EventHandler() {
                     }
                 }
             }
-            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right
-                                                            && player.in_the_hands)
-                if (player.hand_item->id == ItemID::fireHose) {
-                    WaterParticle* wp = new WaterParticle();
-                    wp->setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
-                    wp->setSize(50.f, 80.f);
-                    wp->setCenter(player.getPosition());
-                    DrawableStuff.push_back(wp);
-                    WPs.push_back(wp);
-                    wp->setTarget(window.mapPixelToCoords(sf::Mouse::getPosition()));
-            }
 
             if (IsSomeOneCanBeActivated()) {
                 if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite)))
@@ -1110,8 +1102,14 @@ bool useItem(ItemID::Type id) {
             AllEffects.push_back(new Effect(&player, Effects::Heal, 60.f, sf::seconds(1.f)));
             return true;
         case ItemID::fireHose:
-            player.GiveItem(player.inventory.items[8]);
-            return false;
+        // NOT FINAL. IN TESTING
+            weapons.push_back(&fireHose);
+            player.ChangeWeapon(weapons[weapons.size() - 1]);
+            CurWeapon.top += 1;
+            CurWeapon += CurWeapon.fromTop();
+            weapons[weapons.size() - 1]->AmountOfAmmunition = 100;
+            return true;
+        // NOT FINAL. IN TESTING
         default:
             return false;
     }
@@ -1157,19 +1155,33 @@ void updateBullets() {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
-            for (Enemy*& enemy: Enemies) {
-                if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
-                    enemy->getDamage(Bullets[i].damage);
-                    Bullets[i].penetration--;
-                    TempText* tempText = new TempText(sf::seconds(1.5f));
-                    tempText->setCharacterSize(30);
-                    tempText->setOutlineColor(sf::Color::White);
-                    tempText->setOutlineThickness(3);
-                    tempText->setString(std::to_string(int(Bullets[i].damage)));
-                    tempText->setFillColor(sf::Color(250, 50, 50, 200));
-                    tempText->setCenter(enemy->getPosition());
-                    TempTextsOnGround.push_back(tempText);
-                    break;
+            // NOT FINAL. IN TESTING
+            if (Bullets[i].type == Bullet::Type::WaterParticle) {
+                for (int j = 0; j < FireSet.size(); j++) {
+                    if (FireSet[j]->intersect(Bullets[i])) {
+                        DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[j]));
+                        delete FireSet[j];
+                        FireSet.erase(FireSet.begin() + j--);
+                        Bullets[i].todel = true;
+                        break;
+                    }
+                }
+                // NOT FINAL. IN TESTING
+            } else {
+                for (Enemy*& enemy: Enemies) {
+                    if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
+                        enemy->getDamage(Bullets[i].damage);
+                        Bullets[i].penetration--;
+                        TempText* tempText = new TempText(sf::seconds(1.5f));
+                        tempText->setCharacterSize(30);
+                        tempText->setOutlineColor(sf::Color::White);
+                        tempText->setOutlineThickness(3);
+                        tempText->setString(std::to_string(int(Bullets[i].damage)));
+                        tempText->setFillColor(sf::Color(250, 50, 50, 200));
+                        tempText->setCenter(enemy->getPosition());
+                        TempTextsOnGround.push_back(tempText);
+                        break;
+                    }
                 }
             }
         }
@@ -1203,7 +1215,7 @@ void MainLoop() {
                 if (Enemies.size() == 0) {
                     TempText* enemiesKilledText = new TempText(sf::seconds(10));
                     enemiesKilledText->setCharacterSize(40);
-                    enemiesKilledText->setString("      All enemies cleared!\nPortal to next area opened.");
+                    enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
                     enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
                     TempTextsOnScreen.push_back(enemiesKilledText);
 
@@ -1225,7 +1237,7 @@ void MainLoop() {
 
         fireUpdate();
 
-        wpUpdate();
+        // wpUpdate();
 
         player.UpdateState();
         if (screen == screens::Dungeon) {
@@ -1262,8 +1274,16 @@ void MainLoop() {
                 FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
             }
             int wasBulletsSize = Bullets.size();
+
             if (player.CurWeapon != nullptr) {
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
+            }
+            if (weapons[CurWeapon.cur] == &fireHose && weapons[CurWeapon.cur]->AmountOfAmmunition.toBottom() == 0) {
+                weapons.erase(weapons.begin() + CurWeapon.cur);
+                fireHose.lock = true;
+                CurWeapon -= 1;
+                player.ChangeWeapon(weapons[CurWeapon.cur]);
+                CurWeapon.top -= 1;
             }
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
@@ -1316,14 +1336,14 @@ void MainLoop() {
         for (int i = 0; i < FireSet.size(); i++) {
             if (FireSet[i]->intersect(player))
                 AllEffects.push_back(new Effect(&player, Effects::Damage, 0.1f, sf::seconds(2.f)));
-            for (WaterParticle* &wp: WPs) {
-                if (FireSet[i]->intersect(*wp)) {
-                    DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
-                    delete FireSet[i];
-                    FireSet.erase(FireSet.begin() + i--);
-                    break;
-                }
-            }
+            // for (WaterParticle* &wp: WPs) {
+            //     if (FireSet[i]->intersect(*wp)) {
+            //         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
+            //         delete FireSet[i];
+            //         FireSet.erase(FireSet.begin() + i--);
+            //         break;
+            //     }
+            // }
         }
         processEffects();
 
@@ -1510,11 +1530,11 @@ void fireUpdate() {
     }
 }
 
-void wpUpdate() {
-    for (WaterParticle* &wp: WPs) {
-        wp->move(CurLocation);
-    }
-}
+// void wpUpdate() {
+//     for (WaterParticle* &wp: WPs) {
+//         wp->move(CurLocation);
+//     }
+// }
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect() {
