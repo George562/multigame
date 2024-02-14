@@ -6,12 +6,14 @@
 #define COMMON_BULLET_RADIUS 7
 #define COMMON_BULLET_PENETRATION 0
 
+sf::CircleShape circleShape;
+
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-struct Bullet : public Circle {
+struct Bullet : public Circle, public sf::Drawable {
     enum Type : sf::Uint8 {
         Common,
         Bubble,
@@ -19,7 +21,7 @@ struct Bullet : public Circle {
     };
     Bullet::Type type;
 
-    Animation* animation;
+    Animation* animation = nullptr;
 
     bool explode = false;
     bool todel = false;
@@ -28,21 +30,21 @@ struct Bullet : public Circle {
     sf::Vector2f Velocity;
     Scale<float> ExplosionRadius = {1, 12, 1};
     faction::Type fromWho;
-    sf::Clock* localClock;
+    sf::Clock* localClock = nullptr;
     sf::Time timer;
     sf::Color color;
 
     Bullet() {}
-    Bullet(faction::Type f, sf::Vector2f pos, sf::Vector2f v, float dmg, int penetr = COMMON_BULLET_PENETRATION, Bullet::Type t = Bullet::Common,
-           sf::Time time = sf::Time::Zero, Animation* anim = nullptr) {
-        fromWho = f;
+    Bullet(faction::Type faction, sf::Vector2f pos, sf::Vector2f velocity, float dmg, int penetr = COMMON_BULLET_PENETRATION,
+           Bullet::Type type = Bullet::Common, sf::Time time = sf::Time::Zero, Animation* anim = nullptr) {
+        fromWho = faction;
         PosX = pos.x; PosY = pos.y;
-        Velocity = v;
+        Velocity = velocity;
         penetration = penetr;
         damage = dmg;
         timer = time;
-        type = t;
-        switch (t) {
+        this->type = type;
+        switch (type) {
             case Bullet::Common:
                 Radius = COMMON_BULLET_RADIUS;
                 color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
@@ -60,8 +62,12 @@ struct Bullet : public Circle {
         }
         localClock = new sf::Clock();
         
-        if (anim != nullptr)
-            this->animation = anim;     //  DOESN'T WORK FOR NOW. BULLET NEEDS A DRAW FUNCTION
+        if (anim != nullptr) {
+            animation = anim;
+            animation->setSize({Radius * 2.f, Radius * 2.f});
+            animation->setOrigin(animation->getLocalSize() / 2.f);
+            animation->play();
+        }
     }
 
     void move(Location* location) {
@@ -96,6 +102,18 @@ struct Bullet : public Circle {
             case Bullet::WaterParticle:
                 Circle::move(Velocity);
                 break;
+        }
+    }
+    void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        if (animation != nullptr) {
+            animation->setPosition(getPosition());
+            target.draw(*animation, states);
+        } else {
+            circleShape.setFillColor(color);
+            circleShape.setRadius(Radius);
+            circleShape.setPosition(getPosition());
+            circleShape.setOrigin(Radius, Radius);
+            target.draw(circleShape);
         }
     }
 };

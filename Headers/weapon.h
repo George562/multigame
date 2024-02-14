@@ -19,7 +19,7 @@ public:
     float scatter; // at degree
     bool lock; // Bullets is like a stream and "lock" is blocking it stream
 
-    Weapon() {};
+    Weapon() {}
     Weapon(sf::String name, int MaxAmmo, float ManaCost, float FireRate, float dmg) {
         Name = name;
         AmountOfAmmunition = {0, MaxAmmo, MaxAmmo};
@@ -35,7 +35,7 @@ public:
             lock = false;
         if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
             lock = true;
-    };
+    }
 
     virtual void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
@@ -55,7 +55,7 @@ public:
         int x = std::min(int(Mana.cur / ManaCost), AmountOfAmmunition.fromTop());
         Mana -= ManaCost * x;
         AmountOfAmmunition += x;
-    };
+    }
 };
 #pragma pack(pop)
 ////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ public:
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
             lock = false;
-    };
+    }
     void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
@@ -140,7 +140,7 @@ public:
             lock = false;
         } if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
             lock = true;
-    };
+    }
     void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
@@ -174,7 +174,7 @@ public:
 
 class FireHose : public Weapon {
 public:
-    FireHose() : Weapon("Fire hose", 100, 1000000, 1.f / 10, 0) { BulletVelocity = 20; }
+    FireHose() : Weapon("Fire hose", 100, 0, 1.f / 10, 0) { BulletVelocity = 20; }
     void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
@@ -189,4 +189,5 @@ public:
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
     }
+    void Reload(Scale<float>& Mana) {}
 };

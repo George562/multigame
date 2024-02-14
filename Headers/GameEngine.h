@@ -7,7 +7,6 @@
 #include "effect.h"
 #include "fire.h"
 #include "tempText.h"
-#include "waterPart.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;
@@ -29,7 +28,6 @@ std::vector<Item*> PickupStuff;
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect, FLoorTileSprite;
 std::vector<sf::Texture> FloorTextureRects;
-sf::CircleShape circleShape;
 std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround;
 Bar<float> EnemyHealthBar;
 
@@ -100,9 +98,6 @@ std::vector<Interactable*> listOfBox,
 //////////////////////////////////////////////////////////// Fire
 std::vector<Fire*> FireSet;
 
-//////////////////////////////////////////////////////////// Water Particles
-std::vector<WaterParticle*> WPs;
-
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
 Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
@@ -137,7 +132,7 @@ std::vector<Weapon*> weapons = {
     &shotgun,
     &revolver,
     &rifle,
-    &bubblegun,
+    &bubblegun
 };
 Scale<int> CurWeapon{0, 4, 0};
 
@@ -174,7 +169,6 @@ void setArtifact(Interactable*&);
 template <typename T> void clearVectorOfPointer(std::vector<T>&);
 bool firePropagationAllowed(sf::Vector2i, sf::Vector2i);
 void fireUpdate();
-// void wpUpdate();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -231,6 +225,9 @@ Button EscapeButton("Exit", [](){
     clearVectorOfPointer(listOfArtifact);
     clearVectorOfPointer(PickupStuff);
     player.CurWeapon->lock = true;
+    DeleteFromVector(weapons, (Weapon*)&fireHose);
+    CurWeapon -= 1;
+    CurWeapon.top -= 1;
     LoadMainMenu();
 });
 
@@ -266,11 +263,7 @@ void draw() {
     }
 
     for (int i = 0; i < Bullets.size(); i++) {
-        circleShape.setFillColor(Bullets[i].color);
-        circleShape.setRadius(Bullets[i].Radius);
-        circleShape.setPosition(Bullets[i].getPosition());
-        circleShape.setOrigin(Bullets[i].Radius, Bullets[i].Radius);
-        window.draw(circleShape);
+        window.draw(Bullets[i]);
     }
 
     for (size_t i = 0; i < TempTextsOnGround.size(); i++) {
@@ -677,8 +670,6 @@ void LoadMainMenu() {
     PickupStuff.push_back(fireHosePickup);
     DrawableStuff.push_back(PickupStuff[1]);
     PickupStuff[1]->dropTo(player.getPosition() + sf::Vector2f(400, 300));
-
-    fireHose.AmountOfAmmunition = 0;
 
     listOfBox.push_back(new Interactable());
     setBox(listOfBox[0]);
@@ -1102,14 +1093,10 @@ bool useItem(ItemID::Type id) {
             AllEffects.push_back(new Effect(&player, Effects::Heal, 60.f, sf::seconds(1.f)));
             return true;
         case ItemID::fireHose:
-        // NOT FINAL. IN TESTING
+            fireHose.AmountOfAmmunition = 100;
             weapons.push_back(&fireHose);
-            player.ChangeWeapon(weapons[weapons.size() - 1]);
             CurWeapon.top += 1;
-            CurWeapon += CurWeapon.fromTop();
-            weapons[weapons.size() - 1]->AmountOfAmmunition = 100;
             return true;
-        // NOT FINAL. IN TESTING
         default:
             return false;
     }
@@ -1155,8 +1142,7 @@ void updateBullets() {
                 player.getDamage(Bullets[i].damage);
                 Bullets[i].penetration--;
             }
-            // NOT FINAL. IN TESTING
-            if (Bullets[i].type == Bullet::Type::WaterParticle) {
+            if (Bullets[i].type == Bullet::WaterParticle) {
                 for (int j = 0; j < FireSet.size(); j++) {
                     if (FireSet[j]->intersect(Bullets[i])) {
                         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[j]));
@@ -1166,7 +1152,6 @@ void updateBullets() {
                         break;
                     }
                 }
-                // NOT FINAL. IN TESTING
             } else {
                 for (Enemy*& enemy: Enemies) {
                     if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
@@ -1237,8 +1222,6 @@ void MainLoop() {
 
         fireUpdate();
 
-        // wpUpdate();
-
         player.UpdateState();
         if (screen == screens::Dungeon) {
             if (Musics::Fight1.getDuration() - Musics::Fight1.getPlayingOffset() < sf::seconds(0.3f)) {
@@ -1277,13 +1260,12 @@ void MainLoop() {
 
             if (player.CurWeapon != nullptr) {
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
-            }
-            if (weapons[CurWeapon.cur] == &fireHose && weapons[CurWeapon.cur]->AmountOfAmmunition.toBottom() == 0) {
-                weapons.erase(weapons.begin() + CurWeapon.cur);
-                fireHose.lock = true;
-                CurWeapon -= 1;
-                player.ChangeWeapon(weapons[CurWeapon.cur]);
-                CurWeapon.top -= 1;
+                if (player.CurWeapon == &fireHose && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
+                    DeleteFromVector(weapons, (Weapon*)&fireHose);
+                    CurWeapon -= 1;
+                    CurWeapon.top -= 1;
+                    player.ChangeWeapon(weapons[CurWeapon.cur]);
+                }
             }
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
@@ -1336,14 +1318,6 @@ void MainLoop() {
         for (int i = 0; i < FireSet.size(); i++) {
             if (FireSet[i]->intersect(player))
                 AllEffects.push_back(new Effect(&player, Effects::Damage, 0.1f, sf::seconds(2.f)));
-            // for (WaterParticle* &wp: WPs) {
-            //     if (FireSet[i]->intersect(*wp)) {
-            //         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[i]));
-            //         delete FireSet[i];
-            //         FireSet.erase(FireSet.begin() + i--);
-            //         break;
-            //     }
-            // }
         }
         processEffects();
 
@@ -1529,12 +1503,6 @@ void fireUpdate() {
         }
     }
 }
-
-// void wpUpdate() {
-//     for (WaterParticle* &wp: WPs) {
-//         wp->move(CurLocation);
-//     }
-// }
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect() {

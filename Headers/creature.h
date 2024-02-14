@@ -43,7 +43,7 @@ public:
         localClock = new sf::Clock();
         animation = nullptr;
         dropInventory = true;
-    };
+    }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animation != nullptr) {
@@ -52,7 +52,7 @@ public:
         }
         Name.setPosition(PosX - Name.Width / 2.f, PosY - Radius - Name.Height);
         target.draw(Name, states);
-    };
+    }
 
     virtual void getDamage(float dmg) { Health -= dmg; }
 
@@ -74,7 +74,7 @@ public:
         PosX += Velocity.x * ElapsedTimeAsSecond;
         PosY += Velocity.y * ElapsedTimeAsSecond;
         LastMoveCheck = localClock->getElapsedTime();
-    };
+    }
 
     virtual void UpdateState() {
         Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
@@ -90,7 +90,7 @@ public:
         animation->setSize({Radius * 2.f, Radius * 2.f});
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
-    };
+    }
 
     void ChangeWeapon(Weapon* to) { CurWeapon = to; }
 
