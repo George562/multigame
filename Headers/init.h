@@ -1,16 +1,13 @@
 #pragma once
-#include "../SFML-2.5.1/include/SFML/Network.hpp"
-#include "../SFML-2.5.1/include/SFML/Graphics.hpp"
+#include "tools.h"
+#include "scale.h"
+#include "rect.h"
+#include "circle.h"
 #include "../SFML-2.5.1/include/SFML/Audio.hpp"
 #include <vector>
 #include <map>
 #include <set>
 #include <ctime>
-#define _USE_MATH_DEFINES
-#include <cmath>
-#include "scale.h"
-#include "rect.h"
-#include "circle.h"
 
 namespace faction {
     using Type = sf::Uint8;

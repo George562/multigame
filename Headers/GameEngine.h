@@ -7,7 +7,7 @@
 #include "effect.h"
 #include "fire.h"
 #include "tempText.h"
-#include "waterParticle.h"
+#include "waterPart.h"
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap       = true;

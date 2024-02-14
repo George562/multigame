@@ -2,8 +2,6 @@
 
 #include "interactible.h"
 #include "location.h"
-#include "tools.h"
-#include "enemy.h"
 
 class WaterParticle : public Interactable {
 public:

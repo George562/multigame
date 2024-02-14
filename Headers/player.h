@@ -30,7 +30,7 @@ Player::Player() : Creature("Player", faction::Player) {
     Armor = {0.f, 0.f, 0.f};
     Money = 0.f;
     Radius = 60.f;
-    Velocity = {0.f, 0.f}; MaxVelocity = 6.f;
+    Velocity = {0.f, 0.f}; MaxVelocity = 10.f;
     Acceleration = 0.6f;
 }
 
