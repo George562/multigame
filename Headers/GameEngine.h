@@ -1368,11 +1368,11 @@ void updateShaders() {
     sf::Vector2f u_playerPosition(window.mapCoordsToPixel(player.getPosition()));
 
     Shaders::Map.setUniform("u_mouse", u_mouse);
-    Shaders::Map.setUniform("u_time", u_time);
+    // Shaders::Map.setUniform("u_time", u_time);
     Shaders::Map.setUniform("u_playerPosition", u_playerPosition);
 
     Shaders::Player.setUniform("u_mouse", u_mouse);
-    Shaders::Player.setUniform("u_time", u_time);
+    // Shaders::Player.setUniform("u_time", u_time);
     Shaders::Player.setUniform("u_playerPosition", u_playerPosition);
 
     Shaders::Portal.setUniform("u_mouse", u_mouse);
@@ -1383,7 +1383,7 @@ void updateShaders() {
     Shaders::Architect.setUniform("u_time", u_time);
     Shaders::Architect.setUniform("u_playerPosition", u_playerPosition);
 
-    Shaders::PickupItem.setUniform("u_time", u_time);
+    // Shaders::PickupItem.setUniform("u_time", u_time);
 }
 
 void processEffects() {

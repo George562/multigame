@@ -2,7 +2,7 @@ uniform sampler2D overlay;
 
 uniform vec2 u_resolution;  // Canvas size (width, height)
 uniform vec2 u_mouse;       // mouse position in screen pixels
-uniform float u_time;       // Time in seconds since load
+// uniform float u_time;       // Time in seconds since load
 
 uniform vec2 u_playerPosition;
 
@@ -34,5 +34,6 @@ void main() {
 
     // gl_FragColor = gl_Color * vec4(mix(pixel.xyz, pallete(u_time * 0.1), clamp(abs(sin(u_time * 2.)), 0.0, 0.3)) * intensity, pixel.w);
     // gl_FragColor = gl_Color * vec4(pixel.xyz * random(uv * u_time), pixel.w);
-    gl_FragColor = gl_Color * vec4(mix(pixel.xyz, pallete(u_time * 0.1), clamp(abs(sin(u_time * 2.)), 0.0, 0.3)), pixel.w);
+    // gl_FragColor = gl_Color * vec4(mix(pixel.xyz, pallete(u_time * 0.1), clamp(abs(sin(u_time * 2.)), 0.0, 0.3)), pixel.w);
+    gl_FragColor = gl_Color * pixel;
 }

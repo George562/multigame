@@ -1,5 +1,5 @@
 uniform sampler2D overlay;
-uniform float u_time;       // Time in seconds since load
+// uniform float u_time;       // Time in seconds since load
 
 vec3 pallete(float t) {
     vec3 a = vec3(0.938, 0.328, 0.718);
@@ -13,5 +13,6 @@ vec3 pallete(float t) {
 void main() {
     vec4 pixel = texture2D(overlay, gl_TexCoord[0].xy);
 
-    gl_FragColor = gl_Color * vec4(mix(pixel.xyz, pallete(u_time * 0.1), clamp(abs(sin(u_time * 2.)), 0.0, 0.3)), pixel.w);
+    // gl_FragColor = gl_Color * vec4(mix(pixel.xyz, pallete(u_time * 0.1), clamp(abs(sin(u_time * 2.)), 0.0, 0.3)), pixel.w);
+    gl_FragColor = gl_Color * pixel;
 }
