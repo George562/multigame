@@ -129,6 +129,7 @@ public:
     bool isInInventory = true;
 
     Item(ItemID::Type, int, bool = true, bool = true, bool = true, bool = false, bool = false);
+    Item(const Item& item);
 
     bool isActivated(Circle&, sf::Event&) override;
     bool CanBeActivated(Circle&) override;
@@ -149,6 +150,18 @@ Item::Item(ItemID::Type _id, int _amount, bool _pickupable, bool _isInInventory,
     isInInventory = _isInInventory;
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
+
+    setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
+}
+
+Item::Item(const Item& item) {
+    id            = item.id;
+    amount        = item.amount;
+    pickupable    = item.pickupable;
+    isDropable    = item.isDropable;
+    isInInventory = item.isInInventory;
+    isEquippable  = item.isEquippable;
+    isKeyItem     = item.isKeyItem;
 
     setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
 }

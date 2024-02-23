@@ -16,6 +16,12 @@ public:
 
     Interactable() : Rect() {}
 
+    ~Interactable() {
+        if (animation) {
+            delete animation;
+        }
+    }
+
     void setFunction(void (*func)(Interactable*)) { function = func; }
 
     virtual bool isActivated(Circle&, sf::Event& event) {

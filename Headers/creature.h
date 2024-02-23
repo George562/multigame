@@ -44,6 +44,14 @@ public:
         animation = nullptr;
         dropInventory = true;
     }
+    ~Creature() {
+        if (localClock) {
+            delete localClock;
+        }
+        if (animation) {
+            delete animation;
+        }
+    }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animation != nullptr) {

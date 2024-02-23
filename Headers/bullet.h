@@ -1,7 +1,5 @@
 #pragma once
 #include "location.h"
-#include "tools.h"
-#include "animation.h"
 
 #define COMMON_BULLET_RADIUS 7
 #define COMMON_BULLET_PENETRATION 0
@@ -21,8 +19,6 @@ struct Bullet : public Circle, public sf::Drawable {
     };
     Bullet::Type type;
 
-    Animation* animation = nullptr;
-
     bool explode = false;
     bool todel = false;
     float damage;
@@ -39,15 +35,9 @@ struct Bullet : public Circle, public sf::Drawable {
     }
 
     Bullet(faction::Type faction, sf::Vector2f pos, sf::Vector2f velocity, float dmg, int penetr = COMMON_BULLET_PENETRATION,
-           Bullet::Type type = Bullet::Common, sf::Time time = sf::Time::Zero, Animation* anim = nullptr) : Bullet() {
+           Bullet::Type type = Bullet::Common, sf::Time time = sf::Time::Zero) : Bullet() {
         this->type = type;
         PosX = pos.x; PosY = pos.y;
-        if (anim != nullptr) {
-            animation = anim;
-            animation->setSize({Radius * 2.f, Radius * 2.f});
-            animation->setOrigin(animation->getLocalSize() / 2.f);
-            animation->play();
-        }
         damage = dmg;
         penetration = penetr;
         Velocity = velocity;
@@ -61,33 +51,14 @@ struct Bullet : public Circle, public sf::Drawable {
                 break;
             case Bullet::WaterParticle:
                 Radius = COMMON_BULLET_RADIUS * 3;
+                color = sf::Color::Blue;
                 break;
         }
     }
 
-    Bullet(const Bullet& bullet) : Bullet() {
-        this->type = bullet.type;
-        if (bullet.animation) {
-            this->animation = new Animation(*bullet.animation);
-        }
-        this->explode = bullet.explode;
-        this->todel = bullet.todel;
-        this->damage = bullet.damage;
-        this->penetration = bullet.penetration;
-        this->Velocity = bullet.Velocity;
-        this->fromWho = bullet.fromWho;
-        this->timer = bullet.timer;
-        this->setCircle(bullet);
-        this->color = bullet.color;
-    }
-
     ~Bullet() {
-        static int amountOfDeletedBullet;
         if (localClock) {
             delete localClock;
-        }
-        if (animation) {
-            delete animation;
         }
     }
 
@@ -126,16 +97,11 @@ struct Bullet : public Circle, public sf::Drawable {
         }
     }
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
-        if (animation != nullptr) {
-            animation->setPosition(getPosition());
-            target.draw(*animation, states);
-        } else {
-            circleShape.setFillColor(color);
-            circleShape.setRadius(Radius);
-            circleShape.setPosition(getPosition());
-            circleShape.setOrigin(Radius, Radius);
-            target.draw(circleShape);
-        }
+        circleShape.setFillColor(color);
+        circleShape.setRadius(Radius);
+        circleShape.setPosition(getPosition());
+        circleShape.setOrigin(Radius, Radius);
+        target.draw(circleShape);
     }
 };
 #pragma pack(pop)

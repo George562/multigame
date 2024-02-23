@@ -10,5 +10,9 @@ public:
         this->localClock = new sf::Clock();
         this->secs = secs;
     }
-    ~Fire() { if (localClock) delete localClock; }
+    ~Fire() {
+        if (localClock) {
+            delete localClock;
+        }
+    }
 };

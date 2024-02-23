@@ -16,12 +16,10 @@ private:
     int frameAmount;
     bool isPlaying;
     sf::Shader* shader = nullptr;
-    sf::Texture* texture = nullptr;
 
 public:
     Animation();
     Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
-    Animation(const Animation& animation);
     ~Animation();
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const;
 
@@ -51,23 +49,10 @@ Animation::Animation() {
 
 Animation::Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader) : Animation() {
     this->sprite.setTexture(texture);
-    this->texture = &texture;
     this->frameAmount = FrameAmount;
     this->maxLevel = maxLevel;
     this->duration = duration;
     this->shader = shader;
-}
-
-Animation::Animation(const Animation& animation) : Animation() {
-    this->sprite.setTexture(*animation.texture, true);
-    this->texture = animation.texture;
-    this->frameAmount = animation.frameAmount;
-    this->maxLevel = animation.maxLevel;
-    this->duration = animation.duration;
-    this->shader = animation.shader;
-    this->isPlaying = animation.isPlaying;
-    this->curTime = animation.curTime;
-    curLevel = animation.curLevel;
 }
 
 Animation::~Animation() {

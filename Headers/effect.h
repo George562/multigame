@@ -26,5 +26,9 @@ public:
         this->secs = secs;
     }
     
-    ~Effect() { if (localClock) delete localClock; }
+    ~Effect() {
+        if (localClock) {
+            delete localClock;
+        }
+    }
 };

@@ -24,6 +24,7 @@ public:
     bool ChatEnable;
 
     Chat(int, int);
+    ~Chat();
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
     bool InputText(sf::Event&);
     bool Entered();
@@ -63,6 +64,12 @@ Chat::Chat(int scw, int sch) : inputted(false), start(0), len(11) {
 
     ChatEnable = true;
     localClock = new sf::Clock();
+}
+
+Chat::~Chat() {
+    if (localClock) {
+        delete localClock;
+    }
 }
 
 void Chat::draw(sf::RenderTarget& target, sf::RenderStates states) const {
