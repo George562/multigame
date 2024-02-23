@@ -28,7 +28,7 @@ std::vector<Item*> PickupStuff;
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect, FLoorTileSprite;
 std::vector<sf::Texture> FloorTextureRects;
-std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround;
+std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround, DamageText;
 Bar<float> EnemyHealthBar;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
@@ -220,6 +220,7 @@ Button EscapeButton("Exit", [](){
     clearVectorOfPointer(FireSet);
     clearVectorOfPointer(TempTextsOnGround);
     clearVectorOfPointer(TempTextsOnScreen);
+    clearVectorOfPointer(DamageText);
     clearVectorOfPointer(listOfBox);
     clearVectorOfPointer(listOfArtifact);
     clearVectorOfPointer(PickupStuff);
@@ -247,7 +248,7 @@ void draw() {
         }
         if (CurLocation->objects[i].id == Tiles::puddle) {
             puddle.setPosition(CurLocation->objects[i].pos);
-            window.draw(puddle, MapStates);
+            window.draw(puddle, States::Map);
         }
     }
 
@@ -273,6 +274,15 @@ void draw() {
         }
     }
 
+    for (size_t i = 0; i < DamageText.size(); i++) {
+        if (DamageText[i]->localClock->getElapsedTime() < DamageText[i]->howLongToExist) {
+            Shaders::DmgText.setUniform("u_time", DamageText[i]->localClock->getElapsedTime().asSeconds());
+            window.draw(*DamageText[i], States::DmgText);
+        } else {
+            DeletePointerFromVector(DamageText, i--);
+        }
+    }
+
     if (IsDrawMinimap) {
         drawMiniMap();
     }
@@ -292,7 +302,7 @@ void drawFloor() {
             if (CurLocation->EnableTiles[i][j]) {
                 FLoorTileSprite.setTexture(*it);
                 FLoorTileSprite.setPosition(size * j, size * i);
-                window.draw(FLoorTileSprite, MapStates);
+                window.draw(FLoorTileSprite, States::Map);
                 it++;
             }
         }
@@ -316,7 +326,7 @@ void drawWalls() {
                         (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].Height) * random(sf::Vector2f(j, i)),
                         CurLocation->wallsRect[i][j].Width,
                         CurLocation->wallsRect[i][j].Height));
-                window.draw(WallRect, MapStates);
+                window.draw(WallRect, States::Map);
             }
         }
     }
@@ -1115,31 +1125,25 @@ bool useItem(ItemID::Type id) {
 }
 
 void createSlotRects() {
-    if (!itemSlotsRects.empty()) {
-        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-            if (itemSlotsRects.find(id) != itemSlotsRects.end()) {
-                delete itemSlotsRects[id];
-            }
-        }
-        itemSlotsRects.clear();
+    for (auto it = itemSlotsRects.begin(); it != itemSlotsRects.end(); it++) {
+        delete it->second;
     }
+    itemSlotsRects.clear();
 
-    for (int i = 0; i < 4; i++) {
-        int slotNumber = 0;
-        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-            if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
-                player.inventory.items[id]->amount > 0) {
+    int slotNumber = 0;
+    for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+        if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
+            player.inventory.items[id]->amount > 0) {
 
-                float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
-                float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
+            float itemX = (slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
+            float itemY = (slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
 
-                Rect* itemActivationRect = new Rect();
-                itemActivationRect->setPosition(itemX, itemY);
-                itemActivationRect->setSize(Textures::ItemPanel.getSize().x / 2.0f, Textures::ItemPanel.getSize().y / 2.0f);
-                itemSlotsRects[id] = itemActivationRect;
+            Rect* itemActivationRect = new Rect();
+            itemActivationRect->setPosition(itemX, itemY);
+            itemActivationRect->setSize(sf::Vector2f(Textures::ItemPanel.getSize() / 2u));
+            itemSlotsRects[id] = itemActivationRect;
 
-                slotNumber++;
-            }
+            slotNumber++;
         }
     }
 }
@@ -1175,7 +1179,7 @@ void updateBullets() {
                         tempText->setString(std::to_string(int(Bullets[i]->damage)));
                         tempText->setFillColor(sf::Color(250, 50, 50, 200));
                         tempText->setCenter(enemy->getPosition());
-                        TempTextsOnGround.push_back(tempText);
+                        DamageText.push_back(tempText);
                         break;
                     }
                 }
