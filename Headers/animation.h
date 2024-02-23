@@ -10,16 +10,19 @@ class Animation : public sf::Drawable, public sf::Transformable {
 private:
     mutable sf::Sprite sprite;
     int maxLevel, curLevel;
-    sf::Clock* localClock;
+    sf::Clock* localClock = nullptr;
     sf::Time duration;
     mutable sf::Time curTime;
     int frameAmount;
     bool isPlaying;
-    sf::Shader* shader;
+    sf::Shader* shader = nullptr;
+    sf::Texture* texture = nullptr;
 
 public:
     Animation();
     Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
+    Animation(const Animation& animation);
+    ~Animation();
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const;
 
     void play();
@@ -30,7 +33,6 @@ public:
     void setShader(sf::Shader* shader);
     void setAnimationLevel(int);
     void setSize(sf::Vector2f size);
-    sf::Vector2f getSize() const;
     sf::Vector2f getGlobalSize() const;
     sf::Vector2f getLocalSize() const;
 };
@@ -49,10 +51,29 @@ Animation::Animation() {
 
 Animation::Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader) : Animation() {
     this->sprite.setTexture(texture);
+    this->texture = &texture;
     this->frameAmount = FrameAmount;
     this->maxLevel = maxLevel;
     this->duration = duration;
     this->shader = shader;
+}
+
+Animation::Animation(const Animation& animation) : Animation() {
+    this->sprite.setTexture(*animation.texture, true);
+    this->texture = animation.texture;
+    this->frameAmount = animation.frameAmount;
+    this->maxLevel = animation.maxLevel;
+    this->duration = animation.duration;
+    this->shader = animation.shader;
+    this->isPlaying = animation.isPlaying;
+    this->curTime = animation.curTime;
+    curLevel = animation.curLevel;
+}
+
+Animation::~Animation() {
+    if (localClock) {
+        delete localClock;
+    }
 }
 
 void Animation::draw(sf::RenderTarget& target, sf::RenderStates states) const {

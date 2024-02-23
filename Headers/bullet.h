@@ -34,21 +34,27 @@ struct Bullet : public Circle, public sf::Drawable {
     sf::Time timer;
     sf::Color color;
 
-    Bullet() {}
+    Bullet() {
+        localClock = new sf::Clock();
+    }
+
     Bullet(faction::Type faction, sf::Vector2f pos, sf::Vector2f velocity, float dmg, int penetr = COMMON_BULLET_PENETRATION,
-           Bullet::Type type = Bullet::Common, sf::Time time = sf::Time::Zero, Animation* anim = nullptr) {
-        fromWho = faction;
-        PosX = pos.x; PosY = pos.y;
-        Velocity = velocity;
-        penetration = penetr;
-        damage = dmg;
-        timer = time;
+           Bullet::Type type = Bullet::Common, sf::Time time = sf::Time::Zero, Animation* anim = nullptr) : Bullet() {
         this->type = type;
+        PosX = pos.x; PosY = pos.y;
+        if (anim != nullptr) {
+            animation = anim;
+            animation->setSize({Radius * 2.f, Radius * 2.f});
+            animation->setOrigin(animation->getLocalSize() / 2.f);
+            animation->play();
+        }
+        damage = dmg;
+        penetration = penetr;
+        Velocity = velocity;
+        fromWho = faction;
+        timer = time;
         switch (type) {
             case Bullet::Common:
-                Radius = COMMON_BULLET_RADIUS;
-                color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
-                break;
             case Bullet::Bubble:
                 Radius = COMMON_BULLET_RADIUS;
                 color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
@@ -56,17 +62,32 @@ struct Bullet : public Circle, public sf::Drawable {
             case Bullet::WaterParticle:
                 Radius = COMMON_BULLET_RADIUS * 3;
                 break;
-            default:
-                Radius = COMMON_BULLET_RADIUS;
-                break;
         }
-        localClock = new sf::Clock();
-        
-        if (anim != nullptr) {
-            animation = anim;
-            animation->setSize({Radius * 2.f, Radius * 2.f});
-            animation->setOrigin(animation->getLocalSize() / 2.f);
-            animation->play();
+    }
+
+    Bullet(const Bullet& bullet) : Bullet() {
+        this->type = bullet.type;
+        if (bullet.animation) {
+            this->animation = new Animation(*bullet.animation);
+        }
+        this->explode = bullet.explode;
+        this->todel = bullet.todel;
+        this->damage = bullet.damage;
+        this->penetration = bullet.penetration;
+        this->Velocity = bullet.Velocity;
+        this->fromWho = bullet.fromWho;
+        this->timer = bullet.timer;
+        this->setCircle(bullet);
+        this->color = bullet.color;
+    }
+
+    ~Bullet() {
+        static int amountOfDeletedBullet;
+        if (localClock) {
+            delete localClock;
+        }
+        if (animation) {
+            delete animation;
         }
     }
 
@@ -119,7 +140,7 @@ struct Bullet : public Circle, public sf::Drawable {
 };
 #pragma pack(pop)
 
-using vB = std::vector<Bullet>;
+using vB = std::vector<Bullet*>;
 vB Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {

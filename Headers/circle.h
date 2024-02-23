@@ -26,6 +26,7 @@ struct Circle {
     // Set position and radius
     void setCircle(float x, float y, float r) { PosX = x; PosY = y; Radius = r; }
     void setCircle(sf::Vector2f pos, float r) { PosX = pos.x; PosY = pos.y; Radius = r; }
+    void setCircle(Circle circle) { PosX = circle.PosX; PosY = circle.PosY; Radius = circle.Radius; }
 
     // Check the intersection between two circles
     bool intersect(float x, float y, float r) const { // for future (if this part of game will be most slowed, then "float&")

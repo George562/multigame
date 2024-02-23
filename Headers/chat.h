@@ -19,7 +19,7 @@ public:
     int start, len;
     size_t cursorPos;
     sf::RectangleShape rect, cursor;
-    sf::Clock* localClock;
+    sf::Clock* localClock = nullptr;
     bool inputted;
     bool ChatEnable;
 

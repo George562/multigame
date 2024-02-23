@@ -32,6 +32,20 @@ bool DeleteFromVector(std::vector<T>& arr, T x) {
     return false;
 }
 
+template <typename T>
+void DeletePointerFromVector(std::vector<T>& arr, size_t index) {
+    delete arr[index];
+    arr.erase(arr.begin() + index);
+}
+
+template <typename T>
+void clearVectorOfPointer(std::vector<T>& arr) {
+    for (size_t i = 0; i < arr.size(); i++) {
+        delete arr[i];
+    }
+    arr.clear();
+}
+
 void RotateOn(float phi, float& x, float& y) {
     float oldX = x, OldY = y;
     x =   oldX * cos(phi) + OldY * sin(phi);

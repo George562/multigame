@@ -116,7 +116,7 @@ Chat chat(scw, sch);
 
 //////////////////////////////////////////////////////////// Other stuff
 sf::Vector2i MouseBuffer;
-Bullet tempBullet;
+Bullet* tempBullet;
 
 //////////////////////////////////////////////////////////// Weapons
 Pistol pistol;
@@ -166,7 +166,6 @@ void updateShaders();
 void processEffects();
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
-template <typename T> void clearVectorOfPointer(std::vector<T>&);
 bool firePropagationAllowed(sf::Vector2i, sf::Vector2i);
 void fireUpdate();
 
@@ -216,7 +215,7 @@ Button EscapeButton("Exit", [](){
     screen = screens::MainRoom;
     EscapeMenuActivated = false;
     ListOfPlayers.clear();
-    Bullets.clear();
+    clearVectorOfPointer(Bullets);
     clearVectorOfPointer(Enemies);
     clearVectorOfPointer(FireSet);
     clearVectorOfPointer(TempTextsOnGround);
@@ -263,15 +262,14 @@ void draw() {
     }
 
     for (int i = 0; i < Bullets.size(); i++) {
-        window.draw(Bullets[i]);
+        window.draw(*Bullets[i]);
     }
 
     for (size_t i = 0; i < TempTextsOnGround.size(); i++) {
         if (TempTextsOnGround[i]->localClock->getElapsedTime() < TempTextsOnGround[i]->howLongToExist) {
             window.draw(*TempTextsOnGround[i]);
         } else {
-            delete TempTextsOnGround[i];
-            TempTextsOnGround.erase(TempTextsOnGround.begin() + i--);
+            DeletePointerFromVector(TempTextsOnGround, i--);
         }
     }
 
@@ -427,8 +425,7 @@ void drawInterface() {
         if (TempTextsOnScreen[i]->localClock->getElapsedTime() < TempTextsOnScreen[i]->howLongToExist) {
             window.draw(*TempTextsOnScreen[i]);
         } else {
-            delete TempTextsOnScreen[i];
-            TempTextsOnScreen.erase(TempTextsOnScreen.begin() + i--);
+            DeletePointerFromVector(TempTextsOnScreen, i--);
         }
     }
 
@@ -510,7 +507,7 @@ void updateInventoryUI() {
 }
 
 void LevelGenerate(int n, int m) {
-    Bullets.clear();
+    clearVectorOfPointer(Bullets);
 
     MiniMapView.zoom(1 / MiniMapZoom);
     MiniMapZoom = 1;
@@ -584,7 +581,7 @@ void LoadMainMenu() {
 
     player.setPosition(3.5f * size, 2.5f * size);
     FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
-    player.CurWeapon = nullptr;
+    player.CurWeapon = &pistol;
 
     sf::Vector2f PlayerPos = player.getPosition() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
@@ -947,8 +944,7 @@ void EventHandler() {
                         player.AddItem(PickupStuff[i]);
                         isInventoryUpToDate = false;
                         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
-                        delete PickupStuff[i];
-                        PickupStuff.erase(PickupStuff.begin() + i--);
+                        DeletePointerFromVector(PickupStuff, i--);
                     }
                 }
             }
@@ -959,6 +955,22 @@ void EventHandler() {
                         if (event.key.code == sf::Keyboard::Escape) {
                             Musics::MainMenu.pause();
                             window.close();
+                        }
+                    }
+                    if (player.CurWeapon != nullptr && !MiniMapActivated) {
+                        player.CurWeapon->Update(event);
+                        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
+                            player.CurWeapon->Reload(player.Mana);
+                        }
+                    }
+                    if (event.type == sf::Event::MouseWheelScrolled) {
+                        if (!MiniMapActivated) {
+                            CurWeapon -= (int)event.mouseWheelScroll.delta;
+                            player.ChangeWeapon(weapons[CurWeapon.cur]);
+
+                            std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
+                            ReloadWeaponText.setString(reloadStr);
+                            ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
                         }
                     }
                     break;
@@ -1134,34 +1146,33 @@ void createSlotRects() {
 
 void updateBullets() {
     for (int i = 0; i < Bullets.size(); i++) {
-        if (Bullets[i].penetration < 0 || Bullets[i].todel) {
-            Bullets.erase(Bullets.begin() + i--);
+        if (Bullets[i]->penetration < 0 || Bullets[i]->todel) {
+            DeletePointerFromVector(Bullets, i--);
         } else {
-            Bullets[i].move(CurLocation);
-            if (!faction::friends(Bullets[i].fromWho, player.faction) && player.intersect(Bullets[i])) {
-                player.getDamage(Bullets[i].damage);
-                Bullets[i].penetration--;
+            Bullets[i]->move(CurLocation);
+            if (!faction::friends(Bullets[i]->fromWho, player.faction) && player.intersect(*Bullets[i])) {
+                player.getDamage(Bullets[i]->damage);
+                Bullets[i]->penetration--;
             }
-            if (Bullets[i].type == Bullet::WaterParticle) {
+            if (Bullets[i]->type == Bullet::WaterParticle) {
                 for (int j = 0; j < FireSet.size(); j++) {
-                    if (FireSet[j]->intersect(Bullets[i])) {
+                    if (FireSet[j]->intersect(*Bullets[i])) {
                         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[j]));
-                        delete FireSet[j];
-                        FireSet.erase(FireSet.begin() + j--);
-                        Bullets[i].todel = true;
+                        DeletePointerFromVector(FireSet, j--);
+                        Bullets[i]->todel = true;
                         break;
                     }
                 }
             } else {
                 for (Enemy*& enemy: Enemies) {
-                    if (!faction::friends(Bullets[i].fromWho, enemy->faction) && enemy->intersect(Bullets[i])) {
-                        enemy->getDamage(Bullets[i].damage);
-                        Bullets[i].penetration--;
+                    if (!faction::friends(Bullets[i]->fromWho, enemy->faction) && enemy->intersect(*Bullets[i])) {
+                        enemy->getDamage(Bullets[i]->damage);
+                        Bullets[i]->penetration--;
                         TempText* tempText = new TempText(sf::seconds(1.5f));
                         tempText->setCharacterSize(30);
                         tempText->setOutlineColor(sf::Color::White);
                         tempText->setOutlineThickness(3);
-                        tempText->setString(std::to_string(int(Bullets[i].damage)));
+                        tempText->setString(std::to_string(int(Bullets[i]->damage)));
                         tempText->setFillColor(sf::Color(250, 50, 50, 200));
                         tempText->setCenter(enemy->getPosition());
                         TempTextsOnGround.push_back(tempText);
@@ -1194,8 +1205,7 @@ void MainLoop() {
                 Enemies[i]->inventory.items.clear();
 
                 DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
-                delete Enemies[i];
-                Enemies.erase(Enemies.begin() + i--);
+                DeletePointerFromVector(Enemies, i--);
 
                 if (Enemies.size() == 0) {
                     TempText* enemiesKilledText = new TempText(sf::seconds(10));
@@ -1272,7 +1282,7 @@ void MainLoop() {
                 mutex.lock();
                 SendPacket << pacetStates::Shooting << (int)Bullets.size() - wasBulletsSize;
                 for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
-                    SendPacket << Bullets[wasBulletsSize];
+                    SendPacket << *Bullets[wasBulletsSize];
                 }
                 if (HostFuncRun) {
                     SendToClients(SendPacket);
@@ -1462,13 +1472,6 @@ void setArtifact(Interactable*& artifact) {
     });
 }
 
-template <typename T> void clearVectorOfPointer(std::vector<T>& arr) {
-    for (size_t i = 0; i < arr.size(); i++) {
-        delete arr[i];
-    }
-    arr.clear();
-}
-
 bool firePropagationAllowed(sf::Vector2i ancestor, sf::Vector2i pos) {
     if (pos.y < 0 || pos.x < 0) return false; // если огонь пытается пересечь самые левые или самые верхние стены
     ancestor /= size;
@@ -1535,7 +1538,7 @@ void ClientConnect() {
         SendPacket << pacetStates::Shooting << (sf::Int32)Bullets.size();
         std::cout << "bullets: " << Bullets.size() << "\n";
         for (int i = 0; i < Bullets.size(); i++) {
-            SendPacket << Bullets[i];
+            SendPacket << *Bullets[i];
         }
 
         std::cout << "amount players = " << ConnectedPlayers.size() - 1 << '\n';
@@ -1566,8 +1569,7 @@ void ClientConnect() {
 void ClientDisconnect(int i) {
     selector.remove(*clients[i]);
     std::cout << (*clients[i]).getRemoteAddress().toString() << " disconnected; number = " << i << "\n";
-    delete clients[i];
-    clients.erase(clients.begin() + i);
+    DeletePointerFromVector(clients, i);
     ConnectedPlayers.erase(ConnectedPlayers.begin() + i + 1);
     ListOfPlayers.removeWord(i);
 
@@ -1633,7 +1635,8 @@ void funcOfHost() {
                                     int i; ReceivePacket >> i;
                                     SendPacket << pacetStates::Shooting << i;
                                     for (; i > 0; i--) {
-                                        ReceivePacket >> tempBullet;
+                                        tempBullet = new Bullet();
+                                        ReceivePacket >> *tempBullet;
                                         Bullets.push_back(tempBullet);
                                         SendPacket << tempBullet;
                                     }
@@ -1705,7 +1708,8 @@ void funcOfClient() {
                         case pacetStates::Shooting: {
                             int i; ReceivePacket >> i;
                             for (; i > 0; i--) {
-                                ReceivePacket >> tempBullet;
+                                tempBullet = new Bullet();
+                                ReceivePacket >> *tempBullet;
                                 Bullets.push_back(tempBullet);
                             }
                             break;

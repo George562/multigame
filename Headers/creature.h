@@ -19,11 +19,11 @@ public:
     sf::Vector2f Velocity; float MaxVelocity, VelocityBuff;
     float Acceleration;
     sf::Vector2f target;
-    Weapon *FirstWeapon, *SecondWeapon, *CurWeapon;
+    Weapon *FirstWeapon = nullptr, *SecondWeapon = nullptr, *CurWeapon = nullptr;
     sf::Time LastStateCheck, LastMoveCheck;
-    sf::Clock* localClock;
+    sf::Clock* localClock = nullptr;
     mutable PlacedText Name;
-    Animation *animation;
+    Animation *animation = nullptr;
 
     bool dropInventory;
     Inventory inventory;
