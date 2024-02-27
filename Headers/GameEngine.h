@@ -70,11 +70,22 @@ Panel itemListBG;
 std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
 std::map<ItemID::Type, std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 std::map<ItemID::Type, Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
+std::vector<sf::Drawable*> statsVec; // All the drawables that are displayed on the stats screen
 
 Panel statsPlayerImage;
+Bar<float> statsHPBar;
+Bar<float> statsMPBar;
+
+PlacedText statsArmorText;
+PlacedText statsMaxSpeedText;
+PlacedText statsAccelText;
+PlacedText statsHPText;
+PlacedText statsMPText;
+PlacedText statsHPRegenText;
+PlacedText statsMPRegenText;
 
 bool isItemDescDrawn = false;
-bool isInventoryUpToDate = true;
+std::map<inventoryPage::Type, bool> doInventoryUpdate;
 PlacedText itemDescText;
 ItemID::Type prevItemDescID;
 
@@ -446,73 +457,96 @@ void drawInventory() {
     window.setView(InventoryView);
     for (sf::Drawable*& elem : inventoryElements)
         window.draw(*elem);
+    switch (activeInventoryPage) {
+        case inventoryPage::Items:
+            for (sf::Drawable*& elem : inventoryPageElements[activeInventoryPage])
+                window.draw(*elem);
 
-    for (sf::Drawable*& elem : inventoryPageElements[activeInventoryPage])
-        window.draw(*elem);
+            if (player.inventory.items.size() != 0 && activeInventoryPage != inventoryPage::Stats) {
+                int slotNumber = 0;
+                for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+                    if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
+                        player.inventory.items[id]->amount > 0) {
 
-    if (player.inventory.items.size() != 0 && activeInventoryPage != inventoryPage::Stats) {
-        int slotNumber = 0;
-        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-            if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
-                player.inventory.items[id]->amount > 0) {
+                        Item* drawnItem = player.inventory.items[id];
 
-                Item* drawnItem = player.inventory.items[id];
+                        for (sf::Drawable*& elem : itemSlotsElements[id])
+                            window.draw(*elem);
+                        window.draw(*drawnItem);
 
-                for (sf::Drawable*& elem : itemSlotsElements[id])
-                    window.draw(*elem);
-                window.draw(*drawnItem);
-
-                slotNumber++;
+                        slotNumber++;
+                    }
+                }
             }
-        }
-    }
 
-    if (isItemDescDrawn) {
-        itemDescText.setPosition(sf::Mouse::getPosition(window).x + 100, sf::Mouse::getPosition(window).y);
-        window.draw(itemDescText);
+            if (isItemDescDrawn) {
+                itemDescText.setPosition(sf::Mouse::getPosition(window).x + 100, sf::Mouse::getPosition(window).y);
+                window.draw(itemDescText);
+            }
+            break;
+        
+        case inventoryPage::Stats:
+            for (sf::Drawable*& elem : inventoryPageElements[inventoryPage::Stats])
+                window.draw(*elem);
+            break;
+
+        default:
+            break;
     }
 
     window.setView(InterfaceView);
 }
 
 void updateInventoryUI() {
-    if (!itemSlotsElements.empty()) {
-        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-            if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
-                for (sf::Drawable*& elem : itemSlotsElements[id])
-                    delete elem;
-                itemSlotsElements[id].clear();
+    if (doInventoryUpdate[inventoryPage::Items]) {
+        if (!itemSlotsElements.empty()) {
+            for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+                if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
+                    for (sf::Drawable*& elem : itemSlotsElements[id])
+                        delete elem;
+                    itemSlotsElements[id].clear();
+                }
             }
         }
-    }
-    itemSlotsElements.clear();
+        itemSlotsElements.clear();
 
-    int slotNumber = 0;
-    for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-        if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
-            player.inventory.items[id]->amount > 0) {
-            Item* drawnItem = player.inventory.items[id];
+        int slotNumber = 0;
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+            if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
+                player.inventory.items[id]->amount > 0) {
+                Item* drawnItem = player.inventory.items[id];
 
-            float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
-            float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
-            drawnItem->setCenter(itemX + 75, itemY + 75);
+                float itemX = int(slotNumber % 6) * 150 + itemListBG.getPosition().x + 50;
+                float itemY = int(slotNumber / 6) * 150 + itemListBG.getPosition().y + 50;
+                drawnItem->setCenter(itemX + 75, itemY + 75);
 
-            Panel* bgPanel = new Panel();
-            bgPanel->setPosition(itemX, itemY);
-            bgPanel->setScale(0.5, 0.5);
-            bgPanel->setTexture(Textures::ItemPanel);
-            itemSlotsElements[id].push_back(bgPanel);
+                Panel* bgPanel = new Panel();
+                bgPanel->setPosition(itemX, itemY);
+                bgPanel->setScale(0.5, 0.5);
+                bgPanel->setTexture(Textures::ItemPanel);
+                itemSlotsElements[id].push_back(bgPanel);
 
-            PlacedText* itemAmountText = new PlacedText();
-            itemAmountText->setCharacterSize(16);
-            itemAmountText->setString(std::to_string(drawnItem->amount));
-            itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
+                PlacedText* itemAmountText = new PlacedText();
+                itemAmountText->setCharacterSize(16);
+                itemAmountText->setString(std::to_string(drawnItem->amount));
+                itemAmountText->setPosition(sf::Vector2f(itemX + 125, itemY + 125));
 
-            if (drawnItem->amount > 1)
-                itemSlotsElements[id].push_back(itemAmountText);
+                if (drawnItem->amount > 1)
+                    itemSlotsElements[id].push_back(itemAmountText);
 
-            slotNumber++;
+                slotNumber++;
+            }
         }
+        doInventoryUpdate[inventoryPage::Items] = false;
+        createSlotRects();
+    }
+    if (doInventoryUpdate[inventoryPage::Stats]) {
+        statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
+        statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
+        statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
+        statsMaxSpeedText.setString("Maximum Speed: " + floatToString(player.MaxVelocity));
+        statsAccelText.setString("Acceleration: " + floatToString(player.Acceleration));
+        // doInventoryUpdate[inventoryPage::Stats] = false;
     }
 }
 
@@ -861,11 +895,62 @@ void initInventory() {
     inventoryElements.push_back(&perksPageButton);
     inventoryElements.push_back(&statsPageButton);
 
+
     statsPlayerImage.setTexture(Textures::Player);
     statsPlayerImage.setCenter(5 * scw / 6, sch / 2);
 
+    statsHPBar.setValue(player.Health);
+    statsHPBar.setSize(scw / 10, sch / 20);
+    statsHPBar.setPosition(3 * scw / 10, 2 * sch / 10);
+    statsHPBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(192, 0, 0, 160), sf::Color(32, 32, 32, 160));
+    statsHPText.setCharacterSize(24);
+    statsHPText.setString("Health");
+    statsHPText.setPosition(scw / 10, 2 * sch / 10);
+
+    statsMPBar.setValue(player.Mana);
+    statsMPBar.setSize(scw / 10, sch / 20);
+    statsMPBar.setPosition(3 * scw / 10, 3 * sch / 10);
+    statsMPBar.setColors(sf::Color(255, 255, 255, 160), sf::Color(0, 0, 192, 160), sf::Color(32, 32, 32, 160));
+    statsMPText.setCharacterSize(24);
+    statsMPText.setString("Mana");
+    statsMPText.setPosition(scw / 10, 3 * sch / 10);
+
+    statsHPRegenText.setCharacterSize(24);
+    statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
+    statsHPRegenText.setPosition(scw / 10, 4 * sch / 10);
+
+    statsMPRegenText.setCharacterSize(24);
+    statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
+    statsMPRegenText.setPosition(scw / 10, 5 * sch / 10);
+
+    statsArmorText.setCharacterSize(24);
+    statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
+    statsArmorText.setPosition(scw / 10, 6 * sch / 10);
+
+    statsMaxSpeedText.setCharacterSize(24);
+    statsMaxSpeedText.setString("Maximum Speed: " + floatToString(player.MaxVelocity));
+    statsMaxSpeedText.setPosition(scw / 10, 7 * sch / 10);
+
+    statsAccelText.setCharacterSize(24);
+    statsAccelText.setString("Acceleration: " + floatToString(player.Acceleration));
+    statsAccelText.setPosition(scw / 10, 8 * sch / 10);
+
     inventoryPageElements[inventoryPage::Items].push_back(&itemListBG);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPBar);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPBar);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPText);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPText);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPRegenText);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsMaxSpeedText);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsAccelText);
+
+    for (int page = 0; page < inventoryPage::NONE; page++)
+        doInventoryUpdate[page] = false;
+
+    doInventoryUpdate[inventoryPage::Stats] = true;
 }
 
 void EventHandler() {
@@ -914,11 +999,7 @@ void EventHandler() {
                 }
                 if (event.key.code == sf::Keyboard::Tilde) {
                     isDrawInventory = true;
-                    if (!isInventoryUpToDate) {
-                        updateInventoryUI();
-                        isInventoryUpToDate = true;
-                    }
-                    createSlotRects();
+                    doInventoryUpdate[inventoryPage::Items] = true;
                 }
             }
             if (event.type == sf::Event::MouseWheelMoved) {
@@ -952,7 +1033,7 @@ void EventHandler() {
                 if (PickupStuff[i]->CanBeActivated(player)) {
                     if (PickupStuff[i]->isActivated(player, event)) {
                         player.AddItem(PickupStuff[i]);
-                        isInventoryUpToDate = false;
+                        doInventoryUpdate[inventoryPage::Items] = true;
                         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
                         DeletePointerFromVector(PickupStuff, i--);
                     }
@@ -1077,6 +1158,11 @@ void inventoryHandler(sf::Event& event) {
     perksPageButton.isActivated(event);
     statsPageButton.isActivated(event);
 
+    if ((player.ManaRecovery != 0 && player.Mana.fromTop() != 0) ||
+        (player.HealthRecovery != 0 && player.Health.fromTop() != 0)) {
+        // doInventoryUpdate[inventoryPage::Stats] = true;
+    }
+
     bool isAnythingHovered = false;
     if (player.inventory.items.size() != 0 &&
         activeInventoryPage != inventoryPage::Stats) {
@@ -1098,21 +1184,22 @@ void inventoryHandler(sf::Event& event) {
                 if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(id)) {
                     player.inventory.items[id]->amount = (player.inventory.items[id]->amount == 1) ? 0 : player.inventory.items[id]->amount - 1;
                     isItemDescDrawn = false;
-                    updateInventoryUI();
-                    createSlotRects();
+                    doInventoryUpdate[inventoryPage::Items] = true;
                 }
             }
         }
     }
     if (!isAnythingHovered)
         isItemDescDrawn = false;
+
+    updateInventoryUI();
 }
 
 bool useItem(ItemID::Type id) {
     ///////////////////////////////////// PLACEHOLDER ACTIONS. ALL ITEM FUNCTIONS ARE NOT FINAL
     switch (id) {
         case ItemID::regenDrug:
-            AllEffects.push_back(new Effect(&player, Effects::Heal, 60.f, sf::seconds(1.f)));
+            AllEffects.push_back(new Effect(&player, Effects::HPRegen, 1.f, sf::seconds(10.f)));
             return true;
         case ItemID::fireHose:
             fireHose.AmountOfAmmunition = 100;
@@ -1397,6 +1484,13 @@ void updateShaders() {
 void processEffects() {
     for (int i = AllEffects.size() - 1; i >= 0; i--) {
         if (AllEffects[i]->secs <= sf::Time::Zero) {
+            switch (AllEffects[i]->type) {
+                case Effects::HPRegen:
+                    AllEffects[i]->owner->HealthRecovery -= AllEffects[i]->parameter;
+                    break;
+                default:
+                    break;
+            }
             delete AllEffects[i];
             std::swap(AllEffects[i], AllEffects[AllEffects.size() - 1]);
             AllEffects.pop_back();
@@ -1409,6 +1503,10 @@ void processEffects() {
                     break;
                 case Effects::Heal:
                     AllEffects[i]->owner->getDamage(-AllEffects[i]->parameter * t);
+                    break;
+                case Effects::HPRegen:
+                    AllEffects[i]->owner->HealthRecovery += AllEffects[i]->parameter * (!AllEffects[i]->active);
+                    AllEffects[i]->active = true;
                     break;
                 default:
                     break;
@@ -1424,7 +1522,7 @@ void setBox(Interactable*& box) {
         if (player.Mana.cur >= 20) {
             player.Mana -= 20.f;
             player.AddItem(new Item(ItemID::coin, rand() % 5));
-            isInventoryUpToDate = false;
+            doInventoryUpdate[inventoryPage::Items] = true;
             DeleteFromVector(listOfBox, i);
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);

@@ -5,7 +5,8 @@ namespace Effects {
     using Type = sf::Uint8;
     enum : Type {
         Damage,
-        Heal
+        Heal,
+        HPRegen,
     };
 };
 
@@ -14,6 +15,7 @@ public:
     Creature* owner;
     Effects::Type type;
     float parameter;
+    bool active = false;
 
     sf::Clock* localClock = nullptr;
     sf::Time secs;

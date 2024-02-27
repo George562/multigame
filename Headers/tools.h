@@ -3,6 +3,18 @@
 #include "../SFML-2.5.1/include/SFML/Graphics.hpp"
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <iostream>
+#include <string>
+
+std::string floatToString(float num) {
+    int wholePart = int(num);
+    int fracPart = int(std::abs(int(num * 10) % 10));
+    if (fracPart == 0)
+        return std::to_string(wholePart);
+    else {
+        return std::to_string(wholePart) + '.' + std::to_string(fracPart);
+    }
+}
 
 void CreateImage() {
     sf::Image img, res;
