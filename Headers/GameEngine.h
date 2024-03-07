@@ -85,7 +85,7 @@ PlacedText statsHPRegenText;
 PlacedText statsMPRegenText;
 
 bool isItemDescDrawn = false;
-std::map<inventoryPage::Type, bool> doInventoryUpdate;
+std::vector<inventoryPage::Type, bool> doInventoryUpdate;
 PlacedText itemDescText;
 ItemID::Type prevItemDescID;
 
@@ -947,9 +947,7 @@ void initInventory() {
     inventoryPageElements[inventoryPage::Stats].push_back(&statsMaxSpeedText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsAccelText);
 
-    for (int page = 0; page < inventoryPage::NONE; page++)
-        doInventoryUpdate[page] = false;
-
+    doInventoryUpdate.assign(5, false); // 5 type of inventoryPage
     doInventoryUpdate[inventoryPage::Stats] = true;
 }
 

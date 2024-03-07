@@ -57,8 +57,7 @@ namespace inventoryPage {
         Weapons,
         Equipables,
         Perks,
-        Stats,
-        NONE
+        Stats
     };
 }
 
