@@ -15,7 +15,6 @@ public:
     Scale<float> Mana;
     float ManaRecovery, HealthRecovery;
     Scale<float> Armor; // blocking damage = min(1, damage - armor)
-    float Money;
     sf::Vector2f Velocity; float MaxVelocity, VelocityBuff;
     float Acceleration;
     sf::Vector2f target;
@@ -65,14 +64,17 @@ public:
     virtual void getDamage(float dmg) { Health -= dmg; }
 
     virtual void move(Location* location) {
-        float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), 0.0167f) * 60.f;
+        float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), 1.f / 60.f);
         sf::Vector2f dist = target - getPosition();
-        sf::Vector2f VelocityTarget = {std::clamp(dist.x, -MaxVelocity * VelocityBuff, MaxVelocity * VelocityBuff),
-                                       std::clamp(dist.y, -MaxVelocity * VelocityBuff, MaxVelocity * VelocityBuff)};
+        float len = std::sqrt(dist.x * dist.x + dist.y * dist.y);
+        sf::Vector2f VelocityTarget(std::clamp(dist.x, -std::abs(dist.x) * MaxVelocity * VelocityBuff / len, std::abs(dist.x) * MaxVelocity * VelocityBuff / len),
+                                    std::clamp(dist.y, -std::abs(dist.y) * MaxVelocity * VelocityBuff / len, std::abs(dist.y) * MaxVelocity * VelocityBuff / len));
         sf::Vector2f Vdist = VelocityTarget - Velocity;
-        sf::Vector2f Direction = {std::clamp(Vdist.x, -Acceleration, Acceleration),
-                                  std::clamp(Vdist.y, -Acceleration, Acceleration)};
+        len = std::sqrt(Vdist.x * Vdist.x + Vdist.y * Vdist.y);
+        sf::Vector2f Direction(std::clamp(Vdist.x, -std::abs(Vdist.x) * Acceleration / len, std::abs(Vdist.x) * Acceleration / len),
+                               std::clamp(Vdist.y, -std::abs(Vdist.y) * Acceleration / len, std::abs(Vdist.y) * Acceleration / len));
         Velocity += Direction * ElapsedTimeAsSecond;
+        // visualization https://www.desmos.com/calculator/oumleenz1s
 
         sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, *this, Velocity * ElapsedTimeAsSecond);
 

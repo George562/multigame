@@ -489,7 +489,7 @@ void drawInventory() {
                 window.draw(itemDescText);
             }
             break;
-        
+
         case inventoryPage::Stats:
             for (sf::Drawable*& elem : inventoryPageElements[inventoryPage::Stats])
                 window.draw(*elem);

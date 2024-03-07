@@ -19,9 +19,8 @@ public:
         Mana = {0, 100, 100}; ManaRecovery = 1;
         ManaRecovery = 1;
         Armor = {0, 100, 100};
-        Money = rand() % 100;
-        Velocity = {0, 0}; MaxVelocity = 4.f;
-        Acceleration = MaxVelocity / 0.6f;
+        Velocity = {0, 0}; MaxVelocity = 400.f;
+        Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
         CurWeapon = new Pistol();
 
@@ -48,9 +47,8 @@ public:
         Mana = {0, 100, 100}; ManaRecovery = 1;
         ManaRecovery = 1;
         Armor = {0, 100, 100};
-        Money = rand() % 100;
-        Velocity = {0, 0}; MaxVelocity = 4.f;
-        Acceleration = MaxVelocity / 0.6f;
+        Velocity = {0, 0}; MaxVelocity = 400.f;
+        Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
         CurWeapon = new Pistol();
 
@@ -78,9 +76,8 @@ public:
         Mana = {0, 100, 100}; ManaRecovery = 1;
         ManaRecovery = 1;
         Armor = {0, 100, 100};
-        Money = rand() % 100;
-        Velocity = {0, 0}; MaxVelocity = 4.f;
-        Acceleration = MaxVelocity / 0.6f;
+        Velocity = {0, 0}; MaxVelocity = 400.f;
+        Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
         CurWeapon = new Pistol();
 

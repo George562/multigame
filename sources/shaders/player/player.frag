@@ -17,7 +17,7 @@ vec3 pallete(float t) {
     vec3 b = vec3(0.659, -3.142, 0.328);
     vec3 c = vec3(-3.142, -3.142, -3.142);
     vec3 d = vec3(-0.692, -2.032, -0.802);
-    
+
     return a + b * cos(6.28318 * (c * t + d));
 }
 
@@ -30,7 +30,7 @@ void main() {
     vec2 lightPosition = gl_FragCoord.xy - playerPosition;
     vec2 normal = vec2(u_mouse.x, u_resolution.y - u_mouse.y) - playerPosition;
     float intensity = smoothstep(0.65, 0.85, dot(normalize(normal), normalize(lightPosition)));
-    intensity = clamp(intensity, 0.4, 1.);
+    intensity = clamp(intensity, 0.25, 1.);
 
     // gl_FragColor = gl_Color * vec4(mix(pixel.xyz, pallete(u_time * 0.1), clamp(abs(sin(u_time * 2.)), 0.0, 0.3)) * intensity, pixel.w);
     // gl_FragColor = gl_Color * vec4(pixel.xyz * random(uv * u_time), pixel.w);

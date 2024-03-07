@@ -55,9 +55,11 @@ struct Bullet : public Circle, public sf::Drawable {
                 break;
             case Bullet::WaterParticle:
                 Radius = COMMON_BULLET_RADIUS * 3;
+                color = sf::Color(0, 0, 255);
                 break;
             case Bullet::FireParticle:
                 Radius = COMMON_BULLET_RADIUS * 3;
+                color = sf::Color(255, 0, 0);
                 break;
             default:
                 Radius = COMMON_BULLET_RADIUS;
