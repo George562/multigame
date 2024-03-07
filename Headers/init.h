@@ -57,7 +57,8 @@ namespace inventoryPage {
         Weapons,
         Equipables,
         Perks,
-        Stats
+        Stats,
+        NONE
     };
 }
 
@@ -143,7 +144,8 @@ namespace Shaders {
                Player,
                Portal,
                PickupItem,
-               Architect
+               Architect,
+               DmgText
                ;
 }
 
@@ -153,10 +155,15 @@ void loadShaders() {
     Shaders::Portal     .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"        );
     Shaders::PickupItem .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag");
     Shaders::Architect  .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"  );
+    Shaders::DmgText    .loadFromFile("sources/shaders/dmgText/dmgText.vert",       "sources/shaders/dmgText/dmgText.frag"      );
 }
 
+namespace States {
 //////////////////////////////////////////////////////////// States
-sf::RenderStates MapStates(&Shaders::Map);
+    sf::RenderStates Map(&Shaders::Map),
+                     DmgText(&Shaders::DmgText)
+                     ;
+}
 
 namespace Musics {
 //////////////////////////////////////////////////////////// Music

@@ -10,16 +10,17 @@ class Animation : public sf::Drawable, public sf::Transformable {
 private:
     mutable sf::Sprite sprite;
     int maxLevel, curLevel;
-    sf::Clock* localClock;
+    sf::Clock* localClock = nullptr;
     sf::Time duration;
     mutable sf::Time curTime;
     int frameAmount;
     bool isPlaying;
-    sf::Shader* shader;
+    sf::Shader* shader = nullptr;
 
 public:
     Animation();
     Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
+    ~Animation();
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const;
 
     void play();
@@ -30,7 +31,6 @@ public:
     void setShader(sf::Shader* shader);
     void setAnimationLevel(int);
     void setSize(sf::Vector2f size);
-    sf::Vector2f getSize() const;
     sf::Vector2f getGlobalSize() const;
     sf::Vector2f getLocalSize() const;
 };
@@ -53,6 +53,12 @@ Animation::Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Ti
     this->maxLevel = maxLevel;
     this->duration = duration;
     this->shader = shader;
+}
+
+Animation::~Animation() {
+    if (localClock) {
+        delete localClock;
+    }
 }
 
 void Animation::draw(sf::RenderTarget& target, sf::RenderStates states) const {
