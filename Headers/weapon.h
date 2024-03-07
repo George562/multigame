@@ -208,8 +208,7 @@ public:
         if (len == 0) return;
         d = d * BulletVelocity / len;
         sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
-        Bullets.push_back(*(new Bullet(f, SpawnPoint, d, damage, 0, Bullet::Type::FireParticle, sf::Time::Zero,
-                            new Animation(Textures::Fireball, 1, 1, sf::seconds(1), &Shaders::Map))));
+        Bullets.push_back(new Bullet(f, SpawnPoint, d, damage, 0, Bullet::Type::FireParticle));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
     }
