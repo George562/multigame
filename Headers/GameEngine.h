@@ -1,3 +1,4 @@
+#pragma once
 #include "enemy.h"
 #include "chat.h"
 #include "contextMenu.h"
@@ -127,6 +128,7 @@ Bubblegun bubblegun;
 Armageddon armageddon;
 Chaotic chaotic;
 FireHose fireHose;
+Flamethrower flamethrower;
 std::vector<Weapon*> weapons = {
     &pistol,
     &shotgun,
@@ -226,6 +228,9 @@ Button EscapeButton("Exit", [](){
     clearVectorOfPointer(PickupStuff);
     player.CurWeapon->lock = true;
     DeleteFromVector(weapons, (Weapon*)&fireHose);
+    CurWeapon -= 1;
+    CurWeapon.top -= 1;
+    DeleteFromVector(weapons, (Weapon*)&flamethrower);
     CurWeapon -= 1;
     CurWeapon.top -= 1;
     LoadMainMenu();
@@ -671,6 +676,12 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[1]);
     PickupStuff[1]->dropTo(player.getPosition() + sf::Vector2f(400, 300));
 
+    Item* flamethrowerPickup = new Item(ItemID::flamethrower, 1);
+    flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower], 1, 1, sf::seconds(1), &Shaders::Map);
+    PickupStuff.push_back(flamethrowerPickup);
+    DrawableStuff.push_back(PickupStuff[2]);
+    PickupStuff[2]->dropTo(player.getPosition() + sf::Vector2f(-550, -120));
+
     listOfBox.push_back(new Interactable());
     setBox(listOfBox[0]);
     listOfBox[0]->setPosition(1912.5, 1545);
@@ -1097,6 +1108,11 @@ bool useItem(ItemID::Type id) {
             weapons.push_back(&fireHose);
             CurWeapon.top += 1;
             return true;
+        case ItemID::flamethrower:
+            flamethrower.AmountOfAmmunition = 100;
+            weapons.push_back(&flamethrower);
+            CurWeapon.top +=1 ;
+            return true;
         default:
             return false;
     }
@@ -1135,6 +1151,14 @@ void createSlotRects() {
 void updateBullets() {
     for (int i = 0; i < Bullets.size(); i++) {
         if (Bullets[i].penetration < 0 || Bullets[i].todel) {
+            if (Bullets[i].type == Bullet::FireParticle) {
+                Fire* fire = new Fire(sf::seconds(10));
+                fire->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
+                fire->setSize(50.f, 50.f);
+                fire->setPosition(Bullets[i].getPosition());
+                FireSet.push_back(fire);
+                DrawableStuff.push_back(fire);
+            }
             Bullets.erase(Bullets.begin() + i--);
         } else {
             Bullets[i].move(CurLocation);
@@ -1262,6 +1286,12 @@ void MainLoop() {
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
                 if (player.CurWeapon == &fireHose && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
                     DeleteFromVector(weapons, (Weapon*)&fireHose);
+                    CurWeapon -= 1;
+                    CurWeapon.top -= 1;
+                    player.ChangeWeapon(weapons[CurWeapon.cur]);
+                }
+                if (player.CurWeapon == &flamethrower && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
+                    DeleteFromVector(weapons, (Weapon*)&flamethrower);
                     CurWeapon -= 1;
                     CurWeapon.top -= 1;
                     player.ChangeWeapon(weapons[CurWeapon.cur]);
