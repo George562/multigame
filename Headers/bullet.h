@@ -1,5 +1,8 @@
 #pragma once
 #include "location.h"
+#include "tools.h"
+#include "animation.h"
+#include "fire.h"
 
 #define COMMON_BULLET_RADIUS 7
 #define COMMON_BULLET_PENETRATION 0
@@ -15,7 +18,8 @@ struct Bullet : public Circle, public sf::Drawable {
     enum Type : sf::Uint8 {
         Common,
         Bubble,
-        WaterParticle
+        WaterParticle,
+        FireParticle
     };
     Bullet::Type type;
 
@@ -51,7 +55,12 @@ struct Bullet : public Circle, public sf::Drawable {
                 break;
             case Bullet::WaterParticle:
                 Radius = COMMON_BULLET_RADIUS * 3;
-                color = sf::Color::Blue;
+                break;
+            case Bullet::FireParticle:
+                Radius = COMMON_BULLET_RADIUS * 3;
+                break;
+            default:
+                Radius = COMMON_BULLET_RADIUS;
                 break;
         }
     }
@@ -92,6 +101,9 @@ struct Bullet : public Circle, public sf::Drawable {
                 Circle::move(Velocity);
                 break;
             case Bullet::WaterParticle:
+                Circle::move(Velocity);
+                break;
+            case Bullet::FireParticle:
                 Circle::move(Velocity);
                 break;
         }

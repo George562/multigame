@@ -195,3 +195,22 @@ public:
     }
     void Reload(Scale<float>& Mana) {}
 };
+
+class Flamethrower : public Weapon {
+public:
+    Flamethrower() : Weapon("Flamethrower", 100, 0, 1.f / 10, 8) { BulletVelocity = 20; }
+    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+        if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
+        if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
+
+        sf::Vector2f d = direction - shooter.getPosition();
+        float len = hypotf(d.x, d.y);
+        if (len == 0) return;
+        d = d * BulletVelocity / len;
+        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
+        Bullets.push_back(new Bullet(f, SpawnPoint, d, damage, 0, Bullet::Type::FireParticle));
+        AmountOfAmmunition -= 1;
+        TimeFromLastShot->restart();
+    }
+    void Reload(Scale<float>& Mana) {}
+};

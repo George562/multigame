@@ -91,6 +91,7 @@ namespace Textures {
                 floor1x,
                 Puddle,
                 Fire,
+                Fireball,
                 Architect,
 //////////////////////////////////////////////////////////// Panel Tetures
                 GreenPanel,
@@ -120,6 +121,7 @@ void loadTextures() {
     Textures::floor1x            .loadFromFile("sources/textures/floors/floor1x.png");
     Textures::Puddle             .loadFromFile("sources/textures/Puddle.png");
     Textures::Fire               .loadFromFile("sources/textures/Fire.png");
+    Textures::Fireball           .loadFromFile("sources/textures/Fireball.png");
     Textures::Architect          .loadFromFile("sources/textures/Architect.png");
 
     Textures::GreenPanel        .loadFromFile("sources/textures/Panels/GreenPanel.png");
