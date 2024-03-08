@@ -68,10 +68,10 @@ public:
     }
 };
 
-// RamonaFlowers
-class RamonaFlowers : public Enemy {
+// Distorted
+class Distorted : public Enemy {
 public:
-    RamonaFlowers() : Enemy("Ramona Flowers") {
+    Distorted() : Enemy("Distorted") {
         Health = {0, 20, 20}; HealthRecovery = 1;
         Mana = {0, 100, 100}; ManaRecovery = 1;
         ManaRecovery = 1;
@@ -81,7 +81,7 @@ public:
         Radius = 60.f;
         CurWeapon = new Pistol();
 
-        setAnimation(Textures::RamonaFlowers, 8, 2, sf::seconds(1), &Shaders::Map);
+        setAnimation(Textures::Distorted, 8, 2, sf::seconds(0.75), &Shaders::Map);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 

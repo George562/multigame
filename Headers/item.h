@@ -19,9 +19,8 @@ namespace ItemID {
     };
 }
 
-///////////////////////////////////////////////////////////// PLACEHOLDER
-std::map<ItemID::Type, std::string> itemDesc {
-    {ItemID::regenDrug, "The so called \"Portal straight to St. Petersburg\"\nGives +1 HP/s for the next 10 seconds"},
+std::map<ItemID::Type, std::string> itemDesc { // Descriptions of items
+    {ItemID::regenDrug, "Substance for stabilizing the state of dimension of an object"}, // Gives +1 HP/s for the next 10 seconds
     {ItemID::coin, "Moneh :D"},
     {ItemID::fireHose, "Used to put out fires.\n" \
                        "Use this item to gain the ability\n" \
@@ -29,81 +28,80 @@ std::map<ItemID::Type, std::string> itemDesc {
                        "I have absolutely no idea how it works by itself what the fuck where does the water come from?????"},
     {ItemID::flamethrower, "Use this item to wreak havoc #0_o"}
 };
-//////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////// Item Animation params
 std::map<ItemID::Type, sf::Texture*> itemTextureName {
-    {ItemID::gunParts, new sf::Texture},
-    {ItemID::repairKit, new sf::Texture},
-    {ItemID::keyCard, new sf::Texture},
+    {ItemID::gunParts,       new sf::Texture},
+    {ItemID::repairKit,      new sf::Texture},
+    {ItemID::keyCard,        new sf::Texture},
     {ItemID::protectiveSuit, new sf::Texture},
-    {ItemID::regenDrug, new sf::Texture},
-    {ItemID::coin, new sf::Texture},
-    {ItemID::fireHose, new sf::Texture},
-    {ItemID::flamethrower, new sf::Texture}
+    {ItemID::regenDrug,      new sf::Texture},
+    {ItemID::coin,           new sf::Texture},
+    {ItemID::fireHose,       new sf::Texture},
+    {ItemID::flamethrower,   new sf::Texture}
 };
 
 std::map<ItemID::Type, int> itemTextureFrameAmount {
-    {ItemID::generic, 1},
-    {ItemID::medkit, 1},
-    {ItemID::regenDrug, 1},
-    {ItemID::coin, 4},
-    {ItemID::fireHose, 1},
+    {ItemID::generic,      1},
+    {ItemID::medkit,       1},
+    {ItemID::regenDrug,    1},
+    {ItemID::coin,         4},
+    {ItemID::fireHose,     1},
     {ItemID::flamethrower, 1}
 };
 
 std::map<ItemID::Type, sf::Time> itemTextureDuration {
-    {ItemID::generic, sf::seconds(1)},
-    {ItemID::medkit, sf::seconds(1)},
-    {ItemID::regenDrug, sf::seconds(1)},
-    {ItemID::coin, sf::seconds(1)},
-    {ItemID::fireHose, sf::seconds(1)},
+    {ItemID::generic,      sf::seconds(1)},
+    {ItemID::medkit,       sf::seconds(1)},
+    {ItemID::regenDrug,    sf::seconds(1)},
+    {ItemID::coin,         sf::seconds(0.75)},
+    {ItemID::fireHose,     sf::seconds(1)},
     {ItemID::flamethrower, sf::seconds(1)}
 };
 
 std::map<ItemID::Type, sf::Shader *> itemTextureShader {
-    {ItemID::generic, &Shaders::PickupItem},
-    {ItemID::medkit, &Shaders::PickupItem},
-    {ItemID::regenDrug, &Shaders::PickupItem},
-    {ItemID::coin, &Shaders::PickupItem},
-    {ItemID::fireHose, &Shaders::PickupItem},
+    {ItemID::generic,      &Shaders::PickupItem},
+    {ItemID::medkit,       &Shaders::PickupItem},
+    {ItemID::regenDrug,    &Shaders::PickupItem},
+    {ItemID::coin,         &Shaders::PickupItem},
+    {ItemID::fireHose,     &Shaders::PickupItem},
     {ItemID::flamethrower, &Shaders::PickupItem}
 };
 
 //////////////////////////////////////////////////////////// Pickup Item Animation params
 std::map<ItemID::Type, sf::Texture*> pickupItemTextureName {
-    {ItemID::generic, new sf::Texture},
-    {ItemID::medkit, new sf::Texture},
-    {ItemID::regenDrug, new sf::Texture},
-    {ItemID::coin, new sf::Texture},
-    {ItemID::fireHose, new sf::Texture},
+    {ItemID::generic,      new sf::Texture},
+    {ItemID::medkit,       new sf::Texture},
+    {ItemID::regenDrug,    new sf::Texture},
+    {ItemID::coin,         new sf::Texture},
+    {ItemID::fireHose,     new sf::Texture},
     {ItemID::flamethrower, new sf::Texture}
 };
 
 std::map<ItemID::Type, int> pickupItemTextureFrameAmount {
-    {ItemID::generic, 1},
-    {ItemID::medkit, 1},
-    {ItemID::regenDrug, 1},
-    {ItemID::coin, 4},
-    {ItemID::fireHose, 1},
+    {ItemID::generic,      1},
+    {ItemID::medkit,       1},
+    {ItemID::regenDrug,    1},
+    {ItemID::coin,         4},
+    {ItemID::fireHose,     1},
     {ItemID::flamethrower, 1}
 };
 
 std::map<ItemID::Type, sf::Time> pickupItemTextureDuration {
-    {ItemID::generic, sf::seconds(1)},
-    {ItemID::medkit, sf::seconds(1)},
-    {ItemID::regenDrug, sf::seconds(1)},
-    {ItemID::coin, sf::seconds(1)},
-    {ItemID::fireHose, sf::seconds(1)},
+    {ItemID::generic,      sf::seconds(1)},
+    {ItemID::medkit,       sf::seconds(1)},
+    {ItemID::regenDrug,    sf::seconds(1)},
+    {ItemID::coin,         sf::seconds(1)},
+    {ItemID::fireHose,     sf::seconds(1)},
     {ItemID::flamethrower, sf::seconds(1)}
 };
 
 std::map<ItemID::Type, sf::Shader *> pickupItemTextureShader {
-    {ItemID::generic, &Shaders::Map},
-    {ItemID::medkit, &Shaders::Map},
-    {ItemID::regenDrug, &Shaders::Map},
-    {ItemID::coin, &Shaders::Map},
-    {ItemID::fireHose, &Shaders::Map},
+    {ItemID::generic,      &Shaders::Map},
+    {ItemID::medkit,       &Shaders::Map},
+    {ItemID::regenDrug,    &Shaders::Map},
+    {ItemID::coin,         &Shaders::Map},
+    {ItemID::fireHose,     &Shaders::Map},
     {ItemID::flamethrower, &Shaders::Map}
 };
 
@@ -179,19 +177,17 @@ Item::Item(const Item& item) {
 }
 
 bool Item::CanBeActivated(Circle& player) {
-    if (pickupable && !isInInventory)
-        return intersect(player);
-    return false;
+    return pickupable && !isInInventory && intersect(player);
 }
 
 bool Item::isActivated(Circle& player, sf::Event& event) {
     if (pickupable && !isInInventory)
         return intersect(player);
-    if(isInInventory) {
-        if((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
+    if (isInInventory) {
+        if ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
            (event.mouseButton.button == sf::Mouse::Button::Right || event.mouseButton.button == sf::Mouse::Button::Left))
             return contains(event.mouseButton.x, event.mouseButton.y);
-        if(event.type == sf::Event::MouseMoved)
+        if (event.type == sf::Event::MouseMoved)
             return contains(event.mouseMove.x, event.mouseMove.y);
         return false;
     }
