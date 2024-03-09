@@ -66,7 +66,7 @@ constexpr int sch = 1080; // screen height
 
 constexpr int size = 480, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
 constexpr float ScaleParam = float(miniSize) / float(size);
-int START_N = 10, START_M = 10;
+int START_N = 9, START_M = 6;
 float WallMinSize = size / 8, WallMaxSize = size;
 
 sf::View GameView({0, 0, (float)scw, (float)sch});

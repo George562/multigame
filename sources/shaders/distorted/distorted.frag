@@ -14,10 +14,8 @@ void main() {
     vec2 uv = gl_FragCoord.xy / uResolution;
     float offSpeed = 0.075;
     float noise = texture2D(noise_png, fract(uv + vec2(uTime * offSpeed, 0.))).r;
-    // noise = noise1(uTime * offSpeed);
-    vec2 offset = noise * vec2(0.2, 0.18);
-    vec2 correctedOffset = vec2(0.09, 0.09);
-    vec4 pixel = texture2D(overlay, fract(uv + offset - correctedOffset));
+    vec2 offset = (noise - 0.5) * vec2(0.2, 0.18); // making noise from [0; 1] to [-0.5; 0.5]
+    vec4 pixel = texture2D(overlay, fract(uv + offset));
 
     gl_FragColor = pixel;
 }
