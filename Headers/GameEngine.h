@@ -31,6 +31,7 @@ sf::Sprite WallRect, FLoorTileSprite;
 std::vector<sf::Texture> FloorTextureRects;
 std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround, DamageText;
 Bar<float> EnemyHealthBar;
+sf::Sprite undergroundBG;
 
 //////////////////////////////////////////////////////////// MiniMapStuff
 sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
@@ -249,10 +250,11 @@ Button EscapeButton("Exit", [](){
 
 //////////////////////////////////////////////////////////// functions
 void draw() {
-    window.setView(GameView);
-    window.clear(sf::Color::Black);
-
     updateShaders();
+    window.setView(InterfaceView);
+    window.draw(undergroundBG, States::Distortion);
+
+    window.setView(GameView);
 
     drawFloor();
     drawWalls();
@@ -292,7 +294,7 @@ void draw() {
 
     for (size_t i = 0; i < DamageText.size(); i++) {
         if (DamageText[i]->localClock->getElapsedTime() < DamageText[i]->howLongToExist) {
-            Shaders::DmgText.setUniform("u_time", DamageText[i]->localClock->getElapsedTime().asSeconds());
+            Shaders::DmgText.setUniform("uTime", DamageText[i]->localClock->getElapsedTime().asSeconds());
             window.draw(*DamageText[i], States::DmgText);
         } else {
             DeletePointerFromVector(DamageText, i--);
@@ -766,16 +768,19 @@ void init() {
     puddle.setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
     puddle.setSize(90.f, 90.f);
 
-    Shaders::Map.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Map.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     Shaders::Map.setUniform("u_playerRadius", player.Radius);
 
-    Shaders::Player.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Player.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
 
-    Shaders::Portal.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Portal.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     Shaders::Portal.setUniform("u_playerRadius", player.Radius);
 
-    Shaders::Architect.setUniform("u_resolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Architect.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
     Shaders::Architect.setUniform("u_playerRadius", player.Radius);
+
+    Shaders::Distorted.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Distorted.setUniform("noise_png", Textures::Noise);
 
     IPPanel       .setTexture(Textures::YellowPanel);
     ListOfPlayers .setTexture(Textures::SteelFrame);
@@ -846,6 +851,10 @@ void init() {
     EnemyHealthBar.ShowText = false;
 
     FLoorTileSprite.setScale(3.f, 3.f);
+
+    undergroundBG.setTexture(Textures::Noise);
+    undergroundBG.setPosition(0, 0);
+    undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
     initInventory();
 
@@ -1482,27 +1491,29 @@ void FillFloorRects() {
 }
 
 void updateShaders() {
-    sf::Vector2f u_mouse(sf::Mouse::getPosition());
-    float u_time = GameClock->getElapsedTime().asSeconds();
-    sf::Vector2f u_playerPosition(window.mapCoordsToPixel(player.getPosition()));
+    sf::Vector2f uMouse(sf::Mouse::getPosition());
+    float uTime = GameClock->getElapsedTime().asSeconds();
+    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getPosition()));
 
-    Shaders::Map.setUniform("u_mouse", u_mouse);
-    // Shaders::Map.setUniform("u_time", u_time);
-    Shaders::Map.setUniform("u_playerPosition", u_playerPosition);
+    Shaders::Map.setUniform("uMouse", uMouse);
+    // Shaders::Map.setUniform("uTime", uTime);
+    Shaders::Map.setUniform("uPlayerPosition", uPlayerPosition);
 
-    Shaders::Player.setUniform("u_mouse", u_mouse);
-    // Shaders::Player.setUniform("u_time", u_time);
-    Shaders::Player.setUniform("u_playerPosition", u_playerPosition);
+    Shaders::Player.setUniform("uMouse", uMouse);
+    // Shaders::Player.setUniform("uTime", uTime);
+    Shaders::Player.setUniform("uPlayerPosition", uPlayerPosition);
 
-    Shaders::Portal.setUniform("u_mouse", u_mouse);
-    Shaders::Portal.setUniform("u_time", u_time);
-    Shaders::Portal.setUniform("u_playerPosition", u_playerPosition);
+    Shaders::Portal.setUniform("uMouse", uMouse);
+    Shaders::Portal.setUniform("uTime", uTime);
+    Shaders::Portal.setUniform("uPlayerPosition", uPlayerPosition);
 
-    Shaders::Architect.setUniform("u_mouse", u_mouse);
-    Shaders::Architect.setUniform("u_time", u_time);
-    Shaders::Architect.setUniform("u_playerPosition", u_playerPosition);
+    Shaders::Architect.setUniform("uMouse", uMouse);
+    Shaders::Architect.setUniform("uTime", uTime);
+    Shaders::Architect.setUniform("uPlayerPosition", uPlayerPosition);
 
-    // Shaders::PickupItem.setUniform("u_time", u_time);
+    // Shaders::PickupItem.setUniform("uTime", uTime);
+
+    Shaders::Distorted.setUniform("uTime", uTime);
 }
 
 void processEffects() {

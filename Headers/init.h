@@ -93,6 +93,7 @@ namespace Textures {
                 Fire,
                 Fireball,
                 Architect,
+                Noise,
 //////////////////////////////////////////////////////////// Panel Tetures
                 GreenPanel,
                 GreenPanelPushed,
@@ -123,6 +124,7 @@ void loadTextures() {
     Textures::Fire               .loadFromFile("sources/textures/Fire.png");
     Textures::Fireball           .loadFromFile("sources/textures/Fireball.png");
     Textures::Architect          .loadFromFile("sources/textures/Architect.png");
+    Textures::Noise              .loadFromFile("sources/textures/noise.png");
 
     Textures::GreenPanel        .loadFromFile("sources/textures/Panels/GreenPanel.png");
     Textures::GreenPanelPushed  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
@@ -144,7 +146,8 @@ namespace Shaders {
                Portal,
                PickupItem,
                Architect,
-               DmgText
+               DmgText,
+               Distorted
                ;
 }
 
@@ -155,12 +158,14 @@ void loadShaders() {
     Shaders::PickupItem .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag");
     Shaders::Architect  .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"  );
     Shaders::DmgText    .loadFromFile("sources/shaders/dmgText/dmgText.vert",       "sources/shaders/dmgText/dmgText.frag"      );
+    Shaders::Distorted  .loadFromFile("sources/shaders/distorted/distorted.vert",   "sources/shaders/distorted/distorted.frag"  );
 }
 
 namespace States {
 //////////////////////////////////////////////////////////// States
     sf::RenderStates Map(&Shaders::Map),
-                     DmgText(&Shaders::DmgText)
+                     DmgText(&Shaders::DmgText),
+                     Distortion(&Shaders::Distorted)
                      ;
 }
 
