@@ -81,7 +81,7 @@ public:
         Radius = 60.f;
         CurWeapon = new Pistol();
 
-        setAnimation(Textures::Distorted, 8, 2, sf::seconds(0.75), &Shaders::Distorted);
+        setAnimation(Textures::Distorted, 1, 1, sf::seconds(1), &Shaders::Distortion2);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
 
@@ -92,7 +92,6 @@ public:
         VelocityBuff = 1;
 
         setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
-        animation->setAnimationLevel(target.x - PosX < 0);
         Creature::move(location);
     }
 };

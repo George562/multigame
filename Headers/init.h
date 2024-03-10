@@ -146,31 +146,34 @@ namespace Shaders {
                Portal,
                PickupItem,
                Architect,
-               DmgText,
-               Distorted
+               DmgText,     // text moving up
+               Distortion1, // linear right move
+               Distortion2  // circle move
                ;
 }
 
 void loadShaders() {
-    Shaders::Map        .loadFromFile("sources/shaders/terrain.vert",               "sources/shaders/terrain.frag"              );
-    Shaders::Player     .loadFromFile("sources/shaders/player/player.vert",         "sources/shaders/player/player.frag"        );
-    Shaders::Portal     .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"        );
-    Shaders::PickupItem .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag");
-    Shaders::Architect  .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"  );
-    Shaders::DmgText    .loadFromFile("sources/shaders/dmgText/dmgText.vert",       "sources/shaders/dmgText/dmgText.frag"      );
-    Shaders::Distorted  .loadFromFile("sources/shaders/distorted/distorted.vert",   "sources/shaders/distorted/distorted.frag"  );
+    Shaders::Map         .loadFromFile("sources/shaders/terrain.vert",               "sources/shaders/terrain.frag"               );
+    Shaders::Player      .loadFromFile("sources/shaders/player/player.vert",         "sources/shaders/player/player.frag"         );
+    Shaders::Portal      .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"         );
+    Shaders::PickupItem  .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag" );
+    Shaders::Architect   .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"   );
+    Shaders::DmgText     .loadFromFile("sources/shaders/dmgText/dmgText.vert",       "sources/shaders/dmgText/dmgText.frag"       );
+    Shaders::Distortion1 .loadFromFile("sources/shaders/distorted1/distorted1.vert", "sources/shaders/distorted1/distorted1.frag" );
+    Shaders::Distortion2 .loadFromFile("sources/shaders/distorted2/distorted2.vert", "sources/shaders/distorted2/distorted2.frag" );
 }
 
 namespace States {
 //////////////////////////////////////////////////////////// States
     sf::RenderStates Map(&Shaders::Map),
                      DmgText(&Shaders::DmgText),
-                     Distortion(&Shaders::Distorted)
+                     Distortion1(&Shaders::Distortion1),
+                     Distortion2(&Shaders::Distortion2)
                      ;
 }
 
 namespace Musics {
-//////////////////////////////////////////////////////////// Music
+//////////////////////////////////////////////////////////// Musics
     sf::Music MainMenu,
               Fight1, Fight2
               ;

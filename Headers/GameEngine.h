@@ -252,7 +252,7 @@ Button EscapeButton("Exit", [](){
 void draw() {
     updateShaders();
     window.setView(InterfaceView);
-    window.draw(undergroundBG, States::Distortion);
+    window.draw(undergroundBG, States::Distortion1);
 
     window.setView(GameView);
 
@@ -768,19 +768,20 @@ void init() {
     puddle.setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
     puddle.setSize(90.f, 90.f);
 
-    Shaders::Map.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Map.setUniform("uResolution", sf::Vector2f(scw, sch));
     Shaders::Map.setUniform("u_playerRadius", player.Radius);
 
-    Shaders::Player.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Player.setUniform("uResolution", sf::Vector2f(scw, sch));
 
-    Shaders::Portal.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Portal.setUniform("uResolution", sf::Vector2f(scw, sch));
     Shaders::Portal.setUniform("u_playerRadius", player.Radius);
 
-    Shaders::Architect.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
+    Shaders::Architect.setUniform("uResolution", sf::Vector2f(scw, sch));
     Shaders::Architect.setUniform("u_playerRadius", player.Radius);
 
-    Shaders::Distorted.setUniform("uResolution", sf::Vector2f(static_cast<float>(scw), static_cast<float>(sch)));
-    Shaders::Distorted.setUniform("noise_png", Textures::Noise);
+    Shaders::Distortion1.setUniform("noise_png", Textures::Noise);
+
+    Shaders::Distortion2.setUniform("noise_png", Textures::Noise);
 
     IPPanel       .setTexture(Textures::YellowPanel);
     ListOfPlayers .setTexture(Textures::SteelFrame);
@@ -1496,11 +1497,9 @@ void updateShaders() {
     sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getPosition()));
 
     Shaders::Map.setUniform("uMouse", uMouse);
-    // Shaders::Map.setUniform("uTime", uTime);
     Shaders::Map.setUniform("uPlayerPosition", uPlayerPosition);
 
     Shaders::Player.setUniform("uMouse", uMouse);
-    // Shaders::Player.setUniform("uTime", uTime);
     Shaders::Player.setUniform("uPlayerPosition", uPlayerPosition);
 
     Shaders::Portal.setUniform("uMouse", uMouse);
@@ -1513,7 +1512,8 @@ void updateShaders() {
 
     // Shaders::PickupItem.setUniform("uTime", uTime);
 
-    Shaders::Distorted.setUniform("uTime", uTime);
+    Shaders::Distortion1.setUniform("uTime", uTime);
+    Shaders::Distortion2.setUniform("uTime", uTime);
 }
 
 void processEffects() {
