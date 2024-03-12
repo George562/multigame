@@ -616,7 +616,7 @@ void LevelGenerate(int n, int m) {
     }
     FillFloorRectsThread.wait();
 }
-bool debugStuff;
+
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
 
@@ -629,7 +629,6 @@ void LoadMainMenu() {
     FillFloorRectsThread.launch();
 
     portal.setFunction([](Interactable* i){
-        debugStuff = true;
         clearVectorOfPointer(PickupStuff);
 
         DrawableStuff.clear();
