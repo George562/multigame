@@ -79,8 +79,6 @@ Bar<float> statsHPBar;
 Bar<float> statsMPBar;
 
 PlacedText statsArmorText;
-PlacedText statsMaxSpeedText;
-PlacedText statsAccelText;
 PlacedText statsHPText;
 PlacedText statsMPText;
 PlacedText statsHPRegenText;
@@ -141,7 +139,7 @@ Armageddon armageddon;
 Chaotic chaotic;
 FireHose fireHose;
 Flamethrower flamethrower;
-std::vector<Weapon*> weapons = {
+std::vector<Weapon*> arsenal = {
     &pistol,
     &shotgun,
     &revolver,
@@ -182,6 +180,8 @@ void setBox(Interactable*&);
 void setArtifact(Interactable*&);
 bool firePropagationAllowed(sf::Vector2i, sf::Vector2i);
 void fireUpdate();
+void saveGame();
+void loadSaves();
 
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
@@ -239,12 +239,9 @@ Button EscapeButton("Exit", [](){
     clearVectorOfPointer(listOfArtifact);
     clearVectorOfPointer(PickupStuff);
     player.CurWeapon->lock = true;
-    DeleteFromVector(weapons, (Weapon*)&fireHose);
-    CurWeapon -= 1;
-    CurWeapon.top -= 1;
-    DeleteFromVector(weapons, (Weapon*)&flamethrower);
-    CurWeapon -= 1;
-    CurWeapon.top -= 1;
+    if (DeleteFromVector(arsenal, (Weapon*)&fireHose))     CurWeapon.top -= 1;
+    if (DeleteFromVector(arsenal, (Weapon*)&flamethrower)) CurWeapon.top -= 1;
+    normalize(CurWeapon);
     LoadMainMenu();
 });
 
@@ -420,17 +417,17 @@ void drawInterface() {
         window.draw(ReloadWeaponText);
     }
 
-    for (int i = 0; i < weapons.size(); i++) {
-        if (weapons[i] == player.CurWeapon) {
+    for (int i = 0; i < arsenal.size(); i++) {
+        if (arsenal[i] == player.CurWeapon) {
             WeaponNameText.setFillColor(sf::Color::White);
             WeaponNameText.setOutlineThickness(3);
         } else {
             WeaponNameText.setFillColor(sf::Color(25, 192, 25, 160));
             WeaponNameText.setOutlineThickness(1);
         }
-        AmmoBar.setValue(weapons[i]->AmountOfAmmunition);
-        AmmoBar.setPosition(20, sch - 20 - (weapons.size() - i) * (AmmoBar.getSize().y + 10));
-        WeaponNameText.setString(weapons[i]->Name);
+        AmmoBar.setValue(arsenal[i]->AmountOfAmmunition);
+        AmmoBar.setPosition(20, sch - 20 - (arsenal.size() - i) * (AmmoBar.getSize().y + 10));
+        WeaponNameText.setString(arsenal[i]->Name);
         WeaponNameText.setPosition(35 + AmmoBar.getSize().x, AmmoBar.getPosition().y + WeaponNameText.Height / 4);
         window.draw(AmmoBar);
         window.draw(WeaponNameText);
@@ -546,8 +543,6 @@ void createInventoryUI() {
         statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
         statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
         statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
-        statsMaxSpeedText.setString("Maximum Speed: " + floatToString(player.MaxVelocity));
-        statsAccelText.setString("Acceleration: " + floatToString(player.Acceleration));
         // doInventoryUpdate[inventoryPage::Stats] = false;
     }
 }
@@ -621,7 +616,7 @@ void LevelGenerate(int n, int m) {
     }
     FillFloorRectsThread.wait();
 }
-
+bool debugStuff;
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
 
@@ -634,6 +629,7 @@ void LoadMainMenu() {
     FillFloorRectsThread.launch();
 
     portal.setFunction([](Interactable* i){
+        debugStuff = true;
         clearVectorOfPointer(PickupStuff);
 
         DrawableStuff.clear();
@@ -641,7 +637,7 @@ void LoadMainMenu() {
         InteractibeStuff.clear();
 
         player.setPosition(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
-        player.ChangeWeapon(weapons[CurWeapon.cur]);
+        player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
         screen = screens::Dungeon;
 
@@ -657,7 +653,7 @@ void LoadMainMenu() {
         }
 
         CurLocation = &LabyrinthLocation;
-        LevelGenerate(START_N++, START_M++);
+        LevelGenerate(START_N, START_M);
         FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);
@@ -756,6 +752,7 @@ void init() {
     loadFonts();
     loadShaders();
     loadMusics();
+    loadSaves();
 
     Musics::MainMenu.setLoop(true);
     Musics::MainMenu.setVolume(5);
@@ -943,14 +940,6 @@ void initInventory() {
     statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
     statsArmorText.setPosition(scw / 10, 6 * sch / 10);
 
-    statsMaxSpeedText.setCharacterSize(24);
-    statsMaxSpeedText.setString("Maximum Speed: " + floatToString(player.MaxVelocity));
-    statsMaxSpeedText.setPosition(scw / 10, 7 * sch / 10);
-
-    statsAccelText.setCharacterSize(24);
-    statsAccelText.setString("Acceleration: " + floatToString(player.Acceleration));
-    statsAccelText.setPosition(scw / 10, 8 * sch / 10);
-
     inventoryPageElements[inventoryPage::Items].push_back(&itemListBG);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsHPBar);
@@ -960,8 +949,6 @@ void initInventory() {
     inventoryPageElements[inventoryPage::Stats].push_back(&statsHPRegenText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsMaxSpeedText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsAccelText);
 
     doInventoryUpdate[inventoryPage::Items]      = false;
     doInventoryUpdate[inventoryPage::Weapons]    = false;
@@ -1074,7 +1061,7 @@ void EventHandler() {
                     if (event.type == sf::Event::MouseWheelScrolled) {
                         if (!MiniMapActivated) {
                             CurWeapon -= (int)event.mouseWheelScroll.delta;
-                            player.ChangeWeapon(weapons[CurWeapon.cur]);
+                            player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
                             std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
                             ReloadWeaponText.setString(reloadStr);
@@ -1102,7 +1089,7 @@ void EventHandler() {
                     if (event.type == sf::Event::MouseWheelScrolled) {
                         if (!MiniMapActivated) {
                             CurWeapon -= (int)event.mouseWheelScroll.delta;
-                            player.ChangeWeapon(weapons[CurWeapon.cur]);
+                            player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
                             std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
                             ReloadWeaponText.setString(reloadStr);
@@ -1219,12 +1206,12 @@ bool useItem(ItemID::Type id) {
             return true;
         case ItemID::fireHose:
             fireHose.AmountOfAmmunition = 100;
-            weapons.push_back(&fireHose);
+            arsenal.push_back(&fireHose);
             CurWeapon.top += 1;
             return true;
         case ItemID::flamethrower:
             flamethrower.AmountOfAmmunition = 100;
-            weapons.push_back(&flamethrower);
+            arsenal.push_back(&flamethrower);
             CurWeapon.top +=1 ;
             return true;
         default:
@@ -1390,16 +1377,16 @@ void MainLoop() {
             if (player.CurWeapon != nullptr) {
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
                 if (player.CurWeapon == &fireHose && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
-                    DeleteFromVector(weapons, (Weapon*)&fireHose);
+                    DeleteFromVector(arsenal, (Weapon*)&fireHose);
                     CurWeapon -= 1;
                     CurWeapon.top -= 1;
-                    player.ChangeWeapon(weapons[CurWeapon.cur]);
+                    player.ChangeWeapon(arsenal[CurWeapon.cur]);
                 }
                 if (player.CurWeapon == &flamethrower && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
-                    DeleteFromVector(weapons, (Weapon*)&flamethrower);
+                    DeleteFromVector(arsenal, (Weapon*)&flamethrower);
                     CurWeapon -= 1;
                     CurWeapon.top -= 1;
-                    player.ChangeWeapon(weapons[CurWeapon.cur]);
+                    player.ChangeWeapon(arsenal[CurWeapon.cur]);
                 }
             }
 
@@ -1458,6 +1445,7 @@ void MainLoop() {
 
         EventHandler();
     }
+    saveGame();
 }
 
 bool IsSomeOneCanBeActivated() {
@@ -1509,8 +1497,6 @@ void updateShaders() {
     Shaders::Architect.setUniform("uMouse", uMouse);
     Shaders::Architect.setUniform("uTime", uTime);
     Shaders::Architect.setUniform("uPlayerPosition", uPlayerPosition);
-
-    // Shaders::PickupItem.setUniform("uTime", uTime);
 
     Shaders::Distortion1.setUniform("uTime", uTime);
     Shaders::Distortion2.setUniform("uTime", uTime);
@@ -1641,6 +1627,28 @@ void fireUpdate() {
             FireSet.push_back(descendant1);
             DrawableStuff.push_back(descendant1);
         }
+    }
+}
+
+void saveGame() {
+    std::ofstream fileToSave("save.save");
+    fileToSave << player.Name.getString().toAnsiString() << '\n';
+    if (player.inventory.items[ItemID::coin] != nullptr)
+        fileToSave << player.inventory.items[ItemID::coin]->amount;
+    else 
+        fileToSave << 0;
+    fileToSave.close();
+}
+
+void loadSaves() {
+    std::ifstream fileToSave("save.save");
+    if (!fileToSave.is_open()) {
+        player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
+    } else {
+        char name[15]; fileToSave.getline(name, 15);
+        player.Name.setString(name);
+        int amount; fileToSave >> amount;
+        player.AddItem(new Item(ItemID::coin, amount));
     }
 }
 

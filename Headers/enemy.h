@@ -27,8 +27,6 @@ public:
         setAnimation(Textures::DistortedScientist, 1, 1, sf::seconds(1), &Shaders::Map);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
-
-        Name.ShowText = true;
     }
 
     void move(Location* location) override {
@@ -55,8 +53,6 @@ public:
         setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Map);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
-
-        Name.ShowText = true;
     }
 
     void move(Location* location) override {
@@ -84,8 +80,6 @@ public:
         setAnimation(Textures::Distorted, 1, 1, sf::seconds(1), &Shaders::Distortion2);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
-
-        Name.ShowText = true;
     }
 
     void move(Location* location) override {

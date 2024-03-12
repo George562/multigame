@@ -338,7 +338,7 @@ void FindTheWay(Location* where, sf::Vector2f from, sf::Vector2f to, std::vector
 }
 
 void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<sf::Vector2f>>& theWays) {
-    if (theWays.size() != location->n && (theWays.size() == 0 || theWays[0].size() != location->m)) {
+    if (theWays.size() != location->n || theWays[0].size() != location->m) {
         theWays.assign(location->n, std::vector<sf::Vector2f>(location->m, to));
     }
     std::queue<sf::Vector2i> q; q.push(sf::Vector2i(to.x / size, to.y / size));

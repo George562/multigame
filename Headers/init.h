@@ -147,7 +147,7 @@ namespace Shaders {
                PickupItem,
                Architect,
                DmgText,     // text moving up
-               Distortion1, // linear right move
+               Distortion1, // linear left move
                Distortion2  // circle move
                ;
 }

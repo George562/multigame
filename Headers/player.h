@@ -27,7 +27,9 @@ Player::Player() : Creature("Player", faction::Player) {
     Armor = {0.f, 0.f, 0.f};
     Radius = 60.f;
     Velocity = {0.f, 0.f}; MaxVelocity = 900.f;
-    Acceleration = 6000.f;
+    Acceleration = 10000.f;
+    Name.setOutlineColor(sf::Color::Green);
+    Name.setFillColor(sf::Color::Black);
 }
 
 void Player::move(Location* location) {

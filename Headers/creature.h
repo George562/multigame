@@ -33,7 +33,6 @@ public:
         Name.setOutlineThickness(2);
         Name.setOutlineColor(sf::Color::Red);
         Name.setFillColor(sf::Color::White);
-        Name.ShowText = false;
 
         faction = f;
 
