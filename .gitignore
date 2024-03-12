@@ -5,4 +5,4 @@ setupScript.iss
 versions/
 *.exe
 *.ico
-.save
+*.save
