@@ -76,9 +76,21 @@ public:
         // visualization https://www.desmos.com/calculator/oumleenz1s
 
         sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, *this, Velocity * ElapsedTimeAsSecond);
+        sf::Vector2i door_collision = WillCollisionWithDoor(location->wallsRect, location->doorPos, *this, Velocity * ElapsedTimeAsSecond);
 
-        if (tempv.x == -1) Velocity.x = 0;
-        if (tempv.y == -1) Velocity.y = 0;
+        if (door_collision.x == -1) {
+            if (this->inventory.items.count(ItemID::keyCard) > 0)
+                DeleteWall(location->walls, location->wallsRect, location->doorPos.y, location->doorPos.x);
+            else Velocity.x = 0;
+        } else
+        if (door_collision.y == -1) {
+            if (this->inventory.items.count(ItemID::keyCard) > 0)
+                DeleteWall(location->walls, location->wallsRect, location->doorPos.y, location->doorPos.x);
+            Velocity.y = 0;
+        } else {
+            if (tempv.x == -1) Velocity.x = 0;
+            if (tempv.y == -1) Velocity.y = 0;
+        }
 
         PosX += Velocity.x * ElapsedTimeAsSecond;
         PosY += Velocity.y * ElapsedTimeAsSecond;

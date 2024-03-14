@@ -431,6 +431,28 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f Velocity)
     return res;  // if value of vector == -1 => there was collision
 }
 
+template <typename Obj>
+sf::Vector2i WillCollisionWithDoor(vvr& Walls, sf::Vector2i doorPos, Obj& obj, sf::Vector2f Velocity) {
+    int y = int(obj.PosY) / size, x = int(obj.PosX) / size;
+    sf::Vector2i res = {-1, -1};
+    obj.PosY += Velocity.y;
+    if (!Walls[doorPos.y][doorPos.x].intersect(obj))
+            res.y = 1;
+    obj.PosY -= Velocity.y;
+    obj.PosX += Velocity.x;
+    if (!Walls[doorPos.y][doorPos.x].intersect(obj))
+            res.x = 1;
+    obj.PosX -= Velocity.x;
+    return res;  // if value of vector == -1 => there was collision
+}
+
+void DeleteWall(vvb& Walls, vvr& WallsRect, int _n, int _m) {
+    if (Walls[_n][_m]) {
+        Walls[_n][_m] = false;
+        WallsRect[_n][_m] = Rect{0, 0, 0, 0};
+    }
+}
+
 ////////////////////////////////////////////////////////////
 // perhaps unusable code, but usefull for future
 ////////////////////////////////////////////////////////////

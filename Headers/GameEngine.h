@@ -715,6 +715,12 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[2]);
     PickupStuff[2]->dropTo(player.getPosition() + sf::Vector2f(-550, -120));
 
+    Item* keyCard = new Item(ItemID::keyCard, 1);
+    keyCard->setAnimation(*itemTextureName[ItemID::keyCard], 1, 1, sf::seconds(1), &Shaders::Map);
+    PickupStuff.push_back(keyCard);
+    DrawableStuff.push_back(PickupStuff[3]);
+    PickupStuff[3]->dropTo(player.getPosition() + sf::Vector2f(-120, 100));
+
     listOfBox.push_back(new Interactable());
     setBox(listOfBox[0]);
     listOfBox[0]->setPosition(1912.5, 1545);
