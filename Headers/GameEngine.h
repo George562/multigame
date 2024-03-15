@@ -551,7 +551,8 @@ void LevelGenerate(int n, int m) {
     clearVectorOfPointer(Bullets);
 
     MiniMapView.zoom(1 / MiniMapZoom);
-    MiniMapZoom = 1;
+    MiniMapZoom = std::pow(1.1, -10);
+    MiniMapView.zoom(MiniMapZoom);
 
     LabyrinthLocation.GenerateLocation(n, m, player.getPosition() / float(size));
 
@@ -740,6 +741,8 @@ void init() {
     window.setView(GameView);
 
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+    MiniMapZoom = std::pow(1.1, -10);
+    MiniMapView.zoom(MiniMapZoom);
     GameClock = new sf::Clock;
 
     // Load locations
@@ -987,7 +990,7 @@ void EventHandler() {
                         continue;
                     }
                 }
-                if (event.key.code == sf::Keyboard::Tab) {
+                if (event.key.code == sf::Keyboard::M) {
                     MiniMapActivated = !MiniMapActivated;
                     if (MiniMapActivated) {
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
@@ -1000,7 +1003,7 @@ void EventHandler() {
                         MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
                     }
                 }
-                if (event.key.code == sf::Keyboard::Tilde) {
+                if (event.key.code == sf::Keyboard::I) {
                     isDrawInventory = true;
                     doInventoryUpdate[inventoryPage::Items] = true;
                 }
