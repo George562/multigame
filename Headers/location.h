@@ -147,6 +147,7 @@ void Location::WallGenerator(float probability) {
     ClearSeenWalls();
 }
 
+// bug: иногда создаётся замкнутая комната
 void Location::RoomGenerator() {
     std::vector<sf::Vector2i> probabblePositions;
     for (int i = 0; i < n; i++)
