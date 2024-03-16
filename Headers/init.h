@@ -26,15 +26,6 @@ namespace faction {
     }
 };
 
-namespace screens {
-    using Type = sf::Uint8;
-    enum : Type {  // the types of screen
-        MainRoom,
-        SetIP,
-        Dungeon
-    };
-};
-
 namespace pacetStates {
     sf::Uint8 curState;
     enum : sf::Uint8 {

@@ -20,7 +20,6 @@ sf::ContextSettings settings;
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated, isDrawInventory;
-screens::Type screen = screens::MainRoom;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactable*> InteractibeStuff;
 
@@ -226,7 +225,6 @@ Button EscapeButton("Exit", [](){
     } else if (ClientFuncRun) {
         SelfDisconnect();
     }
-    screen = screens::MainRoom;
     EscapeMenuActivated = false;
     ListOfPlayers.clear();
     clearVectorOfPointer(Bullets);
@@ -639,8 +637,6 @@ void LoadMainMenu() {
         player.setPosition(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
         player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
-        screen = screens::Dungeon;
-
         MiniMapActivated = false;
         EscapeMenuActivated = false;
 
@@ -1046,109 +1042,90 @@ void EventHandler() {
                 }
             }
 
-            switch (screen) {
-                case screens::MainRoom:
-                    if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Escape) {
-                            Musics::MainMenu.pause();
-                            window.close();
-                        }
-                    }
-                    if (player.CurWeapon != nullptr && !MiniMapActivated) {
-                        player.CurWeapon->Update(event);
-                        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
-                            player.CurWeapon->Reload(player.Mana);
-                        }
-                    }
-                    if (event.type == sf::Event::MouseWheelScrolled) {
-                        if (!MiniMapActivated) {
-                            CurWeapon -= (int)event.mouseWheelScroll.delta;
-                            player.ChangeWeapon(arsenal[CurWeapon.cur]);
+            if (event.type == sf::Event::MouseWheelScrolled) {
+                if (!MiniMapActivated) {
+                    CurWeapon -= (int)event.mouseWheelScroll.delta;
+                    player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
-                            std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
-                            ReloadWeaponText.setString(reloadStr);
-                            ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
-                        }
-                    }
-                    break;
-
-                case screens::Dungeon:
-                    if (player.CurWeapon != nullptr && !MiniMapActivated) {
-                        player.CurWeapon->Update(event);
-                        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
-                            player.CurWeapon->Reload(player.Mana);
-                        }
-                    }
-                    if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Escape) {
-                            EscapeMenuActivated = true;
-                        }
-                        if (event.key.code == sf::Keyboard::H) {
-                            player.setPosition(size, size);
-                            CurLocation = &WaitingRoomLoaction;
-                        }
-                    }
-                    if (event.type == sf::Event::MouseWheelScrolled) {
-                        if (!MiniMapActivated) {
-                            CurWeapon -= (int)event.mouseWheelScroll.delta;
-                            player.ChangeWeapon(arsenal[CurWeapon.cur]);
-
-                            std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
-                            ReloadWeaponText.setString(reloadStr);
-                            ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
-                        }
-                    }
-                    break;
-
-                case screens::SetIP:
-                    if (event.type == sf::Event::TextEntered) {
-                        sf::Uint32 code = event.text.unicode;
-                        if (46 == code || (48 <= code && code <= 57)) {
-                            IPOfHost.push_back(code);
-                            IPPanel.setWord("IP:" + IPOfHost);
-                        }
-                    }
-                    if (event.type == sf::Event::KeyPressed) {
-                        if (event.key.code == sf::Keyboard::Enter) {
-                            IPPanel.setWord("Connecting...");
-                            draw();
-                            if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
-                                selector.add(MySocket);
-
-                                if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
-                                    MySocket.receive(ReceivePacket) == sf::Socket::Done) {
-                                    while (!ReceivePacket.endOfPacket()) {
-                                        ReceivePacket >> pacetStates::curState;
-                                        switch (pacetStates::curState) {
-                                            case pacetStates::PlayersAmount:
-                                                ReceivePacket >> ComputerID;
-                                                std::cout << "My ID = " << ComputerID << '\n';
-                                                break;
-                                            case pacetStates::PlayerConnect:
-                                                ReceivePacket >> PacetData;
-                                                ListOfPlayers.addWord(PacetData);
-                                                ConnectedPlayers.push_back(*(new Player()));
-                                                std::cout << PacetData << " connected\n";
-                                                break;
-                                            case pacetStates::SetPos:
-                                                for (Player& x: ConnectedPlayers) {
-                                                    ReceivePacket >> x;
-                                                }
-                                                player.setPosition(ConnectedPlayers[ComputerID].getPosition());
-                                        }
-                                    }
-                                }
-                                ClientFuncRun = true;
-                                ClientTread.launch();
-                            }
-                            IPPanel.setWord("IP:" + IPOfHost);
-                        } else if (event.key.code == sf::Keyboard::BackSpace && IPOfHost.size() > 0) {
-                            IPOfHost.pop_back();
-                            IPPanel.setWord("IP:" + IPOfHost);
-                        }
-                    }
-                    break;
+                    std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
+                    ReloadWeaponText.setString(reloadStr);
+                    ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
                 }
+            }
+
+            if (player.CurWeapon != nullptr && !MiniMapActivated) {
+                player.CurWeapon->Update(event);
+                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
+                    player.CurWeapon->Reload(player.Mana);
+                }
+            }
+
+            if (CurLocation == &MainMenuLocation) {
+                if (event.type == sf::Event::KeyPressed) {
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        Musics::MainMenu.pause();
+                        window.close();
+                    }
+                }
+            } else if (CurLocation ==  &LabyrinthLocation) {
+                if (event.type == sf::Event::KeyPressed) {
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        EscapeMenuActivated = true;
+                    } else if (event.key.code == sf::Keyboard::H) {
+                        player.setPosition(size, size);
+                        CurLocation = &WaitingRoomLoaction;
+                    }
+                }
+            }
+
+            // case screens::SetIP:
+            //     if (event.type == sf::Event::TextEntered) {
+            //         sf::Uint32 code = event.text.unicode;
+            //         if (46 == code || (48 <= code && code <= 57)) {
+            //             IPOfHost.push_back(code);
+            //             IPPanel.setWord("IP:" + IPOfHost);
+            //         }
+            //     }
+            //     if (event.type == sf::Event::KeyPressed) {
+            //         if (event.key.code == sf::Keyboard::Enter) {
+            //             IPPanel.setWord("Connecting...");
+            //             draw();
+            //             if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
+            //                 selector.add(MySocket);
+
+            //                 if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
+            //                     MySocket.receive(ReceivePacket) == sf::Socket::Done) {
+            //                     while (!ReceivePacket.endOfPacket()) {
+            //                         ReceivePacket >> pacetStates::curState;
+            //                         switch (pacetStates::curState) {
+            //                             case pacetStates::PlayersAmount:
+            //                                 ReceivePacket >> ComputerID;
+            //                                 std::cout << "My ID = " << ComputerID << '\n';
+            //                                 break;
+            //                             case pacetStates::PlayerConnect:
+            //                                 ReceivePacket >> PacetData;
+            //                                 ListOfPlayers.addWord(PacetData);
+            //                                 ConnectedPlayers.push_back(*(new Player()));
+            //                                 std::cout << PacetData << " connected\n";
+            //                                 break;
+            //                             case pacetStates::SetPos:
+            //                                 for (Player& x: ConnectedPlayers) {
+            //                                     ReceivePacket >> x;
+            //                                 }
+            //                                 player.setPosition(ConnectedPlayers[ComputerID].getPosition());
+            //                         }
+            //                     }
+            //                 }
+            //                 ClientFuncRun = true;
+            //                 ClientTread.launch();
+            //             }
+            //             IPPanel.setWord("IP:" + IPOfHost);
+            //         } else if (event.key.code == sf::Keyboard::BackSpace && IPOfHost.size() > 0) {
+            //             IPOfHost.pop_back();
+            //             IPPanel.setWord("IP:" + IPOfHost);
+            //         }
+            //     }
+            //     break;
         }
     }
 }
@@ -1322,7 +1299,7 @@ void MainLoop() {
                     enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
                     TempTextsOnScreen.push_back(enemiesKilledText);
 
-                    if (screen == screens::Dungeon) {
+                    if (CurLocation == &LabyrinthLocation) {
                         if (!in(InteractibeStuff, (Interactable*)&portal)) {
                             InteractibeStuff.push_back(&portal);
                         }
@@ -1341,7 +1318,7 @@ void MainLoop() {
         fireUpdate();
 
         player.UpdateState();
-        if (screen == screens::Dungeon) {
+        if (CurLocation == &LabyrinthLocation) {
             if (Musics::Fight1.getDuration() - Musics::Fight1.getPlayingOffset() < sf::seconds(0.3f)) {
                 Musics::Fight2.play();
             }
@@ -1637,7 +1614,7 @@ void saveGame() {
     fileToSave << player.Name.getString().toAnsiString() << '\n';
     if (player.inventory.items[ItemID::coin] != nullptr)
         fileToSave << player.inventory.items[ItemID::coin]->amount;
-    else 
+    else
         fileToSave << 0;
     fileToSave.close();
 }
@@ -1731,7 +1708,6 @@ void ClientDisconnect(int i) {
 void SelfDisconnect() {
     std::cout << "SelfDisconnect\n";
     ClientFuncRun = false;
-    screen = screens::MainRoom;
     LoadMainMenu();
     mutex.lock();
     SendPacket << pacetStates::disconnect;
