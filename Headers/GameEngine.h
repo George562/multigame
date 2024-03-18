@@ -68,10 +68,12 @@ Button statsPageButton("Stats", [](){
 sf::Sprite invBackground;
 sf::Sprite itemListBG;
 
-std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
-std::map<ItemID::Type, std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
-std::map<ItemID::Type, Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
+std::vector<std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
+std::vector<std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
+std::vector<Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 std::vector<sf::Drawable*> statsVec; // All the drawables that are displayed on the stats screen
+
+int inventoryPages = 5; // Inventory page count
 
 sf::Sprite statsPlayerImage;
 Bar<float> statsHPBar;
@@ -84,7 +86,7 @@ PlacedText statsHPRegenText;
 PlacedText statsMPRegenText;
 
 bool isItemDescDrawn = false;
-std::map<inventoryPage::Type, bool> doInventoryUpdate;
+std::vector<bool> doInventoryUpdate;
 PlacedText itemDescText;
 ItemID::Type prevItemDescID;
 
@@ -494,6 +496,8 @@ void drawInventory() {
             break;
     }
 
+    createInventoryUI();
+
     window.setView(InterfaceView);
 }
 
@@ -501,7 +505,7 @@ void createInventoryUI() {
     if (doInventoryUpdate[inventoryPage::Items]) {
         if (!itemSlotsElements.empty()) {
             for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
+                if (itemSlotsElements[id].size() != 0) {
                     clearVectorOfPointer(itemSlotsElements[id]);
                 }
             }
@@ -858,6 +862,10 @@ void init() {
 }
 
 void initInventory() {
+    inventoryPageElements.resize(inventoryPage::NONE);
+    itemSlotsElements.resize(ItemID::NONE);
+    itemSlotsRects.resize(ItemID::NONE);
+
     invBackground.setTexture(Textures::SteelFrame);
     invBackground.setScale((float)scw / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y);
     invBackground.setPosition(0, 0);
@@ -948,11 +956,8 @@ void initInventory() {
     inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
 
-    doInventoryUpdate[inventoryPage::Items]      = false;
-    doInventoryUpdate[inventoryPage::Weapons]    = false;
-    doInventoryUpdate[inventoryPage::Equipables] = false;
-    doInventoryUpdate[inventoryPage::Perks]      = false;
-    doInventoryUpdate[inventoryPage::Stats]      = true;
+    doInventoryUpdate.assign(inventoryPage::NONE, false);
+    doInventoryUpdate[inventoryPage::Stats] = true;
 }
 
 void EventHandler() {
@@ -1141,10 +1146,10 @@ void inventoryHandler(sf::Event& event) {
     perksPageButton.isActivated(event);
     statsPageButton.isActivated(event);
 
-    if ((player.ManaRecovery != 0 && player.Mana.fromTop() != 0) ||
-        (player.HealthRecovery != 0 && player.Health.fromTop() != 0)) {
-        // doInventoryUpdate[inventoryPage::Stats] = true;
-    }
+    // if ((player.ManaRecovery != 0 && player.Mana.fromTop() != 0) ||
+    //     (player.HealthRecovery != 0 && player.Health.fromTop() != 0)) {
+    //     doInventoryUpdate[inventoryPage::Stats] = true;
+    // }
 
     bool isAnythingHovered = false;
     if (player.inventory.items.size() != 0 &&
@@ -1152,7 +1157,7 @@ void inventoryHandler(sf::Event& event) {
         for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
             if (player.inventory.items.find(id) != player.inventory.items.end() &&
                 player.inventory.items[id]->amount > 0 &&
-                !itemSlotsRects.empty() && itemSlotsRects.find(id) != itemSlotsRects.end() &&
+                !itemSlotsRects.empty() && itemSlotsRects[id] != nullptr &&
                 itemSlotsRects[id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
                 if (id != prevItemDescID) {
                     prevItemDescID = ItemID::NONE;
@@ -1174,8 +1179,6 @@ void inventoryHandler(sf::Event& event) {
     }
     if (!isAnythingHovered)
         isItemDescDrawn = false;
-
-    createInventoryUI();
 }
 
 bool useItem(ItemID::Type id) {
@@ -1199,10 +1202,9 @@ bool useItem(ItemID::Type id) {
 }
 
 void createSlotRects() {
-    for (auto it = itemSlotsRects.begin(); it != itemSlotsRects.end(); it++) {
-        delete it->second;
-    }
-    itemSlotsRects.clear();
+    for (int i = 0; i < itemSlotsRects.size(); i++)
+        DeletePointerFromVector(itemSlotsRects, i--);
+    itemSlotsRects.resize(ItemID::NONE);
 
     int slotNumber = 0;
     for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
