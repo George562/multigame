@@ -7,6 +7,7 @@ namespace Effects {
         Damage,
         Heal,
         HPRegen,
+        NONE,
     };
 };
 

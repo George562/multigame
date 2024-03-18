@@ -86,6 +86,8 @@ namespace Textures {
                 Fireball,
                 Architect,
                 Noise,
+//////////////////////////////////////////////////////////// Effect Textures
+                HPRegen,
 //////////////////////////////////////////////////////////// Panel Tetures
                 GreenPanel,
                 GreenPanelPushed,
@@ -118,17 +120,19 @@ void loadTextures() {
     Textures::Architect          .loadFromFile("sources/textures/Architect.png");
     Textures::Noise              .loadFromFile("sources/textures/noise.png");
 
-    Textures::GreenPanel        .loadFromFile("sources/textures/Panels/GreenPanel.png");
-    Textures::GreenPanelPushed  .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
-    Textures::RedPanel          .loadFromFile("sources/textures/Panels/RedPanel.png");
-    Textures::RedPanelPushed    .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
-    Textures::BluePanel         .loadFromFile("sources/textures/Panels/BluePanel.png");
-    Textures::BluePanelPushed   .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
-    Textures::YellowPanel       .loadFromFile("sources/textures/Panels/YellowPanel.png");
-    Textures::YellowPanelPushed .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
-    Textures::SteelFrame        .loadFromFile("sources/textures/Panels/SteelFrame.png");
-    Textures::ItemPanel         .loadFromFile("sources/textures/Panels/ItemPanel.png");
-    Textures::Frame4            .loadFromFile("sources/textures/Panels/frame4.png");
+    Textures::HPRegen            .loadFromFile("sources/textures/effects/HPRegenEffect.png");
+
+    Textures::GreenPanel         .loadFromFile("sources/textures/Panels/GreenPanel.png");
+    Textures::GreenPanelPushed   .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
+    Textures::RedPanel           .loadFromFile("sources/textures/Panels/RedPanel.png");
+    Textures::RedPanelPushed     .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
+    Textures::BluePanel          .loadFromFile("sources/textures/Panels/BluePanel.png");
+    Textures::BluePanelPushed    .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
+    Textures::YellowPanel        .loadFromFile("sources/textures/Panels/YellowPanel.png");
+    Textures::YellowPanelPushed  .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
+    Textures::SteelFrame         .loadFromFile("sources/textures/Panels/SteelFrame.png");
+    Textures::ItemPanel          .loadFromFile("sources/textures/Panels/ItemPanel.png");
+    Textures::Frame4             .loadFromFile("sources/textures/Panels/frame4.png");
 }
 
 namespace Shaders {

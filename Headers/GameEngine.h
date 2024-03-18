@@ -43,6 +43,9 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
+std::vector<sf::Sprite*> effectIcons;
+std::vector<TempText*> effectIconsTimers;
+
 //////////////////////////////////////////////////////////// InventoryStuff
 inventoryPage::Type activeInventoryPage = inventoryPage::Items;
 std::vector<sf::Drawable*> inventoryElements; // These elements appear on every page
@@ -71,9 +74,6 @@ sf::Sprite itemListBG;
 std::vector<std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
 std::vector<std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 std::vector<Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
-std::vector<sf::Drawable*> statsVec; // All the drawables that are displayed on the stats screen
-
-int inventoryPages = 5; // Inventory page count
 
 sf::Sprite statsPlayerImage;
 Bar<float> statsHPBar;
@@ -161,6 +161,7 @@ void drawFloor();
 void drawWalls();
 void drawMiniMap();
 void drawInterface();
+void drawEffects();
 void drawInventory();
 void createInventoryUI();
 void LevelGenerate(int, int);
@@ -454,7 +455,49 @@ void drawInterface() {
         }
     }
 
+    drawEffects();
+
     window.setView(GameView);
+}
+
+void drawEffects() {
+    int count = 0;
+    int xOffset = 175, yOffset = 175;
+    std::vector<int> seenEffects;
+    seenEffects.assign(Effects::NONE, false);
+    std::vector<sf::Time> effectTimersTimes;
+    effectTimersTimes.assign(Effects::NONE, sf::seconds(0.0));
+    for (Effect* eff : AllEffects) {
+        if (eff->active) {
+            if (seenEffects[eff->type] == 0) {
+                effectIcons[eff->type]->setScale(0.5, 0.5);
+                effectIcons[eff->type]->setPosition(ManaBar.getPosition().x - 300 + xOffset * (count % 3),
+                                ManaBar.getPosition().y + ManaBar.getSize().y + 20 + yOffset * (count / 3));
+                
+                TempText* txt = effectIconsTimers[eff->type];
+                txt->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
+                txt->setCharacterSize(28);
+                window.draw(*effectIcons[eff->type]);
+            }
+            seenEffects[eff->type] += 1;
+            effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->secs);
+            }
+            count++;
+    }
+    for (int i = 0; i < effectTimersTimes.size(); i++) {
+        if (seenEffects[i] > 0) {
+            TempText* txt = effectIconsTimers[i];
+            sf::Time timeDif = txt->howLongToExist - txt->localClock->getElapsedTime();
+            if (txt->localClock->getElapsedTime() > txt->howLongToExist || effectTimersTimes[i] > timeDif) {
+                txt->howLongToExist = effectTimersTimes[i];
+                txt->localClock->restart();
+            }
+            txt->setString("x" + std::to_string(seenEffects[i]) + "\t\t\t\t" +
+                           floatToString(timeDif.asSeconds()));
+            window.draw(*txt);
+        }
+            
+    }
 }
 
 void drawInventory() {
@@ -856,6 +899,12 @@ void init() {
     undergroundBG.setPosition(0, 0);
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
+    effectIcons.assign(Effects::NONE, new sf::Sprite());
+    effectIconsTimers.assign(Effects::NONE,  new TempText(sf::seconds(0.0)));
+
+    for (int i = 0; i < Effects::NONE; i++)
+        effectIcons[i]->setTexture(Textures::HPRegen);
+
     initInventory();
 
     LoadMainMenu();
@@ -1004,7 +1053,7 @@ void EventHandler() {
                         MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
                     }
                 }
-                if (event.key.code == sf::Keyboard::I) {
+                if (event.key.code == sf::Keyboard::Tab) {
                     isDrawInventory = true;
                     doInventoryUpdate[inventoryPage::Items] = true;
                 }
@@ -1194,7 +1243,7 @@ bool useItem(ItemID::Type id) {
         case ItemID::flamethrower:
             flamethrower.AmountOfAmmunition = 100;
             arsenal.push_back(&flamethrower);
-            CurWeapon.top +=1 ;
+            CurWeapon.top +=1;
             return true;
         default:
             return false;
@@ -1484,7 +1533,7 @@ void updateShaders() {
 }
 
 void processEffects() {
-    for (int i = AllEffects.size() - 1; i >= 0; i--) {
+    for (int i = 0; i < AllEffects.size(); i++) {
         if (AllEffects[i]->secs <= sf::Time::Zero) {
             switch (AllEffects[i]->type) {
                 case Effects::HPRegen:
@@ -1493,25 +1542,25 @@ void processEffects() {
                 default:
                     break;
             }
-            delete AllEffects[i];
-            std::swap(AllEffects[i], AllEffects[AllEffects.size() - 1]);
-            AllEffects.pop_back();
+            DeletePointerFromVector(AllEffects, i--);
         } else {
             float t = std::min(AllEffects[i]->localClock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
             AllEffects[i]->secs -= sf::seconds(t);
-            switch (AllEffects[i]->type) {
-                case Effects::Damage:
-                    AllEffects[i]->owner->getDamage(AllEffects[i]->parameter * t);
-                    break;
-                case Effects::Heal:
-                    AllEffects[i]->owner->getDamage(-AllEffects[i]->parameter * t);
-                    break;
-                case Effects::HPRegen:
-                    AllEffects[i]->owner->HealthRecovery += AllEffects[i]->parameter * (!AllEffects[i]->active);
-                    AllEffects[i]->active = true;
-                    break;
-                default:
-                    break;
+            if (!AllEffects[i]->active) {
+                switch (AllEffects[i]->type) {
+                    case Effects::Damage:
+                        AllEffects[i]->owner->getDamage(AllEffects[i]->parameter * t);
+                        break;
+                    case Effects::Heal:
+                        AllEffects[i]->owner->getDamage(-AllEffects[i]->parameter * t);
+                        break;
+                    case Effects::HPRegen:
+                        AllEffects[i]->owner->HealthRecovery += AllEffects[i]->parameter;
+                        AllEffects[i]->active = true;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
