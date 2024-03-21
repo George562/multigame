@@ -147,7 +147,6 @@ void Location::WallGenerator(float probability) {
     ClearSeenWalls();
 }
 
-// bug: иногда создаётся замкнутая комната
 void Location::RoomGenerator() {
     std::vector<sf::Vector2i> probabblePositions;
     for (int i = 0; i < n; i++)
@@ -212,7 +211,7 @@ void Location::FillWallsRect() {
                     wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
             } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
 
-    if (room.x != 0 && room.y != 0) {
+    if (room.x != 0 || room.y != 0) {
         if (doorPos.y % 2 == 1)
             wallsRect[doorPos.y][doorPos.x].setSize(WallMinSize / 2, WallMaxSize / 2);
         else
