@@ -53,14 +53,13 @@ public:
     sf::Vector2i room;
     sf::Vector2i doorPos;
 
-    Location() { AmountOfEnableTiles = 0; }
-    Location(int w, int h) { SetSize(w, h); }
+    Location() { AmountOfEnableTiles = 0; room = sf::Vector2i(0, 0); }
+    Location(int w, int h) { SetSize(w, h); room = sf::Vector2i(0, 0); }
     void SetSize(int w, int h);
     void GenerateLocation(int n, int m, sf::Vector2f RootPoint);
     void BuildWayFrom(sf::Vector2f);
     void WallGenerator(float probability);
     void RoomGenerator();
-    bool TileHas3Walls(int _n, int _m);
     std::vector<sf::Vector2i> getPassages(int _n, int _m);
     void FindEnableTilesFrom(sf::Vector2f&);
     void FillWallsRect();
