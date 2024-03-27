@@ -43,8 +43,8 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
-std::vector<sf::Sprite*> effectIcons;
-std::vector<TempText*> effectIconsTimers;
+std::vector<sf::Sprite*> effectIcons(Effects::NONE, new sf::Sprite());
+std::vector<TempText*> effectIconsTimers(Effects::NONE,  new TempText(sf::seconds(0.0)));
 
 //////////////////////////////////////////////////////////// InventoryStuff
 inventoryPage::Type activeInventoryPage = inventoryPage::Items;
@@ -86,7 +86,7 @@ PlacedText statsHPRegenText;
 PlacedText statsMPRegenText;
 
 bool isItemDescDrawn = false;
-std::vector<bool> doInventoryUpdate;
+std::vector<bool> doInventoryUpdate(inventoryPage::NONE, false);
 PlacedText itemDescText;
 ItemID::Type prevItemDescID;
 
@@ -463,10 +463,8 @@ void drawInterface() {
 void drawEffects() {
     int count = 0;
     int xOffset = 175, yOffset = 175;
-    std::vector<int> seenEffects;
-    seenEffects.assign(Effects::NONE, false);
-    std::vector<sf::Time> effectTimersTimes;
-    effectTimersTimes.assign(Effects::NONE, sf::seconds(0.0));
+    std::vector<int> seenEffects(Effects::NONE, false);
+    std::vector<sf::Time> effectTimersTimes(Effects::NONE, sf::seconds(0.0));
     for (Effect* eff : AllEffects) {
         if (eff->active) {
             if (seenEffects[eff->type] == 0) {
@@ -899,9 +897,6 @@ void init() {
     undergroundBG.setPosition(0, 0);
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
-    effectIcons.assign(Effects::NONE, new sf::Sprite());
-    effectIconsTimers.assign(Effects::NONE,  new TempText(sf::seconds(0.0)));
-
     for (int i = 0; i < Effects::NONE; i++)
         effectIcons[i]->setTexture(Textures::HPRegen);
 
@@ -1005,7 +1000,6 @@ void initInventory() {
     inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
 
-    doInventoryUpdate.assign(inventoryPage::NONE, false);
     doInventoryUpdate[inventoryPage::Stats] = true;
 }
 
