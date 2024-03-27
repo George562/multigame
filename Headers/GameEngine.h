@@ -43,8 +43,8 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
-std::vector<sf::Sprite*> effectIcons(Effects::NONE, new sf::Sprite());
-std::vector<TempText*> effectIconsTimers(Effects::NONE,  new TempText(sf::seconds(0.0)));
+std::vector<sf::Sprite*> effectIcons(Effects::NONE);
+std::vector<TempText*> effectIconsTimers(Effects::NONE);
 
 //////////////////////////////////////////////////////////// InventoryStuff
 inventoryPage::Type activeInventoryPage = inventoryPage::Items;
@@ -177,6 +177,8 @@ void MainLoop();
 bool IsSomeOneCanBeActivated();
 void FillFloorRects();
 void updateShaders();
+void applyEffect(Creature&, Effect*);
+void clearEffect(Creature&, Effect*);
 void processEffects();
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
@@ -463,24 +465,27 @@ void drawInterface() {
 void drawEffects() {
     int count = 0;
     int xOffset = 175, yOffset = 175;
-    std::vector<int> seenEffects(Effects::NONE, false);
+    std::vector<int> seenEffects(Effects::NONE, 0);
     std::vector<sf::Time> effectTimersTimes(Effects::NONE, sf::seconds(0.0));
     for (Effect* eff : AllEffects) {
-        if (eff->active) {
-            if (seenEffects[eff->type] == 0) {
-                effectIcons[eff->type]->setScale(0.5, 0.5);
-                effectIcons[eff->type]->setPosition(ManaBar.getPosition().x - 300 + xOffset * (count % 3),
-                                ManaBar.getPosition().y + ManaBar.getSize().y + 20 + yOffset * (count / 3));
-                
-                TempText* txt = effectIconsTimers[eff->type];
-                txt->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
-                txt->setCharacterSize(28);
-                window.draw(*effectIcons[eff->type]);
+        if (eff->type != Effects::Heal && eff->type != Effects::Damage) {
+            if (eff->active) {
+                if (seenEffects[eff->type] == 0) {
+                    effectIcons[eff->type]->setScale(0.5, 0.5);
+                    effectIcons[eff->type]->setPosition(ManaBar.getPosition().x - 300 + xOffset * (count % 3),
+                                    ManaBar.getPosition().y + ManaBar.getSize().y + 20 + yOffset * (count / 3));
+                    
+                    TempText* txt = effectIconsTimers[eff->type];
+                    txt->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
+                    txt->setCharacterSize(28);
+                    window.draw(*effectIcons[eff->type]);
+                }
+                seenEffects[eff->type] += 1;
+                effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->secs);
+
+                count++;
             }
-            seenEffects[eff->type] += 1;
-            effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->secs);
-            }
-            count++;
+        }
     }
     for (int i = 0; i < effectTimersTimes.size(); i++) {
         if (seenEffects[i] > 0) {
@@ -494,7 +499,6 @@ void drawEffects() {
                            floatToString(timeDif.asSeconds()));
             window.draw(*txt);
         }
-            
     }
 }
 
@@ -897,8 +901,12 @@ void init() {
     undergroundBG.setPosition(0, 0);
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
-    for (int i = 0; i < Effects::NONE; i++)
-        effectIcons[i]->setTexture(Textures::HPRegen);
+    for (int i = 0; i < Effects::NONE; i++) {
+        effectIconsTimers[i] = new TempText(sf::seconds(0.0));
+        effectIcons[i] = new sf::Sprite();
+    }
+    effectIcons[2]->setTexture(Textures::Eff_HPRegen);
+    effectIcons[3]->setTexture(Textures::Eff_Burn);
 
     initInventory();
 
@@ -1227,7 +1235,8 @@ void inventoryHandler(sf::Event& event) {
 bool useItem(ItemID::Type id) {
     switch (id) {
         case ItemID::regenDrug:
-            AllEffects.push_back(new Effect(&player, Effects::HPRegen, 1.f, sf::seconds(10.f)));
+            std::cout << "Using item\n";
+            applyEffect(player, new Effect(&player, Effects::HPRegen, std::vector<float>{1.0f}, sf::seconds(10.f)));
             return true;
         case ItemID::fireHose:
             fireHose.AmountOfAmmunition = 100;
@@ -1459,11 +1468,11 @@ void MainLoop() {
         draw();
 
         if (puddle.intersect(player))
-            AllEffects.push_back(new Effect(&player, Effects::Heal, 30.f, sf::seconds(1.5f)));
+            applyEffect(player, new Effect(&player, Effects::Heal, std::vector<float>{30.f}, sf::seconds(1.5f)));
 
         for (int i = 0; i < FireSet.size(); i++) {
             if (FireSet[i]->intersect(player))
-                AllEffects.push_back(new Effect(&player, Effects::Damage, 0.1f, sf::seconds(2.f)));
+                applyEffect(player, new Effect(&player, Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
         }
         processEffects();
 
@@ -1526,35 +1535,85 @@ void updateShaders() {
     Shaders::Distortion2.setUniform("uTime", uTime);
 }
 
+void clearEffect(Creature& owner, Effect* effect) {
+    switch (effect->type)
+    {
+        case Effects::HPRegen:
+            effect->owner->HealthRecovery -= effect->parameters[0];
+            break;
+        default:
+            owner.effectStacks[effect->type] -= 1;
+            break;
+    }
+}
+
+void applyEffect(Creature& owner, Effect* effect) {
+    switch (effect->type)
+    {
+        case Effects::Burn:
+            if (owner.effectStacks[effect->type] < 1) {
+                AllEffects.push_back(effect);
+                owner.effectStacks[effect->type] = 1;
+            }
+            break;
+        
+        case Effects::HPRegen:
+            AllEffects.push_back(effect);
+            owner.effectStacks[effect->type] += 1;
+            break;
+
+        case Effects::Heal:
+            AllEffects.push_back(effect);
+            break;
+
+        case Effects::Damage:
+            AllEffects.push_back(effect);
+            break;
+        
+        default:
+            AllEffects.push_back(effect);
+            owner.effectStacks[effect->type] += 1;
+            break;
+    }
+}
+
 void processEffects() {
     for (int i = 0; i < AllEffects.size(); i++) {
         if (AllEffects[i]->secs <= sf::Time::Zero) {
-            switch (AllEffects[i]->type) {
-                case Effects::HPRegen:
-                    AllEffects[i]->owner->HealthRecovery -= AllEffects[i]->parameter;
-                    break;
-                default:
-                    break;
-            }
+            clearEffect(*(AllEffects[i]->owner), AllEffects[i]);
             DeletePointerFromVector(AllEffects, i--);
         } else {
             float t = std::min(AllEffects[i]->localClock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
             AllEffects[i]->secs -= sf::seconds(t);
-            if (!AllEffects[i]->active) {
-                switch (AllEffects[i]->type) {
-                    case Effects::Damage:
-                        AllEffects[i]->owner->getDamage(AllEffects[i]->parameter * t);
-                        break;
-                    case Effects::Heal:
-                        AllEffects[i]->owner->getDamage(-AllEffects[i]->parameter * t);
-                        break;
-                    case Effects::HPRegen:
-                        AllEffects[i]->owner->HealthRecovery += AllEffects[i]->parameter;
+            switch (AllEffects[i]->type) {
+                case Effects::Damage:
+                    AllEffects[i]->owner->getDamage(AllEffects[i]->parameters[0] * t);
+                    break;
+                case Effects::Heal:
+                    AllEffects[i]->owner->getDamage(-AllEffects[i]->parameters[0] * t);
+                    break;
+                case Effects::HPRegen:
+                    if (!AllEffects[i]->active) {
+                        AllEffects[i]->owner->HealthRecovery += AllEffects[i]->parameters[0];
                         AllEffects[i]->active = true;
-                        break;
-                    default:
-                        break;
-                }
+                    }
+                    break;
+                case Effects::Burn:
+                    if (!AllEffects[i]->active) {
+                        AllEffects[i]->parameters[1] += 1;
+                        AllEffects[i]->owner->getDamage(AllEffects[i]->owner->HealthRecovery +
+                                                        AllEffects[i]->parameters[0] * AllEffects[i]->parameters[1]);
+                        AllEffects[i]->active = true;
+                    }
+                    if (AllEffects[i]->customTickClock->getElapsedTime().asSeconds() >= AllEffects[i]->customTick.asSeconds()) {
+                        AllEffects[i]->owner->getDamage(AllEffects[i]->owner->HealthRecovery +
+                                                        AllEffects[i]->parameters[0] * AllEffects[i]->parameters[1]);
+                        AllEffects[i]->parameters[1] += 1;
+                        AllEffects[i]->customTickClock->restart();
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }

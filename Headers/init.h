@@ -87,7 +87,8 @@ namespace Textures {
                 Architect,
                 Noise,
 //////////////////////////////////////////////////////////// Effect Textures
-                HPRegen,
+                Eff_HPRegen,
+                Eff_Burn,
 //////////////////////////////////////////////////////////// Panel Tetures
                 GreenPanel,
                 GreenPanelPushed,
@@ -120,7 +121,8 @@ void loadTextures() {
     Textures::Architect          .loadFromFile("sources/textures/Architect.png");
     Textures::Noise              .loadFromFile("sources/textures/noise.png");
 
-    Textures::HPRegen            .loadFromFile("sources/textures/effects/HPRegenEffect.png");
+    Textures::Eff_HPRegen        .loadFromFile("sources/textures/effects/HPRegenEffect.png");
+    Textures::Eff_Burn           .loadFromFile("sources/textures/effects/BurnEffect.png");
 
     Textures::GreenPanel         .loadFromFile("sources/textures/Panels/GreenPanel.png");
     Textures::GreenPanelPushed   .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
