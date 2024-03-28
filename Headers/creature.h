@@ -43,8 +43,6 @@ public:
         localClock = new sf::Clock();
         animation = nullptr;
         dropInventory = true;
-
-        effectStacks.assign(5, 0);
     }
     ~Creature() {
         if (localClock) {

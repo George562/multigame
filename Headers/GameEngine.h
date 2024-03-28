@@ -1548,6 +1548,8 @@ void clearEffect(Creature& owner, Effect* effect) {
 }
 
 void applyEffect(Creature& owner, Effect* effect) {
+    if (owner.effectStacks.size() == 0)
+        owner.effectStacks.assign(Effects::NONE, 0);
     switch (effect->type)
     {
         case Effects::Burn:

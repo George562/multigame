@@ -40,5 +40,8 @@ public:
         if (localClock) {
             delete localClock;
         }
+        if (customTickClock) {
+            delete customTickClock;
+        }
     }
 };
