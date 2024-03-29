@@ -31,7 +31,7 @@ public:
     void setTexture(sf::Texture&, sf::Texture&);
     void setCharacterSize(int size) { ButtonText.setCharacterSize(size); ButtonText.setCenter(getCenter()); }
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
-    bool OnTheButton(int& x, int& y)  { return contains(x, y); }
+    bool OnTheButton(int& x, int& y) { return contains(x, y); }
     bool isActivated(sf::Event&);
 };
 #pragma pack(pop)

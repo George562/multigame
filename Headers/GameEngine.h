@@ -466,7 +466,7 @@ void drawEffects() {
     int count = 0;
     int xOffset = 175, yOffset = 175;
     std::vector<int> seenEffects(Effects::NONE, 0);
-    std::vector<sf::Time> effectTimersTimes(Effects::NONE, sf::seconds(0.0));
+    std::vector<sf::Time> effectTimersTimes(Effects::NONE, sf::Time::Zero);
     for (Effect* eff : AllEffects) {
         if (eff->type != Effects::Heal && eff->type != Effects::Damage) {
             if (eff->active) {
@@ -474,10 +474,9 @@ void drawEffects() {
                     effectIcons[eff->type]->setScale(0.5, 0.5);
                     effectIcons[eff->type]->setPosition(ManaBar.getPosition().x - 300 + xOffset * (count % 3),
                                     ManaBar.getPosition().y + ManaBar.getSize().y + 20 + yOffset * (count / 3));
-                    
-                    TempText* txt = effectIconsTimers[eff->type];
-                    txt->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
-                    txt->setCharacterSize(28);
+
+                    effectIconsTimers[eff->type]->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
+                    effectIconsTimers[eff->type]->setCharacterSize(28);
                     window.draw(*effectIcons[eff->type]);
                 }
                 seenEffects[eff->type] += 1;
@@ -902,7 +901,7 @@ void init() {
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
     for (int i = 0; i < Effects::NONE; i++) {
-        effectIconsTimers[i] = new TempText(sf::seconds(0.0));
+        effectIconsTimers[i] = new TempText(sf::Time::Zero);
         effectIcons[i] = new sf::Sprite();
     }
     effectIcons[2]->setTexture(Textures::Eff_HPRegen);
@@ -1536,8 +1535,7 @@ void updateShaders() {
 }
 
 void clearEffect(Creature& owner, Effect* effect) {
-    switch (effect->type)
-    {
+    switch (effect->type) {
         case Effects::HPRegen:
             effect->owner->HealthRecovery -= effect->parameters[0];
             break;
@@ -1550,15 +1548,14 @@ void clearEffect(Creature& owner, Effect* effect) {
 void applyEffect(Creature& owner, Effect* effect) {
     if (owner.effectStacks.size() == 0)
         owner.effectStacks.assign(Effects::NONE, 0);
-    switch (effect->type)
-    {
+    switch (effect->type) {
         case Effects::Burn:
             if (owner.effectStacks[effect->type] < 1) {
                 AllEffects.push_back(effect);
                 owner.effectStacks[effect->type] = 1;
             }
             break;
-        
+
         case Effects::HPRegen:
             AllEffects.push_back(effect);
             owner.effectStacks[effect->type] += 1;
@@ -1571,7 +1568,7 @@ void applyEffect(Creature& owner, Effect* effect) {
         case Effects::Damage:
             AllEffects.push_back(effect);
             break;
-        
+
         default:
             AllEffects.push_back(effect);
             owner.effectStacks[effect->type] += 1;
