@@ -9,10 +9,7 @@
 std::string floatToString(float num) {
     int wholePart = std::floor(num);
     int fracPart = (num - wholePart) * 10;
-    if (fracPart == 0)
-        return std::to_string(wholePart);
-    else
-        return std::to_string(wholePart) + '.' + std::to_string(fracPart);
+    return std::to_string(wholePart) + '.' + std::to_string(fracPart);
 }
 
 void CreateImage() {

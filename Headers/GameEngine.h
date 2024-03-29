@@ -43,6 +43,9 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
+std::vector<sf::Sprite*> effectIcons(Effects::NONE);
+std::vector<TempText*> effectIconsTimers(Effects::NONE);
+
 //////////////////////////////////////////////////////////// InventoryStuff
 inventoryPage::Type activeInventoryPage = inventoryPage::Items;
 std::vector<sf::Drawable*> inventoryElements; // These elements appear on every page
@@ -68,10 +71,9 @@ Button statsPageButton("Stats", [](){
 sf::Sprite invBackground;
 sf::Sprite itemListBG;
 
-std::map<inventoryPage::Type, std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
-std::map<ItemID::Type, std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
-std::map<ItemID::Type, Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
-std::vector<sf::Drawable*> statsVec; // All the drawables that are displayed on the stats screen
+std::vector<std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
+std::vector<std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
+std::vector<Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
 sf::Sprite statsPlayerImage;
 Bar<float> statsHPBar;
@@ -84,7 +86,7 @@ PlacedText statsHPRegenText;
 PlacedText statsMPRegenText;
 
 bool isItemDescDrawn = false;
-std::map<inventoryPage::Type, bool> doInventoryUpdate;
+std::vector<bool> doInventoryUpdate(inventoryPage::NONE, false);
 PlacedText itemDescText;
 ItemID::Type prevItemDescID;
 
@@ -159,6 +161,7 @@ void drawFloor();
 void drawWalls();
 void drawMiniMap();
 void drawInterface();
+void drawEffects();
 void drawInventory();
 void createInventoryUI();
 void LevelGenerate(int, int);
@@ -174,6 +177,8 @@ void MainLoop();
 bool IsSomeOneCanBeActivated();
 void FillFloorRects();
 void updateShaders();
+void applyEffect(Creature&, Effect*);
+void clearEffect(Creature&, Effect*);
 void processEffects();
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
@@ -452,7 +457,48 @@ void drawInterface() {
         }
     }
 
+    drawEffects();
+
     window.setView(GameView);
+}
+
+void drawEffects() {
+    int count = 0;
+    int xOffset = 175, yOffset = 175;
+    std::vector<int> seenEffects(Effects::NONE, 0);
+    std::vector<sf::Time> effectTimersTimes(Effects::NONE, sf::Time::Zero);
+    for (Effect* eff : AllEffects) {
+        if (eff->type != Effects::Heal && eff->type != Effects::Damage) {
+            if (eff->active) {
+                if (seenEffects[eff->type] == 0) {
+                    effectIcons[eff->type]->setScale(0.5, 0.5);
+                    effectIcons[eff->type]->setPosition(ManaBar.getPosition().x - 300 + xOffset * (count % 3),
+                                    ManaBar.getPosition().y + ManaBar.getSize().y + 20 + yOffset * (count / 3));
+
+                    effectIconsTimers[eff->type]->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
+                    effectIconsTimers[eff->type]->setCharacterSize(28);
+                    window.draw(*effectIcons[eff->type]);
+                }
+                seenEffects[eff->type] += 1;
+                effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->secs);
+
+                count++;
+            }
+        }
+    }
+    for (int i = 0; i < effectTimersTimes.size(); i++) {
+        if (seenEffects[i] > 0) {
+            TempText* txt = effectIconsTimers[i];
+            sf::Time timeDif = txt->howLongToExist - txt->localClock->getElapsedTime();
+            if (txt->localClock->getElapsedTime() > txt->howLongToExist || effectTimersTimes[i] > timeDif) {
+                txt->howLongToExist = effectTimersTimes[i];
+                txt->localClock->restart();
+            }
+            txt->setString("x" + std::to_string(seenEffects[i]) + "\t\t\t\t" +
+                           floatToString(timeDif.asSeconds()));
+            window.draw(*txt);
+        }
+    }
 }
 
 void drawInventory() {
@@ -494,6 +540,8 @@ void drawInventory() {
             break;
     }
 
+    createInventoryUI();
+
     window.setView(InterfaceView);
 }
 
@@ -501,7 +549,7 @@ void createInventoryUI() {
     if (doInventoryUpdate[inventoryPage::Items]) {
         if (!itemSlotsElements.empty()) {
             for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
-                if (itemSlotsElements.find(id) != itemSlotsElements.end()) {
+                if (itemSlotsElements[id].size() != 0) {
                     clearVectorOfPointer(itemSlotsElements[id]);
                 }
             }
@@ -852,12 +900,23 @@ void init() {
     undergroundBG.setPosition(0, 0);
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
+    for (int i = 0; i < Effects::NONE; i++) {
+        effectIconsTimers[i] = new TempText(sf::Time::Zero);
+        effectIcons[i] = new sf::Sprite();
+    }
+    effectIcons[2]->setTexture(Textures::Eff_HPRegen);
+    effectIcons[3]->setTexture(Textures::Eff_Burn);
+
     initInventory();
 
     LoadMainMenu();
 }
 
 void initInventory() {
+    inventoryPageElements.resize(inventoryPage::NONE);
+    itemSlotsElements.resize(ItemID::NONE);
+    itemSlotsRects.resize(ItemID::NONE);
+
     invBackground.setTexture(Textures::SteelFrame);
     invBackground.setScale((float)scw / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y);
     invBackground.setPosition(0, 0);
@@ -948,11 +1007,7 @@ void initInventory() {
     inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
 
-    doInventoryUpdate[inventoryPage::Items]      = false;
-    doInventoryUpdate[inventoryPage::Weapons]    = false;
-    doInventoryUpdate[inventoryPage::Equipables] = false;
-    doInventoryUpdate[inventoryPage::Perks]      = false;
-    doInventoryUpdate[inventoryPage::Stats]      = true;
+    doInventoryUpdate[inventoryPage::Stats] = true;
 }
 
 void EventHandler() {
@@ -999,7 +1054,7 @@ void EventHandler() {
                         MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
                     }
                 }
-                if (event.key.code == sf::Keyboard::I) {
+                if (event.key.code == sf::Keyboard::Tab) {
                     isDrawInventory = true;
                     doInventoryUpdate[inventoryPage::Items] = true;
                 }
@@ -1141,10 +1196,10 @@ void inventoryHandler(sf::Event& event) {
     perksPageButton.isActivated(event);
     statsPageButton.isActivated(event);
 
-    if ((player.ManaRecovery != 0 && player.Mana.fromTop() != 0) ||
-        (player.HealthRecovery != 0 && player.Health.fromTop() != 0)) {
-        // doInventoryUpdate[inventoryPage::Stats] = true;
-    }
+    // if ((player.ManaRecovery != 0 && player.Mana.fromTop() != 0) ||
+    //     (player.HealthRecovery != 0 && player.Health.fromTop() != 0)) {
+    //     doInventoryUpdate[inventoryPage::Stats] = true;
+    // }
 
     bool isAnythingHovered = false;
     if (player.inventory.items.size() != 0 &&
@@ -1152,7 +1207,7 @@ void inventoryHandler(sf::Event& event) {
         for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
             if (player.inventory.items.find(id) != player.inventory.items.end() &&
                 player.inventory.items[id]->amount > 0 &&
-                !itemSlotsRects.empty() && itemSlotsRects.find(id) != itemSlotsRects.end() &&
+                !itemSlotsRects.empty() && itemSlotsRects[id] != nullptr &&
                 itemSlotsRects[id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
                 if (id != prevItemDescID) {
                     prevItemDescID = ItemID::NONE;
@@ -1174,14 +1229,13 @@ void inventoryHandler(sf::Event& event) {
     }
     if (!isAnythingHovered)
         isItemDescDrawn = false;
-
-    createInventoryUI();
 }
 
 bool useItem(ItemID::Type id) {
     switch (id) {
         case ItemID::regenDrug:
-            AllEffects.push_back(new Effect(&player, Effects::HPRegen, 1.f, sf::seconds(10.f)));
+            std::cout << "Using item\n";
+            applyEffect(player, new Effect(&player, Effects::HPRegen, std::vector<float>{1.0f}, sf::seconds(10.f)));
             return true;
         case ItemID::fireHose:
             fireHose.AmountOfAmmunition = 100;
@@ -1191,7 +1245,7 @@ bool useItem(ItemID::Type id) {
         case ItemID::flamethrower:
             flamethrower.AmountOfAmmunition = 100;
             arsenal.push_back(&flamethrower);
-            CurWeapon.top +=1 ;
+            CurWeapon.top +=1;
             return true;
         default:
             return false;
@@ -1199,10 +1253,9 @@ bool useItem(ItemID::Type id) {
 }
 
 void createSlotRects() {
-    for (auto it = itemSlotsRects.begin(); it != itemSlotsRects.end(); it++) {
-        delete it->second;
-    }
-    itemSlotsRects.clear();
+    for (int i = 0; i < itemSlotsRects.size(); i++)
+        DeletePointerFromVector(itemSlotsRects, i--);
+    itemSlotsRects.resize(ItemID::NONE);
 
     int slotNumber = 0;
     for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
@@ -1414,11 +1467,11 @@ void MainLoop() {
         draw();
 
         if (puddle.intersect(player))
-            AllEffects.push_back(new Effect(&player, Effects::Heal, 30.f, sf::seconds(1.5f)));
+            applyEffect(player, new Effect(&player, Effects::Heal, std::vector<float>{30.f}, sf::seconds(1.5f)));
 
         for (int i = 0; i < FireSet.size(); i++) {
             if (FireSet[i]->intersect(player))
-                AllEffects.push_back(new Effect(&player, Effects::Damage, 0.1f, sf::seconds(2.f)));
+                applyEffect(player, new Effect(&player, Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
         }
         processEffects();
 
@@ -1481,32 +1534,82 @@ void updateShaders() {
     Shaders::Distortion2.setUniform("uTime", uTime);
 }
 
-void processEffects() {
-    for (int i = AllEffects.size() - 1; i >= 0; i--) {
-        if (AllEffects[i]->secs <= sf::Time::Zero) {
-            switch (AllEffects[i]->type) {
-                case Effects::HPRegen:
-                    AllEffects[i]->owner->HealthRecovery -= AllEffects[i]->parameter;
-                    break;
-                default:
-                    break;
+void clearEffect(Creature& owner, Effect* effect) {
+    switch (effect->type) {
+        case Effects::HPRegen:
+            effect->owner->HealthRecovery -= effect->parameters[0];
+            break;
+        default:
+            owner.effectStacks[effect->type] -= 1;
+            break;
+    }
+}
+
+void applyEffect(Creature& owner, Effect* effect) {
+    if (owner.effectStacks.size() == 0)
+        owner.effectStacks.assign(Effects::NONE, 0);
+    switch (effect->type) {
+        case Effects::Burn:
+            if (owner.effectStacks[effect->type] < 1) {
+                AllEffects.push_back(effect);
+                owner.effectStacks[effect->type] = 1;
             }
-            delete AllEffects[i];
-            std::swap(AllEffects[i], AllEffects[AllEffects.size() - 1]);
-            AllEffects.pop_back();
+            break;
+
+        case Effects::HPRegen:
+            AllEffects.push_back(effect);
+            owner.effectStacks[effect->type] += 1;
+            break;
+
+        case Effects::Heal:
+            AllEffects.push_back(effect);
+            break;
+
+        case Effects::Damage:
+            AllEffects.push_back(effect);
+            break;
+
+        default:
+            AllEffects.push_back(effect);
+            owner.effectStacks[effect->type] += 1;
+            break;
+    }
+}
+
+void processEffects() {
+    for (int i = 0; i < AllEffects.size(); i++) {
+        if (AllEffects[i]->secs <= sf::Time::Zero) {
+            clearEffect(*(AllEffects[i]->owner), AllEffects[i]);
+            DeletePointerFromVector(AllEffects, i--);
         } else {
             float t = std::min(AllEffects[i]->localClock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
             AllEffects[i]->secs -= sf::seconds(t);
             switch (AllEffects[i]->type) {
                 case Effects::Damage:
-                    AllEffects[i]->owner->getDamage(AllEffects[i]->parameter * t);
+                    AllEffects[i]->owner->getDamage(AllEffects[i]->parameters[0] * t);
                     break;
                 case Effects::Heal:
-                    AllEffects[i]->owner->getDamage(-AllEffects[i]->parameter * t);
+                    AllEffects[i]->owner->getDamage(-AllEffects[i]->parameters[0] * t);
                     break;
                 case Effects::HPRegen:
-                    AllEffects[i]->owner->HealthRecovery += AllEffects[i]->parameter * (!AllEffects[i]->active);
-                    AllEffects[i]->active = true;
+                    if (!AllEffects[i]->active) {
+                        AllEffects[i]->owner->HealthRecovery += AllEffects[i]->parameters[0];
+                        AllEffects[i]->active = true;
+                    }
+                    break;
+                case Effects::Burn:
+                    if (!AllEffects[i]->active) {
+                        AllEffects[i]->parameters[1] += 1;
+                        AllEffects[i]->owner->getDamage(AllEffects[i]->owner->HealthRecovery +
+                                                        AllEffects[i]->parameters[0] * AllEffects[i]->parameters[1]);
+                        AllEffects[i]->active = true;
+                    }
+                    if (AllEffects[i]->customTickClock->getElapsedTime().asSeconds() >= AllEffects[i]->customTick.asSeconds()) {
+                        AllEffects[i]->owner->getDamage(AllEffects[i]->owner->HealthRecovery +
+                                                        AllEffects[i]->parameters[0] * AllEffects[i]->parameters[1]);
+                        AllEffects[i]->parameters[1] += 1;
+                        AllEffects[i]->customTickClock->restart();
+                    }
                     break;
                 default:
                     break;

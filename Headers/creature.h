@@ -27,6 +27,8 @@ public:
     bool dropInventory;
     Inventory inventory;
 
+    std::vector<int> effectStacks;
+
     Creature(sf::String name, faction::Type f) : Circle() {
         Name.setString(name);
         Name.setCharacterSize(25);
