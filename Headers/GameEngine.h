@@ -19,7 +19,7 @@ sf::ContextSettings settings;
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 float MiniMapZoom = 1.f;
-bool MiniMapActivated, EscapeMenuActivated, isDrawInventory;
+bool MiniMapActivated, EscapeMenuActivated, isDrawInventory, isDrawShop;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
 std::vector<Interactable*> InteractibeStuff;
 
@@ -103,7 +103,8 @@ bool ClientFuncRun, HostFuncRun;
 
 //////////////////////////////////////////////////////////// Interactables
 Interactable portal,
-             puddle;
+             puddle,
+             shop;
 std::vector<Interactable*> listOfBox,
                            listOfArtifact;
 
@@ -721,6 +722,10 @@ void LoadMainMenu() {
         player.getDamage(5.f);
     });
 
+    shop.setFunction([](Interactable* i){
+        isDrawShop = true;
+    });
+
     // Set cameras
     GameView.setCenter(player.getPosition());
     MiniMapView.setCenter(player.getPosition() * ScaleParam);
@@ -741,6 +746,7 @@ void LoadMainMenu() {
     InteractibeStuff.clear();
     InteractibeStuff.push_back(&portal);
     InteractibeStuff.push_back(&puddle);
+    InteractibeStuff.push_back(&shop);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
     newItem->setAnimation(*itemTextureName[ItemID::regenDrug], 1, 1, sf::seconds(1), &Shaders::Map);
@@ -810,6 +816,8 @@ void init() {
     player.setAnimation(Textures::Player, 1, 1, sf::seconds(1), &Shaders::Player);
     puddle.setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
     puddle.setSize(90.f, 90.f);
+    shop.setSize(size, size);
+    shop.setPosition(-3 * size, 2 * size);
 
     Shaders::Map.setUniform("uResolution", sf::Vector2f(scw, sch));
     Shaders::Map.setUniform("u_playerRadius", player.Radius);
