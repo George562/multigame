@@ -7,7 +7,7 @@
 
 class Inventory {
 public:
-    std::map<ItemID::Type, Item*> items; // All items that can be dropped.
+    std::map<ItemID::Type, Item*> items;
 
     void addItem(Item*& item) {
         if (!items[item->id]) {
