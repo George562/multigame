@@ -24,7 +24,7 @@ public:
         Radius = 60.f;
         CurWeapon = new Pistol();
 
-        setAnimation(Textures::DistortedScientist, 1, 1, sf::seconds(1), &Shaders::Map);
+        setAnimation(Textures::DistortedScientist, &Shaders::Map);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
     }
@@ -75,7 +75,7 @@ public:
         Radius = 60.f;
         CurWeapon = new Pistol();
 
-        setAnimation(Textures::Distorted, 1, 1, sf::seconds(1), &Shaders::Distortion2);
+        setAnimation(Textures::Distorted, &Shaders::Distortion2);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
     }

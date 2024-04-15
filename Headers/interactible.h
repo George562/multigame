@@ -49,6 +49,15 @@ public:
         animation->play();
     };
 
+    void setAnimation(sf::Texture& texture, sf::Shader *shader = nullptr) {
+        if (animation != nullptr) {
+            delete animation;
+        }
+        animation = new Animation(texture, shader);
+        Rect::setSize(animation->getGlobalSize());
+        animation->play();
+    };
+
     void setSize(float w, float h) { Rect::setSize(w, h); animation->setSize(sf::Vector2f(w, h)); }
     void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
 

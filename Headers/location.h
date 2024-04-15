@@ -389,7 +389,7 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
 template <typename Obj>
 sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f Velocity) {
     int y = int(obj.PosY) / size, x = int(obj.PosX) / size;
-    sf::Vector2i res = {-1, -1};
+    sf::Vector2i res(Velocity.x != 0 ? -1 : 1, Velocity.y != 0 ? -1 : 1);
 
     obj.PosY += Velocity.y;
     if (Velocity.y < 0) {
