@@ -18,7 +18,7 @@ public:
     sf::Vector2f Velocity; float MaxVelocity, VelocityBuff;
     float Acceleration;
     sf::Vector2f target;
-    Weapon *FirstWeapon = nullptr, *SecondWeapon = nullptr, *CurWeapon = nullptr;
+    Weapon *CurWeapon = nullptr; // ref on exist weapon from arsenal
     sf::Time LastStateCheck, LastMoveCheck;
     sf::Clock* localClock = nullptr;
     mutable PlacedText Name;

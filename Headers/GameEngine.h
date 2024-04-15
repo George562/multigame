@@ -852,9 +852,6 @@ void init() {
     MMPlayerCircle.setFillColor(sf::Color(0, 180, 0));
     MMPlayerCircle.setOrigin(MMPlayerCircle.getRadius(), MMPlayerCircle.getRadius());
 
-    player.FirstWeapon  = &pistol;
-    player.SecondWeapon = &shotgun;
-
     HpBar.setSize(360, 50);
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
     HpBar.setValue(player.Health);
