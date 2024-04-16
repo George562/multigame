@@ -74,8 +74,19 @@ struct Bullet : public Circle, public sf::Drawable {
     }
 
     void move(Location* location) {
+        float elapsedTime = std::min(localClock->restart().asSeconds(), oneOverSixty);
         if (LenOfVector(Velocity) != 0) {
-            sf::Vector2i res = WillCollisionWithWalls(location->wallsRect, *this, Velocity);
+            sf::Vector2i res;
+            switch (type) {
+                case Bullet::Bubble:
+                    res = WillCollisionWithWalls(location->wallsRect, *this, Velocity * timer.asSeconds() * elapsedTime);
+                    break;
+                case Bullet::Common:
+                case Bullet::WaterParticle:
+                case Bullet::FireParticle:
+                    res = WillCollisionWithWalls(location->wallsRect, *this, Velocity * elapsedTime);
+                    break;
+            }
             if (res.x == -1 || res.y == -1) {
                 penetration--;
             }
@@ -83,16 +94,16 @@ struct Bullet : public Circle, public sf::Drawable {
         }
         switch (type) {
             case Bullet::Bubble:
-                PosX += Velocity.x * (timer - localClock->getElapsedTime()).asSeconds();
-                PosY += Velocity.y * (timer - localClock->getElapsedTime()).asSeconds();
-                if (!explode && timer < localClock->getElapsedTime()) {
+                timer -= sf::seconds(elapsedTime);
+                PosX += Velocity.x * timer.asSeconds() * elapsedTime;
+                PosY += Velocity.y * timer.asSeconds() * elapsedTime;
+                if (!explode && timer <= sf::Time::Zero) {
                     Velocity = {0.f, 0.f};
                     explode = true;
-                    localClock->restart();
                 }
                 if (explode && !todel) {
                     if (ExplosionRadius.fromTop() > 0) {
-                        ExplosionRadius += localClock->restart().asSeconds() * 8.f;
+                        ExplosionRadius += elapsedTime * 8.f;
                         color -= sf::Color(0, 0, 0, 4);
                         Radius = COMMON_BULLET_RADIUS * ExplosionRadius.cur;
                         Circle::move(-COMMON_BULLET_RADIUS / 5, -COMMON_BULLET_RADIUS / 5);
@@ -100,13 +111,9 @@ struct Bullet : public Circle, public sf::Drawable {
                 }
                 break;
             case Bullet::Common:
-                Circle::move(Velocity);
-                break;
             case Bullet::WaterParticle:
-                Circle::move(Velocity);
-                break;
             case Bullet::FireParticle:
-                Circle::move(Velocity);
+                Circle::move(Velocity * elapsedTime);
                 break;
         }
     }

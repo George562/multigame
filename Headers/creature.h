@@ -18,7 +18,7 @@ public:
     sf::Vector2f Velocity; float MaxVelocity, VelocityBuff;
     float Acceleration;
     sf::Vector2f target;
-    Weapon *FirstWeapon = nullptr, *SecondWeapon = nullptr, *CurWeapon = nullptr;
+    Weapon *CurWeapon = nullptr; // ref on exist weapon from arsenal
     sf::Time LastStateCheck, LastMoveCheck;
     sf::Clock* localClock = nullptr;
     mutable PlacedText Name;
@@ -38,8 +38,8 @@ public:
 
         faction = f;
 
-        LastStateCheck = sf::seconds(0);
-        LastMoveCheck = sf::seconds(0);
+        LastStateCheck = sf::Time::Zero;
+        LastMoveCheck = sf::Time::Zero;
         localClock = new sf::Clock();
         animation = nullptr;
         dropInventory = true;
@@ -65,7 +65,7 @@ public:
     virtual void getDamage(float dmg) { Health -= dmg; }
 
     virtual void move(Location* location) {
-        float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), 1.f / 60.f);
+        float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), oneOverSixty);
         sf::Vector2f dist = target - getPosition();
         float len = std::sqrt(dist.x * dist.x + dist.y * dist.y);
         sf::Vector2f VelocityTarget(std::clamp(dist.x, -std::abs(dist.x) * MaxVelocity * VelocityBuff / len, std::abs(dist.x) * MaxVelocity * VelocityBuff / len),
@@ -102,6 +102,16 @@ public:
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
     }
+
+    void setAnimation(sf::Texture& texture, sf::Shader *shader = nullptr) {
+        if (animation != nullptr) {
+            delete animation;
+        }
+        animation = new Animation(texture, shader);
+        animation->setSize({Radius * 2.f, Radius * 2.f});
+        animation->setOrigin(animation->getLocalSize() / 2.f);
+        animation->play();
+    };
 
     void ChangeWeapon(Weapon* to) { CurWeapon = to; }
 

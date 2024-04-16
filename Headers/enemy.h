@@ -8,6 +8,7 @@ std::vector<std::vector<sf::Vector2f>> TheWayToPlayer;
 class Enemy : public Creature {
 public:
     Enemy(sf::String name) : Creature(name, faction::Enemy) {}
+    ~Enemy() { if (CurWeapon) { delete CurWeapon; } }
 };
 ////////////////////////////////////////////////////////////
 
@@ -15,16 +16,15 @@ public:
 class DistortedScientist : public Enemy {
 public:
     DistortedScientist() : Enemy("Distorted Scientist") {
-        Health = {0, 20, 20}; HealthRecovery = 1;
-        Mana = {0, 100, 100}; ManaRecovery = 1;
-        ManaRecovery = 1;
-        Armor = {0, 100, 100};
+        Health = {0,  20,  20}; HealthRecovery = 1;
+        Mana   = {0, 100, 100}; ManaRecovery   = 1;
+        Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
         CurWeapon = new Pistol();
 
-        setAnimation(Textures::DistortedScientist, 1, 1, sf::seconds(1), &Shaders::Map);
+        setAnimation(Textures::DistortedScientist, &Shaders::Map);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
     }
@@ -41,10 +41,9 @@ public:
 class ScottPilgrim : public Enemy {
 public:
     ScottPilgrim() : Enemy("Scott Pilgrim") {
-        Health = {0, 20, 20}; HealthRecovery = 1;
-        Mana = {0, 100, 100}; ManaRecovery = 1;
-        ManaRecovery = 1;
-        Armor = {0, 100, 100};
+        Health = {0,  20,  20}; HealthRecovery = 1;
+        Mana   = {0, 100, 100}; ManaRecovery   = 1;
+        Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
@@ -68,16 +67,15 @@ public:
 class Distorted : public Enemy {
 public:
     Distorted() : Enemy("Distorted") {
-        Health = {0, 20, 20}; HealthRecovery = 1;
-        Mana = {0, 100, 100}; ManaRecovery = 1;
-        ManaRecovery = 1;
-        Armor = {0, 100, 100};
+        Health = {0,  20,  20}; HealthRecovery = 1;
+        Mana   = {0, 100, 100}; ManaRecovery   = 1;
+        Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
         CurWeapon = new Pistol();
 
-        setAnimation(Textures::Distorted, 1, 1, sf::seconds(1), &Shaders::Distortion2);
+        setAnimation(Textures::Distorted, &Shaders::Distortion2);
 
         inventory.items[ItemID::regenDrug] = new Item(ItemID::regenDrug, 1);
     }

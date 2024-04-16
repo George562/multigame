@@ -51,12 +51,12 @@ std::map<ItemID::Type, int> itemTextureFrameAmount {
 };
 
 std::map<ItemID::Type, sf::Time> itemTextureDuration {
-    {ItemID::generic,      sf::seconds(1)},
-    {ItemID::medkit,       sf::seconds(1)},
-    {ItemID::regenDrug,    sf::seconds(1)},
+    {ItemID::generic,      sf::Time::Zero},
+    {ItemID::medkit,       sf::Time::Zero},
+    {ItemID::regenDrug,    sf::Time::Zero},
     {ItemID::coin,         sf::seconds(0.75)},
-    {ItemID::fireHose,     sf::seconds(1)},
-    {ItemID::flamethrower, sf::seconds(1)}
+    {ItemID::fireHose,     sf::Time::Zero},
+    {ItemID::flamethrower, sf::Time::Zero}
 };
 
 std::map<ItemID::Type, sf::Shader *> itemTextureShader {
@@ -88,12 +88,12 @@ std::map<ItemID::Type, int> pickupItemTextureFrameAmount {
 };
 
 std::map<ItemID::Type, sf::Time> pickupItemTextureDuration {
-    {ItemID::generic,      sf::seconds(1)},
-    {ItemID::medkit,       sf::seconds(1)},
-    {ItemID::regenDrug,    sf::seconds(1)},
-    {ItemID::coin,         sf::seconds(1)},
-    {ItemID::fireHose,     sf::seconds(1)},
-    {ItemID::flamethrower, sf::seconds(1)}
+    {ItemID::generic,      sf::Time::Zero},
+    {ItemID::medkit,       sf::Time::Zero},
+    {ItemID::regenDrug,    sf::Time::Zero},
+    {ItemID::coin,         sf::Time::Zero},
+    {ItemID::fireHose,     sf::Time::Zero},
+    {ItemID::flamethrower, sf::Time::Zero}
 };
 
 std::map<ItemID::Type, sf::Shader *> pickupItemTextureShader {
@@ -160,8 +160,11 @@ Item::Item(ItemID::Type _id, int _amount, bool _pickupable, bool _isInInventory,
     isInInventory = _isInInventory;
     isEquippable  = _isEquippable;
     isKeyItem     = _isKeyItem;
-
-    setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
+    if (itemTextureDuration[id] != sf::Time::Zero) {
+        setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
+    } else {
+        setAnimation(*itemTextureName[id], itemTextureShader[id]);
+    }
 }
 
 Item::Item(const Item& item) {
@@ -172,8 +175,11 @@ Item::Item(const Item& item) {
     isInInventory = item.isInInventory;
     isEquippable  = item.isEquippable;
     isKeyItem     = item.isKeyItem;
-
-    setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
+    if (itemTextureDuration[id] != sf::Time::Zero) {
+        setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
+    } else {
+        setAnimation(*itemTextureName[id], itemTextureShader[id]);
+    }
 }
 
 bool Item::CanBeActivated(Circle& player) {
@@ -195,7 +201,11 @@ bool Item::isActivated(Circle& player, sf::Event& event) {
 }
 
 void Item::dropTo(sf::Vector2f pos) {
-    setAnimation(*pickupItemTextureName[id], pickupItemTextureFrameAmount[id], 1, pickupItemTextureDuration[id], pickupItemTextureShader[id]);
+    if (pickupItemTextureDuration[id] != sf::Time::Zero) {
+        setAnimation(*pickupItemTextureName[id], pickupItemTextureFrameAmount[id], 1, pickupItemTextureDuration[id], pickupItemTextureShader[id]);
+    } else {
+        setAnimation(*pickupItemTextureName[id], pickupItemTextureShader[id]);
+    }
     setPosition(pos);
     isInInventory = false;
 }

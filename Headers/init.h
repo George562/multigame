@@ -61,6 +61,8 @@ constexpr float ScaleParam = float(miniSize) / float(size);
 int START_N = 9, START_M = 6;
 float WallMinSize = size / 8, WallMaxSize = size;
 
+constexpr float oneOverSixty = 1.f / 60.f;
+
 sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
