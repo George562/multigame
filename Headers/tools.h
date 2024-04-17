@@ -26,6 +26,19 @@ std::string textWrap(std::string text, int wrapEvery) {
     return wrappedText;
 }
 
+std::string stringLower(std::string text) {
+    std::string loweredText;
+    int uppercaseCount = 0;
+    for (int i = 0; i < text.size(); i++)
+        if ('A' <= text[i] && text[i] <= 'Z')
+            uppercaseCount++;
+    if (uppercaseCount > 1) // If it's an acronym - do not lower
+        return text;
+    for (int i = 0; i < text.size(); i++)
+        loweredText.push_back(std::tolower(text[i]));
+    return loweredText;
+}
+
 void CreateImage() {
     sf::Image img, res;
     img.loadFromFile("sources/textures/floor1x.png");

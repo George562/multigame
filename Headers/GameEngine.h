@@ -110,6 +110,7 @@ Shop* curShop = nullptr;
 Item* shopSelectedItem = nullptr;
 std::vector<sf::Drawable*> shopUIElements;
 std::vector<std::vector<sf::Drawable*>> shopItemSlotsElements; // Analogous to the inventory itemSlotsElements + price
+std::vector<std::vector<sf::Drawable*>> shopPlayerSlotsElements; // Analogous to the inventory itemSlotsElements + price
 std::vector<Rect*> shopItemSlotsRects; // Analogous to the inventory itemSlotsRects
 
 sf::Sprite shopBG, shopBGPattern;
@@ -586,27 +587,30 @@ void initInventory() {
 
 void initShop() {
     shopItemSlotsElements.resize(ItemID::NONE);
+    shopPlayerSlotsElements.resize(ItemID::NONE);
     shopItemSlotsRects.resize(ItemID::NONE);
     mainMenuShop = Shop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100),
                                                new Item(ItemID::flamethrower, 1),
                                                new Item(ItemID::fireHose, 1)},
                         std::vector<int>{20, 100, 199});
     mainMenuShop.setFunction([](Player* player){
-        if (shopSelectedItem != nullptr &&
-            player->inventory.items[ItemID::coin]->amount >= mainMenuShop.itemPrices[shopSelectedItem->id] &&
-            mainMenuShop.soldItems.items[shopSelectedItem->id]->amount > 0) {
+        if (shopSelectedItem != nullptr)
+            if (player->inventory.items[ItemID::coin]->amount >= mainMenuShop.itemPrices[shopSelectedItem->id]) {
+                if(mainMenuShop.soldItems.items[shopSelectedItem->id]->amount > 0) {
+                    Item boughtItem = Item(*shopSelectedItem);
+                    boughtItem.amount = 1;
+                    player->AddItem(&boughtItem);
+                    player->inventory.items[ItemID::coin]->amount -= mainMenuShop.itemPrices[shopSelectedItem->id];
 
-            Item boughtItem = Item(*shopSelectedItem);
-            boughtItem.amount = 1;
-            player->AddItem(&boughtItem);
-            player->inventory.items[ItemID::coin]->amount -= mainMenuShop.itemPrices[shopSelectedItem->id];
-
-            mainMenuShop.soldItems.items[shopSelectedItem->id]->amount -= 1;
-            if (mainMenuShop.soldItems.items[shopSelectedItem->id]->amount == 0) {
-                shopItemSprite.setTexture(Textures::INVISIBLE);
-                shopSelectedItem = nullptr;
+                    mainMenuShop.soldItems.items[shopSelectedItem->id]->amount -= 1;
+                    shopNPCText.setString("Thank you for buying a " + stringLower(itemName[shopSelectedItem->id]) + "!");
+                    if (mainMenuShop.soldItems.items[shopSelectedItem->id]->amount == 0) {
+                        shopItemSprite.setTexture(Textures::INVISIBLE);
+                        shopSelectedItem = nullptr;
+                    }
+                }
             }
-        }
+            else shopNPCText.setString("Sorry, but you cannot afford a " + stringLower(itemName[shopSelectedItem->id]) + ".");
     });
 
     int xOffset = 50, yOffset = 50;
@@ -630,6 +634,20 @@ void initShop() {
     shopNPCTextFrame.setScale((float) (scw - 2 * xOffset) / Textures::NPCDialogueFrame_Wide.getSize().x,
                               200.0 / Textures::NPCDialogueFrame_Wide.getSize().y);
     shopNPCTextFrame.setPosition(xOffset, shopBackButton.getBottom() + yOffset / 5);
+
+    shopNPCSprite.setTexture(Textures::DistortedScientist);
+    shopNPCSprite.setScale((shopNPCTextFrame.getGlobalBounds().height - 2 * yOffset) / shopNPCSprite.getTexture()->getSize().x,
+                           (shopNPCTextFrame.getGlobalBounds().height - 2 * yOffset) / shopNPCSprite.getTexture()->getSize().y);
+    shopNPCSprite.setPosition(shopNPCTextFrame.getPosition() + sf::Vector2f(2 * xOffset, yOffset));
+
+    shopNPCName.setCharacterSize(32);
+    shopNPCName.setPosition(shopNPCSprite.getPosition().x + shopNPCSprite.getGlobalBounds().width + xOffset,
+                            shopNPCSprite.getPosition().y + shopNPCSprite.getGlobalBounds().height / 2 - yOffset / 2);
+    shopNPCName.setString(textWrap("Shop keeper", 20));
+
+    shopNPCText.setCharacterSize(32);
+    shopNPCText.setPosition(shopNPCTextFrame.getPosition().x + shopNPCTextFrame.getGlobalBounds().width * 0.25,
+                            shopNPCTextFrame.getPosition().y + yOffset);
 
     shopItemsFrame.setTexture(Textures::ShopSectionFrame);
     shopItemsFrame.setColor(sf::Color(0xCC, 0xAA, 0x11));
@@ -666,6 +684,7 @@ void initShop() {
                                  0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ShopItemPhotoFrame.getSize().y);
     shopItemSpriteFrame.setPosition(shopItemStatsFrame.getPosition().x + xOffset,
                                     shopItemStatsFrame.getPosition().y + yOffset * 0.3);
+    shopItemSpriteFrame.setColor(sf::Color(0xAA, 0x88, 0x00));
 
     shopItemSprite.setTexture(Textures::INVISIBLE, true);
     shopItemSprite.setScale(2.5 * shopItemSpriteFrame.getGlobalBounds().width / Textures::INVISIBLE.getSize().x,
@@ -709,6 +728,9 @@ void initShop() {
     shopUIElements.push_back(&shopBGPattern);
     shopUIElements.push_back(&shopBackButton);
     shopUIElements.push_back(&shopNPCTextFrame);
+    shopUIElements.push_back(&shopNPCSprite);
+    shopUIElements.push_back(&shopNPCName);
+    shopUIElements.push_back(&shopNPCText);
     shopUIElements.push_back(&shopItemsFrame);
     shopUIElements.push_back(&shopPlayerInventoryFrame);
     shopUIElements.push_back(&shopItemStatsFrame);
@@ -1032,9 +1054,8 @@ void drawShop() {
         window.draw(shopItemCoinsSprite);
         window.draw(shopItemStats);
     }
-
+    
     window.setView(ShopStockView);
-    int slotNumber = 0;
     sf::Transform viewTransform = sf::Transform::Identity;
     viewTransform = viewTransform.scale(1, 1 / shopItemsViewSizeY);
     for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
@@ -1044,7 +1065,19 @@ void drawShop() {
             for (sf::Drawable*& elem : shopItemSlotsElements[id])
                 window.draw(*elem, viewTransform);
             window.draw(*curShop->soldItems.items[id], viewTransform);
-            slotNumber++;
+        }
+    }
+
+    window.setView(ShopPlayerInvView);
+    viewTransform = sf::Transform::Identity;
+    viewTransform = viewTransform.scale(1, 1 / shopPlayerInvViewSizeY);
+    for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+        if ((id != ItemID::coin) &&
+            (player.inventory.items.find(id) != player.inventory.items.end()) &&
+            (player.inventory.items[id]->amount > 0)) {
+            for (sf::Drawable*& elem : shopPlayerSlotsElements[id])
+                window.draw(*elem, viewTransform);
+            window.draw(*player.inventory.items[id], viewTransform);
         }
     }
 
@@ -1118,6 +1151,14 @@ void createShopUI() {
         }
     }
 
+    if (!shopPlayerSlotsElements.empty()) {
+        for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+            if (shopPlayerSlotsElements[id].size() != 0) {
+                clearVectorOfPointer(shopPlayerSlotsElements[id]);
+            }
+        }
+    }
+
     int slotNumber = 0;
     for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
         if ((curShop->soldItems.items.find(id) != curShop->soldItems.items.end()) &&
@@ -1152,6 +1193,46 @@ void createShopUI() {
             priceText->setPosition(sf::Vector2f(itemX - slotBG->getGlobalBounds().width / 10,
                                                 itemY + slotBG->getGlobalBounds().height));
             shopItemSlotsElements[id].push_back(priceText);
+
+            slotNumber++;
+        }
+    }
+
+    slotNumber = 0;
+    for (ItemID::Type id = 0; id != ItemID::NONE; id++) {
+        if (id == ItemID::coin)
+                continue;
+        if ((player.inventory.items.find(id) != player.inventory.items.end()) &&
+            (player.inventory.items[id]->amount > 0)) {
+            Item* drawnItem = player.inventory.items[id];
+            drawnItem->animation->setScale(0.5, 0.5);
+
+            float itemX = (slotNumber % 3) * 200 + 30;
+            float itemY = (slotNumber / 3) * 200 + 20;
+
+            sf::Sprite* slotBG = new sf::Sprite();
+            slotBG->setPosition(itemX, itemY);
+            slotBG->setTexture(Textures::ItemPanel, true);
+            slotBG->setScale(0.333, 0.333);
+            shopPlayerSlotsElements[id].push_back(slotBG);
+
+            drawnItem->setPosition(itemX, itemY);
+
+            if (drawnItem->amount > 0) {
+                PlacedText* itemAmountText = new PlacedText();
+                itemAmountText->setCharacterSize(20);
+                itemAmountText->setString(std::to_string(drawnItem->amount));
+                itemAmountText->setPosition(sf::Vector2f(itemX + slotBG->getGlobalBounds().width,
+                                                         itemY + slotBG->getGlobalBounds().height));
+                shopPlayerSlotsElements[id].push_back(itemAmountText);
+            }
+
+            PlacedText* playerPriceText = new PlacedText();
+            playerPriceText->setCharacterSize(20);
+            playerPriceText->setString(std::to_string(curShop->itemPrices[drawnItem->id]) + " C.");
+            playerPriceText->setPosition(sf::Vector2f(itemX - slotBG->getGlobalBounds().width / 10,
+                                                itemY + slotBG->getGlobalBounds().height));
+            shopPlayerSlotsElements[id].push_back(playerPriceText);
 
             slotNumber++;
         }
@@ -1682,6 +1763,9 @@ void LoadMainMenu() {
     shopSector.setFunction([](Interactable* i){
         isDrawShop = true;
         shopPlayerCoins.setString("You have:   " + std::to_string(player.inventory.items[ItemID::coin]->amount));
+        shopNPCText.setString(textWrap("Hello! Welcome to the \"We are literally standing near a phenomenon beyond our"
+                                       " entire plane of existence in a literal motherfucking sense, that we have no fucking clue on"
+                                       " how it fucking works why did we decide it was a good idea to station a shop exactly here\?!\?\?!\?!\?\" shop!", 94));
     });
 
     // Set cameras
