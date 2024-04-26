@@ -19,6 +19,17 @@ namespace ItemID {
     };
 }
 
+std::map<ItemID::Type, std::string> itemName {
+    {ItemID::gunParts,       "Gun parts"},
+    {ItemID::repairKit,      "Repair kit"},
+    {ItemID::keyCard,        "Keycard"},
+    {ItemID::protectiveSuit, "Protective suit"},
+    {ItemID::regenDrug,      "Regen drug"},
+    {ItemID::coin,           "Coin"},
+    {ItemID::fireHose,       "Fire hose"},
+    {ItemID::flamethrower,   "Flamethrower"}
+};
+
 std::map<ItemID::Type, std::string> itemDesc { // Descriptions of items
     {ItemID::regenDrug, "Substance for stabilizing the state of dimension of an object"}, // Gives +1 HP/s for the next 10 seconds
     {ItemID::coin, "Moneh :D"},

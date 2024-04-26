@@ -12,6 +12,33 @@ std::string floatToString(float num) {
     return std::to_string(wholePart) + '.' + std::to_string(fracPart);
 }
 
+std::string textWrap(std::string text, int wrapEvery) {
+    std::string wrappedText;
+    int charCount = 0;
+    for (int i = 0; i < text.size(); i++) {
+        if (text[i] == '\n')
+            charCount = 0;
+        if (charCount % wrapEvery == 0 and charCount != 0)
+            wrappedText.push_back('\n');
+        wrappedText.push_back(text.at(i));
+        charCount++;
+    }
+    return wrappedText;
+}
+
+std::string stringLower(std::string text) {
+    std::string loweredText;
+    int uppercaseCount = 0;
+    for (int i = 0; i < text.size(); i++)
+        if ('A' <= text[i] && text[i] <= 'Z')
+            uppercaseCount++;
+    if (uppercaseCount > 1) // If it's an acronym - do not lower
+        return text;
+    for (int i = 0; i < text.size(); i++)
+        loweredText.push_back(std::tolower(text[i]));
+    return loweredText;
+}
+
 void CreateImage() {
     sf::Image img, res;
     img.loadFromFile("sources/textures/floor1x.png");
