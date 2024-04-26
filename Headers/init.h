@@ -68,6 +68,9 @@ sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
 
 sf::View InventoryView({0, 0, (float)scw, (float)sch});
+sf::View ShopView({0, 0, (float)scw, (float)sch});
+sf::View ShopStockView;
+sf::View ShopPlayerInvView;
 
 sf::Clock* GameClock;
 
@@ -102,41 +105,59 @@ namespace Textures {
                 YellowPanelPushed,
                 SteelFrame,
                 ItemPanel,
-                Frame4
+                Frame4,
+
+                NPCDialogueFrame_Square,
+                NPCDialogueFrame_Wide,
+
+                ShopBG,
+                ShopSectionFrame,
+                ShopItemPhotoFrame,
+
+                INVISIBLE
                 ;
 }
 
 void loadTextures() {
-    Textures::ScottPilgrim       .loadFromFile("sources/textures/scottpilgrim_multiple.png");
-    Textures::Distorted          .loadFromFile("sources/textures/Distorted.png");
-    Textures::DistortedScientist .loadFromFile("sources/textures/DistortedScientist.png");
-    Textures::Player             .loadFromFile("sources/textures/Player.png");
-    Textures::Portal             .loadFromFile("sources/textures/Portal.png");
-    Textures::PortalAnimation2   .loadFromFile("sources/textures/PortalAnimation2.png");
-    Textures::Wall               .loadFromFile("sources/textures/wall.png");
-    Textures::XButton            .loadFromFile("sources/textures/XButton.png");
-    Textures::Box                .loadFromFile("sources/textures/Box.png");
-    Textures::floor1x            .loadFromFile("sources/textures/floors/floor1x.png");
-    Textures::Puddle             .loadFromFile("sources/textures/Puddle.png");
-    Textures::Fire               .loadFromFile("sources/textures/Fire.png");
-    Textures::Fireball           .loadFromFile("sources/textures/Fireball.png");
-    Textures::Architect          .loadFromFile("sources/textures/Architect.png");
-    Textures::Noise              .loadFromFile("sources/textures/noise.png");
+    Textures::ScottPilgrim              .loadFromFile("sources/textures/scottpilgrim_multiple.png");
+    Textures::Distorted                 .loadFromFile("sources/textures/Distorted.png");
+    Textures::DistortedScientist        .loadFromFile("sources/textures/DistortedScientist.png");
+    Textures::Player                    .loadFromFile("sources/textures/Player.png");
+    Textures::Portal                    .loadFromFile("sources/textures/Portal.png");
+    Textures::PortalAnimation2          .loadFromFile("sources/textures/PortalAnimation2.png");
+    Textures::Wall                      .loadFromFile("sources/textures/wall.png");
+    Textures::XButton                   .loadFromFile("sources/textures/XButton.png");
+    Textures::Box                       .loadFromFile("sources/textures/Box.png");
+    Textures::floor1x                   .loadFromFile("sources/textures/floors/floor1x.png");
+    Textures::Puddle                    .loadFromFile("sources/textures/Puddle.png");
+    Textures::Fire                      .loadFromFile("sources/textures/Fire.png");
+    Textures::Fireball                  .loadFromFile("sources/textures/Fireball.png");
+    Textures::Architect                 .loadFromFile("sources/textures/Architect.png");
+    Textures::Noise                     .loadFromFile("sources/textures/noise.png");
 
-    Textures::Eff_HPRegen        .loadFromFile("sources/textures/effects/HPRegenEffect.png");
-    Textures::Eff_Burn           .loadFromFile("sources/textures/effects/BurnEffect.png");
+    Textures::Eff_HPRegen               .loadFromFile("sources/textures/effects/HPRegenEffect.png");
+    Textures::Eff_Burn                  .loadFromFile("sources/textures/effects/BurnEffect.png");
 
-    Textures::GreenPanel         .loadFromFile("sources/textures/Panels/GreenPanel.png");
-    Textures::GreenPanelPushed   .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
-    Textures::RedPanel           .loadFromFile("sources/textures/Panels/RedPanel.png");
-    Textures::RedPanelPushed     .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
-    Textures::BluePanel          .loadFromFile("sources/textures/Panels/BluePanel.png");
-    Textures::BluePanelPushed    .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
-    Textures::YellowPanel        .loadFromFile("sources/textures/Panels/YellowPanel.png");
-    Textures::YellowPanelPushed  .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
-    Textures::SteelFrame         .loadFromFile("sources/textures/Panels/SteelFrame.png");
-    Textures::ItemPanel          .loadFromFile("sources/textures/Panels/ItemPanel.png");
-    Textures::Frame4             .loadFromFile("sources/textures/Panels/frame4.png");
+    Textures::GreenPanel                .loadFromFile("sources/textures/Panels/GreenPanel.png");
+    Textures::GreenPanelPushed          .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
+    Textures::RedPanel                  .loadFromFile("sources/textures/Panels/RedPanel.png");
+    Textures::RedPanelPushed            .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
+    Textures::BluePanel                 .loadFromFile("sources/textures/Panels/BluePanel.png");
+    Textures::BluePanelPushed           .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
+    Textures::YellowPanel               .loadFromFile("sources/textures/Panels/YellowPanel.png");
+    Textures::YellowPanelPushed         .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
+    Textures::SteelFrame                .loadFromFile("sources/textures/Panels/SteelFrame.png");
+    Textures::ItemPanel                 .loadFromFile("sources/textures/Panels/ItemPanel.png");
+    Textures::Frame4                    .loadFromFile("sources/textures/Panels/frame4.png");
+
+    Textures::NPCDialogueFrame_Square   .loadFromFile("sources/textures/Panels/NPCDialogueFrame_Square.png");
+    Textures::NPCDialogueFrame_Wide     .loadFromFile("sources/textures/Panels/NPCDialogueFrame_Wide.png");
+
+    Textures::ShopBG                    .loadFromFile("sources/textures/Panels/ShopBG.png");
+    Textures::ShopSectionFrame          .loadFromFile("sources/textures/Panels/ShopSectionFrame.png");
+    Textures::ShopItemPhotoFrame        .loadFromFile("sources/textures/Panels/ShopItemPhotoFrame.png");
+       
+    Textures::INVISIBLE                 .create(size, size);
 }
 
 namespace Shaders {
