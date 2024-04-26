@@ -1,7 +1,8 @@
 #pragma once
 #include "enemy.h"
 #include "chat.h"
-#include "contextMenu.h"
+#include "button.h"
+#include "panel.h"
 #include "bar.h"
 #include "player.h"
 #include "client.h"
@@ -131,7 +132,7 @@ Button shopBackButton("Back", [](){
     shopSelectedItem = nullptr;
 });
 Button shopBuyButton("Buy", [](){
-    curShop->buyFunction(&player);
+    curShop->buyFunction();
     shopPlayerCoins.setString("You have:   " + std::to_string(player.inventory.items[ItemID::coin]->amount));
 });
 
@@ -382,10 +383,10 @@ void init() {
 
     portal.setAnimation(Textures::PortalAnimation2, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
-    player.setAnimation(Textures::Player, 1, 1, sf::seconds(1), &Shaders::Player);
-    puddle.setAnimation(Textures::Puddle, 1, 1, sf::seconds(1), &Shaders::Map);
+    player.setAnimation(Textures::Player, &Shaders::Player);
+    puddle.setAnimation(Textures::Puddle, &Shaders::Map);
     puddle.setSize(90.f, 90.f);
-    shopSector.setAnimation(Textures::INVISIBLE, 1, 1, sf::Time::Zero);
+    shopSector.setAnimation(Textures::INVISIBLE);
     shopSector.setPosition(0, 2 * size);
 
     Shaders::Map.setUniform("uResolution", sf::Vector2f(scw, sch));
@@ -589,18 +590,18 @@ void initShop() {
     shopItemSlotsElements.resize(ItemID::NONE);
     shopPlayerSlotsElements.resize(ItemID::NONE);
     shopItemSlotsRects.resize(ItemID::NONE);
-    mainMenuShop = Shop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100),
-                                               new Item(ItemID::flamethrower, 1),
-                                               new Item(ItemID::fireHose, 1)},
-                        std::vector<int>{20, 100, 199});
-    mainMenuShop.setFunction([](Player* player){
+    mainMenuShop.setShop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100),
+                                                new Item(ItemID::flamethrower, 1),
+                                                new Item(ItemID::fireHose, 1)},
+                         std::vector<int>{20, 100, 199});
+    mainMenuShop.setFunction([](){
         if (shopSelectedItem != nullptr)
-            if (player->inventory.items[ItemID::coin]->amount >= mainMenuShop.itemPrices[shopSelectedItem->id]) {
+            if (player.inventory.items[ItemID::coin]->amount >= mainMenuShop.itemPrices[shopSelectedItem->id]) {
                 if(mainMenuShop.soldItems.items[shopSelectedItem->id]->amount > 0) {
                     Item boughtItem = Item(*shopSelectedItem);
                     boughtItem.amount = 1;
-                    player->AddItem(&boughtItem);
-                    player->inventory.items[ItemID::coin]->amount -= mainMenuShop.itemPrices[shopSelectedItem->id];
+                    player.AddItem(&boughtItem);
+                    player.inventory.items[ItemID::coin]->amount -= mainMenuShop.itemPrices[shopSelectedItem->id];
 
                     mainMenuShop.soldItems.items[shopSelectedItem->id]->amount -= 1;
                     shopNPCText.setString("Thank you for buying a " + stringLower(itemName[shopSelectedItem->id]) + "!");
@@ -1574,7 +1575,7 @@ void FillFloorRects() {
 }
 
 void setBox(Interactable*& box) {
-    box->setAnimation(Textures::Box, 1, 1, sf::seconds(1.f), &Shaders::Map);
+    box->setAnimation(Textures::Box, &Shaders::Map);
     box->setSize(105.f, 117.f);
     box->setFunction([](Interactable* i){
         if (player.Mana.cur >= 20) {
@@ -1591,7 +1592,7 @@ void setBox(Interactable*& box) {
 }
 
 void setArtifact(Interactable*& artifact) {
-    artifact->setAnimation(Textures::Architect, 1, 1, sf::seconds(1), &Shaders::Architect);
+    artifact->setAnimation(Textures::Architect, &Shaders::Architect);
     artifact->setSize(150.f, 150.f);
     artifact->setFunction([](Interactable* i){
         TempText* tempText = new TempText(sf::seconds(2.5f));
@@ -1791,19 +1792,19 @@ void LoadMainMenu() {
     InteractibeStuff.push_back(&shopSector);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
-    newItem->setAnimation(*itemTextureName[ItemID::regenDrug], 1, 1, sf::seconds(1), &Shaders::Map);
+    newItem->setAnimation(*itemTextureName[ItemID::regenDrug], &Shaders::Map);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
 
     Item* fireHosePickup = new Item(ItemID::fireHose, 1);
-    fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose], 1, 1, sf::seconds(1), &Shaders::Map);
+    fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose], &Shaders::Map);
     PickupStuff.push_back(fireHosePickup);
     DrawableStuff.push_back(PickupStuff[1]);
     PickupStuff[1]->dropTo(player.getPosition() + sf::Vector2f(400, 300));
 
     Item* flamethrowerPickup = new Item(ItemID::flamethrower, 1);
-    flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower], 1, 1, sf::seconds(1), &Shaders::Map);
+    flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower], &Shaders::Map);
     PickupStuff.push_back(flamethrowerPickup);
     DrawableStuff.push_back(PickupStuff[2]);
     PickupStuff[2]->dropTo(player.getPosition() + sf::Vector2f(-550, -120));
