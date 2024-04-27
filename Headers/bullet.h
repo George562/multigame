@@ -1,8 +1,5 @@
 #pragma once
 #include "location.h"
-#include "tools.h"
-#include "animation.h"
-#include "fire.h"
 
 #define COMMON_BULLET_RADIUS 7
 #define COMMON_BULLET_PENETRATION 0

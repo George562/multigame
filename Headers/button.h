@@ -55,7 +55,7 @@ void Button::setTexture(sf::Texture& texture, sf::Texture& pushedTexture) {
 }
 
 void Button::setPosition(float x, float y) {
-    PosX = x; PosY = y;
+    Rect::setPosition(x, y);
     sprite.setPosition(x, y);
     ButtonText.setCenter(getCenter());
 }

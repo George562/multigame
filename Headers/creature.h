@@ -117,7 +117,7 @@ public:
 
     virtual void setTarget(sf::Vector2f target) { this->target = target; }
 
-    void AddItem(Item* item) {
+    void addItem(Item* item) {
         inventory.addItem(item);
     }
 };

@@ -48,3 +48,12 @@ void normalize(Scale<sf::Vector2f>& scale) {
     scale.cur.x = std::clamp(scale.cur.x, scale.bottom.x, scale.top.x);
     scale.cur.y = std::clamp(scale.cur.y, scale.bottom.y, scale.top.y);
 }
+
+template <class T>
+std::ostream& operator<<(std::ostream& stream, Scale<T>& a) {
+    return stream << a.bottom << ' ' << a.top<< ' '  << a.cur;
+}
+template <class T>
+std::istream& operator>>(std::istream& stream, Scale<T>& a) {
+    return stream >> a.bottom >> a.top >> a.cur;
+}

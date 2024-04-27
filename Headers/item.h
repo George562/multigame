@@ -18,6 +18,7 @@ namespace ItemID {
         NONE
     };
 }
+int MaxItemID = ItemID::NONE;
 
 std::map<ItemID::Type, std::string> itemName {
     {ItemID::gunParts,       "Gun parts"},
@@ -142,7 +143,7 @@ void loadItemTextures() {
 class Item : public Interactable {
 public:
     ItemID::Type id;
-    int amount = 0;
+    int amount = 0; // -1 if an item is infinite
     bool pickupable = true;
     bool isDropable = true;
     bool isEquippable = false;
@@ -224,10 +225,4 @@ void Item::dropTo(sf::Vector2f pos) {
 void Item::picked() {
     animation->setShader(itemTextureShader[id]);
     isInInventory = true;
-}
-
-void operator +=(Item& sumTo, Item& sumItem) {
-    if (sumTo.id == sumItem.id) {
-        sumTo.amount += sumItem.amount;
-    }
 }

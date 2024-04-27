@@ -7,16 +7,45 @@
 
 class Inventory {
 public:
-    std::map<ItemID::Type, Item*> items;
+    std::vector<Item*> items;
+    int money = 0;
+
+    int find(int id) {
+        for (int i = 0; i < items.size(); i++)
+            if (items[i]->id == id)
+                return i;
+        return items.size();
+    }
+
+    Item* find(Item*& item) {
+        for (int i = 0; i < items.size(); i++)
+            if (items[i]->id == item->id)
+                return items[i];
+        return nullptr;
+    }
 
     void addItem(Item*& item) {
-        if (!items[item->id]) {
-            items[item->id] = new Item(*item);
-            items[item->id]->picked();
-        } else {
-            *(items[item->id]) += *item;
+        for (int i = 0; i < items.size(); i++) {
+            if (items[i]->id == item->id) {
+                items[i]->amount += item->amount;
+                return;
+            }
         }
-        item->isInInventory = true;
+        items.push_back(new Item(*item));
+        items[items.size() - 1]->picked();
+        std::sort(items.begin(), items.end(), [](Item*& left, Item*& right) { return left->id < right->id; });
+    }
+
+    void removeItem(Item*& item) {
+        for (int i = 0; i < items.size(); i++) {
+            if (items[i]->id == item->id && items[i]->amount != -1) {
+                items[i]->amount -= item->amount;
+                if (items[i]->amount == 0) {
+                    items.erase(items.begin() + i);
+                }
+                return;
+            }
+        }
     }
 };
 
