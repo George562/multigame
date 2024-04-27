@@ -2,6 +2,7 @@
 #include "weapon.h"
 #include "inventory.h"
 #include "text.h"
+#include "effect.h"
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -27,6 +28,7 @@ public:
     bool dropInventory;
     Inventory inventory;
 
+    std::vector<Effect*> effects;
     std::vector<int> effectStacks;
 
     Creature(sf::String name, faction::Type f) : Circle() {
@@ -43,6 +45,8 @@ public:
         localClock = new sf::Clock();
         animation = nullptr;
         dropInventory = true;
+
+        effectStacks.assign(Effects::NONE, 0);
     }
     ~Creature() {
         if (localClock) {

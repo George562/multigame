@@ -1,5 +1,4 @@
 #pragma once
-#include "creature.h"
 
 namespace Effects {
     using Type = sf::Uint8;
@@ -14,7 +13,6 @@ namespace Effects {
 
 class Effect {
 public:
-    Creature* owner;
     Effects::Type type;
     std::vector<float> parameters;
     bool active = false;
@@ -24,8 +22,7 @@ public:
     sf::Time secs;
     sf::Time customTick;
 
-    Effect(Creature* owner, Effects::Type type, std::vector<float> parameters, sf::Time secs, sf::Time customTick=sf::Time::Zero) {
-        this->owner = owner;
+    Effect(Effects::Type type, std::vector<float> parameters, sf::Time secs, sf::Time customTick=sf::Time::Zero) {
         this->type = type;
         this->parameters = parameters;
         this->localClock = new sf::Clock();

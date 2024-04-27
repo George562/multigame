@@ -196,10 +196,6 @@ Scale<int> CurWeapon{0, 4, 0};
 std::vector<Enemy*> Enemies;
 
 
-//////////////////////////////////////////////////////////// Effects
-std::vector<Effect*> AllEffects;
-
-
 //////////////////////////////////////////////////////////// functions
 
 //---------------------------- INITS
@@ -253,6 +249,7 @@ void updateBullets();
 bool useItem(ItemID::Type);
 
 void processEffects();
+void updateEffects(Creature*);
 void applyEffect(Creature&, Effect*);
 void clearEffect(Creature&, Effect*);
 
@@ -967,23 +964,21 @@ void drawEffects() {
     int xOffset = 175, yOffset = 175;
     std::vector<int> seenEffects(Effects::NONE, 0);
     std::vector<sf::Time> effectTimersTimes(Effects::NONE, sf::Time::Zero);
-    for (Effect* eff : AllEffects) {
-        if (eff->type != Effects::Heal && eff->type != Effects::Damage) {
-            if (eff->active) {
-                if (seenEffects[eff->type] == 0) {
-                    effectIcons[eff->type]->setScale(0.5, 0.5);
-                    effectIcons[eff->type]->setPosition(ManaBar.getPosition().x - 300 + xOffset * (count % 3),
-                                    ManaBar.getPosition().y + ManaBar.getSize().y + 20 + yOffset * (count / 3));
+    for (Effect* eff : player.effects) {
+        if (eff->type != Effects::Heal && eff->type != Effects::Damage && eff->active) {
+            if (seenEffects[eff->type] == 0) {
+                effectIcons[eff->type]->setScale(0.5, 0.5);
+                effectIcons[eff->type]->setPosition(ManaBar.getPosition().x - 300 + xOffset * (count % 3),
+                                ManaBar.getPosition().y + ManaBar.getSize().y + 20 + yOffset * (count / 3));
 
-                    effectIconsTimers[eff->type]->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
-                    effectIconsTimers[eff->type]->setCharacterSize(28);
-                    window.draw(*effectIcons[eff->type]);
-                }
-                seenEffects[eff->type] += 1;
-                effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->secs);
-
-                count++;
+                effectIconsTimers[eff->type]->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
+                effectIconsTimers[eff->type]->setCharacterSize(28);
+                window.draw(*effectIcons[eff->type]);
             }
+            seenEffects[eff->type] += 1;
+            effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->secs);
+
+            count++;
         }
     }
     for (int i = 0; i < effectTimersTimes.size(); i++) {
@@ -1836,38 +1831,45 @@ void updateBullets() {
 }
 
 void processEffects() {
-    for (int i = 0; i < AllEffects.size(); i++) {
-        if (AllEffects[i]->secs <= sf::Time::Zero) {
-            clearEffect(*(AllEffects[i]->owner), AllEffects[i]);
-            DeletePointerFromVector(AllEffects, i--);
+    updateEffects(&player);
+    for (Enemy*& enemy : Enemies)
+        updateEffects(enemy);
+}
+
+void updateEffects(Creature* creature) {
+    std::vector<Effect*>& effectVec = creature->effects;
+    for (int i = 0; i < effectVec.size(); i++) {
+        if (effectVec[i]->secs <= sf::Time::Zero) {
+            clearEffect(*creature, effectVec[i]);
+            DeletePointerFromVector(effectVec, i--);
         } else {
-            float t = std::min(AllEffects[i]->localClock->restart().asSeconds(), AllEffects[i]->secs.asSeconds());
-            AllEffects[i]->secs -= sf::seconds(t);
-            switch (AllEffects[i]->type) {
+            float t = std::min(effectVec[i]->localClock->restart().asSeconds(), effectVec[i]->secs.asSeconds());
+            effectVec[i]->secs -= sf::seconds(t);
+            switch (effectVec[i]->type) {
                 case Effects::Damage:
-                    AllEffects[i]->owner->getDamage(AllEffects[i]->parameters[0] * t);
+                    creature->getDamage(effectVec[i]->parameters[0] * t);
                     break;
                 case Effects::Heal:
-                    AllEffects[i]->owner->getDamage(-AllEffects[i]->parameters[0] * t);
+                    creature->getDamage(-effectVec[i]->parameters[0] * t);
                     break;
                 case Effects::HPRegen:
-                    if (!AllEffects[i]->active) {
-                        AllEffects[i]->owner->HealthRecovery += AllEffects[i]->parameters[0];
-                        AllEffects[i]->active = true;
+                    if (!effectVec[i]->active) {
+                        creature->HealthRecovery += effectVec[i]->parameters[0];
+                        effectVec[i]->active = true;
                     }
                     break;
                 case Effects::Burn:
-                    if (!AllEffects[i]->active) {
-                        AllEffects[i]->parameters[1] += 1;
-                        AllEffects[i]->owner->getDamage(AllEffects[i]->owner->HealthRecovery +
-                                                        AllEffects[i]->parameters[0] * AllEffects[i]->parameters[1]);
-                        AllEffects[i]->active = true;
+                    if (!effectVec[i]->active) {
+                        effectVec[i]->parameters[1] += 1;
+                        creature->getDamage(creature->HealthRecovery +
+                                            effectVec[i]->parameters[0] * effectVec[i]->parameters[1]);
+                        effectVec[i]->active = true;
                     }
-                    if (AllEffects[i]->customTickClock->getElapsedTime().asSeconds() >= AllEffects[i]->customTick.asSeconds()) {
-                        AllEffects[i]->owner->getDamage(AllEffects[i]->owner->HealthRecovery +
-                                                        AllEffects[i]->parameters[0] * AllEffects[i]->parameters[1]);
-                        AllEffects[i]->parameters[1] += 1;
-                        AllEffects[i]->customTickClock->restart();
+                    if (effectVec[i]->customTickClock->getElapsedTime().asSeconds() >= effectVec[i]->customTick.asSeconds()) {
+                        creature->getDamage(creature->HealthRecovery +
+                                            effectVec[i]->parameters[0] * effectVec[i]->parameters[1]);
+                        effectVec[i]->parameters[1] += 1;
+                        effectVec[i]->customTickClock->restart();
                     }
                     break;
                 default:
@@ -1878,31 +1880,29 @@ void processEffects() {
 }
 
 void applyEffect(Creature& owner, Effect* effect) {
-    if (owner.effectStacks.size() == 0)
-        owner.effectStacks.assign(Effects::NONE, 0);
     switch (effect->type) {
         case Effects::Burn:
             if (owner.effectStacks[effect->type] < 1) {
-                AllEffects.push_back(effect);
+                owner.effects.push_back(effect);
                 owner.effectStacks[effect->type] = 1;
             }
             break;
 
         case Effects::HPRegen:
-            AllEffects.push_back(effect);
+            owner.effects.push_back(effect);
             owner.effectStacks[effect->type] += 1;
             break;
 
         case Effects::Heal:
-            AllEffects.push_back(effect);
+            owner.effects.push_back(effect);
             break;
 
         case Effects::Damage:
-            AllEffects.push_back(effect);
+            owner.effects.push_back(effect);
             break;
 
         default:
-            AllEffects.push_back(effect);
+            owner.effects.push_back(effect);
             owner.effectStacks[effect->type] += 1;
             break;
     }
@@ -1911,7 +1911,7 @@ void applyEffect(Creature& owner, Effect* effect) {
 void clearEffect(Creature& owner, Effect* effect) {
     switch (effect->type) {
         case Effects::HPRegen:
-            effect->owner->HealthRecovery -= effect->parameters[0];
+            owner.HealthRecovery -= effect->parameters[0];
             break;
         default:
             owner.effectStacks[effect->type] -= 1;
@@ -1922,7 +1922,7 @@ void clearEffect(Creature& owner, Effect* effect) {
 bool useItem(ItemID::Type id) {
     switch (id) {
         case ItemID::regenDrug:
-            applyEffect(player, new Effect(&player, Effects::HPRegen, std::vector<float>{1.0f}, sf::seconds(10.f)));
+            applyEffect(player, new Effect(Effects::HPRegen, std::vector<float>{1.0f}, sf::seconds(10.f)));
             return true;
         case ItemID::fireHose:
             fireHose.AmountOfAmmunition = 100;
@@ -2190,11 +2190,11 @@ void MainLoop() {
         draw();
 
         if (puddle.intersect(player))
-            applyEffect(player, new Effect(&player, Effects::Heal, std::vector<float>{30.f}, sf::seconds(1.5f)));
+            applyEffect(player, new Effect(Effects::Heal, std::vector<float>{30.f}, sf::seconds(1.5f)));
 
         for (int i = 0; i < FireSet.size(); i++) {
             if (FireSet[i]->intersect(player))
-                applyEffect(player, new Effect(&player, Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
+                applyEffect(player, new Effect(Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
         }
         processEffects();
 
