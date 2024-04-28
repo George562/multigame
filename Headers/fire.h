@@ -4,11 +4,11 @@
 class Fire : public Interactable {
 public:
     sf::Clock* localClock = nullptr;
-    sf::Time secs;
+    sf::Time howLongToExist;
 
-    Fire(sf::Time secs) : Interactable() {
+    Fire(sf::Time howLongToExist) : Interactable() {
         this->localClock = new sf::Clock();
-        this->secs = secs;
+        this->howLongToExist = howLongToExist;
     }
     ~Fire() {
         if (localClock) {

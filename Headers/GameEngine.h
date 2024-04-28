@@ -56,8 +56,8 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
-std::vector<sf::Sprite*> effectIcons(Effects::NONE);
-std::vector<TempText*> effectIconsTimers(Effects::NONE);
+std::vector<sf::Sprite*> effectIcons(numberOfEffects);
+std::vector<TempText*> effectIconsTimers(numberOfEffects);
 
 
 //////////////////////////////////////////////////////////// InventoryStuff
@@ -473,7 +473,7 @@ void init() {
     undergroundBG.setPosition(0, 0);
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
-    for (int i = 0; i < Effects::NONE; i++) {
+    for (int i = 0; i < numberOfEffects; i++) {
         effectIconsTimers[i] = new TempText(sf::Time::Zero);
         effectIcons[i] = new sf::Sprite();
     }
@@ -962,8 +962,8 @@ void drawInterface() {
 void drawEffects() {
     int count = 0;
     int xOffset = 175, yOffset = 175;
-    std::vector<int> seenEffects(Effects::NONE, 0);
-    std::vector<sf::Time> effectTimersTimes(Effects::NONE, sf::Time::Zero);
+    std::vector<int> seenEffects(numberOfEffects, 0);
+    std::vector<sf::Time> effectTimersTimes(numberOfEffects, sf::Time::Zero);
     for (Effect* eff : player.effects) {
         if (eff->type != Effects::Heal && eff->type != Effects::Damage && eff->active) {
             if (seenEffects[eff->type] == 0) {
@@ -976,7 +976,7 @@ void drawEffects() {
                 window.draw(*effectIcons[eff->type]);
             }
             seenEffects[eff->type] += 1;
-            effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->secs);
+            effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->howLongToExist);
 
             count++;
         }
@@ -1839,12 +1839,12 @@ void processEffects() {
 void updateEffects(Creature* creature) {
     std::vector<Effect*>& effectVec = creature->effects;
     for (int i = 0; i < effectVec.size(); i++) {
-        if (effectVec[i]->secs <= sf::Time::Zero) {
+        if (effectVec[i]->howLongToExist <= sf::Time::Zero) {
             clearEffect(*creature, effectVec[i]);
             DeletePointerFromVector(effectVec, i--);
         } else {
-            float t = std::min(effectVec[i]->localClock->restart().asSeconds(), effectVec[i]->secs.asSeconds());
-            effectVec[i]->secs -= sf::seconds(t);
+            float t = std::min(effectVec[i]->localClock->restart().asSeconds(), effectVec[i]->howLongToExist.asSeconds());
+            effectVec[i]->howLongToExist -= sf::seconds(t);
             switch (effectVec[i]->type) {
                 case Effects::Damage:
                     creature->getDamage(effectVec[i]->parameters[0] * t);
@@ -1953,9 +1953,9 @@ void fireUpdate() {
     float angle;
     for (int i = 0; i < FireSet.size(); i++) {
         float dist = 2.5 * FireSet[i]->Width;
-        if (FireSet[i]->localClock->getElapsedTime() >= FireSet[i]->secs) {
+        if (FireSet[i]->localClock->getElapsedTime() >= FireSet[i]->howLongToExist) {
             FireSet[i]->localClock->restart();
-            FireSet[i]->secs = sf::seconds(rand() % 4 + 15.f);
+            FireSet[i]->howLongToExist = sf::seconds(rand() % 4 + 15.f);
 
             Fire* descendant1 = new Fire(sf::seconds(rand() % 4 + 15.f));
             descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);

@@ -46,7 +46,7 @@ public:
         animation = nullptr;
         dropInventory = true;
 
-        effectStacks.assign(Effects::NONE, 0);
+        effectStacks.assign(numberOfEffects, 0);
     }
     ~Creature() {
         if (localClock) {

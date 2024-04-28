@@ -1,7 +1,6 @@
 #pragma once
 #include "../SFML-2.5.1/include/SFML/Network.hpp"
 #include "text.h"
-#include "rect.h"
 
 #define SPACE_BETWEEN_LINES_IN_PIXELS 35
 #define CHARACTER_SIZE 27
@@ -11,8 +10,10 @@
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Chat : public Rect, public sf::Drawable {
+class Chat : public sf::Drawable {
 public:
+    float PosX, PosY;
+    sf::Vector2f size;
     std::vector<sf::Clock*> clocks;
     std::map<sf::String, void (*)(void)> commands;
     PlacedText lines[11];
@@ -42,7 +43,7 @@ public:
 
 Chat::Chat(int scw, int sch) : inputted(false), start(0), len(11) {
     PosX = 350; PosY = sch - SPACE_BETWEEN_LINES_IN_PIXELS * (len + 2);
-    Width = scw - PosX * 2; Height = 35;
+    size.x = scw - PosX * 2; size.y = 35;
 
     for (int i = 0; i < len; i++) {
         lines[i].setCharacterSize(CHARACTER_SIZE);
@@ -57,10 +58,10 @@ Chat::Chat(int scw, int sch) : inputted(false), start(0), len(11) {
     rect.setOutlineColor(sf::Color::White);
     rect.setOutlineThickness(2);
     rect.setPosition(PosX, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * len);
-    rect.setSize({Width, Height});
+    rect.setSize(size);
 
     cursor.setFillColor(sf::Color::White);
-    cursor.setSize({3, Height});
+    cursor.setSize({3, size.y});
 
     ChatEnable = true;
     localClock = new sf::Clock();
