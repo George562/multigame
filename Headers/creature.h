@@ -12,16 +12,25 @@
 class Creature : public Circle, public sf::Drawable {
 public:
     faction::Type faction;
+
     Scale<float> Health;
+    float HealthRecovery;
     Scale<float> Mana;
-    float ManaRecovery, HealthRecovery;
+    float ManaRecovery;
     Scale<float> Armor; // blocking damage = min(1, damage - armor)
-    sf::Vector2f Velocity; float MaxVelocity, VelocityBuff;
+
+    sf::Vector2f Velocity;
+    float MaxVelocity;
+    float VelocityBuff;
     float Acceleration;
-    sf::Vector2f target;
+    sf::Vector2f target; // target point to move towards
+
     Weapon *CurWeapon = nullptr; // ref on exist weapon from arsenal
-    sf::Time LastStateCheck, LastMoveCheck;
+
+    sf::Time LastStateCheck;
+    sf::Time LastMoveCheck;
     sf::Clock* localClock = nullptr;
+
     mutable PlacedText Name;
     Animation *animation = nullptr;
 

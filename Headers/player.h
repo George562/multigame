@@ -12,9 +12,6 @@ class Player : public Creature {
 public:
     Player();
     void move(Location*) override;
-    void UpdateState() override;
-
-    ItemID::Type handItemId = ItemID::NONE;
 };
 
 ////////////////////////////////////////////////////////////
@@ -48,11 +45,9 @@ void Player::move(Location* location) {
     Creature::move(location);
 }
 
-void Player::UpdateState() {
-    Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-    Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-    LastStateCheck = localClock->getElapsedTime();
+sf::Packet& operator<<(sf::Packet& packet, Player& a) {
+    return packet << a.PosX << a.PosY;
 }
-
-sf::Packet& operator<<(sf::Packet& packet, Player& a) { return packet << a.PosX << a.PosY; }
-sf::Packet& operator>>(sf::Packet& packet, Player& a) { return packet >> a.PosX >> a.PosY; }
+sf::Packet& operator>>(sf::Packet& packet, Player& a) {
+    return packet >> a.PosX >> a.PosY;
+}

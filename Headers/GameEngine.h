@@ -1633,7 +1633,7 @@ void LevelGenerate(int n, int m) {
         // do {
             //FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
         // } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
-        if (CurLocation->room.x != 0 || CurLocation->room.y != 0) {
+        if (CurLocation->room.x != -1 && CurLocation->room.y != -1) {
             FireSet[i]->setPosition(sf::Vector2f(CurLocation->room.x + 0.5f, CurLocation->room.y + 0.5f) * (float)size);
         }
     }

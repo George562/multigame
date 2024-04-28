@@ -53,8 +53,8 @@ public:
     sf::Vector2i room;
     sf::Vector2i doorPos;
 
-    Location() { AmountOfEnableTiles = 0; room = sf::Vector2i(0, 0); }
-    Location(int w, int h) { SetSize(w, h); room = sf::Vector2i(0, 0); }
+    Location() { AmountOfEnableTiles = 0; room = sf::Vector2i(-1, -1); }
+    Location(int w, int h) { SetSize(w, h); room = sf::Vector2i(-1, -1); }
     void SetSize(int w, int h);
     void GenerateLocation(int n, int m, sf::Vector2f RootPoint);
     void BuildWayFrom(sf::Vector2f);
@@ -159,7 +159,7 @@ void Location::RoomGenerator() {
         walls[doorPos.y][doorPos.x] = true;
     } else {
         std::cout << "Room hasn't been created\n";
-        room = sf::Vector2i(0, 0);
+        room = sf::Vector2i(-1, -1);
     }
 }
 
@@ -210,7 +210,7 @@ void Location::FillWallsRect() {
                     wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
             } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
 
-    if (room.x != 0 || room.y != 0) {
+    if (room.x != -1 && room.y != -1) {
         if (doorPos.y % 2 == 1)
             wallsRect[doorPos.y][doorPos.x].setSize(WallMinSize / 2, WallMaxSize / 2);
         else
