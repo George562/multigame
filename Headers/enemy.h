@@ -16,7 +16,7 @@ public:
 class DistortedScientist : public Enemy {
 public:
     DistortedScientist() : Enemy("Distorted Scientist") {
-        Health = {0, 20 + 5.f * completedLevels, 20 + 5.f * completedLevels};
+        Health = {0, 20 + 5.f * curLevel, 20 + 5.f * curLevel};
         HealthRecovery = 1;
         Mana   = {0, 100, 100};
         ManaRecovery   = 1;
@@ -25,6 +25,7 @@ public:
         Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
         CurWeapon = new Pistol();
+        CurWeapon->damage += curLevel;
 
         setAnimation(Textures::DistortedScientist, &Shaders::Map);
 
@@ -43,7 +44,7 @@ public:
 class ScottPilgrim : public Enemy {
 public:
     ScottPilgrim() : Enemy("Scott Pilgrim") {
-        Health = {0, 20 + 5.f * completedLevels, 20 + 5.f * completedLevels};
+        Health = {0, 20 + 5.f * curLevel, 20 + 5.f * curLevel};
         HealthRecovery = 1;
         Mana   = {0, 100, 100};
         ManaRecovery   = 1;
@@ -52,6 +53,7 @@ public:
         Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
         CurWeapon = new Pistol();
+        CurWeapon->damage += curLevel;
 
         setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Map);
 
@@ -71,7 +73,7 @@ public:
 class Distorted : public Enemy {
 public:
     Distorted() : Enemy("Distorted") {
-        Health = {0, 20 + 5.f * completedLevels, 20 + 5.f * completedLevels};
+        Health = {0, 20 + 5.f * curLevel, 20 + 5.f * curLevel};
         HealthRecovery = 1;
         Mana   = {0, 100, 100};
         ManaRecovery   = 1;
@@ -80,6 +82,7 @@ public:
         Acceleration = MaxVelocity * 5.f;
         Radius = 60.f;
         CurWeapon = new Pistol();
+        CurWeapon->damage += curLevel;
 
         setAnimation(Textures::Distorted, &Shaders::Distortion2);
 

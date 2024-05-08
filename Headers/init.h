@@ -64,6 +64,7 @@ float WallMinSize = size / 8, WallMaxSize = size;
 constexpr float oneOverSixty = 1.f / 60.f;
 
 int completedLevels = 0;
+int curLevel = 1;
 
 sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});

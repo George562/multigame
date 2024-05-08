@@ -93,12 +93,13 @@ sf::Sprite statsPlayerImage;
 Bar<float> statsHPBar;
 Bar<float> statsMPBar;
 
-PlacedText statsArmorText;
-PlacedText statsHPText;
-PlacedText statsMPText;
-PlacedText statsHPRegenText;
-PlacedText statsMPRegenText;
-PlacedText statsCompletedLevelsText;
+PlacedText statsArmorText,
+           statsHPText,
+           statsMPText,
+           statsHPRegenText,
+           statsMPRegenText,
+           statsCompletedLevelsText,
+           statsCurLevelsText;
 
 bool isItemDescDrawn = false;
 std::vector<bool> doInventoryUpdate(inventoryPage::NONE, false);
@@ -186,11 +187,9 @@ Flamethrower flamethrower;
 std::vector<Weapon*> arsenal = {
     &pistol,
     &shotgun,
-    &revolver,
     &rifle,
-    &bubblegun
 };
-Scale<int> CurWeapon{0, 4, 0};
+Scale<int> CurWeapon{0, 2, 0};
 
 
 //////////////////////////////////////////////////////////// Enemies
@@ -577,6 +576,10 @@ void initInventory() {
     statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
     statsCompletedLevelsText.setPosition(scw / 10, 7 * sch / 10);
 
+    statsCurLevelsText.setCharacterSize(24);
+    statsCurLevelsText.setString("Current Levels: " + std::to_string(curLevel));
+    statsCurLevelsText.setPosition(scw / 10, 8 * sch / 10);
+
     inventoryPageElements[inventoryPage::Items].push_back(&itemListBG);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsHPBar);
@@ -587,6 +590,7 @@ void initInventory() {
     inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsCompletedLevelsText);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsCurLevelsText);
 
     doInventoryUpdate[inventoryPage::Stats] = true;
 }
@@ -920,7 +924,7 @@ void drawInterface() {
         window.draw(*d);
     }
 
-    if (player.CurWeapon != nullptr && CurWeapon.fromTop() != 0 && player.CurWeapon->AmountOfAmmunition.toBottom() <= 0) {
+    if (player.CurWeapon != nullptr && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
         window.draw(ReloadWeaponText);
     }
 
@@ -1135,6 +1139,7 @@ void createInventoryUI() {
         statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
         statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
         statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
+        statsCurLevelsText.setString("Current Level: " + std::to_string(curLevel));
         // doInventoryUpdate[inventoryPage::Stats] = false;
     }
 }
@@ -1705,7 +1710,8 @@ void LoadMainMenu() {
         if (CurLocation != &LabyrinthLocation) {
             CurLocation = &LabyrinthLocation;
         } else {
-            completedLevels++;
+            completedLevels = std::max(curLevel, completedLevels);
+            curLevel++;
         }
         LevelGenerate(START_N, START_M);
         FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
