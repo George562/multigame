@@ -63,6 +63,8 @@ float WallMinSize = size / 8, WallMaxSize = size;
 
 constexpr float oneOverSixty = 1.f / 60.f;
 
+int completedLevels = 0;
+
 sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
@@ -167,7 +169,7 @@ namespace Shaders {
                Portal,
                PickupItem,
                Architect,
-               DmgText,     // text moving up
+               FloatingUp,     // text moving up
                Distortion1, // linear left move
                Distortion2  // circle move
                ;
@@ -179,7 +181,7 @@ void loadShaders() {
     Shaders::Portal      .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"         );
     Shaders::PickupItem  .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag" );
     Shaders::Architect   .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"   );
-    Shaders::DmgText     .loadFromFile("sources/shaders/dmgText/dmgText.vert",       "sources/shaders/dmgText/dmgText.frag"       );
+    Shaders::FloatingUp  .loadFromFile("sources/shaders/FloatingUp/FloatingUp.vert", "sources/shaders/FloatingUp/FloatingUp.frag" );
     Shaders::Distortion1 .loadFromFile("sources/shaders/distorted1/distorted1.vert", "sources/shaders/distorted1/distorted1.frag" );
     Shaders::Distortion2 .loadFromFile("sources/shaders/distorted2/distorted2.vert", "sources/shaders/distorted2/distorted2.frag" );
 }
@@ -187,7 +189,7 @@ void loadShaders() {
 namespace States {
 //////////////////////////////////////////////////////////// States
     sf::RenderStates Map(&Shaders::Map),
-                     DmgText(&Shaders::DmgText),
+                     FloatingUp(&Shaders::FloatingUp),
                      Distortion1(&Shaders::Distortion1),
                      Distortion2(&Shaders::Distortion2)
                      ;

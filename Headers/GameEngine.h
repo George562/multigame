@@ -25,8 +25,8 @@ sf::ContextSettings settings;
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated, isDrawInventory, isDrawShop;
-std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff;
-std::vector<Interactable*> InteractibeStuff;
+std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff; // references to objects that exist somewhere
+std::vector<Interactable*> InteractibeStuff; // references to objects that exist somewhere
 
 std::vector<Item*> PickupStuff;
 
@@ -39,7 +39,7 @@ std::vector<Player> ConnectedPlayers;
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect, FLoorTileSprite;
 std::vector<sf::Texture> FloorTextureRects;
-std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround, DamageText;
+std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround, DamageText, MessageText;
 Bar<float> EnemyHealthBar;
 sf::Sprite undergroundBG;
 
@@ -98,6 +98,7 @@ PlacedText statsHPText;
 PlacedText statsMPText;
 PlacedText statsHPRegenText;
 PlacedText statsMPRegenText;
+PlacedText statsCompletedLevelsText;
 
 bool isItemDescDrawn = false;
 std::vector<bool> doInventoryUpdate(inventoryPage::NONE, false);
@@ -254,7 +255,7 @@ void applyEffect(Creature&, Effect*);
 void clearEffect(Creature&, Effect*);
 
 void fireUpdate();
-bool firePropagationAllowed(sf::Vector2i, sf::Vector2i);
+bool firePropagationAllowed(sf::Vector2i&, sf::Vector2i);
 //----------------------------
 
 
@@ -328,6 +329,7 @@ Button EscapeButton("Exit", [](){
     clearVectorOfPointer(TempTextsOnGround);
     clearVectorOfPointer(TempTextsOnScreen);
     clearVectorOfPointer(DamageText);
+    clearVectorOfPointer(MessageText);
     clearVectorOfPointer(listOfBox);
     clearVectorOfPointer(listOfArtifact);
     clearVectorOfPointer(PickupStuff);
@@ -571,6 +573,10 @@ void initInventory() {
     statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
     statsArmorText.setPosition(scw / 10, 6 * sch / 10);
 
+    statsCompletedLevelsText.setCharacterSize(24);
+    statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
+    statsCompletedLevelsText.setPosition(scw / 10, 7 * sch / 10);
+
     inventoryPageElements[inventoryPage::Items].push_back(&itemListBG);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsHPBar);
@@ -580,6 +586,7 @@ void initInventory() {
     inventoryPageElements[inventoryPage::Stats].push_back(&statsHPRegenText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
     inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
+    inventoryPageElements[inventoryPage::Stats].push_back(&statsCompletedLevelsText);
 
     doInventoryUpdate[inventoryPage::Stats] = true;
 }
@@ -788,8 +795,8 @@ void draw() {
 
     for (size_t i = 0; i < DamageText.size(); i++) {
         if (DamageText[i]->localClock->getElapsedTime() < DamageText[i]->howLongToExist) {
-            Shaders::DmgText.setUniform("uTime", DamageText[i]->localClock->getElapsedTime().asSeconds());
-            window.draw(*DamageText[i], States::DmgText);
+            Shaders::FloatingUp.setUniform("uTime", DamageText[i]->localClock->getElapsedTime().asSeconds());
+            window.draw(*DamageText[i], States::FloatingUp);
         } else {
             DeletePointerFromVector(DamageText, i--);
         }
@@ -951,6 +958,15 @@ void drawInterface() {
             window.draw(*TempTextsOnScreen[i]);
         } else {
             DeletePointerFromVector(TempTextsOnScreen, i--);
+        }
+    }
+
+    for (size_t i = 0; i < MessageText.size(); i++) {
+        if (MessageText[i]->localClock->getElapsedTime() < MessageText[i]->howLongToExist) {
+            Shaders::FloatingUp.setUniform("uTime", MessageText[i]->localClock->getElapsedTime().asSeconds());
+            window.draw(*MessageText[i], States::FloatingUp);
+        } else {
+            DeletePointerFromVector(MessageText, i--);
         }
     }
 
@@ -1118,6 +1134,7 @@ void createInventoryUI() {
         statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
         statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
         statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
+        statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
         // doInventoryUpdate[inventoryPage::Stats] = false;
     }
 }
@@ -1317,8 +1334,9 @@ void EventHandler() {
             }
 
             if (CanSomethingBeActivated()) {
-                if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite)))
+                if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite))) {
                     InterfaceStuff.push_back(&XButtonSprite);
+                }
             } else {
                 DeleteFromVector(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite));
             }
@@ -1551,30 +1569,30 @@ void setArtifact(Interactable*& artifact) {
         tempText->setOutlineThickness(3);
         switch (rand() % 4) {
             case 0:
-                player.Health.top += 20;
-                tempText->setString("You have found an Artifact\nHealth increased");
+                player.Health.top += 5;
+                tempText->setString("Health limit +5");
                 tempText->setFillColor(sf::Color(250, 50, 50));
                 break;
             case 1:
-                player.Mana.top += 20;
-                tempText->setString("You have found an Artifact\nMana increased");
+                player.Mana.top += 5;
+                tempText->setString("Mana limit +5");
                 tempText->setFillColor(sf::Color(50, 50, 250));
                 break;
             case 2:
-                player.HealthRecovery += 2;
-                tempText->setString("You have found an Artifact\nHealth Recovery increased");
-                tempText->setFillColor(sf::Color(250, 50, 50));
+                player.HealthRecovery += 1;
+                tempText->setString("Health Recovery +1");
+                tempText->setFillColor(sf::Color(250, 80, 80));
                 break;
             case 3:
-                player.ManaRecovery += 2;
-                tempText->setString("You have found an Artifact\nMana Recovery increased");
-                tempText->setFillColor(sf::Color(50, 50, 250, 200));
+                player.ManaRecovery += 1;
+                tempText->setString("Mana Recovery +1");
+                tempText->setFillColor(sf::Color(80, 80, 250, 200));
                 break;
             default: break;
         }
         tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
 
-        TempTextsOnScreen.push_back(tempText);
+        MessageText.push_back(tempText);
         DeleteFromVector(listOfArtifact, i);
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
         DeleteFromVector(InteractibeStuff, i);
@@ -1584,8 +1602,6 @@ void setArtifact(Interactable*& artifact) {
 }
 
 void LevelGenerate(int n, int m) {
-    clearVectorOfPointer(Bullets);
-
     MiniMapView.zoom(1 / MiniMapZoom);
     MiniMapZoom = std::pow(1.1, -10);
     MiniMapView.zoom(MiniMapZoom);
@@ -1626,17 +1642,17 @@ void LevelGenerate(int n, int m) {
     }
 
     clearVectorOfPointer(FireSet);
-    for (int i = 0; i < 1; i++) {
-        FireSet.push_back(new Fire(sf::seconds(15.f)));
-        FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
-        FireSet[i]->setSize(50.f, 50.f);
-        // do {
-            //FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
-        // } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
-        if (CurLocation->room.x != -1 && CurLocation->room.y != -1) {
-            FireSet[i]->setPosition(sf::Vector2f(CurLocation->room.x + 0.5f, CurLocation->room.y + 0.5f) * (float)size);
-        }
-    }
+    // for (int i = 0; i < 1; i++) {
+    //     FireSet.push_back(new Fire(sf::seconds(15.f)));
+    //     FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
+    //     FireSet[i]->setSize(50.f, 50.f);
+    //     // do {
+    //         //FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
+    //     // } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
+    //     if (CurLocation->room.x != -1 && CurLocation->room.y != -1) {
+    //         FireSet[i]->setPosition(sf::Vector2f(CurLocation->room.x + 0.5f, CurLocation->room.y + 0.5f) * (float)size);
+    //     }
+    // }
 
     clearVectorOfPointer(Enemies);
     for (int i = 0; i < 5; i++) {
@@ -1667,6 +1683,7 @@ void LoadMainMenu() {
 
     portal.setFunction([](Interactable* i){
         clearVectorOfPointer(PickupStuff);
+        clearVectorOfPointer(Bullets);
 
         DrawableStuff.clear();
         InterfaceStuff.clear();
@@ -1685,8 +1702,11 @@ void LoadMainMenu() {
         if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
             Musics::Fight1.play();
         }
-
-        CurLocation = &LabyrinthLocation;
+        if (CurLocation != &LabyrinthLocation) {
+            CurLocation = &LabyrinthLocation;
+        } else {
+            completedLevels++;
+        }
         LevelGenerate(START_N, START_M);
         FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
 
@@ -1939,7 +1959,7 @@ bool useItem(ItemID::Type id) {
     }
 }
 
-bool firePropagationAllowed(sf::Vector2i ancestor, sf::Vector2i pos) {
+bool firePropagationAllowed(sf::Vector2i& ancestor, sf::Vector2i pos) {
     if (pos.y < 0 || pos.x < 0) return false; // если огонь пытается пересечь самые левые или самые верхние стены
     ancestor /= size;
     pos /= size;
@@ -2021,7 +2041,8 @@ void saveGame() {
     fileToSave << player.HealthRecovery << '\n';
     fileToSave << player.Mana << '\n';
     fileToSave << player.ManaRecovery << '\n';
-    fileToSave << player.inventory.money;
+    fileToSave << player.inventory.money << '\n';
+    fileToSave << completedLevels;
 
     fileToSave.close();
 }
@@ -2029,6 +2050,7 @@ void saveGame() {
 void loadSaves() {
     std::ifstream fileToSave("save.save");
     if (!fileToSave.is_open()) {
+        std::rand();
         player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
     } else {
         char name[13]; fileToSave.getline(name, 13);
@@ -2038,6 +2060,7 @@ void loadSaves() {
         fileToSave >> player.Mana;
         fileToSave >> player.ManaRecovery;
         fileToSave >> player.inventory.money;
+        fileToSave >> completedLevels;
     }
     fileToSave.close();
 }

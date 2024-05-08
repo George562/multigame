@@ -16,8 +16,10 @@ public:
 class DistortedScientist : public Enemy {
 public:
     DistortedScientist() : Enemy("Distorted Scientist") {
-        Health = {0,  20,  20}; HealthRecovery = 1;
-        Mana   = {0, 100, 100}; ManaRecovery   = 1;
+        Health = {0, 20 + 5.f * completedLevels, 20 + 5.f * completedLevels};
+        HealthRecovery = 1;
+        Mana   = {0, 100, 100};
+        ManaRecovery   = 1;
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
@@ -41,8 +43,10 @@ public:
 class ScottPilgrim : public Enemy {
 public:
     ScottPilgrim() : Enemy("Scott Pilgrim") {
-        Health = {0,  20,  20}; HealthRecovery = 1;
-        Mana   = {0, 100, 100}; ManaRecovery   = 1;
+        Health = {0, 20 + 5.f * completedLevels, 20 + 5.f * completedLevels};
+        HealthRecovery = 1;
+        Mana   = {0, 100, 100};
+        ManaRecovery   = 1;
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
@@ -67,8 +71,10 @@ public:
 class Distorted : public Enemy {
 public:
     Distorted() : Enemy("Distorted") {
-        Health = {0,  20,  20}; HealthRecovery = 1;
-        Mana   = {0, 100, 100}; ManaRecovery   = 1;
+        Health = {0, 20 + 5.f * completedLevels, 20 + 5.f * completedLevels};
+        HealthRecovery = 1;
+        Mana   = {0, 100, 100};
+        ManaRecovery   = 1;
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;

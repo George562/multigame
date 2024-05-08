@@ -198,7 +198,7 @@ public:
 
 class Flamethrower : public Weapon {
 public:
-    Flamethrower() : Weapon("Flamethrower", 100, 0, 1.f / 10, 8) { BulletVelocity = 1200; }
+    Flamethrower() : Weapon("Flamethrower", 100, 0, 1.f / 10, 1) { BulletVelocity = 1200; }
     void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
