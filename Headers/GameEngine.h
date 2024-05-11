@@ -85,8 +85,19 @@ Button statsPageButton("Stats", [](){
 sf::Sprite invBackground;
 sf::Sprite itemListBG;
 
+struct ItemSlot {
+    sf::Sprite* background;
+    std::vector<PlacedText*> texts;     // We could theoretically have multiple texts, such as rarity, durability and similar stuff, thus I use a vector
+    bool isInitialized;  // A marker so that we don't have to use arbitrary checks for null pointers or something as dumb
+
+    ItemSlot() {
+        background = nullptr;
+        isInitialized = false;
+    }
+};
+
 std::vector<std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
-std::vector<std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
+std::vector<ItemSlot> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 std::vector<Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
 sf::Sprite statsPlayerImage;
@@ -489,7 +500,7 @@ void init() {
 
 void initInventory() {
     inventoryPageElements.resize(inventoryPage::NONE);
-    itemSlotsElements.resize(MaxItemID);
+    itemSlotsElements.resize(MaxItemID, ItemSlot());
     itemSlotsRects.resize(MaxItemID);
 
     invBackground.setTexture(Textures::SteelFrame);
@@ -1026,13 +1037,17 @@ void drawInventory() {
                 window.draw(*elem);
 
             if (activeInventoryPage != inventoryPage::Stats) {
-                int slotNumber = 0;
                 for (Item*& item : player.inventory.items) {
-                    for (sf::Drawable*& elem : itemSlotsElements[item->id])
-                        window.draw(*elem);
-                    window.draw(*item);
+                    if (itemSlotsElements[item->id].isInitialized) {
+                        window.draw(*itemSlotsElements[item->id].background);
 
-                    slotNumber++;
+                        if (item->amount > 1) window.draw(*itemSlotsElements[item->id].texts[0]);
+
+                        for (int i = 1; i < itemSlotsElements[item->id].texts.size(); i++) {   // This loop is a placeholder for now. If there are more texts,
+                            window.draw(*itemSlotsElements[item->id].texts[i]);                // then they will  need a special if-else condition,
+                        }                                                                      // because those texts will most likely be stuff like rarity,                                                                // upgrade counters and so on.
+                    }
+                    window.draw(*item);
                 }
             }
 
@@ -1096,13 +1111,6 @@ void drawShop() {
 //============================================================================================== UI UPDATERS/CREATORS
 void createInventoryUI() {
     if (doInventoryUpdate[inventoryPage::Items]) {
-        if (!itemSlotsElements.empty()) {
-            for (ItemID::Type id = 0; id != MaxItemID; id++) {
-                if (itemSlotsElements[id].size() != 0) {
-                    clearVectorOfPointer(itemSlotsElements[id]);
-                }
-            }
-        }
 
         int slotNumber = 0;
         for (Item*& item : player.inventory.items) {
@@ -1112,36 +1120,36 @@ void createInventoryUI() {
             float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
             float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
 
-            sf::Sprite* slotBG = new sf::Sprite();
-            slotBG->setPosition(itemX, itemY);
-            slotBG->setScale(0.5, 0.5);
-            slotBG->setTexture(Textures::ItemPanel);
-            itemSlotsElements[drawnItem->id].push_back(slotBG);
+            if (!itemSlotsElements[drawnItem->id].isInitialized) {
+                std::cout << "Initializing a new itemslot for itemId" << itemName[drawnItem->id] << "\n";
+                itemSlotsElements[drawnItem->id].background = new sf::Sprite();
+                itemSlotsElements[drawnItem->id].isInitialized = true;
+            }
+            sf::Sprite& slotBG = *itemSlotsElements[drawnItem->id].background;
+            slotBG.setPosition(itemX, itemY);
+            slotBG.setScale(0.5, 0.5);
+            slotBG.setTexture(Textures::ItemPanel);
 
             drawnItem->setPosition(itemX, itemY);
 
-            if (drawnItem->amount > 1) {
-                PlacedText* itemAmountText = new PlacedText();
-                itemAmountText->setCharacterSize(20);
-                itemAmountText->setString(std::to_string(drawnItem->amount));
-                itemAmountText->setPosition(sf::Vector2f(itemX + slotBG->getGlobalBounds().width,
-                                                            itemY + slotBG->getGlobalBounds().height));
-                itemSlotsElements[drawnItem->id].push_back(itemAmountText);
-            }
+            if (itemSlotsElements[drawnItem->id].texts.empty())
+                itemSlotsElements[drawnItem->id].texts.push_back(new PlacedText());
+            PlacedText& itemAmountText = *itemSlotsElements[drawnItem->id].texts[0];
+            itemAmountText.setCharacterSize(20);
+            itemAmountText.setString(std::to_string(drawnItem->amount));
+            itemAmountText.setPosition(sf::Vector2f(itemX + slotBG.getGlobalBounds().width,
+                                                        itemY + slotBG.getGlobalBounds().height));
 
             slotNumber++;
         }
         doInventoryUpdate[inventoryPage::Items] = false;
         createSlotRects();
     }
-    if (doInventoryUpdate[inventoryPage::Stats]) {
-        statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
-        statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
-        statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
-        statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
-        statsCurLevelsText.setString("Current Level: " + std::to_string(curLevel));
-        // doInventoryUpdate[inventoryPage::Stats] = false;
-    }
+    statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
+    statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
+    statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
+    statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
+    statsCurLevelsText.setString("Current Level: " + std::to_string(curLevel));
 }
 
 void createShopUI() {
