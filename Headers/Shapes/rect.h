@@ -6,6 +6,10 @@ class Rect : public Shape {
 protected:
     sf::Vector2f size;
 public:
+    Rect() : Shape(4), size(sf::Vector2f(0, 0)) {}
+    Rect(float x, float y, float w, float h) : Shape(4), size(sf::Vector2f(w, h)) {
+        setPosition(sf::Vector2f(x, y));
+    }
     Rect(sf::Vector2f position, sf::Vector2f size) : Shape(4), size(size) {
         setPosition(position);
     }

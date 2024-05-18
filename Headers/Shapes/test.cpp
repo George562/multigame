@@ -4,8 +4,8 @@
 
 int main () {
     Rect rect(sf::Vector2f(2, 2), sf::Vector2f(1, 2));
-    Circle circle(sf::Vector2f(5, 3.5), 2);
-    std::cout << rect.intersect(circle) << '\n';
+    Circle circle(sf::Vector2f(1.5, 4.5), 2);
+    std::cout << circle.intersect(rect) << '\n';
     std::cout << circle.contains(rect.getPosition()) << '\n';
     std::cout << circle.contains(rect.getRightTop()) << '\n';
     std::cout << circle.contains(rect.getRightBottom()) << '\n';

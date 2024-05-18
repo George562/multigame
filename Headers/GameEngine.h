@@ -412,15 +412,15 @@ void init() {
     shopSector.setPosition(0, 2 * size);
 
     Shaders::Map.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Map.setUniform("u_playerRadius", player.Radius);
+    Shaders::Map.setUniform("u_playerRadius", player.getRadius());
 
     Shaders::Player.setUniform("uResolution", sf::Vector2f(scw, sch));
 
     Shaders::Portal.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Portal.setUniform("u_playerRadius", player.Radius);
+    Shaders::Portal.setUniform("u_playerRadius", player.getRadius());
 
     Shaders::Architect.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Architect.setUniform("u_playerRadius", player.Radius);
+    Shaders::Architect.setUniform("u_playerRadius", player.getRadius());
 
     Shaders::Distortion1.setUniform("noise_png", Textures::Noise);
 
@@ -860,22 +860,24 @@ void drawFloor() {
 }
 
 sf::Vector2f CameraPos;
+Rect CameraRect(0, 0, scw, sch);
 void drawWalls() {
     CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
+    CameraRect.setPosition(CameraPos);
     for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
             i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++) {
         for (int j = std::max(0, int(CameraPos.x / size) - 1);
                 j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
-            if (CurLocation->wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, static_cast<float>(scw), static_cast<float>(sch))) {
+            if (CurLocation->wallsRect[i][j].intersect(CameraRect)) {
                 CurLocation->SeenWalls[i][j] = true;
             }
             if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setTextureRect(sf::IntRect(
-                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].Width) * random(sf::Vector2f(i, j)),
-                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].Height) * random(sf::Vector2f(j, i)),
-                        CurLocation->wallsRect[i][j].Width,
-                        CurLocation->wallsRect[i][j].Height));
+                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].getSize().x) * random(sf::Vector2f(i, j)),
+                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].getSize().y) * random(sf::Vector2f(j, i)),
+                        CurLocation->wallsRect[i][j].getSize().x,
+                        CurLocation->wallsRect[i][j].getSize().y));
                 window.draw(WallRect, States::Map);
             }
         }
@@ -885,7 +887,7 @@ void drawWalls() {
 void drawMiniMap() {
     if (MiniMapHoldOnPlayer) {
         if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            MiniMapView.setCenter(player.getPosition() * ScaleParam);
+            MiniMapView.setCenter(player.getCenter() * ScaleParam);
         }
     }
 
@@ -934,7 +936,7 @@ void drawMiniMap() {
             window.draw(MMPlayerCircle);
         }
     } else {
-        MMPlayerCircle.setPosition(player.getPosition() * ScaleParam);
+        MMPlayerCircle.setPosition(player.getCenter() * ScaleParam);
         window.draw(MMPlayerCircle);
     }
     window.setView(GameView);
@@ -1397,7 +1399,7 @@ void EventHandler() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         EscapeMenuActivated = true;
                     } else if (event.key.code == sf::Keyboard::H) {
-                        player.setPosition(size, size);
+                        player.setCenter(size, size);
                         CurLocation = &WaitingRoomLoaction;
                     }
                 }
@@ -1437,7 +1439,7 @@ void EventHandler() {
             //                                 for (Player& x: ConnectedPlayers) {
             //                                     ReceivePacket >> x;
             //                                 }
-            //                                 player.setPosition(ConnectedPlayers[ComputerID].getPosition());
+            //                                 player.setCenter(ConnectedPlayers[ComputerID].getPosition());
             //                         }
             //                     }
             //                 }
@@ -1618,12 +1620,12 @@ void LevelGenerate(int n, int m) {
     MiniMapZoom = std::pow(1.1, -10);
     MiniMapView.zoom(MiniMapZoom);
 
-    LabyrinthLocation.GenerateLocation(n, m, player.getPosition() / float(size));
+    LabyrinthLocation.GenerateLocation(n, m, player.getCenter() / float(size));
 
     FillFloorRectsThread.launch();
 
-    LabyrinthLocation.AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
-    LabyrinthLocation.AddObject({Tiles::puddle, player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)});
+    LabyrinthLocation.AddObject({Tiles::portal, player.getCenter() - portal.getSize() / 2.f});
+    LabyrinthLocation.AddObject({Tiles::puddle, player.getCenter() - portal.getSize() / 2.f + sf::Vector2f(size, size)});
 
     clearVectorOfPointer(listOfBox);
     for (int i = 0; i < 10; i++) {
@@ -1632,7 +1634,7 @@ void LevelGenerate(int n, int m) {
         do {
             listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
             sf::Vector2f(rand() % int(size - listOfBox[i]->getSize().x), rand() % int(size - listOfBox[i]->getSize().y)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->getPosition().y / size][(int)listOfBox[i]->getPosition().x / size]);
 
         LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
         InteractibeStuff.push_back(listOfBox[i]);
@@ -1646,7 +1648,7 @@ void LevelGenerate(int n, int m) {
         do {
             listOfArtifact[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
             sf::Vector2f(rand() % (size - Textures::Architect.getSize().x / 4), rand() % (size - Textures::Architect.getSize().y / 4)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->PosY / size][(int)listOfArtifact[i]->PosX / size]);
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->getPosition().y / size][(int)listOfArtifact[i]->getPosition().x / size]);
 
         LabyrinthLocation.AddObject({Tiles::artifact, listOfArtifact[i]->getPosition()});
         InteractibeStuff.push_back(listOfArtifact[i]);
@@ -1677,8 +1679,8 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < Enemies.size(); i++) {
         do {
             Enemies[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
-        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
-                 distance(Enemies[i]->getPosition(), player.getPosition()) < size * 3);
+        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->getPosition().y / size][(int)Enemies[i]->getPosition().x / size] ||
+                 distance(Enemies[i]->getPosition(), player.getCenter()) < size * 3);
     }
     FillFloorRectsThread.wait();
 }
@@ -1686,11 +1688,11 @@ void LevelGenerate(int n, int m) {
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
 
-    player.setPosition(3.5f * size, 2.5f * size);
-    FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
+    player.setCenter(3.5f * size, 2.5f * size);
+    FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
     player.CurWeapon = &pistol;
 
-    sf::Vector2f PlayerPos = player.getPosition() / (float)size;
+    sf::Vector2f PlayerPos = player.getCenter() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
     FillFloorRectsThread.launch();
 
@@ -1702,14 +1704,14 @@ void LoadMainMenu() {
         InterfaceStuff.clear();
         InteractibeStuff.clear();
 
-        player.setPosition(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
+        player.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
         player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
         MiniMapActivated = false;
         EscapeMenuActivated = false;
 
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter(player.getPosition() * ScaleParam);
+        MiniMapView.setCenter(player.getCenter() * ScaleParam);
 
         Musics::MainMenu.pause();
         if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
@@ -1722,7 +1724,7 @@ void LoadMainMenu() {
             curLevel++;
         }
         LevelGenerate(START_N, START_M);
-        FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
+        FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);
         for (Enemy* &enemy: Enemies) {
@@ -1755,8 +1757,8 @@ void LoadMainMenu() {
     });
 
     // Set cameras
-    GameView.setCenter(player.getPosition());
-    MiniMapView.setCenter(player.getPosition() * ScaleParam);
+    GameView.setCenter(player.getCenter());
+    MiniMapView.setCenter(player.getCenter() * ScaleParam);
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     Musics::Fight1.stop();
@@ -1780,19 +1782,19 @@ void LoadMainMenu() {
     newItem->setAnimation(*itemTextureName[ItemID::regenDrug], &Shaders::Map);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
-    PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
+    PickupStuff[0]->dropTo(player.getCenter() + sf::Vector2f(100, 100));
 
     Item* fireHosePickup = new Item(ItemID::fireHose, 1);
     fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose], &Shaders::Map);
     PickupStuff.push_back(fireHosePickup);
     DrawableStuff.push_back(PickupStuff[1]);
-    PickupStuff[1]->dropTo(player.getPosition() + sf::Vector2f(400, 300));
+    PickupStuff[1]->dropTo(player.getCenter() + sf::Vector2f(400, 300));
 
     Item* flamethrowerPickup = new Item(ItemID::flamethrower, 1);
     flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower], &Shaders::Map);
     PickupStuff.push_back(flamethrowerPickup);
     DrawableStuff.push_back(PickupStuff[2]);
-    PickupStuff[2]->dropTo(player.getPosition() + sf::Vector2f(-550, -120));
+    PickupStuff[2]->dropTo(player.getCenter() + sf::Vector2f(-550, -120));
 
     curShop = &mainMenuShop;
 
@@ -1987,7 +1989,7 @@ bool firePropagationAllowed(sf::Vector2i& ancestor, sf::Vector2i pos) {
 void fireUpdate() {
     float angle;
     for (int i = 0; i < FireSet.size(); i++) {
-        float dist = 2.5 * FireSet[i]->Width;
+        float dist = 2.5 * FireSet[i]->getSize().y;
         if (FireSet[i]->localClock->getElapsedTime() >= FireSet[i]->howLongToExist) {
             FireSet[i]->localClock->restart();
             FireSet[i]->howLongToExist = sf::seconds(rand() % 4 + 15.f);
@@ -2016,7 +2018,7 @@ void fireUpdate() {
 void updateShaders() {
     sf::Vector2f uMouse(sf::Mouse::getPosition());
     float uTime = GameClock->getElapsedTime().asSeconds();
-    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getPosition()));
+    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getCenter()));
 
     Shaders::Map.setUniform("uMouse", uMouse);
     Shaders::Map.setUniform("uPlayerPosition", uPlayerPosition);
@@ -2120,11 +2122,11 @@ void MainLoop() {
                     }
                 }
             } else {
-                Enemies[i]->setTarget(player.getPosition());
+                Enemies[i]->setTarget(player.getCenter());
                 Enemies[i]->move(CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition(), Enemies[i]->faction);
+                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getCenter(), Enemies[i]->faction);
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
@@ -2162,8 +2164,8 @@ void MainLoop() {
         } else {
             if (!chat.inputted && !isDrawInventory && !isDrawShop) {
                 player.move(CurLocation);
-                GameView.setCenter(player.getPosition() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
-                FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
+                GameView.setCenter(player.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
+                FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
             }
             int wasBulletsSize = Bullets.size();
 
@@ -2201,7 +2203,7 @@ void MainLoop() {
             updateBullets();
 
             if (HostFuncRun || ClientFuncRun) {
-                ConnectedPlayers[ComputerID].setPosition(player.getPosition());
+                ConnectedPlayers[ComputerID].setPosition(player.getCenter());
                 mutex.lock();
                 SendPacket << pacetStates::PlayerPos;
                 if (HostFuncRun) {
@@ -2432,8 +2434,8 @@ void funcOfClient() {
                             for (Player& x: ConnectedPlayers) {
                                 ReceivePacket >> x;
                             }
-                            player.setPosition(ConnectedPlayers[ComputerID].getPosition());
-                            GameView.setCenter(player.getPosition());
+                            player.setCenter(ConnectedPlayers[ComputerID].getPosition());
+                            GameView.setCenter(player.getCenter());
                             break;
                         case pacetStates::ChatEvent:
                             ReceivePacket >> PacetData;

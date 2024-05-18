@@ -1,7 +1,7 @@
 #pragma once
 #include "../SFML-2.5.1/include/SFML/Network.hpp"
 #include "text.h"
-#include "rect.h"
+#include "Shapes/rect.h"
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -16,12 +16,12 @@ public:
     bool Pushed = false, ShowButton = true;
     void (*buttonFunction)(void);
 
-    Button() {}
+    Button() : Rect() {}
     Button(sf::String, void (*)(void));
 
     void setPosition(float, float);
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
-    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(float x, float y) { setPosition(x - getSize().x / 2, y - getSize().y / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 
     void setSize(float, float);
@@ -61,8 +61,8 @@ void Button::setPosition(float x, float y) {
 }
 
 void Button::setSize(float w, float h) {
-    if (Width != 0 && Height != 0) {
-        sprite.setScale(w / Width, h / Height);
+    if (getSize().x != 0 && getSize().y != 0) {
+        sprite.setScale(w / getSize().x, h / getSize().y);
     }
     Rect::setSize(w, h);
     ButtonText.setCenter(getCenter());

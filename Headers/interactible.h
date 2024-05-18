@@ -1,7 +1,7 @@
 #pragma once
 #include "animation.h"
-#include "rect.h"
-#include "circle.h"
+#include "Shapes/rect.h"
+#include "Shapes/circle.h"
 
 #define ActivationButton sf::Keyboard::X
 
@@ -64,7 +64,7 @@ public:
     void setPosition(float x, float y) { Rect::setPosition(x, y); animation->setPosition(x, y); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
-    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(float x, float y) { setPosition(x - getSize().x / 2, y - getSize().y / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 };
 

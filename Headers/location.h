@@ -112,7 +112,7 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
 
 void Location::BuildWayFrom(sf::Vector2f p) {
     FindEnableTilesFrom(p);
-    Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
+    sf::IntRect UsedAreaRect(0, 0, m, n);
     sf::Vector2i check;
     bool todel;
     for (int i = 0; i < walls.size(); i++)
@@ -121,10 +121,10 @@ void Location::BuildWayFrom(sf::Vector2f p) {
 
             todel = true;
             check = sf::Vector2i(j, i / 2);
-            if (UsedAreaRect.contains(check.x, check.y) && EnableTiles[check.y][check.x])
+            if (UsedAreaRect.contains(check) && EnableTiles[check.y][check.x])
                 todel = false;
             check = (i % 2 == 0) ? sf::Vector2i(j, i / 2 - 1) : sf::Vector2i(j - 1, i / 2);
-            if (UsedAreaRect.contains(check.x, check.y) && EnableTiles[check.y][check.x])
+            if (UsedAreaRect.contains(check) && EnableTiles[check.y][check.x])
                 todel = false;
             if (todel) walls[i][j] = false;
         }
@@ -177,23 +177,23 @@ void Location::FindEnableTilesFrom(sf::Vector2f& p) {
     AmountOfEnableTiles = 0;
     std::queue<sf::Vector2i> q; q.push(sf::Vector2i(p));
     sf::Vector2i cur, check;
-    Rect UsedAreaRect{0, 0, float(m - 1), float(n - 1)};
+    sf::IntRect UsedAreaRect(0, 0, m, n);
     while (!q.empty()) {
         cur = q.front(); q.pop();
         if (EnableTiles[cur.y][cur.x]) continue;
         EnableTiles[cur.y][cur.x] = true;
         AmountOfEnableTiles++;
         check = cur + dirs[0]; // {1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x])
+        if (UsedAreaRect.contains(check) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x])
             q.push(check);
         check = cur + dirs[2]; // {-1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x + 1])
+        if (UsedAreaRect.contains(check) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 1][check.x + 1])
             q.push(check);
         check = cur + dirs[1]; // {0, 1}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2][check.x])
+        if (UsedAreaRect.contains(check) && !EnableTiles[check.y][check.x] && !walls[check.y * 2][check.x])
             q.push(check);
         check = cur + dirs[3]; // {0, -1}
-        if (UsedAreaRect.contains(check.x, check.y) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 2][check.x])
+        if (UsedAreaRect.contains(check) && !EnableTiles[check.y][check.x] && !walls[check.y * 2 + 2][check.x])
             q.push(check);
     }
 }
@@ -205,10 +205,10 @@ void Location::FillWallsRect() {
         for (int j = 0; j < walls[i].size(); j++)
             if (walls[i][j]) {
                 if (i % 2 == 1) // |
-                    wallsRect[i].push_back(Rect{size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize});
+                    wallsRect[i].push_back(Rect(size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize));
                 else // -
-                    wallsRect[i].push_back(Rect{float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize});
-            } else wallsRect[i].push_back(Rect{0, 0, 0, 0});
+                    wallsRect[i].push_back(Rect(float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize));
+            } else wallsRect[i].push_back(Rect(0, 0, 0, 0));
 
     if (room.x != -1 && room.y != -1) {
         if (doorPos.y % 2 == 1)
@@ -296,7 +296,7 @@ void FindTheWay(Location* where, sf::Vector2f from, sf::Vector2f to, std::vector
     std::vector<std::vector<sf::Vector2i>> place(where->n, std::vector<sf::Vector2i>(where->m, sf::Vector2i(-1, -1)));
     std::queue<sf::Vector2i> q; q.push(sf::Vector2i(from.x / size, from.y / size));
     sf::Vector2i cur, check;
-    Rect UsedAreaRect{0, 0, float(where->m - 1), float(where->n - 1)};
+    sf::IntRect UsedAreaRect(0, 0, where->m, where->n);
     vvb used(where->n, vb(where->m, false));
     while (!q.empty()) {
         cur = q.front(); q.pop();
@@ -304,22 +304,22 @@ void FindTheWay(Location* where, sf::Vector2f from, sf::Vector2f to, std::vector
         used[cur.y][cur.x] = true;
         if (sf::Vector2i(to / (float)size) == cur) break;
         check = cur + dirs[0]; // {1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where->walls[check.y * 2 + 1][check.x]) {
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !where->walls[check.y * 2 + 1][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[2]; // {-1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where->walls[check.y * 2 + 1][check.x + 1]) {
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !where->walls[check.y * 2 + 1][check.x + 1]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[1]; // {0, 1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where->walls[check.y * 2][check.x]) {
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !where->walls[check.y * 2][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
         check = cur + dirs[3]; // {0, -1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !where->walls[check.y * 2 + 2][check.x]) {
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !where->walls[check.y * 2 + 2][check.x]) {
             q.push(check);
             place[check.y][check.x] = cur;
         }
@@ -342,29 +342,29 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
     }
     std::queue<sf::Vector2i> q; q.push(sf::Vector2i(to.x / size, to.y / size));
     sf::Vector2i cur, check;
-    Rect UsedAreaRect{0, 0, float(location->m - 1), float(location->n - 1)};
+    sf::IntRect UsedAreaRect(0, 0, location->m, location->n);
     vvb used(location->n, vb(location->m, false));
     while (!q.empty()) {
         cur = q.front(); q.pop();
         if (used[cur.y][cur.x]) continue;
         used[cur.y][cur.x] = true;
         check = cur + dirs[0]; // {1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x]) {
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x]) {
             q.push(check);
             theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
         }
         check = cur + dirs[2]; // {-1, 0}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x + 1]) {
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x + 1]) {
             q.push(check);
             theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
         }
         check = cur + dirs[1]; // {0, 1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2][check.x]) {
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !location->walls[check.y * 2][check.x]) {
             q.push(check);
             theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
         }
         check = cur + dirs[3]; // {0, -1}
-        if (UsedAreaRect.contains(check.x, check.y) && !used[check.y][check.x] && !location->walls[check.y * 2 + 2][check.x]) {
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !location->walls[check.y * 2 + 2][check.x]) {
             q.push(check);
             theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
         }
@@ -386,12 +386,11 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
 }
 
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
-template <typename Obj>
-sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f Velocity) {
-    int y = int(obj.PosY) / size, x = int(obj.PosX) / size;
+sf::Vector2i WillCollisionWithWalls(vvr& Walls, Shape& obj, sf::Vector2f Velocity) {
+    int y = int(obj.getCenter().y) / size, x = int(obj.getCenter().x) / size;
     sf::Vector2i res(Velocity.x != 0 ? -1 : 1, Velocity.y != 0 ? -1 : 1);
 
-    obj.PosY += Velocity.y;
+    obj.move(0, Velocity.y);
     if (Velocity.y < 0) {
         if ((y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(obj)) &&
             (!Walls[y * 2][x].intersect(obj)) &&
@@ -408,8 +407,8 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f Velocity)
             (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(obj)))
             res.y = 1;
     }
-    obj.PosY -= Velocity.y;
-    obj.PosX += Velocity.x;
+    obj.move(0, -Velocity.y);
+    obj.move(Velocity.x, 0);
     if (Velocity.x < 0) {
         if ((x - 1 < 0 || !Walls[y * 2][x - 1].intersect(obj)) &&
             (!Walls[y * 2 + 1][x].intersect(obj)) &&
@@ -426,7 +425,7 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, Obj& obj, sf::Vector2f Velocity)
             (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x + 1].intersect(obj)))
             res.x = 1;
     }
-    obj.PosX -= Velocity.x;
+    obj.move(-Velocity.x, 0);
     return res;  // if value of vector == -1 => there was collision
 }
 

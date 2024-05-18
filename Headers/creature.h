@@ -68,10 +68,10 @@ public:
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animation != nullptr) {
-            animation->setPosition(getPosition());
+            animation->setPosition(getCenter());
             target.draw(*animation, states);
         }
-        Name.setPosition(PosX - Name.Width / 2.f, PosY - Radius - Name.Height);
+        Name.setPosition(getCenter().x - Name.Width / 2.f, getPosition().y - Name.Height);
         target.draw(Name, states);
     }
 
@@ -79,7 +79,7 @@ public:
 
     virtual void move(Location* location) {
         float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), oneOverSixty);
-        sf::Vector2f dist = target - getPosition();
+        sf::Vector2f dist = target - getCenter();
         float len = std::sqrt(dist.x * dist.x + dist.y * dist.y);
         sf::Vector2f VelocityTarget(std::clamp(dist.x, -std::abs(dist.x) * MaxVelocity * VelocityBuff / len, std::abs(dist.x) * MaxVelocity * VelocityBuff / len),
                                     std::clamp(dist.y, -std::abs(dist.y) * MaxVelocity * VelocityBuff / len, std::abs(dist.y) * MaxVelocity * VelocityBuff / len));
@@ -95,8 +95,7 @@ public:
         if (tempv.x == -1) Velocity.x = 0;
         if (tempv.y == -1) Velocity.y = 0;
 
-        PosX += Velocity.x * ElapsedTimeAsSecond;
-        PosY += Velocity.y * ElapsedTimeAsSecond;
+        Circle::move(Velocity * ElapsedTimeAsSecond);
         LastMoveCheck = localClock->getElapsedTime();
     }
 
@@ -111,7 +110,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
-        animation->setSize({Radius * 2.f, Radius * 2.f});
+        animation->setSize(getSize());
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
     }
@@ -121,7 +120,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, shader);
-        animation->setSize({Radius * 2.f, Radius * 2.f});
+        animation->setSize(getSize());
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
     };

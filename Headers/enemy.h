@@ -23,7 +23,7 @@ public:
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
-        Radius = 60.f;
+        setRadius(60.f);
         CurWeapon = new Pistol();
         CurWeapon->damage += curLevel;
 
@@ -35,7 +35,7 @@ public:
     void move(Location* location) override {
         VelocityBuff = 1;
 
-        setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
+        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
         Creature::move(location);
     }
 };
@@ -51,7 +51,7 @@ public:
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
-        Radius = 60.f;
+        setRadius(60.f);
         CurWeapon = new Pistol();
         CurWeapon->damage += curLevel;
 
@@ -63,8 +63,8 @@ public:
     void move(Location* location) override {
         VelocityBuff = 1;
 
-        setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
-        animation->setAnimationLevel(target.x - PosX < 0);
+        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
+        animation->setAnimationLevel(target.x - getCenter().x < 0);
         Creature::move(location);
     }
 };
@@ -80,7 +80,7 @@ public:
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
-        Radius = 60.f;
+        setRadius(60.f);
         CurWeapon = new Pistol();
         CurWeapon->damage += curLevel;
 
@@ -92,7 +92,7 @@ public:
     void move(Location* location) override {
         VelocityBuff = 1;
 
-        setTarget(TheWayToPlayer[int(PosY) / size][int(PosX) / size]);
+        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
         Creature::move(location);
     }
 };

@@ -1,11 +1,6 @@
 #pragma once
-#include "../../SFML-2.5.1/include/SFML/System.hpp"
 #include <vector>
-#include <iostream>
-
-float cross(sf::Vector2f a, sf::Vector2f b) {
-    return a.x * b.y - a.y * b.x;
-}
+#include "VectorTools.h"
 
 class Shape {
 protected:
@@ -22,6 +17,8 @@ public:
     virtual sf::Vector2f getCenter() const = 0;
 
     virtual sf::Vector2f getSize() const = 0;
+    virtual void move(float x, float y) = 0;
+    virtual void move(sf::Vector2f v) = 0;
 
     bool contains(float x, float y) const {
         return contains(sf::Vector2f(x, y));
@@ -39,7 +36,6 @@ public:
         sf::Vector2f pos  =       getPosition(), size  =       getSize(),
                      pos2 = shape.getPosition(), size2 = shape.getSize();
         if (!(pos2.x <= pos.x + size.x && pos.x <= pos2.x + size2.x && pos2.y <= pos.y + size.y && pos.y <= pos2.y + size2.y)) {
-            std::cout << "absolute bruh\n";
             return false;
         }
         sf::Vector2f a, b, c, d, intersectionPoint;

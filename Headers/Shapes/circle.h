@@ -9,6 +9,7 @@ private:
     sf::Vector2f center;
     float Radius;
 public:
+    Circle() : Shape(30), Radius(0), center(0, 0) {}
     Circle(sf::Vector2f position, float radius) : Shape(30), Radius(radius) {
         setCenter(position);
     }
@@ -20,18 +21,18 @@ public:
     void setCenter(float x, float y) {
         center = sf::Vector2f(x, y);
         for (int i = 0; i < 30; i++) {
-            points[i] = sf::Vector2f(center.x + Radius * std::cos(i * 2 * M_PI / 30),
-                                     center.y + Radius * std::sin(i * 2 * M_PI / 30));
+            points[i] = sf::Vector2f(x + Radius * std::cos(i * 2 * M_PI / 30),
+                                     y + Radius * std::sin(i * 2 * M_PI / 30));
         }
     }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 
     // Move the circle relatively to its current position
-    void move(float x, float y) { setPosition(center.x + x, center.y + y); }
-    void move(sf::Vector2f v) { setPosition(center + v); }
+    void move(float x, float y) { setCenter(center.x + x, center.y + y); }
+    void move(sf::Vector2f v) { setCenter(center + v); }
 
     // Get size
-    sf::Vector2f getSize() const { return sf::Vector2f(Radius, Radius); }
+    sf::Vector2f getSize() const { return sf::Vector2f(Radius * 2, Radius * 2); }
 
     // Get and set radius
     float getRadius() const { return Radius; }
