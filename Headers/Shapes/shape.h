@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 
-float dot(sf::Vector2f a, sf::Vector2f b) {
+float cross(sf::Vector2f a, sf::Vector2f b) {
     return a.x * b.y - a.y * b.x;
 }
 
@@ -28,7 +28,7 @@ public:
     }
     bool contains(sf::Vector2f point) const {
         for (int i = 0; i < pointCount; i++) {
-            if (dot(points[(i + 1) % pointCount] - points[i], point - points[i]) < 0) {
+            if (cross(points[(i + 1) % pointCount] - points[i], point - points[i]) < 0) {
                 return false;
             }
         }
@@ -48,18 +48,18 @@ public:
             for (int j = 0; j < shape.pointCount; j++) {
                 c = shape.points[j]; d = shape.points[(j + 1) % shape.pointCount];
                 if ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x) == 0) {
-                    if (((a.y - b.y == 0) && std::abs(a.y - c.y) < 0.1 && std::min(a.x, b.x) <= std::max(c.x, d.x) && std::min(c.x, d.x) <= std::max(a.x, b.x)) ||
-                       ((a.x - b.x == 0) && std::abs(a.x - c.x) < 0.1 && std::min(a.y, b.y) <= std::max(c.y, d.y) && std::min(c.y, d.y) <= std::max(a.y, b.y))) {
+                    if (((a.y - b.y == 0) && std::abs(a.y - c.y) < 0.01 && std::min(a.x, b.x) <= std::max(c.x, d.x) && std::min(c.x, d.x) <= std::max(a.x, b.x)) ||
+                       ((a.x - b.x == 0) && std::abs(a.x - c.x) < 0.01 && std::min(a.y, b.y) <= std::max(c.y, d.y) && std::min(c.y, d.y) <= std::max(a.y, b.y))) {
                         return true;
                     }
                 }
                 intersectionPoint = sf::Vector2f(
-                (dot(a, b) * (c.x - d.x) - (a.x - b.x) * dot(c, d)) / ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x)),
-                (dot(a, b) * (c.y - d.y) - (a.y - b.y) * dot(c, d)) / ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x)));
-                if (std::min(a.x, b.x) <= intersectionPoint.x && intersectionPoint.x <= std::max(a.x, b.x) &&
-                    std::min(a.y, b.y) <= intersectionPoint.y && intersectionPoint.y <= std::max(a.y, b.y) &&
-                    std::min(c.x, d.x) <= intersectionPoint.x && intersectionPoint.x <= std::max(c.x, d.x) &&
-                    std::min(c.y, d.y) <= intersectionPoint.y && intersectionPoint.y <= std::max(c.y, d.y)) {
+                (cross(a, b) * (c.x - d.x) - (a.x - b.x) * cross(c, d)) / ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x)),
+                (cross(a, b) * (c.y - d.y) - (a.y - b.y) * cross(c, d)) / ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x)));
+                if (std::min(a.x, b.x) - 0.01 <= intersectionPoint.x && intersectionPoint.x <= std::max(a.x, b.x) + 0.01 &&
+                    std::min(a.y, b.y) - 0.01 <= intersectionPoint.y && intersectionPoint.y <= std::max(a.y, b.y) + 0.01 &&
+                    std::min(c.x, d.x) - 0.01 <= intersectionPoint.x && intersectionPoint.x <= std::max(c.x, d.x) + 0.01 &&
+                    std::min(c.y, d.y) - 0.01 <= intersectionPoint.y && intersectionPoint.y <= std::max(c.y, d.y) + 0.01) {
                     return true;
                 }
             }
