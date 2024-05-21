@@ -1,15 +1,17 @@
 #pragma once
-#include "enemy.h"
-#include "chat.h"
-#include "button.h"
-#include "panel.h"
-#include "bar.h"
-#include "player.h"
-#include "client.h"
-#include "effect.h"
-#include "fire.h"
-#include "tempText.h"
-#include "shop.h"
+#include "Entities/enemy.h"
+#include "Entities/player.h"
+#include "Multiplayer/chat.h"
+#include "Multiplayer/client.h"
+#include "UI/button.h"
+#include "UI/panel.h"
+#include "UI/bar.h"
+#include "UI/tempText.h"
+#include "UI/ItemSlot.h"
+#include "UI/shopSlot.h"
+#include "Systems/effect.h"
+#include "Systems/shop.h"
+#include "LevelSystem/fire.h"
 
 
 //////////////////////////////////////////////////////////// Settings of the game
@@ -62,9 +64,10 @@ std::vector<TempText*> effectIconsTimers(numberOfEffects);
 
 //////////////////////////////////////////////////////////// InventoryStuff
 inventoryPage::Type activeInventoryPage = inventoryPage::Items;
-std::vector<sf::Drawable*> inventoryElements; // These elements appear on every page
+std::vector<sf::Drawable*> invCommonElements; // These elements appear on every page
+int prevItemTypeCount = 0;
 
-Button backButton("Back", [](){
+Button invBackButton("Back", [](){
     isDrawInventory = false;
 });
 Button itemsPageButton("Items", [](){
@@ -85,9 +88,12 @@ Button statsPageButton("Stats", [](){
 sf::Sprite invBackground;
 sf::Sprite itemListBG;
 
-std::vector<std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
-std::vector<std::vector<sf::Drawable*>> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
-std::vector<Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
+Animation playerCoinSprite;
+ItemSlot playerCoinSlot;   // Special slot, so that it can be conveniently used other than in the inventory
+
+std::vector<std::vector<sf::Drawable*>> invPageElements; // These elements only appear on certain pages
+std::vector<ItemSlot> invItemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
+std::vector<sf::FloatRect*> invItemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
 sf::Sprite statsPlayerImage;
 Bar<float> statsHPBar;
@@ -111,10 +117,11 @@ ItemID::Type prevItemDescID;
 Shop mainMenuShop;
 Shop* curShop = nullptr;
 Item* shopSelectedItem = nullptr;
+
 std::vector<sf::Drawable*> shopUIElements;
-std::vector<std::vector<sf::Drawable*>> shopItemSlotsElements; // Analogous to the inventory itemSlotsElements + price
-std::vector<std::vector<sf::Drawable*>> shopPlayerSlotsElements; // Analogous to the inventory itemSlotsElements + price
-std::vector<Rect*> shopItemSlotsRects; // Analogous to the inventory itemSlotsRects
+std::vector<ShopSlot> shopItemSlotsElements; // Analogous to the inventory itemSlotsElements + price
+std::vector<ShopSlot> shopPlayerSlotsElements; // Analogous to the inventory itemSlotsElements + price
+std::vector<sf::FloatRect*> shopItemSlotsRects; // Analogous to the inventory itemSlotsRects
 
 sf::Sprite shopBG, shopBGPattern;
 sf::Sprite shopNPCTextFrame;
@@ -122,12 +129,12 @@ sf::Sprite shopItemsFrame, shopPlayerInventoryFrame, shopItemStatsFrame;
 sf::Sprite shopItemSpriteFrame, shopItemSprite;
 
 sf::Sprite shopNPCSprite;
-Animation shopItemCoinsSprite, shopPlayerCoinsSprite;
+Animation shopItemCoinsSprite;
 
 float shopItemsViewSizeX, shopItemsViewSizeY;
 float shopPlayerInvViewSizeX, shopPlayerInvViewSizeY;
 
-PlacedText shopNPCName, shopNPCText, shopItemCoins, shopItemStats, shopPlayerCoins;
+PlacedText shopNPCName, shopNPCText, shopItemCoins, shopItemStats, shopPlayerCoinsText;
 
 
 
@@ -218,10 +225,10 @@ void drawShop();
 
 
 //---------------------------- UI UPDATERS/CREATORS
-void createInventoryUI();
+void updateInventoryUI();
 void createSlotRects();
 
-void createShopUI();
+void updateShopUI();
 void createShopSlotsRects();
 //----------------------------
 
@@ -345,7 +352,6 @@ Button shopBackButton("Back", [](){
 });
 Button shopBuyButton("Buy", [](){
     curShop->buyFunction();
-    shopPlayerCoins.setString("You have:   " + std::to_string(player.inventory.money));
 });
 
 
@@ -389,15 +395,15 @@ void init() {
     shopSector.setPosition(0, 2 * size);
 
     Shaders::Map.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Map.setUniform("u_playerRadius", player.Radius);
+    Shaders::Map.setUniform("u_playerRadius", player.getRadius());
 
     Shaders::Player.setUniform("uResolution", sf::Vector2f(scw, sch));
 
     Shaders::Portal.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Portal.setUniform("u_playerRadius", player.Radius);
+    Shaders::Portal.setUniform("u_playerRadius", player.getRadius());
 
     Shaders::Architect.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Architect.setUniform("u_playerRadius", player.Radius);
+    Shaders::Architect.setUniform("u_playerRadius", player.getRadius());
 
     Shaders::Distortion1.setUniform("noise_png", Textures::Noise);
 
@@ -488,9 +494,9 @@ void init() {
 }
 
 void initInventory() {
-    inventoryPageElements.resize(inventoryPage::NONE);
-    itemSlotsElements.resize(MaxItemID);
-    itemSlotsRects.resize(MaxItemID);
+    invPageElements.resize(inventoryPage::NONE);
+    invItemSlotsElements.resize(MaxItemID, ItemSlot());
+    invItemSlotsRects.resize(MaxItemID);
 
     invBackground.setTexture(Textures::SteelFrame);
     invBackground.setScale((float)scw / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y);
@@ -498,10 +504,10 @@ void initInventory() {
 
     int xOffset = 50, yOffset = 50;
 
-    backButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
-    backButton.setCharacterSize(52);
-    backButton.setPosition(xOffset, yOffset);
-    backButton.setSize(300, 150);
+    invBackButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
+    invBackButton.setCharacterSize(52);
+    invBackButton.setPosition(xOffset, yOffset);
+    invBackButton.setSize(300, 150);
 
     itemsPageButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     itemsPageButton.setCharacterSize(32);
@@ -532,13 +538,13 @@ void initInventory() {
     itemListBG.setScale((float)(scw - 300) / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y * 0.6);
     itemListBG.setPosition(150, sch * 0.2);
 
-    inventoryElements.push_back(&invBackground);
-    inventoryElements.push_back(&backButton);
-    inventoryElements.push_back(&itemsPageButton);
-    inventoryElements.push_back(&weaponsPageButton);
-    inventoryElements.push_back(&equipablesPageButton);
-    inventoryElements.push_back(&perksPageButton);
-    inventoryElements.push_back(&statsPageButton);
+    invCommonElements.push_back(&invBackground);
+    invCommonElements.push_back(&invBackButton);
+    invCommonElements.push_back(&itemsPageButton);
+    invCommonElements.push_back(&weaponsPageButton);
+    invCommonElements.push_back(&equipablesPageButton);
+    invCommonElements.push_back(&perksPageButton);
+    invCommonElements.push_back(&statsPageButton);
 
 
     statsPlayerImage.setTexture(Textures::Player);
@@ -580,24 +586,32 @@ void initInventory() {
     statsCurLevelsText.setString("Current Levels: " + std::to_string(curLevel));
     statsCurLevelsText.setPosition(scw / 10, 8 * sch / 10);
 
-    inventoryPageElements[inventoryPage::Items].push_back(&itemListBG);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPBar);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPBar);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPRegenText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsCompletedLevelsText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsCurLevelsText);
+    playerCoinSprite = Animation(*itemTextureName[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+                                  1, itemTextureDuration[ItemID::coin]);
+    playerCoinSprite.play();
+    playerCoinSlot.background = new sf::Sprite();
+    playerCoinSlot.amountText = new PlacedText();
+    playerCoinSlot.isInitialized = true;
+
+    invPageElements[inventoryPage::Items].push_back(&itemListBG);
+    invPageElements[inventoryPage::Items].push_back(&playerCoinSprite);
+    invPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
+    invPageElements[inventoryPage::Stats].push_back(&statsHPBar);
+    invPageElements[inventoryPage::Stats].push_back(&statsMPBar);
+    invPageElements[inventoryPage::Stats].push_back(&statsHPText);
+    invPageElements[inventoryPage::Stats].push_back(&statsMPText);
+    invPageElements[inventoryPage::Stats].push_back(&statsHPRegenText);
+    invPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
+    invPageElements[inventoryPage::Stats].push_back(&statsArmorText);
+    invPageElements[inventoryPage::Stats].push_back(&statsCompletedLevelsText);
+    invPageElements[inventoryPage::Stats].push_back(&statsCurLevelsText);
 
     doInventoryUpdate[inventoryPage::Stats] = true;
 }
 
 void initShop() {
-    shopItemSlotsElements.resize(MaxItemID);
-    shopPlayerSlotsElements.resize(MaxItemID);
+    shopItemSlotsElements.resize(MaxItemID, ShopSlot());
+    shopPlayerSlotsElements.resize(MaxItemID, ShopSlot());
     shopItemSlotsRects.resize(MaxItemID);
     mainMenuShop.setShop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100),
                                                 new Item(ItemID::flamethrower, 1),
@@ -616,6 +630,7 @@ void initShop() {
                 if (!mainMenuShop.soldItems.find(shopSelectedItem)) {
                     shopItemSprite.setTexture(Textures::INVISIBLE);
                     shopSelectedItem = nullptr;
+                    createShopSlotsRects();
                 }
             } else {
                 shopNPCText.setString("Sorry, but you cannot afford a " + stringLower(itemName[shopSelectedItem->id]) + ".");
@@ -717,22 +732,14 @@ void initShop() {
     shopItemStats.setPosition(shopItemSpriteFrame.getPosition().x + shopItemSpriteFrame.getGlobalBounds().width + 50,
                               shopItemSpriteFrame.getPosition().y + 25);
 
-    shopPlayerCoins.setCharacterSize(40);
-    shopPlayerCoins.setPosition(shopPlayerInventoryFrame.getPosition().x + shopPlayerInventoryFrame.getGlobalBounds().width * 0.3,
-                                shopPlayerInventoryFrame.getPosition().y + shopPlayerInventoryFrame.getGlobalBounds().height * 1.2);
-
-    shopPlayerCoinsSprite = Animation(*itemTextureName[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
-                                      1, itemTextureDuration[ItemID::coin]);
-    shopPlayerCoinsSprite.setPosition(shopPlayerInventoryFrame.getPosition().x + shopPlayerInventoryFrame.getGlobalBounds().width * 0.575,
-                                      shopPlayerInventoryFrame.getPosition().y + shopPlayerInventoryFrame.getGlobalBounds().height * 1.12);
-    shopPlayerCoinsSprite.setSize(sf::Vector2f(100.0, 100.0));
-    shopPlayerCoinsSprite.play();
-
     shopBuyButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     shopBuyButton.setCharacterSize(70);
     shopBuyButton.setSize(400, 150);
     shopBuyButton.setPosition(shopPlayerInventoryFrame.getPosition().x + (0.4 * scw - xOffset) / 5,
                               sch - 150 - 1.5 * yOffset);
+    
+    shopPlayerCoinsText.setCharacterSize(40);
+    shopPlayerCoinsText.setPosition(shopBuyButton.getPosition() - sf::Vector2f(0, 100));
 
     shopUIElements.push_back(&shopBG);
     shopUIElements.push_back(&shopBGPattern);
@@ -746,8 +753,11 @@ void initShop() {
     shopUIElements.push_back(&shopItemStatsFrame);
     shopUIElements.push_back(&shopItemSpriteFrame);
     shopUIElements.push_back(&shopBuyButton);
-    shopUIElements.push_back(&shopPlayerCoins);
-    shopUIElements.push_back(&shopPlayerCoinsSprite);
+    shopUIElements.push_back(&shopPlayerCoinsText);
+
+    shopUIElements.push_back(&playerCoinSprite);
+    shopUIElements.push_back(playerCoinSlot.background);  // It is invisible for now, but may be changed in the future for something visible
+    shopUIElements.push_back(playerCoinSlot.amountText);
 }
 //==============================================================================================
 
@@ -836,22 +846,24 @@ void drawFloor() {
 }
 
 sf::Vector2f CameraPos;
+CollisionRect CameraRect(0, 0, scw, sch);
 void drawWalls() {
     CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
+    CameraRect.setPosition(CameraPos);
     for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
             i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++) {
         for (int j = std::max(0, int(CameraPos.x / size) - 1);
                 j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
-            if (CurLocation->wallsRect[i][j].intersect(CameraPos.x, CameraPos.y, static_cast<float>(scw), static_cast<float>(sch))) {
+            if (CurLocation->wallsRect[i][j].intersect(CameraRect)) {
                 CurLocation->SeenWalls[i][j] = true;
             }
             if (CurLocation->walls[i][j]) {
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setTextureRect(sf::IntRect(
-                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].Width) * random(sf::Vector2f(i, j)),
-                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].Height) * random(sf::Vector2f(j, i)),
-                        CurLocation->wallsRect[i][j].Width,
-                        CurLocation->wallsRect[i][j].Height));
+                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].getSize().x) * random(sf::Vector2f(i, j)),
+                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].getSize().y) * random(sf::Vector2f(j, i)),
+                        CurLocation->wallsRect[i][j].getSize().x,
+                        CurLocation->wallsRect[i][j].getSize().y));
                 window.draw(WallRect, States::Map);
             }
         }
@@ -861,7 +873,7 @@ void drawWalls() {
 void drawMiniMap() {
     if (MiniMapHoldOnPlayer) {
         if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            MiniMapView.setCenter(player.getPosition() * ScaleParam);
+            MiniMapView.setCenter(player.getCenter() * ScaleParam);
         }
     }
 
@@ -910,7 +922,7 @@ void drawMiniMap() {
             window.draw(MMPlayerCircle);
         }
     } else {
-        MMPlayerCircle.setPosition(player.getPosition() * ScaleParam);
+        MMPlayerCircle.setPosition(player.getCenter() * ScaleParam);
         window.draw(MMPlayerCircle);
     }
     window.setView(GameView);
@@ -1018,23 +1030,25 @@ void drawEffects() {
 
 void drawInventory() {
     window.setView(InventoryView);
-    for (sf::Drawable*& elem : inventoryElements)
+    
+    updateInventoryUI();
+
+    for (sf::Drawable*& elem : invCommonElements)
         window.draw(*elem);
     switch (activeInventoryPage) {
         case inventoryPage::Items:
-            for (sf::Drawable*& elem : inventoryPageElements[activeInventoryPage])
+            for (sf::Drawable*& elem : invPageElements[activeInventoryPage])
                 window.draw(*elem);
 
-            if (activeInventoryPage != inventoryPage::Stats) {
-                int slotNumber = 0;
-                for (Item*& item : player.inventory.items) {
-                    for (sf::Drawable*& elem : itemSlotsElements[item->id])
-                        window.draw(*elem);
-                    window.draw(*item);
+            for (Item*& item : player.inventory.items) {
+                if (invItemSlotsElements[item->id].isInitialized) {
+                    window.draw(*invItemSlotsElements[item->id].background);
 
-                    slotNumber++;
+                    if (item->amount >= 1) window.draw(*invItemSlotsElements[item->id].amountText);
                 }
+                window.draw(*item);
             }
+            window.draw(*playerCoinSlot.amountText);
 
             if (isItemDescDrawn) {
                 itemDescText.setPosition(sf::Mouse::getPosition(window).x + 100, sf::Mouse::getPosition(window).y);
@@ -1043,7 +1057,7 @@ void drawInventory() {
             break;
 
         case inventoryPage::Stats:
-            for (sf::Drawable*& elem : inventoryPageElements[inventoryPage::Stats])
+            for (sf::Drawable*& elem : invPageElements[inventoryPage::Stats])
                 window.draw(*elem);
             break;
 
@@ -1051,13 +1065,14 @@ void drawInventory() {
             break;
     }
 
-    createInventoryUI();
-
     window.setView(InterfaceView);
 }
 
 void drawShop() {
     window.setView(ShopView);
+
+    updateShopUI();
+
     for (sf::Drawable*& elem : shopUIElements)
         window.draw(*elem);
     window.draw(shopItemSprite);
@@ -1066,13 +1081,19 @@ void drawShop() {
         window.draw(shopItemCoinsSprite);
         window.draw(shopItemStats);
     }
+
+    window.draw(playerCoinSprite);
+    window.draw(*playerCoinSlot.amountText);
     
     window.setView(ShopStockView);
     sf::Transform viewTransform = sf::Transform::Identity;
     viewTransform = viewTransform.scale(1, 1 / shopItemsViewSizeY);
     for (Item*& item : curShop->soldItems.items) {
-        for (sf::Drawable*& elem : shopItemSlotsElements[item->id])
-            window.draw(*elem, viewTransform);
+        if (shopItemSlotsElements[item->id].isInitialized) {
+            window.draw(*shopItemSlotsElements[item->id].background, viewTransform);
+            if (item->amount >= 1) window.draw(*shopItemSlotsElements[item->id].amountText, viewTransform);
+            window.draw(*shopItemSlotsElements[item->id].priceText, viewTransform);
+        }
         window.draw(*item, viewTransform);
     }
 
@@ -1080,12 +1101,13 @@ void drawShop() {
     viewTransform = sf::Transform::Identity;
     viewTransform = viewTransform.scale(1, 1 / shopPlayerInvViewSizeY);
     for (Item*& item : player.inventory.items) {
-        for (sf::Drawable*& elem : shopPlayerSlotsElements[item->id])
-            window.draw(*elem, viewTransform);
+        if (shopPlayerSlotsElements[item->id].isInitialized) {
+            window.draw(*shopPlayerSlotsElements[item->id].background, viewTransform);
+            if (item->amount >= 1) window.draw(*shopPlayerSlotsElements[item->id].amountText, viewTransform);
+            window.draw(*shopPlayerSlotsElements[item->id].priceText, viewTransform);
+        }
         window.draw(*item, viewTransform);
     }
-
-    createShopUI();
 
     window.setView(InterfaceView);
 }
@@ -1094,16 +1116,8 @@ void drawShop() {
 
 
 //============================================================================================== UI UPDATERS/CREATORS
-void createInventoryUI() {
+void updateInventoryUI() {
     if (doInventoryUpdate[inventoryPage::Items]) {
-        if (!itemSlotsElements.empty()) {
-            for (ItemID::Type id = 0; id != MaxItemID; id++) {
-                if (itemSlotsElements[id].size() != 0) {
-                    clearVectorOfPointer(itemSlotsElements[id]);
-                }
-            }
-        }
-
         int slotNumber = 0;
         for (Item*& item : player.inventory.items) {
             Item* drawnItem = item;
@@ -1112,55 +1126,45 @@ void createInventoryUI() {
             float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
             float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
 
-            sf::Sprite* slotBG = new sf::Sprite();
-            slotBG->setPosition(itemX, itemY);
-            slotBG->setScale(0.5, 0.5);
-            slotBG->setTexture(Textures::ItemPanel);
-            itemSlotsElements[drawnItem->id].push_back(slotBG);
+            if (!invItemSlotsElements[drawnItem->id].isInitialized) {
+                invItemSlotsElements[drawnItem->id].background = new sf::Sprite();
+                invItemSlotsElements[drawnItem->id].amountText = new PlacedText();
+                invItemSlotsElements[drawnItem->id].isInitialized = true;
+            }
+            sf::Sprite& slotBG = *invItemSlotsElements[drawnItem->id].background;
+            slotBG.setPosition(itemX, itemY);
+            slotBG.setScale(0.5, 0.5);
+            slotBG.setTexture(Textures::ItemPanel);
 
             drawnItem->setPosition(itemX, itemY);
 
-            if (drawnItem->amount > 1) {
-                PlacedText* itemAmountText = new PlacedText();
-                itemAmountText->setCharacterSize(20);
-                itemAmountText->setString(std::to_string(drawnItem->amount));
-                itemAmountText->setPosition(sf::Vector2f(itemX + slotBG->getGlobalBounds().width,
-                                                            itemY + slotBG->getGlobalBounds().height));
-                itemSlotsElements[drawnItem->id].push_back(itemAmountText);
-            }
+            PlacedText& itemAmountText = *invItemSlotsElements[drawnItem->id].amountText;
+            itemAmountText.setCharacterSize(20);
+            itemAmountText.setString(std::to_string(drawnItem->amount));
+            itemAmountText.setPosition(sf::Vector2f(itemX + slotBG.getGlobalBounds().width,
+                                                    itemY + slotBG.getGlobalBounds().height));
 
             slotNumber++;
         }
+
+        playerCoinSprite.setScale(1, 1);
+        playerCoinSprite.setPosition(invBackButton.getRight() + 100, invBackButton.getPosition().y - 20);
+        playerCoinSlot.background->setTexture(Textures::INVISIBLE);
+        playerCoinSlot.amountText->setString(std::to_string(player.inventory.money));
+        playerCoinSlot.amountText->setCharacterSize(40);
+        playerCoinSlot.amountText->setPosition(playerCoinSprite.getPosition().x + playerCoinSprite.getGlobalSize().x,
+                                               playerCoinSprite.getPosition().y + playerCoinSprite.getGlobalSize().y / 2 - 20);
+
         doInventoryUpdate[inventoryPage::Items] = false;
-        createSlotRects();
     }
-    if (doInventoryUpdate[inventoryPage::Stats]) {
-        statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
-        statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
-        statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
-        statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
-        statsCurLevelsText.setString("Current Level: " + std::to_string(curLevel));
-        // doInventoryUpdate[inventoryPage::Stats] = false;
-    }
+    statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
+    statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
+    statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
+    statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
+    statsCurLevelsText.setString("Current Level: " + std::to_string(curLevel));
 }
 
-void createShopUI() {
-    if (!shopItemSlotsElements.empty()) {
-        for (ItemID::Type id = 0; id != MaxItemID; id++) {
-            if (shopItemSlotsElements[id].size() != 0) {
-                clearVectorOfPointer(shopItemSlotsElements[id]);
-            }
-        }
-    }
-
-    if (!shopPlayerSlotsElements.empty()) {
-        for (ItemID::Type id = 0; id != MaxItemID; id++) {
-            if (shopPlayerSlotsElements[id].size() != 0) {
-                clearVectorOfPointer(shopPlayerSlotsElements[id]);
-            }
-        }
-    }
-
+void updateShopUI() {
     int slotNumber = 0;
     for (Item*& drawnItem : curShop->soldItems.items) {
         drawnItem->animation->setScale(0.5, 0.5);
@@ -1168,29 +1172,30 @@ void createShopUI() {
         float itemX = (slotNumber % 5) * 200 + 30;
         float itemY = (slotNumber / 5) * 200 + 20;
 
-        sf::Sprite* slotBG = new sf::Sprite();
-        slotBG->setPosition(itemX, itemY);
-        slotBG->setTexture(Textures::ItemPanel, true);
-        slotBG->setScale(0.333, 0.333);
-        shopItemSlotsElements[drawnItem->id].push_back(slotBG);
+        if (!shopItemSlotsElements[drawnItem->id].isInitialized) {
+            shopItemSlotsElements[drawnItem->id].background = new sf::Sprite();
+            shopItemSlotsElements[drawnItem->id].amountText = new PlacedText();
+            shopItemSlotsElements[drawnItem->id].priceText = new PlacedText();
+            shopItemSlotsElements[drawnItem->id].isInitialized = true;
+        }
+        sf::Sprite& slotBG = *shopItemSlotsElements[drawnItem->id].background;
+        slotBG.setPosition(itemX, itemY);
+        slotBG.setTexture(Textures::ItemPanel, true);
+        slotBG.setScale(0.333, 0.333);
 
         drawnItem->setPosition(itemX, itemY);
 
-        if (drawnItem->amount != -1 && drawnItem->amount > 0) {
-            PlacedText* itemAmountText = new PlacedText();
-            itemAmountText->setCharacterSize(20);
-            itemAmountText->setString(std::to_string(drawnItem->amount));
-            itemAmountText->setPosition(sf::Vector2f(itemX + slotBG->getGlobalBounds().width,
-                                                        itemY + slotBG->getGlobalBounds().height));
-            shopItemSlotsElements[drawnItem->id].push_back(itemAmountText);
-        }
+        PlacedText& itemAmountText = *shopItemSlotsElements[drawnItem->id].amountText;
+        itemAmountText.setCharacterSize(20);
+        itemAmountText.setString(std::to_string(drawnItem->amount));
+        itemAmountText.setPosition(sf::Vector2f(itemX + slotBG.getGlobalBounds().width,
+                                                itemY + slotBG.getGlobalBounds().height));
 
-        PlacedText* priceText = new PlacedText();
-        priceText->setCharacterSize(20);
-        priceText->setString(std::to_string(curShop->itemPrices[drawnItem->id]) + " C.");
-        priceText->setPosition(sf::Vector2f(itemX - slotBG->getGlobalBounds().width / 10,
-                                            itemY + slotBG->getGlobalBounds().height));
-        shopItemSlotsElements[drawnItem->id].push_back(priceText);
+        PlacedText& itemPriceText = *shopItemSlotsElements[drawnItem->id].priceText;
+        itemPriceText.setCharacterSize(20);
+        itemPriceText.setString(std::to_string(curShop->itemPrices[drawnItem->id]) + " C.");
+        itemPriceText.setPosition(sf::Vector2f(itemX - slotBG.getGlobalBounds().width / 10,
+                                               itemY + slotBG.getGlobalBounds().height));
 
         slotNumber++;
     }
@@ -1201,51 +1206,56 @@ void createShopUI() {
 
         float itemX = (slotNumber % 3) * 200 + 30;
         float itemY = (slotNumber / 3) * 200 + 20;
-
-        sf::Sprite* slotBG = new sf::Sprite();
-        slotBG->setPosition(itemX, itemY);
-        slotBG->setTexture(Textures::ItemPanel, true);
-        slotBG->setScale(0.333, 0.333);
-        shopPlayerSlotsElements[drawnItem->id].push_back(slotBG);
+        if (!shopPlayerSlotsElements[drawnItem->id].isInitialized) {
+            shopPlayerSlotsElements[drawnItem->id].background = new sf::Sprite();
+            shopPlayerSlotsElements[drawnItem->id].amountText = new PlacedText();
+            shopPlayerSlotsElements[drawnItem->id].priceText = new PlacedText();
+            shopPlayerSlotsElements[drawnItem->id].isInitialized = true;
+        }
+        sf::Sprite& slotBG = *shopPlayerSlotsElements[drawnItem->id].background;
+        slotBG.setPosition(itemX, itemY);
+        slotBG.setTexture(Textures::ItemPanel, true);
+        slotBG.setScale(0.333, 0.333);
 
         drawnItem->setPosition(itemX, itemY);
 
-        if (drawnItem->amount > 0) {
-            PlacedText* itemAmountText = new PlacedText();
-            itemAmountText->setCharacterSize(20);
-            itemAmountText->setString(std::to_string(drawnItem->amount));
-            itemAmountText->setPosition(sf::Vector2f(itemX + slotBG->getGlobalBounds().width,
-                                                        itemY + slotBG->getGlobalBounds().height));
-            shopPlayerSlotsElements[drawnItem->id].push_back(itemAmountText);
-        }
+        PlacedText& playerAmountText = *shopPlayerSlotsElements[drawnItem->id].amountText;
+        playerAmountText.setCharacterSize(20);
+        playerAmountText.setString(std::to_string(drawnItem->amount));
+        playerAmountText.setPosition(sf::Vector2f(itemX + slotBG.getGlobalBounds().width,
+                                                  itemY + slotBG.getGlobalBounds().height));
 
-        PlacedText* playerPriceText = new PlacedText();
-        playerPriceText->setCharacterSize(20);
-        playerPriceText->setString(std::to_string(curShop->itemPrices[drawnItem->id]) + " C.");
-        playerPriceText->setPosition(sf::Vector2f(itemX - slotBG->getGlobalBounds().width / 10,
-                                            itemY + slotBG->getGlobalBounds().height));
-        shopPlayerSlotsElements[drawnItem->id].push_back(playerPriceText);
+        PlacedText& playerPriceText = *shopPlayerSlotsElements[drawnItem->id].priceText;
+        playerPriceText.setCharacterSize(20);
+        playerPriceText.setString(std::to_string(curShop->itemPrices[drawnItem->id]) + " C.");
+        playerPriceText.setPosition(sf::Vector2f(itemX - slotBG.getGlobalBounds().width / 10,
+                                                 itemY + slotBG.getGlobalBounds().height));
 
         slotNumber++;
     }
-
-    createShopSlotsRects();
+    playerCoinSprite.setScale(0.75, 0.75);
+    playerCoinSprite.setPosition(shopPlayerCoinsText.getPosition().x + shopPlayerCoinsText.getGlobalBounds().width - 20,
+                                 shopPlayerCoinsText.getPosition().y - playerCoinSprite.getGlobalSize().y / 3);
+    playerCoinSlot.amountText->setString(std::to_string(player.inventory.money));
+    playerCoinSlot.amountText->setCharacterSize(40);
+    playerCoinSlot.amountText->setPosition(playerCoinSprite.getPosition().x + playerCoinSprite.getGlobalSize().x - 20,
+                                           shopPlayerCoinsText.getPosition().y);
 }
 
 void createSlotRects() {
-    for (int i = 0; i < itemSlotsRects.size(); i++)
-        DeletePointerFromVector(itemSlotsRects, i--);
-    itemSlotsRects.resize(MaxItemID);
+    for (int i = 0; i < invItemSlotsRects.size(); i++)
+        DeletePointerFromVector(invItemSlotsRects, i--);
+    invItemSlotsRects.resize(MaxItemID);
 
     int slotNumber = 0;
     for (Item*& item : player.inventory.items) {
         float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
         float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
 
-        Rect* itemActivationRect = new Rect();
-        itemActivationRect->setPosition(itemX, itemY);
-        itemActivationRect->setSize(sf::Vector2f(Textures::ItemPanel.getSize() / 2u));
-        itemSlotsRects[item->id] = itemActivationRect;
+        sf::FloatRect* itemActivationRect = new sf::FloatRect(itemX, itemY,
+                                                              Textures::ItemPanel.getSize().x / 2,
+                                                              Textures::ItemPanel.getSize().y / 2);
+        invItemSlotsRects[item->id] = itemActivationRect;
 
         slotNumber++;
     }
@@ -1261,10 +1271,9 @@ void createShopSlotsRects() {
         float itemX = ((slotNumber % 5) * 200 + 30);
         float itemY = ((slotNumber / 5) * 200 + 20) / shopItemsViewSizeY;
 
-        Rect* itemActivationRect = new Rect();
-        itemActivationRect->setPosition(itemX, itemY);
-        itemActivationRect->setSize(sf::Vector2f(Textures::ItemPanel.getSize()) *
-                                    sf::Vector2f(0.4, 0.4 / shopItemsViewSizeY));
+        sf::FloatRect* itemActivationRect = new sf::FloatRect(itemX, itemY,
+                                                              Textures::ItemPanel.getSize().x * 0.4,
+                                                              Textures::ItemPanel.getSize().y * 0.4 / shopItemsViewSizeY);
         shopItemSlotsRects[item->id] = itemActivationRect;
 
         slotNumber++;
@@ -1395,7 +1404,7 @@ void EventHandler() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         EscapeMenuActivated = true;
                     } else if (event.key.code == sf::Keyboard::H) {
-                        player.setPosition(size, size);
+                        player.setCenter(size, size);
                         CurLocation = &WaitingRoomLoaction;
                     }
                 }
@@ -1435,7 +1444,7 @@ void EventHandler() {
             //                                 for (Player& x: ConnectedPlayers) {
             //                                     ReceivePacket >> x;
             //                                 }
-            //                                 player.setPosition(ConnectedPlayers[ComputerID].getPosition());
+            //                                 player.setCenter(ConnectedPlayers[ComputerID].getPosition());
             //                         }
             //                     }
             //                 }
@@ -1457,7 +1466,7 @@ void inventoryHandler(sf::Event& event) {
     if (event.key.code == sf::Keyboard::Escape) {
         isDrawInventory = false;
     }
-    backButton.isActivated(event);
+    invBackButton.isActivated(event);
     itemsPageButton.isActivated(event);
     weaponsPageButton.isActivated(event);
     equipablesPageButton.isActivated(event);
@@ -1471,9 +1480,10 @@ void inventoryHandler(sf::Event& event) {
 
     bool isAnythingHovered = false;
     if (activeInventoryPage != inventoryPage::Stats) {
+        int itemTypeCount = 0;
         for (Item*& item : player.inventory.items) {
-            if (!itemSlotsRects.empty() && itemSlotsRects[item->id] != nullptr &&
-                itemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
+            if (!invItemSlotsRects.empty() && invItemSlotsRects[item->id] != nullptr &&
+                invItemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
                 if (item->id != prevItemDescID) {
                     prevItemDescID = ItemID::NONE;
                     isItemDescDrawn = false;
@@ -1486,11 +1496,15 @@ void inventoryHandler(sf::Event& event) {
                 }
                 if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(item->id)) {
                     player.inventory.removeItem(item);
+                    itemTypeCount--;
                     isItemDescDrawn = false;
                     doInventoryUpdate[inventoryPage::Items] = true;
                 }
             }
+            itemTypeCount++;
         }
+        if (itemTypeCount != prevItemTypeCount) createSlotRects();
+        prevItemTypeCount = itemTypeCount;
     }
     if (!isAnythingHovered)
         isItemDescDrawn = false;
@@ -1611,12 +1625,12 @@ void LevelGenerate(int n, int m) {
     MiniMapZoom = std::pow(1.1, -10);
     MiniMapView.zoom(MiniMapZoom);
 
-    LabyrinthLocation.GenerateLocation(n, m, player.getPosition() / float(size));
+    LabyrinthLocation.GenerateLocation(n, m, player.getCenter() / float(size));
 
     FillFloorRectsThread.launch();
 
-    LabyrinthLocation.AddObject({Tiles::portal, player.getPosition() - portal.getSize() / 2.f});
-    LabyrinthLocation.AddObject({Tiles::puddle, player.getPosition() - portal.getSize() / 2.f + sf::Vector2f(size, size)});
+    LabyrinthLocation.AddObject({Tiles::portal, player.getCenter() - portal.getSize() / 2.f});
+    LabyrinthLocation.AddObject({Tiles::puddle, player.getCenter() - portal.getSize() / 2.f + sf::Vector2f(size, size)});
 
     clearVectorOfPointer(listOfBox);
     for (int i = 0; i < 10; i++) {
@@ -1625,7 +1639,7 @@ void LevelGenerate(int n, int m) {
         do {
             listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
             sf::Vector2f(rand() % int(size - listOfBox[i]->getSize().x), rand() % int(size - listOfBox[i]->getSize().y)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->PosY / size][(int)listOfBox[i]->PosX / size]);
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->getPosition().y / size][(int)listOfBox[i]->getPosition().x / size]);
 
         LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
         InteractibeStuff.push_back(listOfBox[i]);
@@ -1639,7 +1653,7 @@ void LevelGenerate(int n, int m) {
         do {
             listOfArtifact[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
             sf::Vector2f(rand() % (size - Textures::Architect.getSize().x / 4), rand() % (size - Textures::Architect.getSize().y / 4)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->PosY / size][(int)listOfArtifact[i]->PosX / size]);
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->getPosition().y / size][(int)listOfArtifact[i]->getPosition().x / size]);
 
         LabyrinthLocation.AddObject({Tiles::artifact, listOfArtifact[i]->getPosition()});
         InteractibeStuff.push_back(listOfArtifact[i]);
@@ -1670,8 +1684,8 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < Enemies.size(); i++) {
         do {
             Enemies[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
-        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->PosY / size][(int)Enemies[i]->PosX / size] ||
-                 distance(Enemies[i]->getPosition(), player.getPosition()) < size * 3);
+        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->getPosition().y / size][(int)Enemies[i]->getPosition().x / size] ||
+                 distance(Enemies[i]->getPosition(), player.getCenter()) < size * 3);
     }
     FillFloorRectsThread.wait();
 }
@@ -1679,11 +1693,11 @@ void LevelGenerate(int n, int m) {
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
 
-    player.setPosition(3.5f * size, 2.5f * size);
-    FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
+    player.setCenter(3.5f * size, 2.5f * size);
+    FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
     player.CurWeapon = &pistol;
 
-    sf::Vector2f PlayerPos = player.getPosition() / (float)size;
+    sf::Vector2f PlayerPos = player.getCenter() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
     FillFloorRectsThread.launch();
 
@@ -1695,14 +1709,14 @@ void LoadMainMenu() {
         InterfaceStuff.clear();
         InteractibeStuff.clear();
 
-        player.setPosition(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
+        player.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
         player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
         MiniMapActivated = false;
         EscapeMenuActivated = false;
 
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter(player.getPosition() * ScaleParam);
+        MiniMapView.setCenter(player.getCenter() * ScaleParam);
 
         Musics::MainMenu.pause();
         if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
@@ -1715,7 +1729,7 @@ void LoadMainMenu() {
             curLevel++;
         }
         LevelGenerate(START_N, START_M);
-        FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
+        FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);
         for (Enemy* &enemy: Enemies) {
@@ -1740,15 +1754,16 @@ void LoadMainMenu() {
 
     shopSector.setFunction([](Interactable* i){
         isDrawShop = true;
-        shopPlayerCoins.setString("You have:   " + std::to_string(player.inventory.money));
+        shopPlayerCoinsText.setString("You have:");
         shopNPCText.setString(textWrap("Hello! Welcome to the \"We are literally standing near a phenomenon beyond our"
                                        " entire plane of existence in a literal motherfucking sense, that we have no fucking clue on"
                                        " how it fucking works why did we decide it was a good idea to station a shop exactly here\?!\?\?!\?!\?\" shop!", 94));
+        createShopSlotsRects();
     });
 
     // Set cameras
-    GameView.setCenter(player.getPosition());
-    MiniMapView.setCenter(player.getPosition() * ScaleParam);
+    GameView.setCenter(player.getCenter());
+    MiniMapView.setCenter(player.getCenter() * ScaleParam);
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     Musics::Fight1.stop();
@@ -1772,19 +1787,19 @@ void LoadMainMenu() {
     newItem->setAnimation(*itemTextureName[ItemID::regenDrug], &Shaders::Map);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
-    PickupStuff[0]->dropTo(player.getPosition() + sf::Vector2f(100, 100));
+    PickupStuff[0]->dropTo(player.getCenter() + sf::Vector2f(100, 100));
 
     Item* fireHosePickup = new Item(ItemID::fireHose, 1);
     fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose], &Shaders::Map);
     PickupStuff.push_back(fireHosePickup);
     DrawableStuff.push_back(PickupStuff[1]);
-    PickupStuff[1]->dropTo(player.getPosition() + sf::Vector2f(400, 300));
+    PickupStuff[1]->dropTo(player.getCenter() + sf::Vector2f(400, 300));
 
     Item* flamethrowerPickup = new Item(ItemID::flamethrower, 1);
     flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower], &Shaders::Map);
     PickupStuff.push_back(flamethrowerPickup);
     DrawableStuff.push_back(PickupStuff[2]);
-    PickupStuff[2]->dropTo(player.getPosition() + sf::Vector2f(-550, -120));
+    PickupStuff[2]->dropTo(player.getCenter() + sf::Vector2f(-550, -120));
 
     curShop = &mainMenuShop;
 
@@ -1979,7 +1994,7 @@ bool firePropagationAllowed(sf::Vector2i& ancestor, sf::Vector2i pos) {
 void fireUpdate() {
     float angle;
     for (int i = 0; i < FireSet.size(); i++) {
-        float dist = 2.5 * FireSet[i]->Width;
+        float dist = 2.5 * FireSet[i]->getSize().y;
         if (FireSet[i]->localClock->getElapsedTime() >= FireSet[i]->howLongToExist) {
             FireSet[i]->localClock->restart();
             FireSet[i]->howLongToExist = sf::seconds(rand() % 4 + 15.f);
@@ -2008,7 +2023,7 @@ void fireUpdate() {
 void updateShaders() {
     sf::Vector2f uMouse(sf::Mouse::getPosition());
     float uTime = GameClock->getElapsedTime().asSeconds();
-    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getPosition()));
+    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getCenter()));
 
     Shaders::Map.setUniform("uMouse", uMouse);
     Shaders::Map.setUniform("uPlayerPosition", uPlayerPosition);
@@ -2112,11 +2127,11 @@ void MainLoop() {
                     }
                 }
             } else {
-                Enemies[i]->setTarget(player.getPosition());
+                Enemies[i]->setTarget(player.getCenter());
                 Enemies[i]->move(CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getPosition(), Enemies[i]->faction);
+                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getCenter(), Enemies[i]->faction);
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
@@ -2154,8 +2169,8 @@ void MainLoop() {
         } else {
             if (!chat.inputted && !isDrawInventory && !isDrawShop) {
                 player.move(CurLocation);
-                GameView.setCenter(player.getPosition() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
-                FindAllWaysTo(CurLocation, player.getPosition(), TheWayToPlayer);
+                GameView.setCenter(player.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
+                FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
             }
             int wasBulletsSize = Bullets.size();
 
@@ -2193,7 +2208,7 @@ void MainLoop() {
             updateBullets();
 
             if (HostFuncRun || ClientFuncRun) {
-                ConnectedPlayers[ComputerID].setPosition(player.getPosition());
+                ConnectedPlayers[ComputerID].setPosition(player.getCenter());
                 mutex.lock();
                 SendPacket << pacetStates::PlayerPos;
                 if (HostFuncRun) {
@@ -2424,8 +2439,8 @@ void funcOfClient() {
                             for (Player& x: ConnectedPlayers) {
                                 ReceivePacket >> x;
                             }
-                            player.setPosition(ConnectedPlayers[ComputerID].getPosition());
-                            GameView.setCenter(player.getPosition());
+                            player.setCenter(ConnectedPlayers[ComputerID].getPosition());
+                            GameView.setCenter(player.getCenter());
                             break;
                         case pacetStates::ChatEvent:
                             ReceivePacket >> PacetData;

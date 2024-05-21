@@ -13,7 +13,7 @@ public:
     GameEvent() {}
     virtual void setFunction(void (*func)(void)) { function = func; }
     //virtual void setCondition(bool eventCond) { eventCondition = eventCond; } TO BE FIXED
-    virtual bool isActivated(Rect, sf::Event&);
+    virtual bool isActivated(CollisionRect, sf::Event&);
 };
 
 ////////////////////////////////////////////////////////////

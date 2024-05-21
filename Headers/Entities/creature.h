@@ -1,15 +1,15 @@
 #pragma once
-#include "weapon.h"
-#include "inventory.h"
-#include "text.h"
-#include "effect.h"
+#include "../Systems/weapon.h"
+#include "../Systems/inventory.h"
+#include "../Systems/effect.h"
+#include "../UI/text.h"
 
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Creature : public Circle, public sf::Drawable {
+class Creature : public CollisionCircle, public sf::Drawable {
 public:
     faction::Type faction;
 
@@ -40,7 +40,7 @@ public:
     std::vector<Effect*> effects;
     std::vector<int> effectStacks;
 
-    Creature(sf::String name, faction::Type f) : Circle() {
+    Creature(sf::String name, faction::Type f) : CollisionCircle() {
         Name.setString(name);
         Name.setCharacterSize(25);
         Name.setOutlineThickness(2);
@@ -68,10 +68,10 @@ public:
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animation != nullptr) {
-            animation->setPosition(getPosition());
+            animation->setPosition(getCenter());
             target.draw(*animation, states);
         }
-        Name.setPosition(PosX - Name.Width / 2.f, PosY - Radius - Name.Height);
+        Name.setPosition(getCenter().x - Name.Width / 2.f, getPosition().y - Name.Height);
         target.draw(Name, states);
     }
 
@@ -79,7 +79,7 @@ public:
 
     virtual void move(Location* location) {
         float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), oneOverSixty);
-        sf::Vector2f dist = target - getPosition();
+        sf::Vector2f dist = target - getCenter();
         float len = std::sqrt(dist.x * dist.x + dist.y * dist.y);
         sf::Vector2f VelocityTarget(std::clamp(dist.x, -std::abs(dist.x) * MaxVelocity * VelocityBuff / len, std::abs(dist.x) * MaxVelocity * VelocityBuff / len),
                                     std::clamp(dist.y, -std::abs(dist.y) * MaxVelocity * VelocityBuff / len, std::abs(dist.y) * MaxVelocity * VelocityBuff / len));
@@ -95,8 +95,7 @@ public:
         if (tempv.x == -1) Velocity.x = 0;
         if (tempv.y == -1) Velocity.y = 0;
 
-        PosX += Velocity.x * ElapsedTimeAsSecond;
-        PosY += Velocity.y * ElapsedTimeAsSecond;
+        CollisionCircle::move(Velocity * ElapsedTimeAsSecond);
         LastMoveCheck = localClock->getElapsedTime();
     }
 
@@ -111,7 +110,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
-        animation->setSize({Radius * 2.f, Radius * 2.f});
+        animation->setSize(getSize());
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
     }
@@ -121,7 +120,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, shader);
-        animation->setSize({Radius * 2.f, Radius * 2.f});
+        animation->setSize(getSize());
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
     };

@@ -1,6 +1,6 @@
 #pragma once
-#include "interactible.h"
-#include "init.h"
+#include "../LevelSystem/interactible.h"
+#include "../init.h"
 
 namespace ItemID {
     using Type = sf::Uint8;
@@ -153,8 +153,8 @@ public:
     Item(ItemID::Type, int, bool = true, bool = true, bool = true, bool = false, bool = false);
     Item(const Item& item);
 
-    bool isActivated(Circle&, sf::Event&) override;
-    bool CanBeActivated(Circle&) override;
+    bool isActivated(CollisionCircle&, sf::Event&) override;
+    bool CanBeActivated(CollisionCircle&) override;
     void dropTo(sf::Vector2f);
     void picked(); // call when you pick up
 };
@@ -194,11 +194,11 @@ Item::Item(const Item& item) {
     }
 }
 
-bool Item::CanBeActivated(Circle& player) {
+bool Item::CanBeActivated(CollisionCircle& player) {
     return pickupable && !isInInventory && intersect(player);
 }
 
-bool Item::isActivated(Circle& player, sf::Event& event) {
+bool Item::isActivated(CollisionCircle& player, sf::Event& event) {
     if (pickupable && !isInInventory)
         return intersect(player);
     if (isInInventory) {

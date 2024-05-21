@@ -1,5 +1,5 @@
 #pragma once
-#include "location.h"
+#include "../LevelSystem/location.h"
 
 #define COMMON_BULLET_RADIUS 7
 #define COMMON_BULLET_PENETRATION 0
@@ -11,7 +11,7 @@ sf::CircleShape circleShape;
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-struct Bullet : public Circle, public sf::Drawable {
+struct Bullet : public CollisionCircle, public sf::Drawable {
     enum Type : sf::Uint8 {
         Common,
         Bubble,
@@ -38,7 +38,7 @@ struct Bullet : public Circle, public sf::Drawable {
     Bullet(faction::Type faction, sf::Vector2f pos, sf::Vector2f velocity, float dmg, int penetr = COMMON_BULLET_PENETRATION,
            Bullet::Type type = Bullet::Common, sf::Time time = sf::Time::Zero) : Bullet() {
         this->type = type;
-        PosX = pos.x; PosY = pos.y;
+        setCenter(pos);
         damage = dmg;
         penetration = penetr;
         Velocity = velocity;
@@ -47,19 +47,19 @@ struct Bullet : public Circle, public sf::Drawable {
         switch (type) {
             case Bullet::Common:
             case Bullet::Bubble:
-                Radius = COMMON_BULLET_RADIUS;
+                setRadius(COMMON_BULLET_RADIUS);
                 color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
                 break;
             case Bullet::WaterParticle:
-                Radius = COMMON_BULLET_RADIUS * 3;
+                setRadius(COMMON_BULLET_RADIUS * 3);
                 color = sf::Color(0, 0, 255);
                 break;
             case Bullet::FireParticle:
-                Radius = COMMON_BULLET_RADIUS * 3;
+                setRadius(COMMON_BULLET_RADIUS * 3);
                 color = sf::Color(255, 0, 0);
                 break;
             default:
-                Radius = COMMON_BULLET_RADIUS;
+                setRadius(COMMON_BULLET_RADIUS);
                 break;
         }
     }
@@ -92,8 +92,7 @@ struct Bullet : public Circle, public sf::Drawable {
         switch (type) {
             case Bullet::Bubble:
                 timer -= sf::seconds(elapsedTime);
-                PosX += Velocity.x * timer.asSeconds() * elapsedTime;
-                PosY += Velocity.y * timer.asSeconds() * elapsedTime;
+                CollisionCircle::move(Velocity * timer.asSeconds() * elapsedTime);
                 if (!explode && timer <= sf::Time::Zero) {
                     Velocity = {0.f, 0.f};
                     explode = true;
@@ -102,23 +101,23 @@ struct Bullet : public Circle, public sf::Drawable {
                     if (ExplosionRadius.fromTop() > 0) {
                         ExplosionRadius += elapsedTime * 8.f;
                         color -= sf::Color(0, 0, 0, 4);
-                        Radius = COMMON_BULLET_RADIUS * ExplosionRadius.cur;
-                        Circle::move(-COMMON_BULLET_RADIUS / 5, -COMMON_BULLET_RADIUS / 5);
+                        setRadius(COMMON_BULLET_RADIUS * ExplosionRadius.cur);
+                        CollisionCircle::move(-COMMON_BULLET_RADIUS / 5, -COMMON_BULLET_RADIUS / 5);
                     } else todel = true;
                 }
                 break;
             case Bullet::Common:
             case Bullet::WaterParticle:
             case Bullet::FireParticle:
-                Circle::move(Velocity * elapsedTime);
+                CollisionCircle::move(Velocity * elapsedTime);
                 break;
         }
     }
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         circleShape.setFillColor(color);
-        circleShape.setRadius(Radius);
+        circleShape.setRadius(getRadius());
         circleShape.setPosition(getPosition());
-        circleShape.setOrigin(Radius, Radius);
+        circleShape.setOrigin(getSize() / 2.f);
         target.draw(circleShape);
     }
 };
@@ -128,11 +127,13 @@ using vB = std::vector<Bullet*>;
 vB Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
-    return packet << b.PosX << b.PosY << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage << b.timer.asSeconds() << b.type;
+    return packet << b.getCenter().x << b.getCenter().y << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage << b.timer.asSeconds() << b.type;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
     float timer;
-    packet >> b.PosX >> b.PosY >> b.Velocity.x >> b.Velocity.y >> b.penetration >> b.color >> b.damage >> timer;
+    sf::Vector2f pos;
+    packet >> pos.x >> pos.y >> b.Velocity.x >> b.Velocity.y >> b.penetration >> b.color >> b.damage >> timer;
+    b.setCenter(pos);
     b.timer = sf::seconds(timer);
     sf::Uint8 t; packet >> t; b.type = Bullet::Type(t);
     return packet;

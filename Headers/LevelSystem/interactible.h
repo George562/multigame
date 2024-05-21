@@ -1,7 +1,7 @@
 #pragma once
-#include "animation.h"
-#include "rect.h"
-#include "circle.h"
+#include "../Systems/animation.h"
+#include "../CollisionShapes/collisionRect.h"
+#include "../CollisionShapes/collisionCircle.h"
 
 #define ActivationButton sf::Keyboard::X
 
@@ -9,12 +9,12 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Interactable : public Rect, public sf::Drawable {
+class Interactable : public CollisionRect, public sf::Drawable {
 public:
     Animation* animation = nullptr;
     void (*function)(Interactable*);
 
-    Interactable() : Rect() {}
+    Interactable() : CollisionRect() {}
 
     ~Interactable() {
         if (animation) {
@@ -24,7 +24,7 @@ public:
 
     void setFunction(void (*func)(Interactable*)) { function = func; }
 
-    virtual bool isActivated(Circle&, sf::Event& event) {
+    virtual bool isActivated(CollisionCircle&, sf::Event& event) {
         if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
             function(this);
             return true;
@@ -32,7 +32,7 @@ public:
         return false;
     }
 
-    virtual bool CanBeActivated(Circle& circle) { return intersect(circle); }
+    virtual bool CanBeActivated(CollisionCircle& circle) { return intersect(circle); }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animation != nullptr) {
@@ -45,7 +45,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
-        Rect::setSize(animation->getGlobalSize());
+        CollisionRect::setSize(animation->getGlobalSize());
         animation->play();
     };
 
@@ -54,17 +54,17 @@ public:
             delete animation;
         }
         animation = new Animation(texture, shader);
-        Rect::setSize(animation->getGlobalSize());
+        CollisionRect::setSize(animation->getGlobalSize());
         animation->play();
     };
 
-    void setSize(float w, float h) { Rect::setSize(w, h); animation->setSize(sf::Vector2f(w, h)); }
-    void setSize(sf::Vector2f v) { Rect::setSize(v); animation->setSize(v); }
+    void setSize(float w, float h) { CollisionRect::setSize(w, h); animation->setSize(sf::Vector2f(w, h)); }
+    void setSize(sf::Vector2f v) { CollisionRect::setSize(v); animation->setSize(v); }
 
-    void setPosition(float x, float y) { Rect::setPosition(x, y); animation->setPosition(x, y); }
+    void setPosition(float x, float y) { CollisionRect::setPosition(x, y); animation->setPosition(x, y); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
-    void setCenter(float x, float y) { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(float x, float y) { setPosition(x - getSize().x / 2, y - getSize().y / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 };
 

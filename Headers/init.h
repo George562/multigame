@@ -1,8 +1,8 @@
 #pragma once
-#include "tools.h"
-#include "scale.h"
-#include "rect.h"
-#include "circle.h"
+#include "Utility/tools.h"
+#include "Abstracts/scale.h"
+#include "CollisionShapes/collisionRect.h"
+#include "CollisionShapes/collisionCircle.h"
 #include "../SFML-2.5.1/include/SFML/Audio.hpp"
 #include <vector>
 #include <map>
@@ -207,16 +207,6 @@ void loadMusics() {
     Musics::MainMenu .openFromFile("sources/music/MainMenu.wav");
     Musics::Fight1   .openFromFile("sources/music/Fight1.flac");
     Musics::Fight2   .openFromFile("sources/music/Fight2.flac");
-}
-
-bool Rect::intersect(Circle& circle) {
-    return LenOfVector(sf::Vector2f(std::max(std::abs(circle.PosX - (PosX + Width  / 2)) - Width / 2,  0.f),
-                                    std::max(std::abs(circle.PosY - (PosY + Height / 2)) - Height / 2, 0.f))) <= circle.Radius;
-    // explanation: https://www.youtube.com/watch?v=62-pRVZuS5c&ab_channel=InigoQuilez
-}
-
-bool Circle::intersect(Rect& rect) {
-    return rect.intersect(*this);
 }
 
 float random(sf::Vector2f v) {

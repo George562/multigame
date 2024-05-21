@@ -2,9 +2,7 @@
 #include "../SFML-2.5.1/include/SFML/Network.hpp"
 #include <vector>
 
-struct Circle;
-
-struct Rect {
+struct UIRect {
     float PosX, PosY, Width, Height;
 
     float getRight() const { return PosX + Width; }
@@ -34,16 +32,16 @@ struct Rect {
 
     // Set position and size
     void setRect(float x, float y, float w, float h) { PosX = x; PosY = y; Width = w; Height = h; }
-    void setRect(Rect rect) { PosX = rect.PosX; PosY = rect.PosY; Width = rect.Width; Height = rect.Height; }
+    void setRect(UIRect rect) { PosX = rect.PosX; PosY = rect.PosY; Width = rect.Width; Height = rect.Height; }
 
     // Check the intersection between two rectangles
     bool intersect(float x, float y, float w, float h) const {
         return x <= PosX + Width && PosX <= x + w && y <= PosY + Height && PosY <= y + h;
     }
-    bool intersect(Rect& rect) const {
+    bool intersect(UIRect& rect) const {
         return rect.PosX <= PosX + Width && PosX <= rect.PosX + rect.Width && rect.PosY <= PosY + Height && PosY <= rect.PosY + rect.Height;
     }
-    bool intersect(Rect& rect, Rect& intersection) const {
+    bool intersect(UIRect& rect, UIRect& intersection) const {
         intersection.setPosition(std::max(PosX, rect.PosX), std::max(PosY, rect.PosY));
         intersection.setSize(std::min(PosX + Width, rect.PosX + rect.Width) - intersection.PosX,
                              std::min(PosY + Height, rect.PosY + rect.Height) - intersection.PosY);
@@ -55,16 +53,14 @@ struct Rect {
         return PosX <= x && x <= PosX + Width && PosY <= y && y <= PosY + Height;
     }
     bool contains(sf::Vector2f point) const { return contains(point.x, point.y); }
-
-    bool intersect(Circle& circle);
 };
 
-using vr = std::vector<Rect>;
+using vr = std::vector<UIRect>;
 using vvr = std::vector<vr>;
 
-sf::Packet& operator<<(sf::Packet& packet, Rect& a) {
+sf::Packet& operator<<(sf::Packet& packet, UIRect& a) {
     return packet << a.PosX << a.PosY << a.Width << a.Height;
 }
-sf::Packet& operator>>(sf::Packet& packet, Rect& a) {
+sf::Packet& operator>>(sf::Packet& packet, UIRect& a) {
     return packet >> a.PosX >> a.PosY >> a.Width >> a.Height;
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include "bullet.h"
+#include "../Entities/bullet.h"
 
 #define M_PI_RAD M_PI / 180.f
 
@@ -42,7 +42,7 @@ public:
             lock = true;
     }
 
-    virtual void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+    virtual void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
@@ -50,7 +50,7 @@ public:
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * (rand() % (int)scatter - scatter / 2), d) * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
@@ -75,7 +75,7 @@ public:
 class Revolver : public Weapon {
 public:
     Revolver() : Weapon("Revolver", 6, 2, 0, 5) { BulletVelocity = 960; NumberOfBulletsPerShot = 1;  scatter = 10; }
-    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+    void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         Weapon::Shoot(shooter, direction, f);
         lock = true;
     }
@@ -85,7 +85,7 @@ public:
 class Shotgun : public Weapon {
 public:
     Shotgun() : Weapon("Shotgun", 5, 10, 1, 3) { BulletVelocity = 600; NumberOfBulletsPerShot = 10;  scatter = 50; }
-    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+    void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
@@ -94,7 +94,7 @@ public:
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * scatter / 2.f, d) * BulletVelocity / len;
         for (int i = 0; i < NumberOfBulletsPerShot; i++, d = RotateOn(M_PI_RAD * scatter / (NumberOfBulletsPerShot - 1.f), d)) {
-            sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
+            sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
             Bullets.push_back(new Bullet(f, SpawnPoint, d, damage));
         }
         AmountOfAmmunition -= 1;
@@ -117,14 +117,14 @@ public:
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
             lock = false;
     }
-    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+    void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
         sf::Vector2f d = direction - shooter.getPosition();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * (rand() % (int)scatter - scatter / 2), d) * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage, COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(1)));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
@@ -146,13 +146,13 @@ public:
         } if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
             lock = true;
     }
-    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+    void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
         sf::Vector2f d{0, BulletVelocity};
         d = RotateOn(float(-M_PI * NumberOfBulletsPerShot) / 12, d);
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage));
         AmountOfAmmunition -= 1;
         NumberOfBulletsPerShot++;
@@ -164,13 +164,13 @@ public:
 class Chaotic : public Weapon {
 public:
     Chaotic() : Weapon("Chaotic", 300, 0.1, 1.f / 16, 3) { BulletVelocity = 180; }
-    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+    void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
         sf::Vector2f d{0, BulletVelocity};
         d = RotateOn(float(rand()), d);
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
@@ -180,7 +180,7 @@ public:
 class FireHose : public Weapon {
 public:
     FireHose() : Weapon("Fire hose", 100, 0, 1.f / 10, 0) { BulletVelocity = 1200; }
-    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+    void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
@@ -188,7 +188,7 @@ public:
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = d * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage, 0, Bullet::WaterParticle));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();
@@ -199,7 +199,7 @@ public:
 class Flamethrower : public Weapon {
 public:
     Flamethrower() : Weapon("Flamethrower", 100, 0, 1.f / 10, 1) { BulletVelocity = 1200; }
-    void Shoot(Circle& shooter, sf::Vector2f direction, faction::Type f) {
+    void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
@@ -207,7 +207,7 @@ public:
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = d * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.Radius * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage, 0, Bullet::Type::FireParticle));
         AmountOfAmmunition -= 1;
         TimeFromLastShot->restart();

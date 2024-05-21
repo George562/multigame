@@ -1,6 +1,6 @@
 #pragma once
 #include "text.h"
-#include "scale.h"
+#include "../Abstracts/scale.h"
 
 #define STANDART_BAR_WALL_WIDTH 5
 
