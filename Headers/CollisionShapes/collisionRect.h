@@ -1,8 +1,8 @@
 #pragma once
 #include "../../SFML-2.5.1/include/SFML/Network.hpp"
-#include "shape.h"
+#include "collisionShape.h"
 
-class Rect : public Shape {
+class CollisionRect : public CollisionShape {
 protected:
     sf::Vector2f size;
     void updateShape() {
@@ -11,11 +11,11 @@ protected:
         points[3] = sf::Vector2f(points[0].x, points[0].y + size.y);
     }
 public:
-    Rect() : Shape(4), size(sf::Vector2f(0, 0)) {}
-    Rect(float x, float y, float w, float h) : Shape(4), size(sf::Vector2f(w, h)) {
+    CollisionRect() : CollisionShape(4), size(sf::Vector2f(0, 0)) {}
+    CollisionRect(float x, float y, float w, float h) : CollisionShape(4), size(sf::Vector2f(w, h)) {
         setPosition(sf::Vector2f(x, y));
     }
-    Rect(sf::Vector2f position, sf::Vector2f size) : Shape(4), size(size) {
+    CollisionRect(sf::Vector2f position, sf::Vector2f size) : CollisionShape(4), size(size) {
         setPosition(position);
     }
     float getRight() const { return points[2].x; }
@@ -46,16 +46,16 @@ public:
     // Set position and size
     void setRect(float x, float y, float w, float h) { size.x = w; size.y = h; setPosition(x, y); }
     void setRect(sf::Vector2f pos, sf::Vector2f size) { this->size = size; setPosition(pos); }
-    void setRect(Rect rect) { size = rect.size; setPosition(rect.getPosition()); }
+    void setRect(CollisionRect rect) { size = rect.size; setPosition(rect.getPosition()); }
 };
 
-using vr = std::vector<Rect>;
+using vr = std::vector<CollisionRect>;
 using vvr = std::vector<vr>;
 
-sf::Packet& operator<<(sf::Packet& packet, Rect& a) {
+sf::Packet& operator<<(sf::Packet& packet, CollisionRect& a) {
     return packet << a.getPosition().x << a.getPosition().y << a.getSize().x << a.getSize().y;
 }
-sf::Packet& operator>>(sf::Packet& packet, Rect& a) {
+sf::Packet& operator>>(sf::Packet& packet, CollisionRect& a) {
     sf::Vector2f pos, size;
     packet >> pos.x >> pos.y >> size.x >> size.y;
     a.setRect(pos, size);

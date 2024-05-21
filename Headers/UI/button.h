@@ -1,14 +1,14 @@
 #pragma once
 #include "../../SFML-2.5.1/include/SFML/Network.hpp"
 #include "text.h"
-#include "../Shapes/rect.h"
+#include "../CollisionShapes/collisionRect.h"
 
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Button : public Rect, public sf::Drawable {
+class Button : public CollisionRect, public sf::Drawable {
 public:
     sf::Texture* texture, *pushedTexture;
     sf::Sprite sprite;
@@ -16,7 +16,7 @@ public:
     bool Pushed = false, ShowButton = true;
     void (*buttonFunction)(void);
 
-    Button() : Rect() {}
+    Button() : CollisionRect() {}
     Button(sf::String, void (*)(void));
 
     void setPosition(float, float);
@@ -55,7 +55,7 @@ void Button::setTexture(sf::Texture& texture, sf::Texture& pushedTexture) {
 }
 
 void Button::setPosition(float x, float y) {
-    Rect::setPosition(x, y);
+    CollisionRect::setPosition(x, y);
     sprite.setPosition(x, y);
     ButtonText.setCenter(getCenter());
 }
@@ -64,7 +64,7 @@ void Button::setSize(float w, float h) {
     if (getSize().x != 0 && getSize().y != 0) {
         sprite.setScale(w / getSize().x, h / getSize().y);
     }
-    Rect::setSize(w, h);
+    CollisionRect::setSize(w, h);
     ButtonText.setCenter(getCenter());
 }
 

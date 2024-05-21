@@ -11,7 +11,7 @@ sf::CircleShape circleShape;
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-struct Bullet : public Circle, public sf::Drawable {
+struct Bullet : public CollisionCircle, public sf::Drawable {
     enum Type : sf::Uint8 {
         Common,
         Bubble,
@@ -92,7 +92,7 @@ struct Bullet : public Circle, public sf::Drawable {
         switch (type) {
             case Bullet::Bubble:
                 timer -= sf::seconds(elapsedTime);
-                Circle::move(Velocity * timer.asSeconds() * elapsedTime);
+                CollisionCircle::move(Velocity * timer.asSeconds() * elapsedTime);
                 if (!explode && timer <= sf::Time::Zero) {
                     Velocity = {0.f, 0.f};
                     explode = true;
@@ -102,14 +102,14 @@ struct Bullet : public Circle, public sf::Drawable {
                         ExplosionRadius += elapsedTime * 8.f;
                         color -= sf::Color(0, 0, 0, 4);
                         setRadius(COMMON_BULLET_RADIUS * ExplosionRadius.cur);
-                        Circle::move(-COMMON_BULLET_RADIUS / 5, -COMMON_BULLET_RADIUS / 5);
+                        CollisionCircle::move(-COMMON_BULLET_RADIUS / 5, -COMMON_BULLET_RADIUS / 5);
                     } else todel = true;
                 }
                 break;
             case Bullet::Common:
             case Bullet::WaterParticle:
             case Bullet::FireParticle:
-                Circle::move(Velocity * elapsedTime);
+                CollisionCircle::move(Velocity * elapsedTime);
                 break;
         }
     }

@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Creature : public Circle, public sf::Drawable {
+class Creature : public CollisionCircle, public sf::Drawable {
 public:
     faction::Type faction;
 
@@ -40,7 +40,7 @@ public:
     std::vector<Effect*> effects;
     std::vector<int> effectStacks;
 
-    Creature(sf::String name, faction::Type f) : Circle() {
+    Creature(sf::String name, faction::Type f) : CollisionCircle() {
         Name.setString(name);
         Name.setCharacterSize(25);
         Name.setOutlineThickness(2);
@@ -95,7 +95,7 @@ public:
         if (tempv.x == -1) Velocity.x = 0;
         if (tempv.y == -1) Velocity.y = 0;
 
-        Circle::move(Velocity * ElapsedTimeAsSecond);
+        CollisionCircle::move(Velocity * ElapsedTimeAsSecond);
         LastMoveCheck = localClock->getElapsedTime();
     }
 

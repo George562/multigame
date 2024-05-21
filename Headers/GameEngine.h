@@ -846,7 +846,7 @@ void drawFloor() {
 }
 
 sf::Vector2f CameraPos;
-Rect CameraRect(0, 0, scw, sch);
+CollisionRect CameraRect(0, 0, scw, sch);
 void drawWalls() {
     CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
     CameraRect.setPosition(CameraPos);

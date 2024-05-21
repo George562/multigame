@@ -205,10 +205,10 @@ void Location::FillWallsRect() {
         for (int j = 0; j < walls[i].size(); j++)
             if (walls[i][j]) {
                 if (i % 2 == 1) // |
-                    wallsRect[i].push_back(Rect(size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize));
+                    wallsRect[i].push_back(CollisionRect(size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize));
                 else // -
-                    wallsRect[i].push_back(Rect(float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize));
-            } else wallsRect[i].push_back(Rect(0, 0, 0, 0));
+                    wallsRect[i].push_back(CollisionRect(float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize));
+            } else wallsRect[i].push_back(CollisionRect(0, 0, 0, 0));
 
     if (room.x != -1 && room.y != -1) {
         if (doorPos.y % 2 == 1)
@@ -386,7 +386,7 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
 }
 
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
-sf::Vector2i WillCollisionWithWalls(vvr& Walls, Shape& obj, sf::Vector2f Velocity) {
+sf::Vector2i WillCollisionWithWalls(vvr& Walls, CollisionShape& obj, sf::Vector2f Velocity) {
     int y = int(obj.getCenter().y) / size, x = int(obj.getCenter().x) / size;
     sf::Vector2i res(Velocity.x != 0 ? -1 : 1, Velocity.y != 0 ? -1 : 1);
 

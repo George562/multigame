@@ -2,16 +2,16 @@
 #include <vector>
 #include "../Utility/VectorTools.h"
 
-class Shape {
+class CollisionShape {
 protected:
     std::vector<sf::Vector2f> points;
     size_t pointCount;
     virtual void updateShape() = 0;
 public:
 
-    Shape() : pointCount(0) {}
-    Shape(size_t count) : pointCount(count) { points.resize(count); }
-    Shape(std::vector<sf::Vector2f> points) : points(points), pointCount(points.size()) {}
+    CollisionShape() : pointCount(0) {}
+    CollisionShape(size_t count) : pointCount(count) { points.resize(count); }
+    CollisionShape(std::vector<sf::Vector2f> points) : points(points), pointCount(points.size()) {}
 
     virtual sf::Vector2f getPosition() const = 0;
 
@@ -33,40 +33,36 @@ public:
         return true;
     }
 
-    bool intersect(Shape& shape) {
+    bool intersect(CollisionShape& shape) {
         sf::Vector2f pos  =       getPosition(), size  =       getSize(),
                      pos2 = shape.getPosition(), size2 = shape.getSize();
         if (!(pos2.x <= pos.x + size.x && pos.x <= pos2.x + size2.x && pos2.y <= pos.y + size.y && pos.y <= pos2.y + size2.y)) {
             return false;
         }
-        sf::Vector2f a, b, c, d, intersectionPoint;
-        bool pointInside;
+        for (int j = 0; j < shape.pointCount; j++) {
+            if (contains(shape.points[j])) {
+                return true;
+            }
+        }
+        sf::Vector2f a, b, ab, c, d, cd, intersectionPoint;
         for (int i = 0; i < pointCount; i++) {
-            a = points[i]; b = points[(i + 1) % pointCount];
-            pointInside = true;
+            a = points[i]; b = points[(i + 1) % pointCount]; ab = a - b;
             for (int j = 0; j < shape.pointCount; j++) {
-                c = shape.points[j]; d = shape.points[(j + 1) % shape.pointCount];
-                if (cross(points[(i + 1) % pointCount] - points[i], c - points[i]) < 0) {
-                    pointInside = false;
-                }
-                if ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x) == 0) {
-                    if (((a.y - b.y == 0) && std::abs(a.y - c.y) < 0.01 && std::min(a.x, b.x) <= std::max(c.x, d.x) && std::min(c.x, d.x) <= std::max(a.x, b.x)) ||
-                       ((a.x - b.x == 0) && std::abs(a.x - c.x) < 0.01 && std::min(a.y, b.y) <= std::max(c.y, d.y) && std::min(c.y, d.y) <= std::max(a.y, b.y))) {
+                c = shape.points[j]; d = shape.points[(j + 1) % shape.pointCount]; cd = c - d;
+                if (ab.x * cd.y - ab.y * cd.x == 0) {
+                    if ((ab.y == 0 && std::abs(a.y - c.y) < 0.01 && std::min(a.x, b.x) <= std::max(c.x, d.x) && std::min(c.x, d.x) <= std::max(a.x, b.x)) ||
+                       (ab.x == 0 && std::abs(a.x - c.x) < 0.01 && std::min(a.y, b.y) <= std::max(c.y, d.y) && std::min(c.y, d.y) <= std::max(a.y, b.y))) {
                         return true;
                     }
                 }
-                intersectionPoint = sf::Vector2f(
-                (cross(a, b) * (c.x - d.x) - (a.x - b.x) * cross(c, d)) / ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x)),
-                (cross(a, b) * (c.y - d.y) - (a.y - b.y) * cross(c, d)) / ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x)));
+                intersectionPoint = sf::Vector2f((cross(a, b) * cd.x - ab.x * cross(c, d)) / (ab.x * cd.y - ab.y * cd.x),
+                                                 (cross(a, b) * cd.y - ab.y * cross(c, d)) / (ab.x * cd.y - ab.y * cd.x));
                 if (std::min(a.x, b.x) - 0.01 <= intersectionPoint.x && intersectionPoint.x <= std::max(a.x, b.x) + 0.01 &&
                     std::min(a.y, b.y) - 0.01 <= intersectionPoint.y && intersectionPoint.y <= std::max(a.y, b.y) + 0.01 &&
                     std::min(c.x, d.x) - 0.01 <= intersectionPoint.x && intersectionPoint.x <= std::max(c.x, d.x) + 0.01 &&
                     std::min(c.y, d.y) - 0.01 <= intersectionPoint.y && intersectionPoint.y <= std::max(c.y, d.y) + 0.01) {
                     return true;
                 }
-            }
-            if (pointInside) {
-                return true;
             }
         }
         return false;
