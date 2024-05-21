@@ -98,7 +98,7 @@ struct ItemSlot {
 
 std::vector<std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
 std::vector<ItemSlot> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
-std::vector<Rect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
+std::vector<sf::FloatRect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
 sf::Sprite statsPlayerImage;
 Bar<float> statsHPBar;
@@ -137,7 +137,7 @@ struct ShopSlot {
 std::vector<sf::Drawable*> shopUIElements;
 std::vector<ShopSlot> shopItemSlotsElements; // Analogous to the inventory itemSlotsElements + price
 std::vector<ShopSlot> shopPlayerSlotsElements; // Analogous to the inventory itemSlotsElements + price
-std::vector<Rect*> shopItemSlotsRects; // Analogous to the inventory itemSlotsRects
+std::vector<sf::FloatRect*> shopItemSlotsRects; // Analogous to the inventory itemSlotsRects
 
 sf::Sprite shopBG, shopBGPattern;
 sf::Sprite shopNPCTextFrame;
@@ -1246,9 +1246,9 @@ void createSlotRects() {
         float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
         float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
 
-        Rect* itemActivationRect = new Rect();
-        itemActivationRect->setPosition(itemX, itemY);
-        itemActivationRect->setSize(sf::Vector2f(Textures::ItemPanel.getSize() / 2u));
+        sf::FloatRect* itemActivationRect = new sf::FloatRect(itemX, itemY,
+                                                              Textures::ItemPanel.getSize().x / 2,
+                                                              Textures::ItemPanel.getSize().y / 2);
         itemSlotsRects[item->id] = itemActivationRect;
 
         slotNumber++;
@@ -1265,10 +1265,9 @@ void createShopSlotsRects() {
         float itemX = ((slotNumber % 5) * 200 + 30);
         float itemY = ((slotNumber / 5) * 200 + 20) / shopItemsViewSizeY;
 
-        Rect* itemActivationRect = new Rect();
-        itemActivationRect->setPosition(itemX, itemY);
-        itemActivationRect->setSize(sf::Vector2f(Textures::ItemPanel.getSize()) *
-                                    sf::Vector2f(0.4, 0.4 / shopItemsViewSizeY));
+        sf::FloatRect* itemActivationRect = new sf::FloatRect(itemX, itemY,
+                                                              Textures::ItemPanel.getSize().x * 0.4,
+                                                              Textures::ItemPanel.getSize().y * 0.4 / shopItemsViewSizeY);
         shopItemSlotsRects[item->id] = itemActivationRect;
 
         slotNumber++;

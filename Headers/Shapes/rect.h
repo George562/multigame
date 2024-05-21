@@ -40,13 +40,13 @@ public:
 
     // Get and set size
     sf::Vector2f getSize() const { return size; }
-    void setSize(float w, float h) { size.x = w; size.y = h; }
+    void setSize(float w, float h) { size.x = w; size.y = h; setPosition(getPosition()); }
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
 
     // Set position and size
-    void setRect(float x, float y, float w, float h) { setPosition(x, y); size.x = w; size.y = h; }
-    void setRect(sf::Vector2f pos, sf::Vector2f size) { setPosition(pos); this->size = size; }
-    void setRect(Rect rect) { setPosition(rect.getPosition()); size = rect.size; }
+    void setRect(float x, float y, float w, float h) { size.x = w; size.y = h; setPosition(x, y); }
+    void setRect(sf::Vector2f pos, sf::Vector2f size) { this->size = size; setPosition(pos); }
+    void setRect(Rect rect) { size = rect.size; setPosition(rect.getPosition()); }
 };
 
 using vr = std::vector<Rect>;
