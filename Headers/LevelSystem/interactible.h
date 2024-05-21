@@ -1,7 +1,7 @@
 #pragma once
-#include "animation.h"
-#include "Shapes/rect.h"
-#include "Shapes/circle.h"
+#include "../Systems/animation.h"
+#include "../Shapes/rect.h"
+#include "../Shapes/circle.h"
 
 #define ActivationButton sf::Keyboard::X
 

@@ -1,6 +1,6 @@
 #pragma once
-#include "tools.h"
-#include "scale.h"
+#include "Utility/tools.h"
+#include "Abstracts/scale.h"
 #include "Shapes/rect.h"
 #include "Shapes/circle.h"
 #include "../SFML-2.5.1/include/SFML/Audio.hpp"

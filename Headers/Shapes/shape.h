@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "VectorTools.h"
+#include "../Utility/VectorTools.h"
 
 class Shape {
 protected:

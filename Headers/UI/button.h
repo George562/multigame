@@ -1,7 +1,7 @@
 #pragma once
-#include "../SFML-2.5.1/include/SFML/Network.hpp"
+#include "../../SFML-2.5.1/include/SFML/Network.hpp"
 #include "text.h"
-#include "Shapes/rect.h"
+#include "../Shapes/rect.h"
 
 ////////////////////////////////////////////////////////////
 // Class

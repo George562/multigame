@@ -1,6 +1,6 @@
 #pragma once
-#include "interactible.h"
-#include "init.h"
+#include "../LevelSystem/interactible.h"
+#include "../init.h"
 
 namespace ItemID {
     using Type = sf::Uint8;

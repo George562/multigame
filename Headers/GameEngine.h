@@ -1,15 +1,17 @@
 #pragma once
-#include "enemy.h"
-#include "chat.h"
-#include "button.h"
-#include "panel.h"
-#include "bar.h"
-#include "player.h"
-#include "client.h"
-#include "effect.h"
-#include "fire.h"
-#include "tempText.h"
-#include "shop.h"
+#include "Entities/enemy.h"
+#include "Entities/player.h"
+#include "Multiplayer/chat.h"
+#include "Multiplayer/client.h"
+#include "UI/button.h"
+#include "UI/panel.h"
+#include "UI/bar.h"
+#include "UI/tempText.h"
+#include "UI/ItemSlot.h"
+#include "UI/shopSlot.h"
+#include "Systems/effect.h"
+#include "Systems/shop.h"
+#include "LevelSystem/fire.h"
 
 
 //////////////////////////////////////////////////////////// Settings of the game
@@ -86,16 +88,6 @@ Button statsPageButton("Stats", [](){
 sf::Sprite invBackground;
 sf::Sprite itemListBG;
 
-struct ItemSlot {
-    sf::Sprite* background;
-    PlacedText* amountText;
-    bool isInitialized;  // A marker so that we don't have to use arbitrary checks for null pointers or something as dumb
-
-    ItemSlot() {
-        isInitialized = false;
-    }
-};
-
 Animation playerCoinSprite;
 ItemSlot playerCoinSlot;   // Special slot, so that it can be conveniently used other than in the inventory
 
@@ -125,17 +117,6 @@ ItemID::Type prevItemDescID;
 Shop mainMenuShop;
 Shop* curShop = nullptr;
 Item* shopSelectedItem = nullptr;
-
-struct ShopSlot {
-    sf::Sprite* background;
-    PlacedText* amountText;
-    PlacedText* priceText;
-    bool isInitialized;  // A marker so that we don't have to use arbitrary checks for null pointers or something as dumb
-
-    ShopSlot() {
-        isInitialized = false;
-    }
-};
 
 std::vector<sf::Drawable*> shopUIElements;
 std::vector<ShopSlot> shopItemSlotsElements; // Analogous to the inventory itemSlotsElements + price

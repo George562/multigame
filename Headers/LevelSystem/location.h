@@ -1,5 +1,5 @@
 #pragma once
-#include "init.h"
+#include "../init.h"
 #include <queue>
 #include <iostream>
 #include <fstream>

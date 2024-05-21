@@ -1,6 +1,6 @@
 #pragma once
-#include "../SFML-2.5.1/include/SFML/Network.hpp"
-#include "../SFML-2.5.1/include/SFML/Graphics.hpp"
+#include "../../SFML-2.5.1/include/SFML/Network.hpp"
+#include "../../SFML-2.5.1/include/SFML/Graphics.hpp"
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <iostream>
