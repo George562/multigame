@@ -62,10 +62,10 @@ std::vector<TempText*> effectIconsTimers(numberOfEffects);
 
 //////////////////////////////////////////////////////////// InventoryStuff
 inventoryPage::Type activeInventoryPage = inventoryPage::Items;
-std::vector<sf::Drawable*> inventoryElements; // These elements appear on every page
+std::vector<sf::Drawable*> invCommonElements; // These elements appear on every page
 int prevItemTypeCount = 0;
 
-Button backButton("Back", [](){
+Button invBackButton("Back", [](){
     isDrawInventory = false;
 });
 Button itemsPageButton("Items", [](){
@@ -96,9 +96,12 @@ struct ItemSlot {
     }
 };
 
-std::vector<std::vector<sf::Drawable*>> inventoryPageElements; // These elements only appear on certain pages
-std::vector<ItemSlot> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
-std::vector<sf::FloatRect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
+Animation playerCoinSprite;
+ItemSlot playerCoinSlot;   // Special slot, so that it can be conveniently used other than in the inventory
+
+std::vector<std::vector<sf::Drawable*>> invPageElements; // These elements only appear on certain pages
+std::vector<ItemSlot> invItemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
+std::vector<sf::FloatRect*> invItemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
 sf::Sprite statsPlayerImage;
 Bar<float> statsHPBar;
@@ -145,12 +148,12 @@ sf::Sprite shopItemsFrame, shopPlayerInventoryFrame, shopItemStatsFrame;
 sf::Sprite shopItemSpriteFrame, shopItemSprite;
 
 sf::Sprite shopNPCSprite;
-Animation shopItemCoinsSprite, shopPlayerCoinsSprite;
+Animation shopItemCoinsSprite;
 
 float shopItemsViewSizeX, shopItemsViewSizeY;
 float shopPlayerInvViewSizeX, shopPlayerInvViewSizeY;
 
-PlacedText shopNPCName, shopNPCText, shopItemCoins, shopItemStats, shopPlayerCoins;
+PlacedText shopNPCName, shopNPCText, shopItemCoins, shopItemStats, shopPlayerCoinsText;
 
 
 
@@ -368,7 +371,6 @@ Button shopBackButton("Back", [](){
 });
 Button shopBuyButton("Buy", [](){
     curShop->buyFunction();
-    shopPlayerCoins.setString("You have:   " + std::to_string(player.inventory.money));
 });
 
 
@@ -511,9 +513,9 @@ void init() {
 }
 
 void initInventory() {
-    inventoryPageElements.resize(inventoryPage::NONE);
-    itemSlotsElements.resize(MaxItemID, ItemSlot());
-    itemSlotsRects.resize(MaxItemID);
+    invPageElements.resize(inventoryPage::NONE);
+    invItemSlotsElements.resize(MaxItemID, ItemSlot());
+    invItemSlotsRects.resize(MaxItemID);
 
     invBackground.setTexture(Textures::SteelFrame);
     invBackground.setScale((float)scw / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y);
@@ -521,10 +523,10 @@ void initInventory() {
 
     int xOffset = 50, yOffset = 50;
 
-    backButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
-    backButton.setCharacterSize(52);
-    backButton.setPosition(xOffset, yOffset);
-    backButton.setSize(300, 150);
+    invBackButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
+    invBackButton.setCharacterSize(52);
+    invBackButton.setPosition(xOffset, yOffset);
+    invBackButton.setSize(300, 150);
 
     itemsPageButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     itemsPageButton.setCharacterSize(32);
@@ -555,13 +557,13 @@ void initInventory() {
     itemListBG.setScale((float)(scw - 300) / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y * 0.6);
     itemListBG.setPosition(150, sch * 0.2);
 
-    inventoryElements.push_back(&invBackground);
-    inventoryElements.push_back(&backButton);
-    inventoryElements.push_back(&itemsPageButton);
-    inventoryElements.push_back(&weaponsPageButton);
-    inventoryElements.push_back(&equipablesPageButton);
-    inventoryElements.push_back(&perksPageButton);
-    inventoryElements.push_back(&statsPageButton);
+    invCommonElements.push_back(&invBackground);
+    invCommonElements.push_back(&invBackButton);
+    invCommonElements.push_back(&itemsPageButton);
+    invCommonElements.push_back(&weaponsPageButton);
+    invCommonElements.push_back(&equipablesPageButton);
+    invCommonElements.push_back(&perksPageButton);
+    invCommonElements.push_back(&statsPageButton);
 
 
     statsPlayerImage.setTexture(Textures::Player);
@@ -603,17 +605,25 @@ void initInventory() {
     statsCurLevelsText.setString("Current Levels: " + std::to_string(curLevel));
     statsCurLevelsText.setPosition(scw / 10, 8 * sch / 10);
 
-    inventoryPageElements[inventoryPage::Items].push_back(&itemListBG);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPBar);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPBar);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsHPRegenText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsArmorText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsCompletedLevelsText);
-    inventoryPageElements[inventoryPage::Stats].push_back(&statsCurLevelsText);
+    playerCoinSprite = Animation(*itemTextureName[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+                                  1, itemTextureDuration[ItemID::coin]);
+    playerCoinSprite.play();
+    playerCoinSlot.background = new sf::Sprite();
+    playerCoinSlot.amountText = new PlacedText();
+    playerCoinSlot.isInitialized = true;
+
+    invPageElements[inventoryPage::Items].push_back(&itemListBG);
+    invPageElements[inventoryPage::Items].push_back(&playerCoinSprite);
+    invPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
+    invPageElements[inventoryPage::Stats].push_back(&statsHPBar);
+    invPageElements[inventoryPage::Stats].push_back(&statsMPBar);
+    invPageElements[inventoryPage::Stats].push_back(&statsHPText);
+    invPageElements[inventoryPage::Stats].push_back(&statsMPText);
+    invPageElements[inventoryPage::Stats].push_back(&statsHPRegenText);
+    invPageElements[inventoryPage::Stats].push_back(&statsMPRegenText);
+    invPageElements[inventoryPage::Stats].push_back(&statsArmorText);
+    invPageElements[inventoryPage::Stats].push_back(&statsCompletedLevelsText);
+    invPageElements[inventoryPage::Stats].push_back(&statsCurLevelsText);
 
     doInventoryUpdate[inventoryPage::Stats] = true;
 }
@@ -741,22 +751,14 @@ void initShop() {
     shopItemStats.setPosition(shopItemSpriteFrame.getPosition().x + shopItemSpriteFrame.getGlobalBounds().width + 50,
                               shopItemSpriteFrame.getPosition().y + 25);
 
-    shopPlayerCoins.setCharacterSize(40);
-    shopPlayerCoins.setPosition(shopPlayerInventoryFrame.getPosition().x + shopPlayerInventoryFrame.getGlobalBounds().width * 0.3,
-                                shopPlayerInventoryFrame.getPosition().y + shopPlayerInventoryFrame.getGlobalBounds().height * 1.2);
-
-    shopPlayerCoinsSprite = Animation(*itemTextureName[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
-                                      1, itemTextureDuration[ItemID::coin]);
-    shopPlayerCoinsSprite.setPosition(shopPlayerInventoryFrame.getPosition().x + shopPlayerInventoryFrame.getGlobalBounds().width * 0.575,
-                                      shopPlayerInventoryFrame.getPosition().y + shopPlayerInventoryFrame.getGlobalBounds().height * 1.12);
-    shopPlayerCoinsSprite.setSize(sf::Vector2f(100.0, 100.0));
-    shopPlayerCoinsSprite.play();
-
     shopBuyButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     shopBuyButton.setCharacterSize(70);
     shopBuyButton.setSize(400, 150);
     shopBuyButton.setPosition(shopPlayerInventoryFrame.getPosition().x + (0.4 * scw - xOffset) / 5,
                               sch - 150 - 1.5 * yOffset);
+    
+    shopPlayerCoinsText.setCharacterSize(40);
+    shopPlayerCoinsText.setPosition(shopBuyButton.getPosition() - sf::Vector2f(0, 100));
 
     shopUIElements.push_back(&shopBG);
     shopUIElements.push_back(&shopBGPattern);
@@ -770,8 +772,11 @@ void initShop() {
     shopUIElements.push_back(&shopItemStatsFrame);
     shopUIElements.push_back(&shopItemSpriteFrame);
     shopUIElements.push_back(&shopBuyButton);
-    shopUIElements.push_back(&shopPlayerCoins);
-    shopUIElements.push_back(&shopPlayerCoinsSprite);
+    shopUIElements.push_back(&shopPlayerCoinsText);
+
+    shopUIElements.push_back(&playerCoinSprite);
+    shopUIElements.push_back(playerCoinSlot.background);  // It is invisible for now, but may be changed in the future for something visible
+    shopUIElements.push_back(playerCoinSlot.amountText);
 }
 //==============================================================================================
 
@@ -1044,23 +1049,25 @@ void drawEffects() {
 
 void drawInventory() {
     window.setView(InventoryView);
-    for (sf::Drawable*& elem : inventoryElements)
+    
+    updateInventoryUI();
+
+    for (sf::Drawable*& elem : invCommonElements)
         window.draw(*elem);
     switch (activeInventoryPage) {
         case inventoryPage::Items:
-            for (sf::Drawable*& elem : inventoryPageElements[activeInventoryPage])
+            for (sf::Drawable*& elem : invPageElements[activeInventoryPage])
                 window.draw(*elem);
 
-            if (activeInventoryPage != inventoryPage::Stats) {
-                for (Item*& item : player.inventory.items) {
-                    if (itemSlotsElements[item->id].isInitialized) {
-                        window.draw(*itemSlotsElements[item->id].background);
+            for (Item*& item : player.inventory.items) {
+                if (invItemSlotsElements[item->id].isInitialized) {
+                    window.draw(*invItemSlotsElements[item->id].background);
 
-                        if (item->amount >= 1) window.draw(*itemSlotsElements[item->id].amountText);
-                    }
-                    window.draw(*item);
+                    if (item->amount >= 1) window.draw(*invItemSlotsElements[item->id].amountText);
                 }
+                window.draw(*item);
             }
+            window.draw(*playerCoinSlot.amountText);
 
             if (isItemDescDrawn) {
                 itemDescText.setPosition(sf::Mouse::getPosition(window).x + 100, sf::Mouse::getPosition(window).y);
@@ -1069,7 +1076,7 @@ void drawInventory() {
             break;
 
         case inventoryPage::Stats:
-            for (sf::Drawable*& elem : inventoryPageElements[inventoryPage::Stats])
+            for (sf::Drawable*& elem : invPageElements[inventoryPage::Stats])
                 window.draw(*elem);
             break;
 
@@ -1077,13 +1084,14 @@ void drawInventory() {
             break;
     }
 
-    updateInventoryUI();
-
     window.setView(InterfaceView);
 }
 
 void drawShop() {
     window.setView(ShopView);
+
+    updateShopUI();
+
     for (sf::Drawable*& elem : shopUIElements)
         window.draw(*elem);
     window.draw(shopItemSprite);
@@ -1092,6 +1100,9 @@ void drawShop() {
         window.draw(shopItemCoinsSprite);
         window.draw(shopItemStats);
     }
+
+    window.draw(playerCoinSprite);
+    window.draw(*playerCoinSlot.amountText);
     
     window.setView(ShopStockView);
     sf::Transform viewTransform = sf::Transform::Identity;
@@ -1117,8 +1128,6 @@ void drawShop() {
         window.draw(*item, viewTransform);
     }
 
-    updateShopUI();
-
     window.setView(InterfaceView);
 }
 //==============================================================================================
@@ -1136,19 +1145,19 @@ void updateInventoryUI() {
             float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
             float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
 
-            if (!itemSlotsElements[drawnItem->id].isInitialized) {
-                itemSlotsElements[drawnItem->id].background = new sf::Sprite();
-                itemSlotsElements[drawnItem->id].amountText = new PlacedText();
-                itemSlotsElements[drawnItem->id].isInitialized = true;
+            if (!invItemSlotsElements[drawnItem->id].isInitialized) {
+                invItemSlotsElements[drawnItem->id].background = new sf::Sprite();
+                invItemSlotsElements[drawnItem->id].amountText = new PlacedText();
+                invItemSlotsElements[drawnItem->id].isInitialized = true;
             }
-            sf::Sprite& slotBG = *itemSlotsElements[drawnItem->id].background;
+            sf::Sprite& slotBG = *invItemSlotsElements[drawnItem->id].background;
             slotBG.setPosition(itemX, itemY);
             slotBG.setScale(0.5, 0.5);
             slotBG.setTexture(Textures::ItemPanel);
 
             drawnItem->setPosition(itemX, itemY);
 
-            PlacedText& itemAmountText = *itemSlotsElements[drawnItem->id].amountText;
+            PlacedText& itemAmountText = *invItemSlotsElements[drawnItem->id].amountText;
             itemAmountText.setCharacterSize(20);
             itemAmountText.setString(std::to_string(drawnItem->amount));
             itemAmountText.setPosition(sf::Vector2f(itemX + slotBG.getGlobalBounds().width,
@@ -1156,6 +1165,15 @@ void updateInventoryUI() {
 
             slotNumber++;
         }
+
+        playerCoinSprite.setScale(1, 1);
+        playerCoinSprite.setPosition(invBackButton.getRight() + 100, invBackButton.getPosition().y - 20);
+        playerCoinSlot.background->setTexture(Textures::INVISIBLE);
+        playerCoinSlot.amountText->setString(std::to_string(player.inventory.money));
+        playerCoinSlot.amountText->setCharacterSize(40);
+        playerCoinSlot.amountText->setPosition(playerCoinSprite.getPosition().x + playerCoinSprite.getGlobalSize().x,
+                                               playerCoinSprite.getPosition().y + playerCoinSprite.getGlobalSize().y / 2 - 20);
+
         doInventoryUpdate[inventoryPage::Items] = false;
     }
     statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
@@ -1234,12 +1252,19 @@ void updateShopUI() {
 
         slotNumber++;
     }
+    playerCoinSprite.setScale(0.75, 0.75);
+    playerCoinSprite.setPosition(shopPlayerCoinsText.getPosition().x + shopPlayerCoinsText.getGlobalBounds().width - 20,
+                                 shopPlayerCoinsText.getPosition().y - playerCoinSprite.getGlobalSize().y / 3);
+    playerCoinSlot.amountText->setString(std::to_string(player.inventory.money));
+    playerCoinSlot.amountText->setCharacterSize(40);
+    playerCoinSlot.amountText->setPosition(playerCoinSprite.getPosition().x + playerCoinSprite.getGlobalSize().x - 20,
+                                           shopPlayerCoinsText.getPosition().y);
 }
 
 void createSlotRects() {
-    for (int i = 0; i < itemSlotsRects.size(); i++)
-        DeletePointerFromVector(itemSlotsRects, i--);
-    itemSlotsRects.resize(MaxItemID);
+    for (int i = 0; i < invItemSlotsRects.size(); i++)
+        DeletePointerFromVector(invItemSlotsRects, i--);
+    invItemSlotsRects.resize(MaxItemID);
 
     int slotNumber = 0;
     for (Item*& item : player.inventory.items) {
@@ -1249,7 +1274,7 @@ void createSlotRects() {
         sf::FloatRect* itemActivationRect = new sf::FloatRect(itemX, itemY,
                                                               Textures::ItemPanel.getSize().x / 2,
                                                               Textures::ItemPanel.getSize().y / 2);
-        itemSlotsRects[item->id] = itemActivationRect;
+        invItemSlotsRects[item->id] = itemActivationRect;
 
         slotNumber++;
     }
@@ -1460,7 +1485,7 @@ void inventoryHandler(sf::Event& event) {
     if (event.key.code == sf::Keyboard::Escape) {
         isDrawInventory = false;
     }
-    backButton.isActivated(event);
+    invBackButton.isActivated(event);
     itemsPageButton.isActivated(event);
     weaponsPageButton.isActivated(event);
     equipablesPageButton.isActivated(event);
@@ -1476,8 +1501,8 @@ void inventoryHandler(sf::Event& event) {
     if (activeInventoryPage != inventoryPage::Stats) {
         int itemTypeCount = 0;
         for (Item*& item : player.inventory.items) {
-            if (!itemSlotsRects.empty() && itemSlotsRects[item->id] != nullptr &&
-                itemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
+            if (!invItemSlotsRects.empty() && invItemSlotsRects[item->id] != nullptr &&
+                invItemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
                 if (item->id != prevItemDescID) {
                     prevItemDescID = ItemID::NONE;
                     isItemDescDrawn = false;
@@ -1748,7 +1773,7 @@ void LoadMainMenu() {
 
     shopSector.setFunction([](Interactable* i){
         isDrawShop = true;
-        shopPlayerCoins.setString("You have:   " + std::to_string(player.inventory.money));
+        shopPlayerCoinsText.setString("You have:");
         shopNPCText.setString(textWrap("Hello! Welcome to the \"We are literally standing near a phenomenon beyond our"
                                        " entire plane of existence in a literal motherfucking sense, that we have no fucking clue on"
                                        " how it fucking works why did we decide it was a good idea to station a shop exactly here\?!\?\?!\?!\?\" shop!", 94));
