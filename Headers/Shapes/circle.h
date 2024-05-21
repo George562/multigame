@@ -8,23 +8,23 @@ class Circle : public Shape {
 private:
     sf::Vector2f center;
     float Radius;
+    void updateShape() {
+        for (int i = 0; i < 30; i++) {
+            points[i] = sf::Vector2f(center.x + Radius * std::cos(i * 2 * M_PI / 30),
+                                     center.y + Radius * std::sin(i * 2 * M_PI / 30));
+        }
+    }
 public:
     Circle() : Shape(30), Radius(0), center(0, 0) {}
-    Circle(sf::Vector2f position, float radius) : Shape(30), Radius(radius) {
-        setCenter(position);
+    Circle(sf::Vector2f position, float radius) : Shape(30), Radius(radius), center(position) {
+        updateShape();
     }
     sf::Vector2f getPosition() const { return center - sf::Vector2f(Radius, Radius); }
     void setPosition(float x, float y) { setCenter(x + Radius, y + Radius); }
     void setPosition(sf::Vector2f v) { setCenter(v.x + Radius, v.y + Radius); }
 
     sf::Vector2f getCenter() const { return center; }
-    void setCenter(float x, float y) {
-        center = sf::Vector2f(x, y);
-        for (int i = 0; i < 30; i++) {
-            points[i] = sf::Vector2f(x + Radius * std::cos(i * 2 * M_PI / 30),
-                                     y + Radius * std::sin(i * 2 * M_PI / 30));
-        }
-    }
+    void setCenter(float x, float y) { center = sf::Vector2f(x, y); updateShape(); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 
     // Move the circle relatively to its current position
@@ -36,12 +36,12 @@ public:
 
     // Get and set radius
     float getRadius() const { return Radius; }
-    void setRadius(float r) { Radius = r; }
+    void setRadius(float r) { Radius = r; updateShape(); }
 
     // Set position and radius
-    void setCircle(float x, float y, float r) { center.x = x; center.y = y; Radius = r; }
-    void setCircle(sf::Vector2f pos, float r) { center = pos; Radius = r; }
-    void setCircle(Circle circle) { center = circle.center; Radius = circle.Radius; }
+    void setCircle(float x, float y, float r) { center.x = x; center.y = y; Radius = r; updateShape(); }
+    void setCircle(sf::Vector2f pos, float r) { center = pos; Radius = r; updateShape(); }
+    void setCircle(Circle circle) { center = circle.center; Radius = circle.Radius; updateShape(); }
 };
 
 

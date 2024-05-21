@@ -6,6 +6,7 @@ class Shape {
 protected:
     std::vector<sf::Vector2f> points;
     size_t pointCount;
+    virtual void updateShape() = 0;
 public:
 
     Shape() : pointCount(0) {}
@@ -39,10 +40,15 @@ public:
             return false;
         }
         sf::Vector2f a, b, c, d, intersectionPoint;
+        bool pointInside;
         for (int i = 0; i < pointCount; i++) {
             a = points[i]; b = points[(i + 1) % pointCount];
+            pointInside = true;
             for (int j = 0; j < shape.pointCount; j++) {
                 c = shape.points[j]; d = shape.points[(j + 1) % shape.pointCount];
+                if (cross(points[(i + 1) % pointCount] - points[i], c - points[i]) < 0) {
+                    pointInside = false;
+                }
                 if ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x) == 0) {
                     if (((a.y - b.y == 0) && std::abs(a.y - c.y) < 0.01 && std::min(a.x, b.x) <= std::max(c.x, d.x) && std::min(c.x, d.x) <= std::max(a.x, b.x)) ||
                        ((a.x - b.x == 0) && std::abs(a.x - c.x) < 0.01 && std::min(a.y, b.y) <= std::max(c.y, d.y) && std::min(c.y, d.y) <= std::max(a.y, b.y))) {
@@ -58,6 +64,9 @@ public:
                     std::min(c.y, d.y) - 0.01 <= intersectionPoint.y && intersectionPoint.y <= std::max(c.y, d.y) + 0.01) {
                     return true;
                 }
+            }
+            if (pointInside) {
+                return true;
             }
         }
         return false;

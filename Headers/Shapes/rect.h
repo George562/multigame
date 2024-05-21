@@ -5,6 +5,11 @@
 class Rect : public Shape {
 protected:
     sf::Vector2f size;
+    void updateShape() {
+        points[1] = sf::Vector2f(points[0].x + size.x, points[0].y);
+        points[2] = sf::Vector2f(points[0].x + size.x, points[0].y + size.y);
+        points[3] = sf::Vector2f(points[0].x, points[0].y + size.y);
+    }
 public:
     Rect() : Shape(4), size(sf::Vector2f(0, 0)) {}
     Rect(float x, float y, float w, float h) : Shape(4), size(sf::Vector2f(w, h)) {
@@ -21,12 +26,7 @@ public:
 
     // Get and set position
     sf::Vector2f getPosition() const { return points[0]; }
-    void setPosition(float x, float y) {
-        points[0] = sf::Vector2f(x, y);
-        points[1] = sf::Vector2f(x + size.x, y);
-        points[2] = sf::Vector2f(x + size.x, y + size.y);
-        points[3] = sf::Vector2f(x, y + size.y);
-    }
+    void setPosition(float x, float y) { points[0] = sf::Vector2f(x, y); updateShape(); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
     // Set position of rect center
@@ -40,7 +40,7 @@ public:
 
     // Get and set size
     sf::Vector2f getSize() const { return size; }
-    void setSize(float w, float h) { size.x = w; size.y = h; setPosition(getPosition()); }
+    void setSize(float w, float h) { size.x = w; size.y = h; updateShape(); }
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
 
     // Set position and size
