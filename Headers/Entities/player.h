@@ -1,9 +1,6 @@
 #pragma once
 #include "creature.h"
 
-#define MAX_MANA 75.f
-#define MAX_HEALTH 100.f
-
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
@@ -19,8 +16,8 @@ public:
 ////////////////////////////////////////////////////////////
 
 Player::Player() : Creature("Player", faction::Player) {
-    Health = {0.f, MAX_HEALTH, MAX_HEALTH}; HealthRecovery = 7.f;
-    Mana = {0.f, MAX_MANA, MAX_MANA}; ManaRecovery = 10.5f;
+    Health = {0.f, 20.f, 20.f}; HealthRecovery = Health.top / 5;
+    Mana = {0.f, 10.f, 10.f}; ManaRecovery = Mana.top / 5;
     Armor = {0.f, 0.f, 0.f};
     setRadius(60.f);
     Velocity = {0.f, 0.f}; MaxVelocity = 900.f;

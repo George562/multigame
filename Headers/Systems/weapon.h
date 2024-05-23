@@ -9,29 +9,37 @@
 class Weapon {
 public:
     sf::String Name;
-    Scale<int> AmountOfAmmunition;
+    Scale<float> ManaStorage;
     sf::Clock* TimeFromLastShot = nullptr;
+    sf::Clock* ReloadTimer = nullptr;
+    float ReloadSpeed;
     sf::Time FireRate;
     int NumberOfBulletsPerShot;
-    float ManaCost;
+    float ManaCostOfBullet;
     float damage;
     float BulletVelocity;
     float scatter; // at degree
     bool lock; // Bullets is like a stream and "lock" is blocking it stream
 
     Weapon() {}
-    Weapon(sf::String name, int MaxAmmo, float ManaCost, float FireRate, float dmg) {
+    Weapon(sf::String name, float MaxManaStorage, float ManaCostOfBullet, float FireRate, float dmg) {
         Name = name;
-        AmountOfAmmunition = {0, MaxAmmo, MaxAmmo};
-        this->ManaCost = ManaCost;
+        ManaStorage = {0, MaxManaStorage, MaxManaStorage};
+        TimeFromLastShot = new sf::Clock();
+        ReloadTimer = new sf::Clock();
+        ReloadSpeed = 10.f;
         this->FireRate = sf::seconds(FireRate);
+        NumberOfBulletsPerShot = 1;
+        this->ManaCostOfBullet = ManaCostOfBullet;
         damage = dmg;
         lock = true;
-        TimeFromLastShot = new sf::Clock();
     }
     virtual ~Weapon() {
         if (TimeFromLastShot) {
             delete TimeFromLastShot;
+        }
+        if (ReloadTimer) {
+            delete ReloadTimer;
         }
     }
 
@@ -43,23 +51,23 @@ public:
     }
 
     virtual void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-        if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
+        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
-        sf::Vector2f d = direction - shooter.getPosition();
+        sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * (rand() % (int)scatter - scatter / 2), d) * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage));
-        AmountOfAmmunition -= 1;
+        ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
     }
 
     virtual void Reload(Scale<float>& Mana) {
-        int x = std::min(int(Mana.cur / ManaCost), AmountOfAmmunition.fromTop());
-        Mana -= ManaCost * x;
-        AmountOfAmmunition += x;
+        float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed, ManaStorage.fromTop()), Mana.toBottom());
+        Mana -= x;
+        ManaStorage += x;
     }
 };
 #pragma pack(pop)
@@ -68,13 +76,13 @@ public:
 // Pistol
 class Pistol : public Weapon {
 public:
-    Pistol() : Weapon("Pistol", 9, 1, 0.4, 2) { BulletVelocity = 600; NumberOfBulletsPerShot = 1;  scatter = 20; }
+    Pistol() : Weapon("Pistol", 10, 1, 0.4, 2) { BulletVelocity = 600; scatter = 20; }
 };
 
 // Revolver
 class Revolver : public Weapon {
 public:
-    Revolver() : Weapon("Revolver", 6, 2, 0, 5) { BulletVelocity = 960; NumberOfBulletsPerShot = 1;  scatter = 10; }
+    Revolver() : Weapon("Revolver", 6, 2, 0, 5) { BulletVelocity = 960; scatter = 10; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         Weapon::Shoot(shooter, direction, f);
         lock = true;
@@ -84,20 +92,20 @@ public:
 // Shotgun
 class Shotgun : public Weapon {
 public:
-    Shotgun() : Weapon("Shotgun", 5, 10, 1, 3) { BulletVelocity = 600; NumberOfBulletsPerShot = 10;  scatter = 50; }
+    Shotgun() : Weapon("Shotgun", 25, 5, 1 / 2.f, 3) { BulletVelocity = 600; NumberOfBulletsPerShot = 10;  scatter = 50; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-        if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
+        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
-        sf::Vector2f d = direction - shooter.getPosition();
+        sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * scatter / 2.f, d) * BulletVelocity / len;
         for (int i = 0; i < NumberOfBulletsPerShot; i++, d = RotateOn(M_PI_RAD * scatter / (NumberOfBulletsPerShot - 1.f), d)) {
-            sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+            sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
             Bullets.push_back(new Bullet(f, SpawnPoint, d, damage));
         }
-        AmountOfAmmunition -= 1;
+        ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
         lock = true;
     }
@@ -106,7 +114,7 @@ public:
 // Rifle
 class Rifle : public Weapon {
 public:
-    Rifle() : Weapon("Rifle", 25, 1.5f, 0.05, 2) { BulletVelocity = 960; NumberOfBulletsPerShot = 10;  scatter = 17; }
+    Rifle() : Weapon("Rifle", 25, 1, 1 / 10.f, 1) { BulletVelocity = 960; scatter = 17; }
 };
 
 // Bubblegun
@@ -118,15 +126,15 @@ public:
             lock = false;
     }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-        if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
+        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
-        sf::Vector2f d = direction - shooter.getPosition();
+        sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = RotateOn(-M_PI_RAD * (rand() % (int)scatter - scatter / 2), d) * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage, COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(1)));
-        AmountOfAmmunition -= 1;
+        ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
         if (--NumberOfBulletsPerShot == 0) {
             NumberOfBulletsPerShot = 10;
@@ -147,14 +155,14 @@ public:
             lock = true;
     }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-        if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
+        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
         sf::Vector2f d{0, BulletVelocity};
         d = RotateOn(float(-M_PI * NumberOfBulletsPerShot) / 12, d);
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage));
-        AmountOfAmmunition -= 1;
+        ManaStorage -= ManaCostOfBullet;
         NumberOfBulletsPerShot++;
         TimeFromLastShot->restart();
     }
@@ -165,14 +173,14 @@ class Chaotic : public Weapon {
 public:
     Chaotic() : Weapon("Chaotic", 300, 0.1, 1.f / 16, 3) { BulletVelocity = 180; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-        if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
+        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
         sf::Vector2f d{0, BulletVelocity};
         d = RotateOn(float(rand()), d);
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage));
-        AmountOfAmmunition -= 1;
+        ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
     }
 };
@@ -181,16 +189,16 @@ class FireHose : public Weapon {
 public:
     FireHose() : Weapon("Fire hose", 100, 0, 1.f / 10, 0) { BulletVelocity = 1200; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-        if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
+        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
-        sf::Vector2f d = direction - shooter.getPosition();
+        sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = d * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage, 0, Bullet::WaterParticle));
-        AmountOfAmmunition -= 1;
+        ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
     }
     void Reload(Scale<float>& Mana) {}
@@ -200,16 +208,16 @@ class Flamethrower : public Weapon {
 public:
     Flamethrower() : Weapon("Flamethrower", 100, 0, 1.f / 10, 1) { BulletVelocity = 1200; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-        if (AmountOfAmmunition.toBottom() == 0) { lock = true; return; }
+        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
 
-        sf::Vector2f d = direction - shooter.getPosition();
+        sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
         d = d * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getPosition() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
         Bullets.push_back(new Bullet(f, SpawnPoint, d, damage, 0, Bullet::Type::FireParticle));
-        AmountOfAmmunition -= 1;
+        ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
     }
     void Reload(Scale<float>& Mana) {}

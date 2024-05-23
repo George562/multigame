@@ -53,7 +53,7 @@ sf::RectangleShape MMPortalRect, MMBoxRect, MMPuddleRect, MMArtifact;
 
 //////////////////////////////////////////////////////////// InterfaceStuff
 Bar<float> ManaBar, HpBar;
-Bar<int> AmmoBar;
+Bar<float> AmmoBar;
 PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
@@ -344,6 +344,7 @@ Button EscapeButton("Exit", [](){
     if (DeleteFromVector(arsenal, (Weapon*)&flamethrower)) CurWeapon.top -= 1;
     normalize(CurWeapon);
     LoadMainMenu();
+    saveGame();
 });
 
 Button shopBackButton("Back", [](){
@@ -936,7 +937,7 @@ void drawInterface() {
         window.draw(*d);
     }
 
-    if (player.CurWeapon != nullptr && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
+    if (player.CurWeapon != nullptr && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
         window.draw(ReloadWeaponText);
     }
 
@@ -948,7 +949,7 @@ void drawInterface() {
             WeaponNameText.setFillColor(sf::Color(25, 192, 25, 160));
             WeaponNameText.setOutlineThickness(1);
         }
-        AmmoBar.setValue(arsenal[i]->AmountOfAmmunition);
+        AmmoBar.setValue(arsenal[i]->ManaStorage);
         AmmoBar.setPosition(20, sch - 20 - (arsenal.size() - i) * (AmmoBar.getSize().y + 10));
         WeaponNameText.setString(arsenal[i]->Name);
         WeaponNameText.setPosition(35 + AmmoBar.getSize().x, AmmoBar.getPosition().y + WeaponNameText.Height / 4);
@@ -1387,9 +1388,6 @@ void EventHandler() {
 
             if (player.CurWeapon != nullptr && !MiniMapActivated) {
                 player.CurWeapon->Update(event);
-                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
-                    player.CurWeapon->Reload(player.Mana);
-                }
             }
 
             if (CurLocation == &MainMenuLocation) {
@@ -1567,7 +1565,19 @@ void setBox(Interactable*& box) {
     box->setFunction([](Interactable* i){
         if (player.Mana.cur >= 20) {
             player.Mana -= 20.f;
-            player.inventory.money += 1 + rand() % 5;
+
+            TempText* tempText = new TempText(sf::seconds(2.5f));
+            tempText->setCharacterSize(50);
+            tempText->setOutlineColor(sf::Color(120, 120, 120));
+            tempText->setOutlineThickness(3);
+
+            rand(); int r = 1 + rand() % 5;
+            tempText->setString("Money + " + std::to_string(r));
+            tempText->setFillColor(sf::Color(255, 170, 29));
+            tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
+
+            MessageText.push_back(tempText);
+            player.inventory.money += r;
             doInventoryUpdate[inventoryPage::Items] = true;
             DeleteFromVector(listOfBox, i);
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
@@ -1578,6 +1588,22 @@ void setBox(Interactable*& box) {
     });
 }
 
+std::vector<sf::String> artifactText = {
+    "Health limit +2",
+    "Mana limit +1",
+    "Health Recovery +0.4",
+    "Mana Recovery +0.2",
+    "Reload Speed +1",
+    "Cur Weapon Mana Storage +1"
+};
+std::vector<sf::Color> artifactColors = {
+    sf::Color(250, 50, 50),
+    sf::Color(50, 50, 250),
+    sf::Color(250, 80, 80),
+    sf::Color(80, 80, 250),
+    sf::Color(90, 90, 90),
+    sf::Color(160, 160, 160)
+};
 void setArtifact(Interactable*& artifact) {
     artifact->setAnimation(Textures::Architect, &Shaders::Architect);
     artifact->setSize(150.f, 150.f);
@@ -1586,27 +1612,17 @@ void setArtifact(Interactable*& artifact) {
         tempText->setCharacterSize(50);
         tempText->setOutlineColor(sf::Color::White);
         tempText->setOutlineThickness(3);
-        switch (rand() % 4) {
-            case 0:
-                player.Health.top += 5;
-                tempText->setString("Health limit +5");
-                tempText->setFillColor(sf::Color(250, 50, 50));
-                break;
-            case 1:
-                player.Mana.top += 5;
-                tempText->setString("Mana limit +5");
-                tempText->setFillColor(sf::Color(50, 50, 250));
-                break;
-            case 2:
-                player.HealthRecovery += 1;
-                tempText->setString("Health Recovery +1");
-                tempText->setFillColor(sf::Color(250, 80, 80));
-                break;
-            case 3:
-                player.ManaRecovery += 1;
-                tempText->setString("Mana Recovery +1");
-                tempText->setFillColor(sf::Color(80, 80, 250, 200));
-                break;
+
+        rand(); int r = rand() % 6;
+        tempText->setString(artifactText[r]);
+        tempText->setFillColor(artifactColors[r]);
+        switch (r) {
+            case 0: player.Health.top += 2; break;
+            case 1: player.Mana.top += 1; break;
+            case 2: player.HealthRecovery += 0.4; break;
+            case 3: player.ManaRecovery += 0.1; break;
+            case 4: player.CurWeapon->ReloadSpeed += 1; break;
+            case 5: player.CurWeapon->ManaStorage.top += 1.f; break;
             default: break;
         }
         tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
@@ -1674,7 +1690,7 @@ void LevelGenerate(int n, int m) {
     // }
 
     clearVectorOfPointer(Enemies);
-    int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 5 : 3;
+    int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
         Enemies.push_back(new DistortedScientist());
         // Enemies.push_back(new ScottPilgrim());
@@ -1695,7 +1711,7 @@ void LoadMainMenu() {
 
     player.setCenter(3.5f * size, 2.5f * size);
     FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
-    player.CurWeapon = &pistol;
+    player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
     sf::Vector2f PlayerPos = player.getCenter() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
@@ -1710,7 +1726,6 @@ void LoadMainMenu() {
         InteractibeStuff.clear();
 
         player.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
-        player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
         MiniMapActivated = false;
         EscapeMenuActivated = false;
@@ -1746,6 +1761,7 @@ void LoadMainMenu() {
         InterfaceStuff.push_back(&chat);
 
         InteractibeStuff.push_back(&puddle);
+        saveGame();
     });
 
     puddle.setFunction([](Interactable* i){
@@ -1967,12 +1983,12 @@ bool useItem(ItemID::Type id) {
             applyEffect(player, new Effect(Effects::HPRegen, std::vector<float>{1.0f}, sf::seconds(10.f)));
             return true;
         case ItemID::fireHose:
-            fireHose.AmountOfAmmunition = 100;
+            fireHose.ManaStorage = 100;
             arsenal.push_back(&fireHose);
             CurWeapon.top += 1;
             return true;
         case ItemID::flamethrower:
-            flamethrower.AmountOfAmmunition = 100;
+            flamethrower.ManaStorage = 100;
             arsenal.push_back(&flamethrower);
             CurWeapon.top +=1;
             return true;
@@ -2171,18 +2187,21 @@ void MainLoop() {
                 player.move(CurLocation);
                 GameView.setCenter(player.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
                 FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
+                    player.CurWeapon->Reload(player.Mana);
+                }
             }
             int wasBulletsSize = Bullets.size();
 
             if (player.CurWeapon != nullptr) {
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
-                if (player.CurWeapon == &fireHose && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
+                if (player.CurWeapon == &fireHose && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
                     DeleteFromVector(arsenal, (Weapon*)&fireHose);
                     CurWeapon -= 1;
                     CurWeapon.top -= 1;
                     player.ChangeWeapon(arsenal[CurWeapon.cur]);
                 }
-                if (player.CurWeapon == &flamethrower && player.CurWeapon->AmountOfAmmunition.toBottom() == 0) {
+                if (player.CurWeapon == &flamethrower && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
                     DeleteFromVector(arsenal, (Weapon*)&flamethrower);
                     CurWeapon -= 1;
                     CurWeapon.top -= 1;
