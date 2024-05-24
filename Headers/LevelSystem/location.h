@@ -5,18 +5,9 @@
 #include <fstream>
 
 using vb = std::vector<bool>;
-using vvb = std::vector<vb>;
+using vvb = std::vector<std::vector<bool>>;
 
 sf::Vector2i dirs[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
-
-using ObjectID = sf::Uint16;
-
-namespace Tiles {
-    ObjectID box = 1;
-    ObjectID portal = 2;
-    ObjectID puddle = 3;
-    ObjectID artifact = 4;
-}
 
 // namespace Side { может понадобиться, если нужно будет опрделять положение чего-то
 //     using Type = sf::Uint8;
@@ -34,16 +25,8 @@ namespace Tiles {
 
 class Location {
 public:
-    struct LocationObject {
-        ObjectID id; sf::Vector2f pos;
-        bool operator==(Location::LocationObject right) {
-            return this->id == right.id && this->pos == right.pos;
-        }
-    };
-
     int n, m;
     vvb walls;
-    std::vector<LocationObject> objects;
     vvb EnableTiles;
     size_t AmountOfEnableTiles;
 
@@ -65,14 +48,6 @@ public:
     void FillWallsRect();
     bool LoadFromFile(sf::String FileName);
     bool WriteToFile(sf::String FileName);
-    void AddObject(LocationObject obj) { objects.push_back(obj); }
-    void DelObject(LocationObject obj) {
-        for (auto it = objects.begin(); it != objects.end(); it++)
-            if (obj == *it) {
-                objects.erase(it);
-                break;
-            }
-    }
     void ClearSeenWalls() {
         SeenWalls.assign(walls.size(), vb(0));
         for (int i = 0; i < walls.size(); i++)
@@ -96,7 +71,6 @@ void Location::SetSize(int NewN, int NewM) {
 
 void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
     SetSize(n, m);
-    objects.clear();
     int CounterOfGenerations = 0;
     sf::Clock timer;
     do {
@@ -229,12 +203,6 @@ bool Location::LoadFromFile(sf::String FileName) {
             walls[i][j] = t;
         }
 
-    if (!file.eof()) {
-        int k; file >> k;
-        objects.resize(k);
-        for (LocationObject& obj: objects) file >> obj.id >> obj.pos.x >> obj.pos.y;
-    }
-
     file.close();
     FillWallsRect();
     ClearSeenWalls();
@@ -249,10 +217,6 @@ bool Location::WriteToFile(sf::String FileName) {
             file << walls[i][j] << ' ';
         file << '\n';
     }
-
-    file << objects.size() << '\n';
-    for (LocationObject& obj: objects) file << obj.id << ' ' << obj.pos.x << ' ' << obj.pos.y << '\n';
-
     file.close();
     return true;
 }
@@ -270,14 +234,6 @@ sf::Packet& operator>>(sf::Packet& packet, Location& loc) {
             packet >> t;
             loc.walls[i][j] = t;
         }
-
-    sf::Uint32 objSize; packet >> objSize;
-    loc.objects.resize(objSize);
-    std::cout << "count of objects = " << loc.objects.size() << '\n';
-    for (int i = 0; i < loc.objects.size(); i++) {
-        packet >> loc.objects[i].id >> loc.objects[i].pos.x >> loc.objects[i].pos.y;
-        std::cout << "ID: " << loc.objects[i].id << "\tx: " << loc.objects[i].pos.x << "\ty: " << loc.objects[i].pos.y << '\n';
-    }
     return packet;
 }
 
@@ -286,9 +242,6 @@ sf::Packet& operator<<(sf::Packet& packet, Location& loc) {
     for (int i = 0; i < loc.walls.size(); i++)
         for (int j = 0; j < loc.walls[i].size(); j++)
             packet << loc.walls[i][j];
-    packet << sf::Uint32(loc.objects.size());
-    for (int i = 0; i < loc.objects.size(); i++)
-        packet << loc.objects[i].id << loc.objects[i].pos.x << loc.objects[i].pos.y;
     return packet;
 }
 

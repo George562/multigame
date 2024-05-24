@@ -165,19 +165,20 @@ void loadTextures() {
 
 namespace Shaders {
 //////////////////////////////////////////////////////////// Shaders
-    sf::Shader Map,
+    sf::Shader Flashlight,
                Player,
                Portal,
                PickupItem,
                Architect,
-               FloatingUp,     // text moving up
+               FloatingUp,  // text moving up
                Distortion1, // linear left move
-               Distortion2  // circle move
+               Distortion2, // circle move
+               Outline
                ;
 }
 
 void loadShaders() {
-    Shaders::Map         .loadFromFile("sources/shaders/terrain.vert",               "sources/shaders/terrain.frag"               );
+    Shaders::Flashlight  .loadFromFile("sources/shaders/flashlight/flashlight.vert", "sources/shaders/flashlight/flashlight.frag" );
     Shaders::Player      .loadFromFile("sources/shaders/player/player.vert",         "sources/shaders/player/player.frag"         );
     Shaders::Portal      .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"         );
     Shaders::PickupItem  .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag" );
@@ -185,15 +186,7 @@ void loadShaders() {
     Shaders::FloatingUp  .loadFromFile("sources/shaders/FloatingUp/FloatingUp.vert", "sources/shaders/FloatingUp/FloatingUp.frag" );
     Shaders::Distortion1 .loadFromFile("sources/shaders/distorted1/distorted1.vert", "sources/shaders/distorted1/distorted1.frag" );
     Shaders::Distortion2 .loadFromFile("sources/shaders/distorted2/distorted2.vert", "sources/shaders/distorted2/distorted2.frag" );
-}
-
-namespace States {
-//////////////////////////////////////////////////////////// States
-    sf::RenderStates Map(&Shaders::Map),
-                     FloatingUp(&Shaders::FloatingUp),
-                     Distortion1(&Shaders::Distortion1),
-                     Distortion2(&Shaders::Distortion2)
-                     ;
+    Shaders::Outline     .loadFromFile("sources/shaders/outline/outline.vert",        "sources/shaders/outline/outline.frag"      );
 }
 
 namespace Musics {

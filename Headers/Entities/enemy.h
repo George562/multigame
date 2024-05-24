@@ -27,7 +27,7 @@ public:
         CurWeapon = new Pistol();
         CurWeapon->damage += curLevel;
 
-        setAnimation(Textures::DistortedScientist, &Shaders::Map);
+        setAnimation(Textures::DistortedScientist, &Shaders::Flashlight);
 
         addItem(new Item(ItemID::regenDrug, 1));
     }
@@ -55,7 +55,7 @@ public:
         CurWeapon = new Pistol();
         CurWeapon->damage += curLevel;
 
-        setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Map);
+        setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Flashlight);
 
         addItem(new Item(ItemID::regenDrug, 1));
     }

@@ -109,12 +109,12 @@ std::map<ItemID::Type, sf::Time> pickupItemTextureDuration {
 };
 
 std::map<ItemID::Type, sf::Shader *> pickupItemTextureShader {
-    {ItemID::generic,      &Shaders::Map},
-    {ItemID::medkit,       &Shaders::Map},
-    {ItemID::regenDrug,    &Shaders::Map},
-    {ItemID::coin,         &Shaders::Map},
-    {ItemID::fireHose,     &Shaders::Map},
-    {ItemID::flamethrower, &Shaders::Map}
+    {ItemID::generic,      &Shaders::Flashlight},
+    {ItemID::medkit,       &Shaders::Flashlight},
+    {ItemID::regenDrug,    &Shaders::Flashlight},
+    {ItemID::coin,         &Shaders::Flashlight},
+    {ItemID::fireHose,     &Shaders::Flashlight},
+    {ItemID::flamethrower, &Shaders::Flashlight}
 };
 
 void loadItemTextures() {

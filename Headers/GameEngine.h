@@ -25,6 +25,8 @@ sf::ContextSettings settings;
 
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
+sf::RenderTexture preRenderTexture;
+sf::Sprite preRenderSprite;
 float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated, isDrawInventory, isDrawShop;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff; // references to objects that exist somewhere
@@ -47,7 +49,7 @@ sf::Sprite undergroundBG;
 
 
 //////////////////////////////////////////////////////////// MiniMapStuff
-sf::CircleShape MMPlayerCircle; // MM - MiniMap prefix
+sf::CircleShape MMPlayerCircle, MMEnemyCircle; // MM - MiniMap prefix
 sf::RectangleShape MMPortalRect, MMBoxRect, MMPuddleRect, MMArtifact;
 
 
@@ -366,6 +368,10 @@ void init() {
     settings.antialiasingLevel = 8;
     window.setView(GameView);
 
+    preRenderTexture.create(scw, sch);
+    preRenderTexture.setView(GameView);
+    preRenderSprite.setTexture(preRenderTexture.getTexture());
+
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     MiniMapZoom = std::pow(1.1, -10);
     MiniMapView.zoom(MiniMapZoom);
@@ -390,25 +396,19 @@ void init() {
     portal.setAnimation(Textures::PortalAnimation2, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
     player.setAnimation(Textures::Player, &Shaders::Player);
-    puddle.setAnimation(Textures::Puddle, &Shaders::Map);
+    puddle.setAnimation(Textures::Puddle, &Shaders::Flashlight);
     puddle.setSize(90.f, 90.f);
     shopSector.setAnimation(Textures::INVISIBLE);
     shopSector.setPosition(0, 2 * size);
 
-    Shaders::Map.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Map.setUniform("u_playerRadius", player.getRadius());
-
-    Shaders::Player.setUniform("uResolution", sf::Vector2f(scw, sch));
-
-    Shaders::Portal.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Portal.setUniform("u_playerRadius", player.getRadius());
-
-    Shaders::Architect.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Architect.setUniform("u_playerRadius", player.getRadius());
+    Shaders::Flashlight.setUniform("uResolution", sf::Vector2f(scw, sch));
+    Shaders::Flashlight.setUniform("u_playerRadius", player.getRadius());
 
     Shaders::Distortion1.setUniform("noise_png", Textures::Noise);
 
     Shaders::Distortion2.setUniform("noise_png", Textures::Noise);
+
+    Shaders::Outline.setUniform("uResolution", sf::Vector2f(scw, sch));
 
     IPPanel       .setTexture(Textures::YellowPanel);
     ListOfPlayers .setTexture(Textures::SteelFrame);
@@ -435,6 +435,10 @@ void init() {
     MMPlayerCircle.setRadius(9);
     MMPlayerCircle.setFillColor(sf::Color(0, 180, 0));
     MMPlayerCircle.setOrigin(MMPlayerCircle.getRadius(), MMPlayerCircle.getRadius());
+
+    MMEnemyCircle.setRadius(9);
+    MMEnemyCircle.setFillColor(sf::Color(180, 0, 0));
+    MMEnemyCircle.setOrigin(MMEnemyCircle.getRadius(), MMEnemyCircle.getRadius());
 
     HpBar.setSize(360, 50);
     HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
@@ -767,67 +771,61 @@ void initShop() {
 //============================================================================================== DRAW FUNCTIONS
 void draw() {
     updateShaders();
-    window.setView(InterfaceView);
-    window.draw(undergroundBG, States::Distortion1);
-
-    window.setView(GameView);
-
-    drawFloor();
-    drawWalls();
-
-    for (int i = 0; i < CurLocation->objects.size(); i++) {
-        if (CurLocation->objects[i].id == Tiles::portal) {
-            portal.setPosition(CurLocation->objects[i].pos);
-            window.draw(portal);
-        }
-        if (CurLocation->objects[i].id == Tiles::puddle) {
-            puddle.setPosition(CurLocation->objects[i].pos);
-            window.draw(puddle, States::Map);
-        }
-    }
-
-    for (sf::Drawable*& d: DrawableStuff) {
-        window.draw(*d);
-    }
-
-    for (Enemy*& enemy: Enemies) {
-        EnemyHealthBar.setPosition(enemy->getPosition() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->getRadius() + 50.f));
-        EnemyHealthBar.setValue(enemy->Health);
-        window.draw(EnemyHealthBar);
-    }
-
-    for (int i = 0; i < Bullets.size(); i++) {
-        window.draw(*Bullets[i]);
-    }
-
-    for (size_t i = 0; i < TempTextsOnGround.size(); i++) {
-        if (TempTextsOnGround[i]->localClock->getElapsedTime() < TempTextsOnGround[i]->howLongToExist) {
-            window.draw(*TempTextsOnGround[i]);
-        } else {
-            DeletePointerFromVector(TempTextsOnGround, i--);
-        }
-    }
-
-    for (size_t i = 0; i < DamageText.size(); i++) {
-        if (DamageText[i]->localClock->getElapsedTime() < DamageText[i]->howLongToExist) {
-            Shaders::FloatingUp.setUniform("uTime", DamageText[i]->localClock->getElapsedTime().asSeconds());
-            window.draw(*DamageText[i], States::FloatingUp);
-        } else {
-            DeletePointerFromVector(DamageText, i--);
-        }
-    }
-
-    if (IsDrawMinimap) {
-        drawMiniMap();
-    }
-    if (IsDrawInterface) {
-        drawInterface();
-    }
     if (isDrawInventory) {
         drawInventory();
-    }
-    if (isDrawShop) {
+    } else if (isDrawShop) {
         drawShop();
+    } else {
+        preRenderTexture.setView(InterfaceView);
+        preRenderTexture.draw(undergroundBG, &Shaders::Distortion1);
+
+        preRenderTexture.setView(GameView);
+
+        drawFloor();
+        drawWalls();
+
+        for (sf::Drawable*& d: DrawableStuff) {
+            preRenderTexture.draw(*d);
+        }
+
+        for (Enemy*& enemy: Enemies) {
+            EnemyHealthBar.setPosition(enemy->getPosition() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->getRadius() + 50.f));
+            EnemyHealthBar.setValue(enemy->Health);
+            preRenderTexture.draw(EnemyHealthBar);
+        }
+
+        for (int i = 0; i < Bullets.size(); i++) {
+            preRenderTexture.draw(*Bullets[i]);
+        }
+
+        preRenderTexture.display();
+
+        window.setView(InterfaceView);
+        window.draw(preRenderSprite, &Shaders::Flashlight);
+
+        for (size_t i = 0; i < TempTextsOnGround.size(); i++) {
+            if (TempTextsOnGround[i]->localClock->getElapsedTime() < TempTextsOnGround[i]->howLongToExist) {
+                window.draw(*TempTextsOnGround[i]);
+            } else {
+                DeletePointerFromVector(TempTextsOnGround, i--);
+            }
+        }
+
+        for (size_t i = 0; i < DamageText.size(); i++) {
+            if (DamageText[i]->localClock->getElapsedTime() < DamageText[i]->howLongToExist) {
+                Shaders::FloatingUp.setUniform("uTime", DamageText[i]->localClock->getElapsedTime().asSeconds());
+                window.draw(*DamageText[i], &Shaders::FloatingUp);
+            } else {
+                DeletePointerFromVector(DamageText, i--);
+            }
+        }
+
+        if (IsDrawMinimap) {
+            drawMiniMap();
+        }
+        if (IsDrawInterface) {
+            drawInterface();
+        }
     }
     window.display();
 }
@@ -839,7 +837,7 @@ void drawFloor() {
             if (CurLocation->EnableTiles[i][j]) {
                 FLoorTileSprite.setTexture(*it);
                 FLoorTileSprite.setPosition(size * j, size * i);
-                window.draw(FLoorTileSprite, States::Map);
+                preRenderTexture.draw(FLoorTileSprite);
                 it++;
             }
         }
@@ -865,7 +863,7 @@ void drawWalls() {
                         (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].getSize().y) * random(sf::Vector2f(j, i)),
                         CurLocation->wallsRect[i][j].getSize().x,
                         CurLocation->wallsRect[i][j].getSize().y));
-                window.draw(WallRect, States::Map);
+                preRenderTexture.draw(WallRect);
             }
         }
     }
@@ -896,24 +894,25 @@ void drawMiniMap() {
         }
     }
 
-    // draw location objects
-    for (int i = 0; i < CurLocation->objects.size(); i++) {
-        if (CurLocation->objects[i].id == Tiles::portal) {
-            MMPortalRect.setPosition(CurLocation->objects[i].pos * ScaleParam);
-            window.draw(MMPortalRect);
-        }
-        if (CurLocation->objects[i].id == Tiles::box) {
-            MMBoxRect.setPosition(CurLocation->objects[i].pos * ScaleParam);
-            window.draw(MMBoxRect);
-        }
-        if (CurLocation->objects[i].id == Tiles::puddle) {
-            MMPuddleRect.setPosition(CurLocation->objects[i].pos * ScaleParam);
-            window.draw(MMPuddleRect);
-        }
-        if (CurLocation->objects[i].id == Tiles::artifact) {
-            MMArtifact.setPosition(CurLocation->objects[i].pos * ScaleParam);
-            window.draw(MMArtifact);
-        }
+    MMPortalRect.setPosition(portal.getPosition() * ScaleParam);
+    window.draw(MMPortalRect);
+
+    for (Interactable*& i: listOfBox) {
+        MMBoxRect.setPosition(i->getPosition() * ScaleParam);
+        window.draw(MMBoxRect);
+    }
+    
+    MMPuddleRect.setPosition(puddle.getPosition() * ScaleParam);
+    window.draw(MMPuddleRect);
+
+    for (Interactable*& i: listOfArtifact) {
+        MMArtifact.setPosition(i->getPosition() * ScaleParam);
+        window.draw(MMArtifact);
+    }
+
+    for (Enemy*& enemy: Enemies) {
+        MMEnemyCircle.setPosition(enemy->getPosition() * ScaleParam);
+        window.draw(MMEnemyCircle);
     }
 
     // draw players
@@ -981,7 +980,7 @@ void drawInterface() {
     for (size_t i = 0; i < MessageText.size(); i++) {
         if (MessageText[i]->localClock->getElapsedTime() < MessageText[i]->howLongToExist) {
             Shaders::FloatingUp.setUniform("uTime", MessageText[i]->localClock->getElapsedTime().asSeconds());
-            window.draw(*MessageText[i], States::FloatingUp);
+            window.draw(*MessageText[i], &Shaders::FloatingUp);
         } else {
             DeletePointerFromVector(MessageText, i--);
         }
@@ -1560,7 +1559,7 @@ void FillFloorRects() {
 }
 
 void setBox(Interactable*& box) {
-    box->setAnimation(Textures::Box, &Shaders::Map);
+    box->setAnimation(Textures::Box, &Shaders::Flashlight);
     box->setSize(105.f, 117.f);
     box->setFunction([](Interactable* i){
         if (player.Mana.cur >= 20) {
@@ -1582,7 +1581,6 @@ void setBox(Interactable*& box) {
             DeleteFromVector(listOfBox, i);
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);
-            LabyrinthLocation.DelObject({Tiles::box, i->getPosition()});
             delete i;
         }
     });
@@ -1631,7 +1629,6 @@ void setArtifact(Interactable*& artifact) {
         DeleteFromVector(listOfArtifact, i);
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
         DeleteFromVector(InteractibeStuff, i);
-        CurLocation->DelObject({Tiles::artifact, i->getPosition()});
         delete i;
     });
 }
@@ -1645,9 +1642,6 @@ void LevelGenerate(int n, int m) {
 
     FillFloorRectsThread.launch();
 
-    LabyrinthLocation.AddObject({Tiles::portal, player.getCenter() - portal.getSize() / 2.f});
-    LabyrinthLocation.AddObject({Tiles::puddle, player.getCenter() - portal.getSize() / 2.f + sf::Vector2f(size, size)});
-
     clearVectorOfPointer(listOfBox);
     for (int i = 0; i < 10; i++) {
         listOfBox.push_back(new Interactable());
@@ -1657,7 +1651,6 @@ void LevelGenerate(int n, int m) {
             sf::Vector2f(rand() % int(size - listOfBox[i]->getSize().x), rand() % int(size - listOfBox[i]->getSize().y)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->getPosition().y / size][(int)listOfBox[i]->getPosition().x / size]);
 
-        LabyrinthLocation.AddObject({Tiles::box, listOfBox[i]->getPosition()});
         InteractibeStuff.push_back(listOfBox[i]);
         DrawableStuff.push_back(listOfBox[i]);
     }
@@ -1671,7 +1664,6 @@ void LevelGenerate(int n, int m) {
             sf::Vector2f(rand() % (size - Textures::Architect.getSize().x / 4), rand() % (size - Textures::Architect.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->getPosition().y / size][(int)listOfArtifact[i]->getPosition().x / size]);
 
-        LabyrinthLocation.AddObject({Tiles::artifact, listOfArtifact[i]->getPosition()});
         InteractibeStuff.push_back(listOfArtifact[i]);
         DrawableStuff.push_back(listOfArtifact[i]);
     }
@@ -1679,7 +1671,7 @@ void LevelGenerate(int n, int m) {
     clearVectorOfPointer(FireSet);
     // for (int i = 0; i < 1; i++) {
     //     FireSet.push_back(new Fire(sf::seconds(15.f)));
-    //     FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
+    //     FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Flashlight);
     //     FireSet[i]->setSize(50.f, 50.f);
     //     // do {
     //         //FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
@@ -1712,6 +1704,9 @@ void LoadMainMenu() {
     player.setCenter(3.5f * size, 2.5f * size);
     FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
     player.ChangeWeapon(arsenal[CurWeapon.cur]);
+
+    portal.setPosition(1612.5, 1545);
+    puddle.setPosition(1012.5, 1545);
 
     sf::Vector2f PlayerPos = player.getCenter() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
@@ -1747,6 +1742,8 @@ void LoadMainMenu() {
         FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);
+        DrawableStuff.push_back(&portal);
+        DrawableStuff.push_back(&puddle);
         for (Enemy* &enemy: Enemies) {
             DrawableStuff.push_back(enemy);
         }
@@ -1788,6 +1785,8 @@ void LoadMainMenu() {
 
     DrawableStuff.clear();
     DrawableStuff.push_back(&player);
+    DrawableStuff.push_back(&portal);
+    DrawableStuff.push_back(&puddle);
 
     InterfaceStuff.clear();
     InterfaceStuff.push_back(&ManaBar);
@@ -1800,19 +1799,19 @@ void LoadMainMenu() {
     InteractibeStuff.push_back(&shopSector);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
-    newItem->setAnimation(*itemTextureName[ItemID::regenDrug], &Shaders::Map);
+    newItem->setAnimation(*itemTextureName[ItemID::regenDrug], &Shaders::Flashlight);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getCenter() + sf::Vector2f(100, 100));
 
     Item* fireHosePickup = new Item(ItemID::fireHose, 1);
-    fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose], &Shaders::Map);
+    fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose], &Shaders::Flashlight);
     PickupStuff.push_back(fireHosePickup);
     DrawableStuff.push_back(PickupStuff[1]);
     PickupStuff[1]->dropTo(player.getCenter() + sf::Vector2f(400, 300));
 
     Item* flamethrowerPickup = new Item(ItemID::flamethrower, 1);
-    flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower], &Shaders::Map);
+    flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower], &Shaders::Flashlight);
     PickupStuff.push_back(flamethrowerPickup);
     DrawableStuff.push_back(PickupStuff[2]);
     PickupStuff[2]->dropTo(player.getCenter() + sf::Vector2f(-550, -120));
@@ -1845,7 +1844,7 @@ void updateBullets() {
         if (Bullets[i]->penetration < 0 || Bullets[i]->todel) {
             if (Bullets[i]->type == Bullet::FireParticle) {
                 Fire* fire = new Fire(sf::seconds(10));
-                fire->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
+                fire->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Flashlight);
                 fire->setSize(50.f, 50.f);
                 fire->setPosition(Bullets[i]->getPosition());
                 FireSet.push_back(fire);
@@ -2016,7 +2015,7 @@ void fireUpdate() {
             FireSet[i]->howLongToExist = sf::seconds(rand() % 4 + 15.f);
 
             Fire* descendant1 = new Fire(sf::seconds(rand() % 4 + 15.f));
-            descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Map);
+            descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Flashlight);
             descendant1->setSize(50.f, 50.f);
             sf::Vector2i posFather = sf::Vector2i(FireSet[i]->getCenter());
             sf::Vector2f posSon = descendant1->getCenter();
@@ -2041,19 +2040,12 @@ void updateShaders() {
     float uTime = GameClock->getElapsedTime().asSeconds();
     sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getCenter()));
 
-    Shaders::Map.setUniform("uMouse", uMouse);
-    Shaders::Map.setUniform("uPlayerPosition", uPlayerPosition);
+    Shaders::Flashlight.setUniform("uMouse", uMouse);
+    Shaders::Flashlight.setUniform("uPlayerPosition", uPlayerPosition);
 
-    Shaders::Player.setUniform("uMouse", uMouse);
-    Shaders::Player.setUniform("uPlayerPosition", uPlayerPosition);
-
-    Shaders::Portal.setUniform("uMouse", uMouse);
     Shaders::Portal.setUniform("uTime", uTime);
-    Shaders::Portal.setUniform("uPlayerPosition", uPlayerPosition);
 
-    Shaders::Architect.setUniform("uMouse", uMouse);
     Shaders::Architect.setUniform("uTime", uTime);
-    Shaders::Architect.setUniform("uPlayerPosition", uPlayerPosition);
 
     Shaders::Distortion1.setUniform("uTime", uTime);
     Shaders::Distortion2.setUniform("uTime", uTime);
