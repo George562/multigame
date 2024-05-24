@@ -39,8 +39,8 @@ public:
         if (!(pos2.x <= pos.x + size.x && pos.x <= pos2.x + size2.x && pos2.y <= pos.y + size.y && pos.y <= pos2.y + size2.y)) {
             return false;
         }
-        for (int j = 0; j < shape.pointCount; j++) {
-            if (contains(shape.points[j])) {
+        for (int i = 0; i < shape.pointCount; i++) {
+            if (contains(shape.points[i])) {
                 return true;
             }
         }

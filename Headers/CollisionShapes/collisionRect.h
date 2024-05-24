@@ -13,7 +13,7 @@ protected:
 public:
     CollisionRect() : CollisionShape(4), size(sf::Vector2f(0, 0)) {}
     CollisionRect(float x, float y, float w, float h) : CollisionShape(4), size(sf::Vector2f(w, h)) {
-        setPosition(sf::Vector2f(x, y));
+        setPosition(x, y);
     }
     CollisionRect(sf::Vector2f position, sf::Vector2f size) : CollisionShape(4), size(size) {
         setPosition(position);

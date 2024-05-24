@@ -158,6 +158,25 @@ public:
     T top;    ///< Top coordinate of the rectangle
     T width;  ///< Width of the rectangle
     T height; ///< Height of the rectangle
+
+    void setPosition(T x, T y) {
+        left = x; top = y;
+    }
+    void setPosition(sf::Vector2<T> position) {
+        left = position.x; top = position.y;
+    }
+    sf::Vector2<T> getPosition() const {
+        return sf::Vector2<T>(left, top);
+    }
+    void setSize(T x, T y) {
+        width = x; height = y;
+    }
+    void setSize(sf::Vector2<T> size) {
+        width = size.x; height = size.y;
+    }
+    sf::Vector2<T> getSize() const {
+        return sf::Vector2<T>(width, height);
+    }
 };
 
 ////////////////////////////////////////////////////////////

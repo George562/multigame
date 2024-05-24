@@ -186,7 +186,7 @@ void loadShaders() {
     Shaders::FloatingUp  .loadFromFile("sources/shaders/FloatingUp/FloatingUp.vert", "sources/shaders/FloatingUp/FloatingUp.frag" );
     Shaders::Distortion1 .loadFromFile("sources/shaders/distorted1/distorted1.vert", "sources/shaders/distorted1/distorted1.frag" );
     Shaders::Distortion2 .loadFromFile("sources/shaders/distorted2/distorted2.vert", "sources/shaders/distorted2/distorted2.frag" );
-    Shaders::Outline     .loadFromFile("sources/shaders/outline/outline.vert",        "sources/shaders/outline/outline.frag"      );
+    Shaders::Outline     .loadFromFile("sources/shaders/outline/outline.vert",       "sources/shaders/outline/outline.frag"       );
 }
 
 namespace Musics {

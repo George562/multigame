@@ -849,14 +849,14 @@ CollisionRect CameraRect(0, 0, scw, sch);
 void drawWalls() {
     CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
     CameraRect.setPosition(CameraPos);
-    for (int i = std::max(0, 2 * int(CameraPos.y / size) - 1);
-            i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize) / size) + 1); i++) {
-        for (int j = std::max(0, int(CameraPos.x / size) - 1);
-                j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size) + 1); j++) {
-            if (CurLocation->wallsRect[i][j].intersect(CameraRect)) {
-                CurLocation->SeenWalls[i][j] = true;
-            }
+    for (int i = std::max(0, 2 * int((CameraPos.y - WallMinSize / 2) / size) + 1);
+            i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize / 2) / size) + 1); i++) {
+        for (int j = std::max(0, int(CameraPos.x / size));
+                j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size)); j++) {
             if (CurLocation->walls[i][j]) {
+                if (CameraRect.intersect(CurLocation->wallsRect[i][j])) {
+                    CurLocation->SeenWalls[i][j] = true;
+                }
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setTextureRect(sf::IntRect(
                         (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].getSize().x) * random(sf::Vector2f(i, j)),
