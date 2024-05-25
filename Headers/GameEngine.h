@@ -255,7 +255,7 @@ void setArtifact(Interactable*&);
 //---------------------------- GAME STATE FUNCTIONS
 void updateBullets();
 
-bool useItem(ItemID::Type);
+bool useItem(Item*&);
 
 void processEffects();
 void updateEffects(Creature*);
@@ -629,8 +629,8 @@ void initShop() {
                 boughtItem->amount = 1;
                 player.addItem(boughtItem);
                 player.inventory.money -= mainMenuShop.itemPrices[shopSelectedItem->id];
-
-                mainMenuShop.soldItems.removeItem(boughtItem);
+                shopSelectedItem->amount--;
+                mainMenuShop.soldItems.removeItem(shopSelectedItem, false);
                 shopNPCText.setString("Thank you for buying a " + stringLower(itemName[shopSelectedItem->id]) + "!");
                 if (!mainMenuShop.soldItems.find(shopSelectedItem)) {
                     shopItemSprite.setTexture(Textures::INVISIBLE);
@@ -950,6 +950,22 @@ void drawInterface() {
         }
         AmmoBar.setValue(arsenal[i]->ManaStorage);
         AmmoBar.setPosition(20, sch - 20 - (arsenal.size() - i) * (AmmoBar.getSize().y + 10));
+
+        if (arsenal[i]->holstered) {
+            float holsterPercent = std::min(arsenal[i]->HolsterTimer->getElapsedTime().asMilliseconds() / arsenal[i]->TimeToHolster, 1.0f);
+            sf::Color wallColor(255 - 155 * holsterPercent, 255 - 155 * holsterPercent, 255, 160);
+            sf::Color foreColor(128 - 96 * holsterPercent, 128 - 96 * holsterPercent, 128, 160);
+            sf::Color backColor(32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 160);
+            AmmoBar.setColors(wallColor, foreColor, backColor);
+        }
+        else {
+            float dispatchPercent = std::min(arsenal[i]->DispatchTimer->getElapsedTime().asMilliseconds() / arsenal[i]->TimeToDispatch, 1.0f);
+            sf::Color wallColor(100 + 155 * dispatchPercent, 100 + 155 * dispatchPercent, 255, 160);
+            sf::Color foreColor(32 + 96 * dispatchPercent, 32 + 96 * dispatchPercent, 128, 160);
+            sf::Color backColor(32 * dispatchPercent, 32 * dispatchPercent, 32 * dispatchPercent, 160);
+            AmmoBar.setColors(wallColor, foreColor, backColor);
+        }
+
         WeaponNameText.setString(arsenal[i]->Name);
         WeaponNameText.setPosition(35 + AmmoBar.getSize().x, AmmoBar.getPosition().y + WeaponNameText.Height / 4);
         window.draw(AmmoBar);
@@ -1006,11 +1022,11 @@ void drawEffects() {
                 effectIconsTimers[eff->type]->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
                 effectIconsTimers[eff->type]->setCharacterSize(28);
                 window.draw(*effectIcons[eff->type]);
+
+                count++;
             }
             seenEffects[eff->type] += 1;
             effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->howLongToExist);
-
-            count++;
         }
     }
     for (int i = 0; i < effectTimersTimes.size(); i++) {
@@ -1491,10 +1507,12 @@ void inventoryHandler(sf::Event& event) {
                     itemDescText.setString(itemDesc[item->id]);
                     prevItemDescID = item->id;
                 }
-                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(item->id)) {
-                    player.inventory.removeItem(item);
-                    itemTypeCount--;
-                    isItemDescDrawn = false;
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(item)) {
+                    if (item->amount <= 0) {
+                        itemTypeCount--;
+                        isItemDescDrawn = false;
+                        player.inventory.removeItem(item, false);
+                    }
                     doInventoryUpdate[inventoryPage::Items] = true;
                 }
             }
@@ -1976,8 +1994,11 @@ void clearEffect(Creature& owner, Effect* effect) {
     }
 }
 
-bool useItem(ItemID::Type id) {
-    switch (id) {
+bool useItem(Item*& item) {
+    if (item->amount <= 0)
+        return false;
+    item->amount--;
+    switch (item->id) {
         case ItemID::regenDrug:
             applyEffect(player, new Effect(Effects::HPRegen, std::vector<float>{1.0f}, sf::seconds(10.f)));
             return true;
@@ -2147,6 +2168,7 @@ void MainLoop() {
         fireUpdate();
 
         player.UpdateState();
+    
         if (CurLocation == &LabyrinthLocation) {
             if (Musics::Fight1.getDuration() - Musics::Fight1.getPlayingOffset() < sf::seconds(0.3f)) {
                 Musics::Fight2.play();
@@ -2180,7 +2202,7 @@ void MainLoop() {
                 GameView.setCenter(player.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
                 FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
-                    player.CurWeapon->Reload(player.Mana);
+                    player.CurWeapon->HolsterAction();
                 }
             }
             int wasBulletsSize = Bullets.size();
@@ -2200,6 +2222,8 @@ void MainLoop() {
                     player.ChangeWeapon(arsenal[CurWeapon.cur]);
                 }
             }
+            for (Weapon*& weapon : arsenal)
+                if (weapon->holstered) weapon->Reload(player.Mana);
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
                 mutex.lock();

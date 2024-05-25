@@ -36,11 +36,10 @@ public:
         std::sort(items.begin(), items.end(), [](Item*& left, Item*& right) { return left->id < right->id; });
     }
 
-    void removeItem(Item*& item) {
+    void removeItem(Item*& item, bool forced) {
         for (int i = 0; i < items.size(); i++) {
             if (items[i]->id == item->id && items[i]->amount != -1) {
-                items[i]->amount -= item->amount;
-                if (items[i]->amount == 0) {
+                if (items[i]->amount == 0 or forced) {
                     items.erase(items.begin() + i);
                 }
                 return;
