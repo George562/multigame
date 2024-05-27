@@ -410,6 +410,8 @@ void init() {
 
     Shaders::Outline.setUniform("uResolution", sf::Vector2f(scw, sch));
 
+    Shaders::Bullet.setUniform("noise_png", Textures::Noise);
+
     IPPanel       .setTexture(Textures::YellowPanel);
     ListOfPlayers .setTexture(Textures::SteelFrame);
 
@@ -776,6 +778,7 @@ void draw() {
     } else if (isDrawShop) {
         drawShop();
     } else {
+        preRenderTexture.clear();
         preRenderTexture.setView(InterfaceView);
         preRenderTexture.draw(undergroundBG, &Shaders::Distortion1);
 
@@ -794,14 +797,19 @@ void draw() {
             preRenderTexture.draw(EnemyHealthBar);
         }
 
-        for (int i = 0; i < Bullets.size(); i++) {
-            preRenderTexture.draw(*Bullets[i]);
-        }
-
         preRenderTexture.display();
 
         window.setView(InterfaceView);
         window.draw(preRenderSprite, &Shaders::Flashlight);
+
+        preRenderTexture.clear(sf::Color::Transparent);
+        for (int i = 0; i < Bullets.size(); i++) {
+            preRenderTexture.draw(*Bullets[i]);
+        }
+        preRenderTexture.display();
+        window.draw(preRenderSprite, &Shaders::Bullet);
+
+        window.setView(GameView);
 
         for (size_t i = 0; i < TempTextsOnGround.size(); i++) {
             if (TempTextsOnGround[i]->localClock->getElapsedTime() < TempTextsOnGround[i]->howLongToExist) {
@@ -849,18 +857,16 @@ CollisionRect CameraRect(0, 0, scw, sch);
 void drawWalls() {
     CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
     CameraRect.setPosition(CameraPos);
-    for (int i = std::max(0, 2 * int((CameraPos.y - WallMinSize / 2) / size) + 1);
+    for (int i = std::max(0, 2 * int((CameraPos.y - WallMinSize / 2) / size));
             i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize / 2) / size) + 1); i++) {
         for (int j = std::max(0, int(CameraPos.x / size));
                 j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size)); j++) {
             if (CurLocation->walls[i][j]) {
-                if (CameraRect.intersect(CurLocation->wallsRect[i][j])) {
-                    CurLocation->SeenWalls[i][j] = true;
-                }
+                CurLocation->SeenWalls[i][j] = CurLocation->SeenWalls[i][j] || CameraRect.intersect(CurLocation->wallsRect[i][j]);
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
                 WallRect.setTextureRect(sf::IntRect(
-                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].getSize().x) * random(sf::Vector2f(i, j)),
-                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].getSize().y) * random(sf::Vector2f(j, i)),
+                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].getSize().x) * random(i, j),
+                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].getSize().y) * random(j, i),
                         CurLocation->wallsRect[i][j].getSize().x,
                         CurLocation->wallsRect[i][j].getSize().y));
                 preRenderTexture.draw(WallRect);
@@ -1660,6 +1666,9 @@ void LevelGenerate(int n, int m) {
 
     FillFloorRectsThread.launch();
 
+    portal.setCenter(player.getCenter());
+    puddle.setCenter(player.getCenter() + sf::Vector2f(size, size));
+
     clearVectorOfPointer(listOfBox);
     for (int i = 0; i < 10; i++) {
         listOfBox.push_back(new Interactable());
@@ -2070,6 +2079,8 @@ void updateShaders() {
 
     Shaders::Distortion1.setUniform("uTime", uTime);
     Shaders::Distortion2.setUniform("uTime", uTime);
+
+    Shaders::Bullet.setUniform("uTime", uTime);
 }
 //==============================================================================================
 
@@ -2093,7 +2104,10 @@ void saveGame() {
     fileToSave << player.Mana << '\n';
     fileToSave << player.ManaRecovery << '\n';
     fileToSave << player.inventory.money << '\n';
-    fileToSave << completedLevels;
+    fileToSave << completedLevels << '\n';
+    fileToSave << pistol.ReloadSpeed << ' ' << pistol.ManaStorage << '\n';
+    fileToSave << shotgun.ReloadSpeed << ' ' << shotgun.ManaStorage << '\n';
+    fileToSave << rifle.ReloadSpeed << ' ' << rifle.ManaStorage << '\n';
 
     fileToSave.close();
 }
@@ -2112,6 +2126,9 @@ void loadSaves() {
         fileToSave >> player.ManaRecovery;
         fileToSave >> player.inventory.money;
         fileToSave >> completedLevels;
+        fileToSave >> pistol.ReloadSpeed >> pistol.ManaStorage;
+        fileToSave >> shotgun.ReloadSpeed >> shotgun.ManaStorage;
+        fileToSave >> rifle.ReloadSpeed >> rifle.ManaStorage;
     }
     fileToSave.close();
 }

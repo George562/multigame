@@ -9,14 +9,14 @@ private:
     sf::Vector2f center;
     float Radius;
     void updateShape() {
-        for (int i = 0; i < 30; i++) {
-            points[i] = sf::Vector2f(center.x + Radius * std::cos(i * 2 * M_PI / 30),
-                                     center.y + Radius * std::sin(i * 2 * M_PI / 30));
+        for (int i = 0; i < pointCount; i++) {
+            points[i] = sf::Vector2f(center.x + Radius * std::cos(i * 2 * M_PI / pointCount),
+                                     center.y + Radius * std::sin(i * 2 * M_PI / pointCount));
         }
     }
 public:
-    CollisionCircle() : CollisionShape(30), Radius(0), center(0, 0) {}
-    CollisionCircle(sf::Vector2f position, float radius) : CollisionShape(30), Radius(radius), center(position) {
+    CollisionCircle() : CollisionShape(20), Radius(0), center(0, 0) {}
+    CollisionCircle(sf::Vector2f position, float radius) : CollisionShape(20), Radius(radius), center(position) {
         updateShape();
     }
     sf::Vector2f getPosition() const { return center - sf::Vector2f(Radius, Radius); }

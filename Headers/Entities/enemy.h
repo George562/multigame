@@ -25,6 +25,8 @@ public:
         Acceleration = MaxVelocity * 5.f;
         setRadius(60.f);
         CurWeapon = new Pistol();
+        CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
         CurWeapon->damage += curLevel;
 
         setAnimation(Textures::DistortedScientist, &Shaders::Flashlight);
@@ -53,6 +55,8 @@ public:
         Acceleration = MaxVelocity * 5.f;
         setRadius(60.f);
         CurWeapon = new Pistol();
+        CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
         CurWeapon->damage += curLevel;
 
         setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Flashlight);
@@ -82,6 +86,8 @@ public:
         Acceleration = MaxVelocity * 5.f;
         setRadius(60.f);
         CurWeapon = new Pistol();
+        CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
         CurWeapon->damage += curLevel;
 
         setAnimation(Textures::Distorted, &Shaders::Distortion2);
