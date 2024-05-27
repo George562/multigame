@@ -25,12 +25,13 @@ sf::ContextSettings settings;
 
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
-sf::RenderTexture preRenderTexture;
-sf::Sprite preRenderSprite;
+sf::RenderTexture preRenderTexture, outlineRenderTexture;
+sf::Sprite preRenderSprite, outlineRenderSprite;
 float MiniMapZoom = 1.f;
 bool MiniMapActivated, EscapeMenuActivated, isDrawInventory, isDrawShop;
 std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff; // references to objects that exist somewhere
 std::vector<Interactable*> InteractibeStuff; // references to objects that exist somewhere
+Interactable* CurInteractable;
 
 std::vector<Item*> PickupStuff;
 
@@ -369,8 +370,10 @@ void init() {
     window.setView(GameView);
 
     preRenderTexture.create(scw, sch);
-    preRenderTexture.setView(GameView);
     preRenderSprite.setTexture(preRenderTexture.getTexture());
+
+    outlineRenderTexture.create(scw, sch);
+    outlineRenderSprite.setTexture(outlineRenderTexture.getTexture());
 
     MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
     MiniMapZoom = std::pow(1.1, -10);
@@ -396,7 +399,7 @@ void init() {
     portal.setAnimation(Textures::PortalAnimation2, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
     player.setAnimation(Textures::Player, &Shaders::Player);
-    puddle.setAnimation(Textures::Puddle, &Shaders::Flashlight);
+    puddle.setAnimation(Textures::Puddle);
     puddle.setSize(90.f, 90.f);
     shopSector.setAnimation(Textures::INVISIBLE);
     shopSector.setPosition(0, 2 * size);
@@ -772,23 +775,33 @@ void initShop() {
 
 //============================================================================================== DRAW FUNCTIONS
 void draw() {
+    window.clear(sf::Color::Transparent);
     updateShaders();
     if (isDrawInventory) {
         drawInventory();
     } else if (isDrawShop) {
         drawShop();
     } else {
-        preRenderTexture.clear();
+        preRenderTexture.clear(sf::Color::Transparent);
         preRenderTexture.setView(InterfaceView);
         preRenderTexture.draw(undergroundBG, &Shaders::Distortion1);
 
         preRenderTexture.setView(GameView);
+        outlineRenderTexture.setView(GameView);
+        outlineRenderSprite.setPosition(GameView.getCenter() - GameView.getSize() / 2.f);
 
         drawFloor();
         drawWalls();
 
         for (sf::Drawable*& d: DrawableStuff) {
-            preRenderTexture.draw(*d);
+            if (d == CurInteractable) {
+                outlineRenderTexture.clear(sf::Color::Transparent);
+                outlineRenderTexture.draw(*d); outlineRenderTexture.display();
+                outlineRenderTexture.draw(outlineRenderSprite, &Shaders::Outline);
+                preRenderTexture.draw(outlineRenderSprite);
+            } else {
+                preRenderTexture.draw(*d);
+            }
         }
 
         for (Enemy*& enemy: Enemies) {
@@ -963,8 +976,7 @@ void drawInterface() {
             sf::Color foreColor(128 - 96 * holsterPercent, 128 - 96 * holsterPercent, 128, 160);
             sf::Color backColor(32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 160);
             AmmoBar.setColors(wallColor, foreColor, backColor);
-        }
-        else {
+        } else {
             float dispatchPercent = std::min(arsenal[i]->DispatchTimer->getElapsedTime().asSeconds() / arsenal[i]->TimeToDispatch, 1.0f);
             sf::Color wallColor(100 + 155 * dispatchPercent, 100 + 155 * dispatchPercent, 255, 160);
             sf::Color foreColor(32 + 96 * dispatchPercent, 32 + 96 * dispatchPercent, 128, 160);
@@ -1369,19 +1381,10 @@ void EventHandler() {
                 }
             }
 
-            if (CanSomethingBeActivated()) {
-                if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite))) {
-                    InterfaceStuff.push_back(&XButtonSprite);
-                }
-            } else {
-                DeleteFromVector(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite));
-            }
-
             for (Interactable*& x: InteractibeStuff) {
                 if (x->CanBeActivated(player)) {
-                    if (x->isActivated(player, event)) {
-                        break;
-                    }
+                    x->isActivated(player, event);
+                    break;
                 }
             }
 
@@ -1565,7 +1568,7 @@ void FillFloorRects() {
     auto CreateOneFLoor = [&src](sf::Image& res){
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 5; x++) {
-                res.copy(src, x * 32, y * 32, {(rand() % 5) * 32, 0, 32, 32});
+                res.copy(src, x * 32, y * 32, {(std::rand() % 5) * 32, 0, 32, 32});
             }
         }
     };
@@ -1583,7 +1586,7 @@ void FillFloorRects() {
 }
 
 void setBox(Interactable*& box) {
-    box->setAnimation(Textures::Box, &Shaders::Flashlight);
+    box->setAnimation(Textures::Box);
     box->setSize(105.f, 117.f);
     box->setFunction([](Interactable* i){
         if (player.Mana.cur >= 20) {
@@ -1594,7 +1597,7 @@ void setBox(Interactable*& box) {
             tempText->setOutlineColor(sf::Color(120, 120, 120));
             tempText->setOutlineThickness(3);
 
-            rand(); int r = 1 + rand() % 5;
+            std::rand(); int r = 1 + std::rand() % 5;
             tempText->setString("Money + " + std::to_string(r));
             tempText->setFillColor(sf::Color(255, 170, 29));
             tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
@@ -1635,7 +1638,7 @@ void setArtifact(Interactable*& artifact) {
         tempText->setOutlineColor(sf::Color::White);
         tempText->setOutlineThickness(3);
 
-        rand(); int r = rand() % 6;
+        std::rand(); int r = std::rand() % 6;
         tempText->setString(artifactText[r]);
         tempText->setFillColor(artifactColors[r]);
         switch (r) {
@@ -1674,8 +1677,8 @@ void LevelGenerate(int n, int m) {
         listOfBox.push_back(new Interactable());
         setBox(listOfBox[i]);
         do {
-            listOfBox[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
-            sf::Vector2f(rand() % int(size - listOfBox[i]->getSize().x), rand() % int(size - listOfBox[i]->getSize().y)));
+            listOfBox[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
+            sf::Vector2f(std::rand() % int(size - listOfBox[i]->getSize().x), std::rand() % int(size - listOfBox[i]->getSize().y)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->getPosition().y / size][(int)listOfBox[i]->getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfBox[i]);
@@ -1687,8 +1690,8 @@ void LevelGenerate(int n, int m) {
         listOfArtifact.push_back(new Interactable());
         setArtifact(listOfArtifact[i]);
         do {
-            listOfArtifact[i]->setPosition(sf::Vector2f(rand() % m, rand() % n) * (float)size +
-            sf::Vector2f(rand() % (size - Textures::Architect.getSize().x / 4), rand() % (size - Textures::Architect.getSize().y / 4)));
+            listOfArtifact[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
+            sf::Vector2f(std::rand() % (size - Textures::Architect.getSize().x / 4), std::rand() % (size - Textures::Architect.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->getPosition().y / size][(int)listOfArtifact[i]->getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfArtifact[i]);
@@ -1698,10 +1701,10 @@ void LevelGenerate(int n, int m) {
     clearVectorOfPointer(FireSet);
     // for (int i = 0; i < 1; i++) {
     //     FireSet.push_back(new Fire(sf::seconds(15.f)));
-    //     FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Flashlight);
+    //     FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1));
     //     FireSet[i]->setSize(50.f, 50.f);
     //     // do {
-    //         //FireSet[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
+    //         //FireSet[i]->setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
     //     // } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
     //     if (CurLocation->room.x != -1 && CurLocation->room.y != -1) {
     //         FireSet[i]->setPosition(sf::Vector2f(CurLocation->room.x + 0.5f, CurLocation->room.y + 0.5f) * (float)size);
@@ -1718,7 +1721,7 @@ void LevelGenerate(int n, int m) {
 
     for (int i = 0; i < Enemies.size(); i++) {
         do {
-            Enemies[i]->setPosition(sf::Vector2f((rand() % m) + 0.5f, (rand() % n) + 0.5f) * (float)size);
+            Enemies[i]->setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
         } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->getPosition().y / size][(int)Enemies[i]->getPosition().x / size] ||
                  distance(Enemies[i]->getPosition(), player.getCenter()) < size * 3);
     }
@@ -1826,19 +1829,19 @@ void LoadMainMenu() {
     InteractibeStuff.push_back(&shopSector);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
-    newItem->setAnimation(*itemTextureName[ItemID::regenDrug], &Shaders::Flashlight);
+    newItem->setAnimation(*itemTextureName[ItemID::regenDrug]);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getCenter() + sf::Vector2f(100, 100));
 
     Item* fireHosePickup = new Item(ItemID::fireHose, 1);
-    fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose], &Shaders::Flashlight);
+    fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose]);
     PickupStuff.push_back(fireHosePickup);
     DrawableStuff.push_back(PickupStuff[1]);
     PickupStuff[1]->dropTo(player.getCenter() + sf::Vector2f(400, 300));
 
     Item* flamethrowerPickup = new Item(ItemID::flamethrower, 1);
-    flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower], &Shaders::Flashlight);
+    flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower]);
     PickupStuff.push_back(flamethrowerPickup);
     DrawableStuff.push_back(PickupStuff[2]);
     PickupStuff[2]->dropTo(player.getCenter() + sf::Vector2f(-550, -120));
@@ -1871,7 +1874,7 @@ void updateBullets() {
         if (Bullets[i]->penetration < 0 || Bullets[i]->todel) {
             if (Bullets[i]->type == Bullet::FireParticle) {
                 Fire* fire = new Fire(sf::seconds(10));
-                fire->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Flashlight);
+                fire->setAnimation(Textures::Fire, 4, 1, sf::seconds(1));
                 fire->setSize(50.f, 50.f);
                 fire->setPosition(Bullets[i]->getPosition());
                 FireSet.push_back(fire);
@@ -2042,15 +2045,15 @@ void fireUpdate() {
         float dist = 2.5 * FireSet[i]->getSize().y;
         if (FireSet[i]->localClock->getElapsedTime() >= FireSet[i]->howLongToExist) {
             FireSet[i]->localClock->restart();
-            FireSet[i]->howLongToExist = sf::seconds(rand() % 4 + 15.f);
+            FireSet[i]->howLongToExist = sf::seconds(std::rand() % 4 + 15.f);
 
-            Fire* descendant1 = new Fire(sf::seconds(rand() % 4 + 15.f));
-            descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1), &Shaders::Flashlight);
+            Fire* descendant1 = new Fire(sf::seconds(std::rand() % 4 + 15.f));
+            descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1));
             descendant1->setSize(50.f, 50.f);
             sf::Vector2i posFather = sf::Vector2i(FireSet[i]->getCenter());
             sf::Vector2f posSon = descendant1->getCenter();
             do {
-                angle = (rand() % 360) * M_PI / 180;
+                angle = (std::rand() % 360) * M_PI / 180;
                 posSon = sf::Vector2f(posFather) + dist * sf::Vector2f(std::sin(angle), std::cos(angle));
             } while (!CurLocation->EnableTiles[posSon.y / size][posSon.x / size] ||
                      !firePropagationAllowed(posFather, sf::Vector2i(posSon)));
@@ -2088,8 +2091,10 @@ void updateShaders() {
 
 //============================================================================================== HELPER FUNCTIONS
 bool CanSomethingBeActivated() {
+    CurInteractable = nullptr;
     for (Interactable*& x: InteractibeStuff) {
         if (x->CanBeActivated(player)) {
+            CurInteractable = x;
             return true;
         }
     }
@@ -2294,6 +2299,14 @@ void MainLoop() {
                 applyEffect(player, new Effect(Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
         }
         processEffects();
+
+        if (CanSomethingBeActivated()) {
+            if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite))) {
+                InterfaceStuff.push_back(&XButtonSprite);
+            }
+        } else {
+            DeleteFromVector(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite));
+        }
 
         EventHandler();
     }

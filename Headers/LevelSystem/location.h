@@ -129,7 +129,6 @@ void Location::RoomGenerator() {
     if (probabblePositions.size() != 0) {
         room = probabblePositions[rand() % probabblePositions.size()];
         doorPos = getPassages(room.y, room.x)[0];
-        std::cout << "Room has been created at y = " << room.y << " x = " << room.x << " tile\n";
         walls[doorPos.y][doorPos.x] = true;
     } else {
         std::cout << "Room hasn't been created\n";
