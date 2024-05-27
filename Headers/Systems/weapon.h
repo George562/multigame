@@ -14,7 +14,7 @@ public:
     sf::Clock* ReloadTimer = nullptr;
     sf::Clock* HolsterTimer = nullptr;          // Putting the weapon in the holster to reload takes time
     sf::Clock* DispatchTimer = nullptr;         // Same thing with getting it out
-    float TimeToHolster;     // How much time it takes in milliseconds
+    float TimeToHolster;     // How much time it takes in seconds
     float TimeToDispatch;
     float ReloadSpeed;
     bool holstered;        // All weapons are active by default. A holstered state for them is when they are being reloaded.
@@ -52,6 +52,12 @@ public:
         if (ReloadTimer) {
             delete ReloadTimer;
         }
+        if (HolsterTimer) {
+            delete HolsterTimer;
+        }
+        if (DispatchTimer) {
+            delete DispatchTimer;
+        }
     }
 
     virtual void Update(sf::Event& event) {
@@ -64,7 +70,7 @@ public:
     virtual bool CanShoot() {
         if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return false; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return false;
-        if (holstered || DispatchTimer->getElapsedTime().asMilliseconds() < TimeToDispatch) return false;
+        if (holstered || DispatchTimer->getElapsedTime().asSeconds() < TimeToDispatch) return false;
         return true;
     }
 
@@ -83,7 +89,7 @@ public:
 
     virtual void Reload(Scale<float>& Mana) {
         if (ManaStorage.fromTop() == 0) return;
-        if (holstered && HolsterTimer->getElapsedTime().asMilliseconds() > TimeToHolster) {
+        if (holstered && HolsterTimer->getElapsedTime().asSeconds() > TimeToHolster) {
             float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed, ManaStorage.fromTop()), Mana.toBottom());
             Mana -= x;
             ManaStorage += x;
@@ -92,12 +98,12 @@ public:
     }
 
     virtual void HolsterAction() {          // Moves weapon to holster or takes it out of it
-        if (holstered && HolsterTimer->getElapsedTime().asMilliseconds() > TimeToHolster) {
+        if (holstered && HolsterTimer->getElapsedTime().asSeconds() > TimeToHolster) {
             holstered = false;
             DispatchTimer->restart();
             return;
         }
-        if (!holstered && DispatchTimer->getElapsedTime().asMilliseconds() >= TimeToDispatch) {
+        if (!holstered && DispatchTimer->getElapsedTime().asSeconds() >= TimeToDispatch) {
             if (ManaStorage.fromTop() == 0) return;
             holstered = true;
             HolsterTimer->restart();
@@ -111,13 +117,13 @@ public:
 // Pistol
 class Pistol : public Weapon {
 public:
-    Pistol() : Weapon("Pistol", 10, 1, 0.4, 2, 350.0f, 500.0f) { BulletVelocity = 600; scatter = 20; }
+    Pistol() : Weapon("Pistol", 10, 1, 0.4, 2, 0.35, 0.5) { BulletVelocity = 600; scatter = 20; }
 };
 
 // Revolver
 class Revolver : public Weapon {
 public:
-    Revolver() : Weapon("Revolver", 6, 2, 0, 5, 500.0f, 500.0f) { BulletVelocity = 960; scatter = 10; }
+    Revolver() : Weapon("Revolver", 6, 2, 0, 5, 0.5, 0.5) { BulletVelocity = 960; scatter = 10; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         Weapon::Shoot(shooter, direction, f);
         lock = true;
@@ -127,7 +133,7 @@ public:
 // Shotgun
 class Shotgun : public Weapon {
 public:
-    Shotgun() : Weapon("Shotgun", 25, 5, 1 / 2.f, 3, 2000.0f, 1000.0f) { BulletVelocity = 600; NumberOfBulletsPerShot = 10;  scatter = 50; }
+    Shotgun() : Weapon("Shotgun", 25, 5, 1 / 2.f, 3, 2, 1) { BulletVelocity = 600; NumberOfBulletsPerShot = 10;  scatter = 50; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (!CanShoot()) return;
 
@@ -148,13 +154,13 @@ public:
 // Rifle
 class Rifle : public Weapon {
 public:
-    Rifle() : Weapon("Rifle", 25, 1, 1 / 10.f, 1, 1000.0f, 1000.0f) { BulletVelocity = 960; scatter = 17; }
+    Rifle() : Weapon("Rifle", 25, 1, 1 / 10.f, 1, 1, 1) { BulletVelocity = 960; scatter = 17; }
 };
 
 // Bubblegun
 class Bubblegun : public Weapon {
 public:
-    Bubblegun() : Weapon("Bubblegun", 30, 3, 0.03, 4, 3000.0f, 1000.0f) { BulletVelocity = 540; NumberOfBulletsPerShot = 10;  scatter = 40; }
+    Bubblegun() : Weapon("Bubblegun", 30, 3, 0.03, 4, 3, 1) { BulletVelocity = 540; NumberOfBulletsPerShot = 10;  scatter = 40; }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
             lock = false;
@@ -180,7 +186,7 @@ public:
 // Armageddon
 class Armageddon : public Weapon {
 public:
-    Armageddon() : Weapon("Armageddon", 300, 0.1, 1.f / 16, 3, 5000.0f, 5000.0f) { BulletVelocity = 180; }
+    Armageddon() : Weapon("Armageddon", 300, 0.1, 1.f / 16, 3, 5, 5) { BulletVelocity = 180; }
     void Update(sf::Event& event) {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             NumberOfBulletsPerShot = 0;
@@ -204,7 +210,7 @@ public:
 // Chaotic
 class Chaotic : public Weapon {
 public:
-    Chaotic() : Weapon("Chaotic", 300, 0.1, 1.f / 16, 3, 5000.0f, 5000.0f) { BulletVelocity = 180; }
+    Chaotic() : Weapon("Chaotic", 300, 0.1, 1.f / 16, 3, 5, 5) { BulletVelocity = 180; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (!CanShoot()) return;
 
@@ -219,7 +225,7 @@ public:
 
 class FireHose : public Weapon {
 public:
-    FireHose() : Weapon("Fire hose", 100, 0, 1.f / 10, 0, 1.0f, 1.0f) { BulletVelocity = 1200; }
+    FireHose() : Weapon("Fire hose", 100, 0, 1.f / 10, 0, 0, 0) { BulletVelocity = 1200; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
@@ -238,7 +244,7 @@ public:
 
 class Flamethrower : public Weapon {
 public:
-    Flamethrower() : Weapon("Flamethrower", 100, 0, 1.f / 10, 1, 1.0f, 1.0f) { BulletVelocity = 1200; }
+    Flamethrower() : Weapon("Flamethrower", 100, 0, 1.f / 10, 1, 0, 0) { BulletVelocity = 1200; }
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return; }
         if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return;
