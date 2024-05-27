@@ -173,7 +173,8 @@ namespace Shaders {
                FloatingUp,  // text moving up
                Distortion1, // linear left move
                Distortion2, // circle move
-               Outline
+               Outline,
+               Bullet
                ;
 }
 
@@ -187,6 +188,7 @@ void loadShaders() {
     Shaders::Distortion1 .loadFromFile("sources/shaders/distorted1/distorted1.vert", "sources/shaders/distorted1/distorted1.frag" );
     Shaders::Distortion2 .loadFromFile("sources/shaders/distorted2/distorted2.vert", "sources/shaders/distorted2/distorted2.frag" );
     Shaders::Outline     .loadFromFile("sources/shaders/outline/outline.vert",       "sources/shaders/outline/outline.frag"       );
+    Shaders::Bullet      .loadFromFile("sources/shaders/bullet/bullet.vert",         "sources/shaders/bullet/bullet.frag"         );
 }
 
 namespace Musics {
@@ -204,4 +206,7 @@ void loadMusics() {
 
 float random(sf::Vector2f v) {
     return std::modf( ( 1.f + std::sin( v.x * 12.9898f + v.y * 78.233f ) ) * 43758.5453123f, nullptr);
+}
+float random(float x, float y) {
+    return std::modf( ( 1.f + std::sin( x * 12.9898f + y * 78.233f ) ) * 43758.5453123f, nullptr);
 }

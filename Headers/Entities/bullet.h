@@ -1,7 +1,7 @@
 #pragma once
 #include "../LevelSystem/location.h"
 
-#define COMMON_BULLET_RADIUS 7
+#define COMMON_BULLET_RADIUS 10
 #define COMMON_BULLET_PENETRATION 0
 
 sf::CircleShape circleShape;
@@ -31,7 +31,7 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
     sf::Time timer;
     sf::Color color;
 
-    Bullet() {
+    Bullet() : CollisionCircle() {
         localClock = new sf::Clock();
     }
 
@@ -48,7 +48,10 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
             case Bullet::Common:
             case Bullet::Bubble:
                 setRadius(COMMON_BULLET_RADIUS);
-                color = sf::Color(rand() % 256, rand() % 256, rand() % 256);
+                switch (faction) {
+                    case faction::Player: color = sf::Color(30, 195, 255); break;
+                    case faction::Enemy:  color = sf::Color(72,  61, 139); break;
+                }
                 break;
             case Bullet::WaterParticle:
                 setRadius(COMMON_BULLET_RADIUS * 3);
@@ -117,7 +120,6 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
         circleShape.setFillColor(color);
         circleShape.setRadius(getRadius());
         circleShape.setPosition(getPosition());
-        circleShape.setOrigin(getSize() / 2.f);
         target.draw(circleShape);
     }
 };
