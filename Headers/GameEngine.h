@@ -1368,6 +1368,16 @@ void EventHandler() {
                     isDrawInventory = true;
                     doInventoryUpdate[inventoryPage::Items] = true;
                 }
+                if (sf::Keyboard::Num1 <= event.key.code && event.key.code <= sf::Keyboard::Num3) {
+                    if (!MiniMapActivated) {
+                        CurWeapon = event.key.code - sf::Keyboard::Num1;
+                        player.ChangeWeapon(arsenal[CurWeapon.cur]);
+
+                        std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
+                        ReloadWeaponText.setString(reloadStr);
+                        ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
+                    }
+                }
             }
             if (event.type == sf::Event::MouseWheelMoved) {
                 if (MiniMapActivated) {
