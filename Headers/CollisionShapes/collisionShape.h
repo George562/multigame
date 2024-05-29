@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "../Utility/VectorTools.h"
+#include <algorithm>
 
 class CollisionShape {
 protected:
@@ -25,12 +26,16 @@ public:
         return contains(sf::Vector2f(x, y));
     }
     bool contains(sf::Vector2f point) const {
-        for (int i = 0; i < pointCount; i++) {
-            if (cross(points[(i + 1) % pointCount] - points[i], point - points[i]) < 0) {
-                return false;
-            }
+        bool s = false;
+        sf::Vector2f e, w;
+        for(int i = 0, j = pointCount - 1; i < pointCount; j = i, i++) {
+            e = points[j] - points[i];
+            w =     point - points[i];
+            if( (points[i].y <= point.y && point.y < points[j].y && cross(e, w) > 0) ||
+               !(points[i].y <= point.y || point.y < points[j].y || cross(e, w) > 0))
+                s = !s;
         }
-        return true;
+        return s;
     }
 
     bool intersect(CollisionShape& shape) {
@@ -66,5 +71,23 @@ public:
             }
         }
         return false;
+    }
+
+    float distance(float x, float y) const {
+        return distance(sf::Vector2f(x, y));
+    }
+    float distance(sf::Vector2f point) const {
+        float s = 1., d = dot(point - points[0], point - points[0]);
+        sf::Vector2f e, w, b;
+        for(int i = 0, j = pointCount - 1; i < pointCount; j = i, i++) {
+            e = points[j] - points[i];
+            w =     point - points[i];
+            b = w - e * std::clamp( dot(w, e) / dot(e, e), 0.f, 1.f );
+            d = std::min(d, dot(b,b));
+            if( (points[i].y <= point.y && point.y < points[j].y && cross(e, w) > 0) ||
+               !(points[i].y <= point.y || point.y < points[j].y || cross(e, w) > 0))
+                s *= -1.;
+        }
+        return s * std::sqrt(d);
     }
 };

@@ -75,7 +75,7 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
 
     void move(Location* location) {
         float elapsedTime = std::min(localClock->restart().asSeconds(), oneOverSixty);
-        if (LenOfVector(Velocity) != 0) {
+        if (length(Velocity) != 0) {
             sf::Vector2i res;
             switch (type) {
                 case Bullet::Bubble:
