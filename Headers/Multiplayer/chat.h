@@ -106,7 +106,7 @@ bool Chat::InputText(sf::Event& event) {
             Entered();
 
         if (event.key.code == sf::Keyboard::BackSpace && cursorPos > 0) {
-            lines[start].setString(lines[start].getString().substring(0, cursorPos) + lines[start].getString().substring(cursorPos, lines[start].TextSize()));
+            lines[start].setString(lines[start].getString().substring(0, cursorPos - 1) + lines[start].getString().substring(cursorPos, lines[start].TextSize()));
             cursorPos--;
         }
         if (event.key.code == sf::Keyboard::Delete && cursorPos < lines[start].TextSize())
