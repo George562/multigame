@@ -45,7 +45,7 @@ namespace inventoryPage {
     using Type = sf::Uint8;
     enum : Type {
         Items,
-        Weapons,
+        Arsenal,
         Equipables,
         Perks,
         Stats,
@@ -116,7 +116,8 @@ namespace Textures {
                 ShopSectionFrame,
                 ShopItemPhotoFrame,
 
-                INVISIBLE
+                INVISIBLE,
+                PH_gun
                 ;
 }
 
@@ -159,6 +160,8 @@ void loadTextures() {
     Textures::ShopItemPhotoFrame        .loadFromFile("sources/textures/Panels/ShopItemPhotoFrame.png");
        
     Textures::INVISIBLE                 .create(size, size);
+
+    Textures::PH_gun                    .loadFromFile("sources/textures/Placeholders/kitchengun.png");
 }
 
 namespace Shaders {
