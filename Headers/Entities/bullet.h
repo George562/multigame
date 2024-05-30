@@ -14,9 +14,7 @@ sf::CircleShape circleShape;
 struct Bullet : public CollisionCircle, public sf::Drawable {
     enum Type : sf::Uint8 {
         Common,
-        Bubble,
-        WaterParticle,
-        FireParticle
+        Bubble
     };
     Bullet::Type type;
 
@@ -53,14 +51,6 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
                     case faction::Enemy:  color = sf::Color(72,  61, 139); break;
                 }
                 break;
-            case Bullet::WaterParticle:
-                setRadius(COMMON_BULLET_RADIUS * 3);
-                color = sf::Color(0, 0, 255);
-                break;
-            case Bullet::FireParticle:
-                setRadius(COMMON_BULLET_RADIUS * 3);
-                color = sf::Color(255, 0, 0);
-                break;
             default:
                 setRadius(COMMON_BULLET_RADIUS);
                 break;
@@ -82,8 +72,6 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
                     res = WillCollisionWithWalls(location->wallsRect, *this, Velocity * timer.asSeconds() * elapsedTime);
                     break;
                 case Bullet::Common:
-                case Bullet::WaterParticle:
-                case Bullet::FireParticle:
                     res = WillCollisionWithWalls(location->wallsRect, *this, Velocity * elapsedTime);
                     break;
             }
@@ -110,8 +98,6 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
                 }
                 break;
             case Bullet::Common:
-            case Bullet::WaterParticle:
-            case Bullet::FireParticle:
                 CollisionCircle::move(Velocity * elapsedTime);
                 break;
         }
