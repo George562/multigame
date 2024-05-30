@@ -7,24 +7,57 @@ class CollisionShape {
 protected:
     std::vector<sf::Vector2f> points;
     size_t pointCount;
-    virtual void updateShape() = 0;
+    sf::Vector2f position, size;
+    virtual void updateShape() {
+        if (pointCount > 0) {
+            position = points[0];
+            for (size_t i = 1; i < pointCount; i++) {
+                position.x = std::min(position.x, points[i].x);
+                position.y = std::min(position.y, points[i].y);
+            }
+            size = points[0] - position;
+            for (size_t i = 1; i < pointCount; i++) {
+                size.x = std::max(size.x, points[i].x - position.x);
+                size.y = std::max(size.y, points[i].y - position.y);
+            }
+        }
+    }
 public:
-
     CollisionShape() : pointCount(0) {}
     CollisionShape(size_t count) : pointCount(count) { points.resize(count); }
-    CollisionShape(std::vector<sf::Vector2f> points) : points(points), pointCount(points.size()) {}
-
-    virtual sf::Vector2f getPosition() const = 0;
-
-    virtual sf::Vector2f getCenter() const = 0;
-
-    virtual sf::Vector2f getSize() const = 0;
-    virtual void move(float x, float y) = 0;
-    virtual void move(sf::Vector2f v) = 0;
-
-    bool contains(float x, float y) const {
-        return contains(sf::Vector2f(x, y));
+    CollisionShape(std::vector<sf::Vector2f> points) : points(points), pointCount(points.size()) {
+        updateShape();
     }
+
+    virtual void setPoints(std::vector<sf::Vector2f> points) {
+        this->points = points;
+        pointCount = points.size();
+        updateShape();
+    }
+
+    virtual sf::Vector2f getPosition() const { return position; };
+    virtual void setPosition(float x, float y) { setPosition(sf::Vector2f(x, y)); }
+    virtual void setPosition(sf::Vector2f newPosition) {
+        for (size_t i = 0; i < pointCount; i++) {
+            points[i] += newPosition - position;
+        }
+        position = newPosition;
+    }
+
+    virtual sf::Vector2f getCenter() const { return position + size / 2.f; }
+    virtual void setCenter(float x, float y) { setPosition(x - size.x / 2.f, y - size.y / 2.f); }
+    virtual void setCenter(sf::Vector2f v)   { setCenter(v.x, v.y); }
+
+    virtual sf::Vector2f getSize() const { return size; }
+
+    virtual void move(float x, float y) { setPosition(position.x + x, position.y + y); }
+    virtual void move(sf::Vector2f v)   { setPosition(position + v); }
+
+    sf::Vector2f getPoint(size_t index) const { return points[index]; }
+
+    std::size_t getPointCount() { return pointCount; }
+
+    bool contains(float x, float y) const { return contains(sf::Vector2f(x, y)); }
     bool contains(sf::Vector2f point) const {
         bool s = false;
         sf::Vector2f e, w;

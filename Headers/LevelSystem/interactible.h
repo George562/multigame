@@ -9,12 +9,13 @@
 // Class
 ////////////////////////////////////////////////////////////
 
-class Interactable : public CollisionRect, public sf::Drawable {
+class Interactable : public sf::Drawable {
 public:
     Animation* animation = nullptr;
     void (*function)(Interactable*);
+    CollisionRect hitbox;
 
-    Interactable() : CollisionRect() {}
+    Interactable() {}
 
     ~Interactable() {
         if (animation) {
@@ -32,7 +33,7 @@ public:
         return false;
     }
 
-    virtual bool CanBeActivated(CollisionCircle& circle) { return intersect(circle); }
+    virtual bool CanBeActivated(CollisionCircle& circle) { return hitbox.intersect(circle); }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animation != nullptr) {
@@ -45,7 +46,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
-        CollisionRect::setSize(animation->getGlobalSize());
+        hitbox.setSize(animation->getGlobalSize());
         animation->play();
     };
 
@@ -54,17 +55,17 @@ public:
             delete animation;
         }
         animation = new Animation(texture, shader);
-        CollisionRect::setSize(animation->getGlobalSize());
+        hitbox.setSize(animation->getGlobalSize());
         animation->play();
     };
 
-    void setSize(float w, float h) { CollisionRect::setSize(w, h); animation->setSize(sf::Vector2f(w, h)); }
-    void setSize(sf::Vector2f v) { CollisionRect::setSize(v); animation->setSize(v); }
+    void setSize(float w, float h) { hitbox.setSize(w, h); animation->setSize(sf::Vector2f(w, h)); }
+    void setSize(sf::Vector2f v) { hitbox.setSize(v); animation->setSize(v); }
 
-    void setPosition(float x, float y) { CollisionRect::setPosition(x, y); animation->setPosition(x, y); }
+    void setPosition(float x, float y) { hitbox.setPosition(x, y); animation->setPosition(x, y); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
-    void setCenter(float x, float y) { setPosition(x - getSize().x / 2, y - getSize().y / 2); }
+    void setCenter(float x, float y) { setPosition(x - hitbox.getSize().x / 2, y - hitbox.getSize().y / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 };
 

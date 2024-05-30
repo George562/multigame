@@ -23,7 +23,7 @@ public:
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
-        setRadius(60.f);
+        hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
         CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
         CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
@@ -37,7 +37,7 @@ public:
     void move(Location* location) override {
         VelocityBuff = 1;
 
-        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
+        setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
 };
@@ -53,7 +53,7 @@ public:
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
-        setRadius(60.f);
+        hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
         CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
         CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
@@ -67,8 +67,8 @@ public:
     void move(Location* location) override {
         VelocityBuff = 1;
 
-        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
-        animation->setAnimationLevel(target.x - getCenter().x < 0);
+        setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
+        animation->setAnimationLevel(target.x - hitbox.getCenter().x < 0);
         Creature::move(location);
     }
 };
@@ -84,7 +84,7 @@ public:
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
-        setRadius(60.f);
+        hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
         CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
         CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
@@ -98,7 +98,7 @@ public:
     void move(Location* location) override {
         VelocityBuff = 1;
 
-        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
+        setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
 };

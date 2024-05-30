@@ -91,7 +91,6 @@ namespace Textures {
                 floor1x,
                 Puddle,
                 Fire,
-                Fireball,
                 Architect,
                 Noise,
 //////////////////////////////////////////////////////////// Effect Textures
@@ -135,7 +134,6 @@ void loadTextures() {
     Textures::floor1x                   .loadFromFile("sources/textures/floors/floor1x.png");
     Textures::Puddle                    .loadFromFile("sources/textures/Puddle.png");
     Textures::Fire                      .loadFromFile("sources/textures/Fire.png");
-    Textures::Fireball                  .loadFromFile("sources/textures/Fireball.png");
     Textures::Architect                 .loadFromFile("sources/textures/Architect.png");
     Textures::Noise                     .loadFromFile("sources/textures/noise.png");
 
@@ -177,7 +175,8 @@ namespace Shaders {
                Distortion1, // linear left move
                Distortion2, // circle move
                Outline,
-               Bullet
+               Bullet,
+               Fire
                ;
 }
 
@@ -192,6 +191,7 @@ void loadShaders() {
     Shaders::Distortion2 .loadFromFile("sources/shaders/distorted2/distorted2.vert", "sources/shaders/distorted2/distorted2.frag" );
     Shaders::Outline     .loadFromFile("sources/shaders/outline/outline.vert",       "sources/shaders/outline/outline.frag"       );
     Shaders::Bullet      .loadFromFile("sources/shaders/bullet/bullet.vert",         "sources/shaders/bullet/bullet.frag"         );
+    Shaders::Fire        .loadFromFile("sources/shaders/fire/fire.vert",             "sources/shaders/fire/fire.frag"             );
 }
 
 namespace Musics {

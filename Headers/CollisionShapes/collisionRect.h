@@ -4,18 +4,19 @@
 
 class CollisionRect : public CollisionShape {
 protected:
-    sf::Vector2f size;
-    void updateShape() {
+    void updateShape() override {
         points[1] = sf::Vector2f(points[0].x + size.x, points[0].y);
         points[2] = sf::Vector2f(points[0].x + size.x, points[0].y + size.y);
         points[3] = sf::Vector2f(points[0].x, points[0].y + size.y);
     }
 public:
-    CollisionRect() : CollisionShape(4), size(sf::Vector2f(0, 0)) {}
-    CollisionRect(float x, float y, float w, float h) : CollisionShape(4), size(sf::Vector2f(w, h)) {
+    CollisionRect() : CollisionShape(4) { this->size = sf::Vector2f(0.f, 0.f); }
+    CollisionRect(float x, float y, float w, float h) : CollisionShape(4) {
+        this->size = sf::Vector2f(w, h);
         setPosition(x, y);
     }
-    CollisionRect(sf::Vector2f position, sf::Vector2f size) : CollisionShape(4), size(size) {
+    CollisionRect(sf::Vector2f position, sf::Vector2f size) : CollisionShape(4) {
+        this->size = size;
         setPosition(position);
     }
     float getRight() const { return points[2].x; }
@@ -31,7 +32,7 @@ public:
 
     // Set position of rect center
     sf::Vector2f getCenter() const { return points[0] + size / 2.f; }
-    void setCenter(float x, float y) { setPosition(x - size.x / 2, y - size.y / 2); }
+    void setCenter(float x, float y) { setPosition(x - size.x / 2.f, y - size.y / 2.f); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 
     // Move the rect relatively to its current position

@@ -11,12 +11,11 @@ sf::CircleShape circleShape;
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-struct Bullet : public CollisionCircle, public sf::Drawable {
+class Bullet : public sf::Drawable {
+public:
     enum Type : sf::Uint8 {
         Common,
-        Bubble,
-        WaterParticle,
-        FireParticle
+        Bubble
     };
     Bullet::Type type;
 
@@ -30,15 +29,16 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
     sf::Clock* localClock = nullptr;
     sf::Time timer;
     sf::Color color;
+    CollisionCircle hitbox;
 
-    Bullet() : CollisionCircle() {
+    Bullet() {
         localClock = new sf::Clock();
     }
 
     Bullet(faction::Type faction, sf::Vector2f pos, sf::Vector2f velocity, float dmg, int penetr = COMMON_BULLET_PENETRATION,
            Bullet::Type type = Bullet::Common, sf::Time time = sf::Time::Zero) : Bullet() {
         this->type = type;
-        setCenter(pos);
+        hitbox.setCenter(pos);
         damage = dmg;
         penetration = penetr;
         Velocity = velocity;
@@ -47,22 +47,14 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
         switch (type) {
             case Bullet::Common:
             case Bullet::Bubble:
-                setRadius(COMMON_BULLET_RADIUS);
+                hitbox.setRadius(COMMON_BULLET_RADIUS);
                 switch (faction) {
                     case faction::Player: color = sf::Color(30, 195, 255); break;
                     case faction::Enemy:  color = sf::Color(72,  61, 139); break;
                 }
                 break;
-            case Bullet::WaterParticle:
-                setRadius(COMMON_BULLET_RADIUS * 3);
-                color = sf::Color(0, 0, 255);
-                break;
-            case Bullet::FireParticle:
-                setRadius(COMMON_BULLET_RADIUS * 3);
-                color = sf::Color(255, 0, 0);
-                break;
             default:
-                setRadius(COMMON_BULLET_RADIUS);
+                hitbox.setRadius(COMMON_BULLET_RADIUS);
                 break;
         }
     }
@@ -79,12 +71,10 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
             sf::Vector2i res;
             switch (type) {
                 case Bullet::Bubble:
-                    res = WillCollisionWithWalls(location->wallsRect, *this, Velocity * timer.asSeconds() * elapsedTime);
+                    res = WillCollisionWithWalls(location->wallsRect, hitbox, Velocity * timer.asSeconds() * elapsedTime);
                     break;
                 case Bullet::Common:
-                case Bullet::WaterParticle:
-                case Bullet::FireParticle:
-                    res = WillCollisionWithWalls(location->wallsRect, *this, Velocity * elapsedTime);
+                    res = WillCollisionWithWalls(location->wallsRect, hitbox, Velocity * elapsedTime);
                     break;
             }
             if (res.x == -1 || res.y == -1) {
@@ -95,7 +85,7 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
         switch (type) {
             case Bullet::Bubble:
                 timer -= sf::seconds(elapsedTime);
-                CollisionCircle::move(Velocity * timer.asSeconds() * elapsedTime);
+                hitbox.move(Velocity * timer.asSeconds() * elapsedTime);
                 if (!explode && timer <= sf::Time::Zero) {
                     Velocity = {0.f, 0.f};
                     explode = true;
@@ -104,22 +94,20 @@ struct Bullet : public CollisionCircle, public sf::Drawable {
                     if (ExplosionRadius.fromTop() > 0) {
                         ExplosionRadius += elapsedTime * 8.f;
                         color -= sf::Color(0, 0, 0, 4);
-                        setRadius(COMMON_BULLET_RADIUS * ExplosionRadius.cur);
-                        CollisionCircle::move(-COMMON_BULLET_RADIUS / 5, -COMMON_BULLET_RADIUS / 5);
+                        hitbox.setRadius(COMMON_BULLET_RADIUS * ExplosionRadius.cur);
+                        hitbox.move(-COMMON_BULLET_RADIUS / 5, -COMMON_BULLET_RADIUS / 5);
                     } else todel = true;
                 }
                 break;
             case Bullet::Common:
-            case Bullet::WaterParticle:
-            case Bullet::FireParticle:
-                CollisionCircle::move(Velocity * elapsedTime);
+                hitbox.move(Velocity * elapsedTime);
                 break;
         }
     }
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         circleShape.setFillColor(color);
-        circleShape.setRadius(getRadius());
-        circleShape.setPosition(getPosition());
+        circleShape.setRadius(hitbox.getRadius());
+        circleShape.setPosition(hitbox.getPosition());
         target.draw(circleShape);
     }
 };
@@ -129,13 +117,13 @@ using vB = std::vector<Bullet*>;
 vB Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
-    return packet << b.getCenter().x << b.getCenter().y << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage << b.timer.asSeconds() << b.type;
+    return packet << b.hitbox.getCenter().x << b.hitbox.getCenter().y << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage << b.timer.asSeconds() << b.type;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
     float timer;
     sf::Vector2f pos;
     packet >> pos.x >> pos.y >> b.Velocity.x >> b.Velocity.y >> b.penetration >> b.color >> b.damage >> timer;
-    b.setCenter(pos);
+    b.hitbox.setCenter(pos);
     b.timer = sf::seconds(timer);
     sf::Uint8 t; packet >> t; b.type = Bullet::Type(t);
     return packet;
