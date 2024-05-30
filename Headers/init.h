@@ -172,7 +172,8 @@ namespace Shaders {
                Distortion1, // linear left move
                Distortion2, // circle move
                Outline,
-               Bullet
+               Bullet,
+               Fire
                ;
 }
 
@@ -187,6 +188,7 @@ void loadShaders() {
     Shaders::Distortion2 .loadFromFile("sources/shaders/distorted2/distorted2.vert", "sources/shaders/distorted2/distorted2.frag" );
     Shaders::Outline     .loadFromFile("sources/shaders/outline/outline.vert",       "sources/shaders/outline/outline.frag"       );
     Shaders::Bullet      .loadFromFile("sources/shaders/bullet/bullet.vert",         "sources/shaders/bullet/bullet.frag"         );
+    Shaders::Fire        .loadFromFile("sources/shaders/fire/fire.vert",             "sources/shaders/fire/fire.frag"             );
 }
 
 namespace Musics {

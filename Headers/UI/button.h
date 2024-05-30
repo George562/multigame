@@ -8,30 +8,31 @@
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Button : public CollisionRect, public sf::Drawable {
+class Button : public sf::Drawable {
 public:
     sf::Texture* texture, *pushedTexture;
     sf::Sprite sprite;
     PlacedText ButtonText;
     bool Pushed = false, ShowButton = true;
     void (*buttonFunction)(void);
+    CollisionRect hitbox;
 
-    Button() : CollisionRect() {}
+    Button() {}
     Button(sf::String, void (*)(void));
 
     void setPosition(float, float);
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
-    void setCenter(float x, float y) { setPosition(x - getSize().x / 2, y - getSize().y / 2); }
+    void setCenter(float x, float y) { setPosition(x - hitbox.getSize().x / 2, y - hitbox.getSize().y / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 
     void setSize(float, float);
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
 
-    void setWord(sf::String word) { ButtonText.setString(word); ButtonText.setCenter(getCenter()); }
+    void setWord(sf::String word) { ButtonText.setString(word); ButtonText.setCenter(hitbox.getCenter()); }
     void setTexture(sf::Texture&, sf::Texture&);
-    void setCharacterSize(int size) { ButtonText.setCharacterSize(size); ButtonText.setCenter(getCenter()); }
+    void setCharacterSize(int size) { ButtonText.setCharacterSize(size); ButtonText.setCenter(hitbox.getCenter()); }
     virtual void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
-    bool OnTheButton(int& x, int& y) { return contains(x, y); }
+    bool OnTheButton(int& x, int& y) { return hitbox.contains(x, y); }
     bool isActivated(sf::Event&);
 };
 #pragma pack(pop)
@@ -55,17 +56,17 @@ void Button::setTexture(sf::Texture& texture, sf::Texture& pushedTexture) {
 }
 
 void Button::setPosition(float x, float y) {
-    CollisionRect::setPosition(x, y);
+    hitbox.setPosition(x, y);
     sprite.setPosition(x, y);
-    ButtonText.setCenter(getCenter());
+    ButtonText.setCenter(hitbox.getCenter());
 }
 
 void Button::setSize(float w, float h) {
-    if (getSize().x != 0 && getSize().y != 0) {
-        sprite.setScale(w / getSize().x, h / getSize().y);
+    if (hitbox.getSize().x != 0 && hitbox.getSize().y != 0) {
+        sprite.setScale(w / hitbox.getSize().x, h / hitbox.getSize().y);
     }
-    CollisionRect::setSize(w, h);
-    ButtonText.setCenter(getCenter());
+    hitbox.setSize(w, h);
+    ButtonText.setCenter(hitbox.getCenter());
 }
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {

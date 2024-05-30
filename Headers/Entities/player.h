@@ -19,7 +19,7 @@ Player::Player() : Creature("Player", faction::Player) {
     Health = {0.f, 20.f, 20.f}; HealthRecovery = Health.top / 5;
     Mana = {0.f, 10.f, 10.f}; ManaRecovery = Mana.top / 5;
     Armor = {0.f, 0.f, 0.f};
-    setRadius(60.f);
+    hitbox.setRadius(60.f);
     Velocity = {0.f, 0.f}; MaxVelocity = 900.f;
     Acceleration = 10000.f;
     Name.setOutlineColor(sf::Color::Green);
@@ -38,16 +38,16 @@ void Player::move(Location* location) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
         VelocityBuff *= 2;
 
-    setTarget(getCenter() + sf::Vector2f(PressedKeys[3] - PressedKeys[1], PressedKeys[2] - PressedKeys[0]) * MaxVelocity * VelocityBuff);
+    setTarget(hitbox.getCenter() + sf::Vector2f(PressedKeys[3] - PressedKeys[1], PressedKeys[2] - PressedKeys[0]) * MaxVelocity * VelocityBuff);
     Creature::move(location);
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Player& a) {
-    return packet << a.getCenter().x << a.getCenter().y;
+    return packet << a.hitbox.getCenter().x << a.hitbox.getCenter().y;
 }
 sf::Packet& operator>>(sf::Packet& packet, Player& a) {
     sf::Vector2f v;
     packet >> v.x >> v.y;
-    a.setCenter(v);
+    a.hitbox.setCenter(v);
     return packet;
 }

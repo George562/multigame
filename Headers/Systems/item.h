@@ -166,18 +166,18 @@ Item::Item(const Item& item) {
 }
 
 bool Item::CanBeActivated(CollisionCircle& player) {
-    return pickupable && !isInInventory && intersect(player);
+    return pickupable && !isInInventory && hitbox.intersect(player);
 }
 
 bool Item::isActivated(CollisionCircle& player, sf::Event& event) {
     if (pickupable && !isInInventory)
-        return intersect(player);
+        return hitbox.intersect(player);
     if (isInInventory) {
         if ((event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) &&
            (event.mouseButton.button == sf::Mouse::Button::Right || event.mouseButton.button == sf::Mouse::Button::Left))
-            return contains(event.mouseButton.x, event.mouseButton.y);
+            return hitbox.contains(event.mouseButton.x, event.mouseButton.y);
         if (event.type == sf::Event::MouseMoved)
-            return contains(event.mouseMove.x, event.mouseMove.y);
+            return hitbox.contains(event.mouseMove.x, event.mouseMove.y);
         return false;
     }
     return false;

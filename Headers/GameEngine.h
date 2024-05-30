@@ -395,7 +395,7 @@ void init() {
     shopSector.setPosition(0, 2 * size);
 
     Shaders::Flashlight.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Flashlight.setUniform("u_playerRadius", player.getRadius());
+    Shaders::Flashlight.setUniform("u_playerRadius", player.hitbox.getRadius());
 
     Shaders::Distortion1.setUniform("noise_png", Textures::Noise);
 
@@ -457,13 +457,13 @@ void init() {
     XButtonSprite.setTexture(Textures::XButton);
     XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
 
-    MMPortalRect.setSize(portal.getSize() * ScaleParam);
+    MMPortalRect.setSize(portal.hitbox.getSize() * ScaleParam);
     MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
 
     MMBoxRect.setSize(sf::Vector2f(105.f, 117.f) * ScaleParam);
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
 
-    MMPuddleRect.setSize(puddle.getSize() * ScaleParam);
+    MMPuddleRect.setSize(puddle.hitbox.getSize() * ScaleParam);
     MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
 
     MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
@@ -656,7 +656,7 @@ void initShop() {
     shopNPCTextFrame.setColor(sf::Color(0x10, 0xBB, 0xFF));
     shopNPCTextFrame.setScale((float) (scw - 2 * xOffset) / Textures::NPCDialogueFrame_Wide.getSize().x,
                               200.0 / Textures::NPCDialogueFrame_Wide.getSize().y);
-    shopNPCTextFrame.setPosition(xOffset, shopBackButton.getBottom() + yOffset / 5);
+    shopNPCTextFrame.setPosition(xOffset, shopBackButton.hitbox.getBottom() + yOffset / 5);
 
     shopNPCSprite.setTexture(Textures::DistortedScientist);
     shopNPCSprite.setScale((shopNPCTextFrame.getGlobalBounds().height - 2 * yOffset) / shopNPCSprite.getTexture()->getSize().x,
@@ -676,7 +676,7 @@ void initShop() {
     shopItemsFrame.setColor(sf::Color(0xCC, 0xAA, 0x11));
     shopItemsFrame.setScale((0.6 * scw - 2 * xOffset) / (Textures::ShopSectionFrame.getSize().x),
                             (0.35 * sch - yOffset) / (Textures::ShopSectionFrame.getSize().y));
-    shopItemsFrame.setPosition(xOffset, shopBackButton.getBottom() + 200.0 + yOffset / 2);
+    shopItemsFrame.setPosition(xOffset, shopBackButton.hitbox.getBottom() + 200.0 + yOffset / 2);
 
     shopItemsViewSizeX = (0.6 * scw - 2 * xOffset) / scw;
     shopItemsViewSizeY = (0.35 * sch - yOffset) / sch;
@@ -737,7 +737,7 @@ void initShop() {
                               sch - 150 - 1.5 * yOffset);
     
     shopPlayerCoinsText.setCharacterSize(40);
-    shopPlayerCoinsText.setPosition(shopBuyButton.getPosition() - sf::Vector2f(0, 100));
+    shopPlayerCoinsText.setPosition(shopBuyButton.hitbox.getPosition() - sf::Vector2f(0, 100));
 
     shopUIElements.push_back(&shopBG);
     shopUIElements.push_back(&shopBGPattern);
@@ -793,7 +793,7 @@ void draw() {
         }
 
         for (Enemy*& enemy: Enemies) {
-            EnemyHealthBar.setPosition(enemy->getPosition() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->getRadius() + 50.f));
+            EnemyHealthBar.setPosition(enemy->hitbox.getPosition() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->hitbox.getRadius() + 50.f));
             EnemyHealthBar.setValue(enemy->Health);
             preRenderTexture.draw(EnemyHealthBar);
         }
@@ -879,7 +879,7 @@ void drawWalls() {
 void drawMiniMap() {
     if (MiniMapHoldOnPlayer) {
         if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            MiniMapView.setCenter(player.getCenter() * ScaleParam);
+            MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
         }
     }
 
@@ -901,35 +901,35 @@ void drawMiniMap() {
         }
     }
 
-    MMPortalRect.setPosition(portal.getPosition() * ScaleParam);
+    MMPortalRect.setPosition(portal.hitbox.getPosition() * ScaleParam);
     window.draw(MMPortalRect);
 
     for (Interactable*& i: listOfBox) {
-        MMBoxRect.setPosition(i->getPosition() * ScaleParam);
+        MMBoxRect.setPosition(i->hitbox.getPosition() * ScaleParam);
         window.draw(MMBoxRect);
     }
     
-    MMPuddleRect.setPosition(puddle.getPosition() * ScaleParam);
+    MMPuddleRect.setPosition(puddle.hitbox.getPosition() * ScaleParam);
     window.draw(MMPuddleRect);
 
     for (Interactable*& i: listOfArtifact) {
-        MMArtifact.setPosition(i->getPosition() * ScaleParam);
+        MMArtifact.setPosition(i->hitbox.getPosition() * ScaleParam);
         window.draw(MMArtifact);
     }
 
     for (Enemy*& enemy: Enemies) {
-        MMEnemyCircle.setPosition(enemy->getPosition() * ScaleParam);
+        MMEnemyCircle.setPosition(enemy->hitbox.getPosition() * ScaleParam);
         window.draw(MMEnemyCircle);
     }
 
     // draw players
     if (ClientFuncRun || HostFuncRun) {
         for (Player& p: ConnectedPlayers) {
-            MMPlayerCircle.setPosition(p.getPosition() * ScaleParam);
+            MMPlayerCircle.setPosition(p.hitbox.getPosition() * ScaleParam);
             window.draw(MMPlayerCircle);
         }
     } else {
-        MMPlayerCircle.setPosition(player.getCenter() * ScaleParam);
+        MMPlayerCircle.setPosition(player.hitbox.getCenter() * ScaleParam);
         window.draw(MMPlayerCircle);
     }
     window.setView(GameView);
@@ -1170,7 +1170,7 @@ void updateInventoryUI() {
         }
 
         playerCoinSprite.setScale(1, 1);
-        playerCoinSprite.setPosition(invBackButton.getRight() + 100, invBackButton.getPosition().y - 20);
+        playerCoinSprite.setPosition(invBackButton.hitbox.getRight() + 100, invBackButton.hitbox.getPosition().y - 20);
         playerCoinSlot.background->setTexture(Textures::INVISIBLE);
         playerCoinSlot.amountText->setString(std::to_string(player.inventory.money));
         playerCoinSlot.amountText->setCharacterSize(40);
@@ -1380,15 +1380,15 @@ void EventHandler() {
             }
 
             for (Interactable*& x: InteractibeStuff) {
-                if (x->CanBeActivated(player)) {
-                    x->isActivated(player, event);
+                if (x->CanBeActivated(player.hitbox)) {
+                    x->isActivated(player.hitbox, event);
                     break;
                 }
             }
 
             for (int i = 0; i < PickupStuff.size(); i++) {
-                if (PickupStuff[i]->CanBeActivated(player)) {
-                    if (PickupStuff[i]->isActivated(player, event)) {
+                if (PickupStuff[i]->CanBeActivated(player.hitbox)) {
+                    if (PickupStuff[i]->isActivated(player.hitbox, event)) {
                         player.addItem(PickupStuff[i]);
                         doInventoryUpdate[inventoryPage::Items] = true;
                         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
@@ -1424,7 +1424,7 @@ void EventHandler() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         EscapeMenuActivated = true;
                     } else if (event.key.code == sf::Keyboard::H) {
-                        player.setCenter(size, size);
+                        player.hitbox.setCenter(size, size);
                         CurLocation = &WaitingRoomLoaction;
                     }
                 }
@@ -1668,12 +1668,12 @@ void LevelGenerate(int n, int m) {
     MiniMapZoom = std::pow(1.1, -10);
     MiniMapView.zoom(MiniMapZoom);
 
-    LabyrinthLocation.GenerateLocation(n, m, player.getCenter() / float(size));
+    LabyrinthLocation.GenerateLocation(n, m, player.hitbox.getCenter() / float(size));
 
     FillFloorRectsThread.launch();
 
-    portal.setCenter(player.getCenter());
-    puddle.setCenter(player.getCenter() + sf::Vector2f(size, size));
+    portal.setCenter(player.hitbox.getCenter());
+    puddle.setCenter(player.hitbox.getCenter() + sf::Vector2f(size, size));
 
     clearVectorOfPointer(listOfBox);
     for (int i = 0; i < 10; i++) {
@@ -1681,8 +1681,8 @@ void LevelGenerate(int n, int m) {
         setBox(listOfBox[i]);
         do {
             listOfBox[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
-            sf::Vector2f(std::rand() % int(size - listOfBox[i]->getSize().x), std::rand() % int(size - listOfBox[i]->getSize().y)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->getPosition().y / size][(int)listOfBox[i]->getPosition().x / size]);
+            sf::Vector2f(std::rand() % int(size - listOfBox[i]->hitbox.getSize().x), std::rand() % int(size - listOfBox[i]->hitbox.getSize().y)));
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->hitbox.getPosition().y / size][(int)listOfBox[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfBox[i]);
         DrawableStuff.push_back(listOfBox[i]);
@@ -1695,7 +1695,7 @@ void LevelGenerate(int n, int m) {
         do {
             listOfArtifact[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
             sf::Vector2f(std::rand() % (size - Textures::Architect.getSize().x / 4), std::rand() % (size - Textures::Architect.getSize().y / 4)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->getPosition().y / size][(int)listOfArtifact[i]->getPosition().x / size]);
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->hitbox.getPosition().y / size][(int)listOfArtifact[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfArtifact[i]);
         DrawableStuff.push_back(listOfArtifact[i]);
@@ -1708,7 +1708,7 @@ void LevelGenerate(int n, int m) {
         do {
             listOfFire[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
             sf::Vector2f(std::rand() % (size - Textures::Fire.getSize().x / 4), std::rand() % (size - Textures::Fire.getSize().y / 4)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfFire[i]->getPosition().y / size][(int)listOfFire[i]->getPosition().x / size]);
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfFire[i]->hitbox.getPosition().y / size][(int)listOfFire[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfFire[i]);
         DrawableStuff.push_back(listOfFire[i]);
@@ -1724,9 +1724,9 @@ void LevelGenerate(int n, int m) {
 
     for (int i = 0; i < Enemies.size(); i++) {
         do {
-            Enemies[i]->setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
-        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->getPosition().y / size][(int)Enemies[i]->getPosition().x / size] ||
-                 distance(Enemies[i]->getPosition(), player.getCenter()) < size * 3);
+            Enemies[i]->hitbox.setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
+        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->hitbox.getPosition().y / size][(int)Enemies[i]->hitbox.getPosition().x / size] ||
+                 distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
     }
     FillFloorRectsThread.wait();
 }
@@ -1734,14 +1734,14 @@ void LevelGenerate(int n, int m) {
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
 
-    player.setCenter(3.5f * size, 2.5f * size);
-    FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
+    player.hitbox.setCenter(3.5f * size, 2.5f * size);
+    FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
     player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
     portal.setPosition(1612.5, 1545);
     puddle.setPosition(1012.5, 1545);
 
-    sf::Vector2f PlayerPos = player.getCenter() / (float)size;
+    sf::Vector2f PlayerPos = player.hitbox.getCenter() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
     FillFloorRectsThread.launch();
 
@@ -1753,13 +1753,13 @@ void LoadMainMenu() {
         InterfaceStuff.clear();
         InteractibeStuff.clear();
 
-        player.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
+        player.hitbox.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
 
         MiniMapActivated = false;
         EscapeMenuActivated = false;
 
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter(player.getCenter() * ScaleParam);
+        MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
 
         Musics::MainMenu.pause();
         if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
@@ -1772,7 +1772,7 @@ void LoadMainMenu() {
             curLevel++;
         }
         LevelGenerate(START_N, START_M);
-        FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
+        FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);
         DrawableStuff.push_back(&portal);
@@ -1805,8 +1805,8 @@ void LoadMainMenu() {
     });
 
     // Set cameras
-    GameView.setCenter(player.getCenter());
-    MiniMapView.setCenter(player.getCenter() * ScaleParam);
+    GameView.setCenter(player.hitbox.getCenter());
+    MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     Musics::Fight1.stop();
@@ -1832,7 +1832,7 @@ void LoadMainMenu() {
     newItem->setAnimation(*itemTextureName[ItemID::regenDrug]);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
-    PickupStuff[0]->dropTo(player.getCenter() + sf::Vector2f(100, 100));
+    PickupStuff[0]->dropTo(player.hitbox.getCenter() + sf::Vector2f(100, 100));
 
     curShop = &mainMenuShop;
 
@@ -1863,13 +1863,13 @@ void updateBullets() {
             DeletePointerFromVector(Bullets, i--);
         } else {
             Bullets[i]->move(CurLocation);
-            if (!faction::friends(Bullets[i]->fromWho, player.faction) && player.intersect(*Bullets[i])) {
+            if (!faction::friends(Bullets[i]->fromWho, player.faction) && player.hitbox.intersect(Bullets[i]->hitbox)) {
                 player.getDamage(Bullets[i]->damage);
                 Bullets[i]->penetration--;
             }
             else {
                 for (Enemy*& enemy: Enemies) {
-                    if (!faction::friends(Bullets[i]->fromWho, enemy->faction) && enemy->intersect(*Bullets[i])) {
+                    if (!faction::friends(Bullets[i]->fromWho, enemy->faction) && enemy->hitbox.intersect(Bullets[i]->hitbox)) {
                         enemy->getDamage(Bullets[i]->damage);
                         Bullets[i]->penetration--;
                         TempText* tempText = new TempText(sf::seconds(1.5f));
@@ -1878,7 +1878,7 @@ void updateBullets() {
                         tempText->setOutlineThickness(3);
                         tempText->setString(std::to_string(int(Bullets[i]->damage)));
                         tempText->setFillColor(sf::Color(250, 50, 50, 200));
-                        tempText->setCenter(enemy->getPosition());
+                        tempText->setCenter(enemy->hitbox.getPosition());
                         DamageText.push_back(tempText);
                         break;
                     }
@@ -1997,7 +1997,7 @@ bool useItem(Item*& item) {
 void updateShaders() {
     sf::Vector2f uMouse(sf::Mouse::getPosition());
     float uTime = GameClock->getElapsedTime().asSeconds();
-    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getCenter()));
+    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.hitbox.getCenter()));
 
     Shaders::Flashlight.setUniform("uMouse", uMouse);
     Shaders::Flashlight.setUniform("uPlayerPosition", uPlayerPosition);
@@ -2019,7 +2019,7 @@ void updateShaders() {
 bool CanSomethingBeActivated() {
     CurInteractable = nullptr;
     for (Interactable*& x: InteractibeStuff) {
-        if (x->CanBeActivated(player)) {
+        if (x->CanBeActivated(player.hitbox)) {
             CurInteractable = x;
             return true;
         }
@@ -2079,7 +2079,7 @@ void MainLoop() {
             if (Enemies[i]->Health.toBottom() == 0) {
                 if (Enemies[i]->dropInventory) {
                     for (Item*& item : Enemies[i]->inventory.items) {
-                        item->dropTo(Enemies[i]->getPosition());
+                        item->dropTo(Enemies[i]->hitbox.getPosition());
 
                         PickupStuff.push_back(item);
                         DrawableStuff.push_back(item);
@@ -2104,11 +2104,11 @@ void MainLoop() {
                     }
                 }
             } else {
-                Enemies[i]->setTarget(player.getCenter());
+                Enemies[i]->setTarget(player.hitbox.getCenter());
                 Enemies[i]->move(CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getCenter(), Enemies[i]->faction);
+                Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, player.hitbox.getCenter(), Enemies[i]->faction);
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
@@ -2125,7 +2125,7 @@ void MainLoop() {
         }
         if (!window.hasFocus()) {
             if (player.CurWeapon != nullptr) {
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
+                player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             updateBullets();
 
@@ -2145,8 +2145,8 @@ void MainLoop() {
         } else {
             if (!chat.inputted && !isDrawInventory && !isDrawShop) {
                 player.move(CurLocation);
-                GameView.setCenter(player.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
-                FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
+                GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
+                FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
                     player.CurWeapon->HolsterAction();
                 }
@@ -2154,7 +2154,7 @@ void MainLoop() {
             int wasBulletsSize = Bullets.size();
 
             if (player.CurWeapon != nullptr) {
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
+                player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             for (Weapon*& weapon : arsenal)
                 if (weapon->holstered) weapon->Reload(player.Mana);
@@ -2177,7 +2177,7 @@ void MainLoop() {
             updateBullets();
 
             if (HostFuncRun || ClientFuncRun) {
-                ConnectedPlayers[ComputerID].setPosition(player.getCenter());
+                ConnectedPlayers[ComputerID].hitbox.setPosition(player.hitbox.getCenter());
                 mutex.lock();
                 SendPacket << pacetStates::PlayerPos;
                 if (HostFuncRun) {
@@ -2203,11 +2203,11 @@ void MainLoop() {
 
         draw();
 
-        if (puddle.intersect(player))
+        if (puddle.hitbox.intersect(player.hitbox))
             applyEffect(player, new Effect(Effects::Heal, std::vector<float>{30.f}, sf::seconds(1.5f)));
 
         for (int i = 0; i < listOfFire.size(); i++) {
-            if (listOfFire[i]->intersect(player))
+            if (listOfFire[i]->hitbox.intersect(player.hitbox))
                 applyEffect(player, new Effect(Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
         }
         processEffects();
@@ -2245,7 +2245,7 @@ void ClientConnect() {
         selector.add(*client);
 
         ConnectedPlayers.push_back(*(new Player()));
-        ConnectedPlayers[ConnectedPlayers.size() - 1].setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
+        ConnectedPlayers[ConnectedPlayers.size() - 1].hitbox.setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
         SendPacket << pacetStates::PlayersAmount << (sf::Int32)ConnectedPlayers.size() - 1;
 
         DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
@@ -2416,8 +2416,8 @@ void funcOfClient() {
                             for (Player& x: ConnectedPlayers) {
                                 ReceivePacket >> x;
                             }
-                            player.setCenter(ConnectedPlayers[ComputerID].getPosition());
-                            GameView.setCenter(player.getCenter());
+                            player.hitbox.setCenter(ConnectedPlayers[ComputerID].hitbox.getPosition());
+                            GameView.setCenter(player.hitbox.getCenter());
                             break;
                         case pacetStates::ChatEvent:
                             ReceivePacket >> PacetData;

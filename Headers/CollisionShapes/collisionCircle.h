@@ -8,7 +8,7 @@ class CollisionCircle : public CollisionShape {
 private:
     sf::Vector2f center;
     float Radius;
-    void updateShape() {
+    void updateShape() override {
         for (int i = 0; i < pointCount; i++) {
             points[i] = sf::Vector2f(center.x + Radius * std::cos(i * 2 * M_PI / pointCount),
                                      center.y + Radius * std::sin(i * 2 * M_PI / pointCount));
