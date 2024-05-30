@@ -91,7 +91,6 @@ namespace Textures {
                 floor1x,
                 Puddle,
                 Fire,
-                Fireball,
                 Architect,
                 Noise,
 //////////////////////////////////////////////////////////// Effect Textures
@@ -134,7 +133,6 @@ void loadTextures() {
     Textures::floor1x                   .loadFromFile("sources/textures/floors/floor1x.png");
     Textures::Puddle                    .loadFromFile("sources/textures/Puddle.png");
     Textures::Fire                      .loadFromFile("sources/textures/Fire.png");
-    Textures::Fireball                  .loadFromFile("sources/textures/Fireball.png");
     Textures::Architect                 .loadFromFile("sources/textures/Architect.png");
     Textures::Noise                     .loadFromFile("sources/textures/noise.png");
 

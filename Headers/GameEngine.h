@@ -11,7 +11,6 @@
 #include "UI/shopSlot.h"
 #include "Systems/effect.h"
 #include "Systems/shop.h"
-#include "LevelSystem/fire.h"
 
 
 //////////////////////////////////////////////////////////// Settings of the game
@@ -158,11 +157,8 @@ Interactable portal,
              puddle,
              shopSector;
 std::vector<Interactable*> listOfBox,
-                           listOfArtifact;
-
-
-//////////////////////////////////////////////////////////// Fire
-std::vector<Fire*> FireSet;
+                           listOfArtifact,
+                           listOfFire;
 
 
 //////////////////////////////////////////////////////////// Locations
@@ -192,8 +188,6 @@ Rifle rifle;
 Bubblegun bubblegun;
 Armageddon armageddon;
 Chaotic chaotic;
-FireHose fireHose;
-Flamethrower flamethrower;
 std::vector<Weapon*> arsenal = {
     &pistol,
     &shotgun,
@@ -250,6 +244,7 @@ void FillFloorRects();
 
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
+void setFire(Interactable*&);
 //----------------------------
 
 
@@ -262,9 +257,6 @@ void processEffects();
 void updateEffects(Creature*);
 void applyEffect(Creature&, Effect*);
 void clearEffect(Creature&, Effect*);
-
-void fireUpdate();
-bool firePropagationAllowed(sf::Vector2i&, sf::Vector2i);
 //----------------------------
 
 
@@ -334,17 +326,15 @@ Button EscapeButton("Exit", [](){
     ListOfPlayers.clear();
     clearVectorOfPointer(Bullets);
     clearVectorOfPointer(Enemies);
-    clearVectorOfPointer(FireSet);
     clearVectorOfPointer(TempTextsOnGround);
     clearVectorOfPointer(TempTextsOnScreen);
     clearVectorOfPointer(DamageText);
     clearVectorOfPointer(MessageText);
     clearVectorOfPointer(listOfBox);
     clearVectorOfPointer(listOfArtifact);
+    clearVectorOfPointer(listOfFire);
     clearVectorOfPointer(PickupStuff);
     player.CurWeapon->lock = true;
-    if (DeleteFromVector(arsenal, (Weapon*)&fireHose))     CurWeapon.top -= 1;
-    if (DeleteFromVector(arsenal, (Weapon*)&flamethrower)) CurWeapon.top -= 1;
     normalize(CurWeapon);
     LoadMainMenu();
     saveGame();
@@ -623,9 +613,7 @@ void initShop() {
     shopItemSlotsElements.resize(MaxItemID, ShopSlot());
     shopPlayerSlotsElements.resize(MaxItemID, ShopSlot());
     shopItemSlotsRects.resize(MaxItemID);
-    mainMenuShop.setShop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100),
-                                                new Item(ItemID::flamethrower, 1),
-                                                new Item(ItemID::fireHose, 1)},
+    mainMenuShop.setShop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100)},
                          std::vector<int>{20, 100, 199});
     mainMenuShop.setFunction([](){
         if (shopSelectedItem != nullptr) {
@@ -1670,6 +1658,11 @@ void setArtifact(Interactable*& artifact) {
     });
 }
 
+void setFire(Interactable*& fire) {
+    fire->setAnimation(Textures::Fire, &Shaders::Player);
+    fire->setSize(70.f, 70.f);
+}
+
 void LevelGenerate(int n, int m) {
     MiniMapView.zoom(1 / MiniMapZoom);
     MiniMapZoom = std::pow(1.1, -10);
@@ -1708,18 +1701,18 @@ void LevelGenerate(int n, int m) {
         DrawableStuff.push_back(listOfArtifact[i]);
     }
 
-    clearVectorOfPointer(FireSet);
-    // for (int i = 0; i < 1; i++) {
-    //     FireSet.push_back(new Fire(sf::seconds(15.f)));
-    //     FireSet[i]->setAnimation(Textures::Fire, 4, 1, sf::seconds(1));
-    //     FireSet[i]->setSize(50.f, 50.f);
-    //     // do {
-    //         //FireSet[i]->setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
-    //     // } while (!LabyrinthLocation.EnableTiles[(int)FireSet[i]->PosY / size][(int)FireSet[i]->PosX / size]);
-    //     if (CurLocation->room.x != -1 && CurLocation->room.y != -1) {
-    //         FireSet[i]->setPosition(sf::Vector2f(CurLocation->room.x + 0.5f, CurLocation->room.y + 0.5f) * (float)size);
-    //     }
-    // }
+    clearVectorOfPointer(listOfFire);
+    for (int i = 0; i < 2; i++) {
+        listOfFire.push_back(new Interactable());
+        setFire(listOfFire[i]);
+        do {
+            listOfFire[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
+            sf::Vector2f(std::rand() % (size - Textures::Fire.getSize().x / 4), std::rand() % (size - Textures::Fire.getSize().y / 4)));
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfFire[i]->getPosition().y / size][(int)listOfFire[i]->getPosition().x / size]);
+
+        InteractibeStuff.push_back(listOfFire[i]);
+        DrawableStuff.push_back(listOfFire[i]);
+    }
 
     clearVectorOfPointer(Enemies);
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
@@ -1787,9 +1780,6 @@ void LoadMainMenu() {
         for (Enemy* &enemy: Enemies) {
             DrawableStuff.push_back(enemy);
         }
-        for (Fire* &fire: FireSet) {
-            DrawableStuff.push_back(fire);
-        }
 
         InterfaceStuff.push_back(&ManaBar);
         InterfaceStuff.push_back(&HpBar);
@@ -1844,18 +1834,6 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.getCenter() + sf::Vector2f(100, 100));
 
-    Item* fireHosePickup = new Item(ItemID::fireHose, 1);
-    fireHosePickup->setAnimation(*itemTextureName[ItemID::fireHose]);
-    PickupStuff.push_back(fireHosePickup);
-    DrawableStuff.push_back(PickupStuff[1]);
-    PickupStuff[1]->dropTo(player.getCenter() + sf::Vector2f(400, 300));
-
-    Item* flamethrowerPickup = new Item(ItemID::flamethrower, 1);
-    flamethrowerPickup->setAnimation(*itemTextureName[ItemID::flamethrower]);
-    PickupStuff.push_back(flamethrowerPickup);
-    DrawableStuff.push_back(PickupStuff[2]);
-    PickupStuff[2]->dropTo(player.getCenter() + sf::Vector2f(-550, -120));
-
     curShop = &mainMenuShop;
 
     listOfBox.push_back(new Interactable());
@@ -1882,14 +1860,6 @@ void LoadMainMenu() {
 void updateBullets() {
     for (int i = 0; i < Bullets.size(); i++) {
         if (Bullets[i]->penetration < 0 || Bullets[i]->todel) {
-            if (Bullets[i]->type == Bullet::FireParticle) {
-                Fire* fire = new Fire(sf::seconds(10));
-                fire->setAnimation(Textures::Fire, 4, 1, sf::seconds(1));
-                fire->setSize(50.f, 50.f);
-                fire->setPosition(Bullets[i]->getPosition());
-                FireSet.push_back(fire);
-                DrawableStuff.push_back(fire);
-            }
             DeletePointerFromVector(Bullets, i--);
         } else {
             Bullets[i]->move(CurLocation);
@@ -1897,16 +1867,7 @@ void updateBullets() {
                 player.getDamage(Bullets[i]->damage);
                 Bullets[i]->penetration--;
             }
-            if (Bullets[i]->type == Bullet::WaterParticle) {
-                for (int j = 0; j < FireSet.size(); j++) {
-                    if (FireSet[j]->intersect(*Bullets[i])) {
-                        DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(FireSet[j]));
-                        DeletePointerFromVector(FireSet, j--);
-                        Bullets[i]->todel = true;
-                        break;
-                    }
-                }
-            } else {
+            else {
                 for (Enemy*& enemy: Enemies) {
                     if (!faction::friends(Bullets[i]->fromWho, enemy->faction) && enemy->intersect(*Bullets[i])) {
                         enemy->getDamage(Bullets[i]->damage);
@@ -2024,53 +1985,8 @@ bool useItem(Item*& item) {
         case ItemID::regenDrug:
             applyEffect(player, new Effect(Effects::HPRegen, std::vector<float>{1.0f}, sf::seconds(10.f)));
             return true;
-        case ItemID::fireHose:
-            fireHose.ManaStorage = 100;
-            arsenal.push_back(&fireHose);
-            CurWeapon.top += 1;
-            return true;
-        case ItemID::flamethrower:
-            flamethrower.ManaStorage = 100;
-            arsenal.push_back(&flamethrower);
-            CurWeapon.top +=1;
-            return true;
         default:
             return false;
-    }
-}
-
-bool firePropagationAllowed(sf::Vector2i& ancestor, sf::Vector2i pos) {
-    if (pos.y < 0 || pos.x < 0) return false; // если огонь пытается пересечь самые левые или самые верхние стены
-    ancestor /= size;
-    pos /= size;
-    if (ancestor.y == pos.y && ancestor.x == pos.x) return true; // одинаковые тайлы
-    // проверка на стену между тайлами
-    return ancestor.y == pos.y && !CurLocation->walls[pos.y * 2 + 1][std::max(ancestor.x, pos.x)] || // соседние тайлы по горизонтали
-           ancestor.x == pos.x && !CurLocation->walls[std::max(ancestor.y, pos.y) * 2][pos.x];       // соседние тайлы по вертикали
-}
-
-void fireUpdate() {
-    float angle;
-    for (int i = 0; i < FireSet.size(); i++) {
-        float dist = 2.5 * FireSet[i]->getSize().y;
-        if (FireSet[i]->localClock->getElapsedTime() >= FireSet[i]->howLongToExist) {
-            FireSet[i]->localClock->restart();
-            FireSet[i]->howLongToExist = sf::seconds(std::rand() % 4 + 15.f);
-
-            Fire* descendant1 = new Fire(sf::seconds(std::rand() % 4 + 15.f));
-            descendant1->setAnimation(Textures::Fire, 4, 1, sf::seconds(1));
-            descendant1->setSize(50.f, 50.f);
-            sf::Vector2i posFather = sf::Vector2i(FireSet[i]->getCenter());
-            sf::Vector2f posSon = descendant1->getCenter();
-            do {
-                angle = (std::rand() % 360) * M_PI / 180;
-                posSon = sf::Vector2f(posFather) + dist * sf::Vector2f(std::sin(angle), std::cos(angle));
-            } while (!CurLocation->EnableTiles[posSon.y / size][posSon.x / size] ||
-                     !firePropagationAllowed(posFather, sf::Vector2i(posSon)));
-            descendant1->setCenter(posSon);
-            FireSet.push_back(descendant1);
-            DrawableStuff.push_back(descendant1);
-        }
     }
 }
 //==============================================================================================
@@ -2197,8 +2113,6 @@ void MainLoop() {
             }
         }
 
-        fireUpdate();
-
         player.UpdateState();
     
         if (CurLocation == &LabyrinthLocation) {
@@ -2241,18 +2155,6 @@ void MainLoop() {
 
             if (player.CurWeapon != nullptr) {
                 player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
-                if (player.CurWeapon == &fireHose && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
-                    DeleteFromVector(arsenal, (Weapon*)&fireHose);
-                    CurWeapon -= 1;
-                    CurWeapon.top -= 1;
-                    player.ChangeWeapon(arsenal[CurWeapon.cur]);
-                }
-                if (player.CurWeapon == &flamethrower && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
-                    DeleteFromVector(arsenal, (Weapon*)&flamethrower);
-                    CurWeapon -= 1;
-                    CurWeapon.top -= 1;
-                    player.ChangeWeapon(arsenal[CurWeapon.cur]);
-                }
             }
             for (Weapon*& weapon : arsenal)
                 if (weapon->holstered) weapon->Reload(player.Mana);
@@ -2304,8 +2206,8 @@ void MainLoop() {
         if (puddle.intersect(player))
             applyEffect(player, new Effect(Effects::Heal, std::vector<float>{30.f}, sf::seconds(1.5f)));
 
-        for (int i = 0; i < FireSet.size(); i++) {
-            if (FireSet[i]->intersect(player))
+        for (int i = 0; i < listOfFire.size(); i++) {
+            if (listOfFire[i]->intersect(player))
                 applyEffect(player, new Effect(Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
         }
         processEffects();
