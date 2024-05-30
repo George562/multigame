@@ -405,6 +405,8 @@ void init() {
 
     Shaders::Bullet.setUniform("noise_png", Textures::Noise);
 
+    Shaders::Fire.setUniform("noise_png", Textures::Noise);
+
     IPPanel       .setTexture(Textures::YellowPanel);
     ListOfPlayers .setTexture(Textures::SteelFrame);
 
@@ -2010,6 +2012,8 @@ void updateShaders() {
     Shaders::Distortion2.setUniform("uTime", uTime);
 
     Shaders::Bullet.setUniform("uTime", uTime);
+
+    Shaders::Fire.setUniform("uTime", uTime);
 }
 //==============================================================================================
 
