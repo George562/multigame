@@ -79,12 +79,10 @@ sf::Clock* GameClock;
 
 namespace Textures {
 //////////////////////////////////////////////////////////// Textures
-    sf::Texture ScottPilgrim,
-                Distorted,
+    sf::Texture Distorted,
                 DistortedScientist,
                 Player,
                 Portal,
-                PortalAnimation2,
                 WallG,
                 WallV,
                 XButton,
@@ -123,12 +121,10 @@ namespace Textures {
 }
 
 void loadTextures() {
-    Textures::ScottPilgrim            .loadFromFile("sources/textures/scottpilgrim_multiple.png");
     Textures::Distorted               .loadFromFile("sources/textures/Distorted.png");
     Textures::DistortedScientist      .loadFromFile("sources/textures/DistortedScientist.png");
     Textures::Player                  .loadFromFile("sources/textures/Player.png");
     Textures::Portal                  .loadFromFile("sources/textures/Portal.png");
-    Textures::PortalAnimation2        .loadFromFile("sources/textures/PortalAnimation2.png");
     Textures::WallG                   .loadFromFile("sources/textures/wallG.png");
     Textures::WallV                   .loadFromFile("sources/textures/wallV.png");
     Textures::XButton                 .loadFromFile("sources/textures/XButton.png");
