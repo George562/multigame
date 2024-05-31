@@ -33,7 +33,7 @@ public:
             this->customTickClock = new sf::Clock();
         }
     }
-    
+
     ~Effect() {
         if (localClock) {
             delete localClock;

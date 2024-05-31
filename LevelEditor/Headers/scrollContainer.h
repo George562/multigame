@@ -24,7 +24,7 @@ private:
 public:
     ScrollContainer() {};
     ScrollContainer(float, float, float, float, sf::FloatRect, int);
-    
+
     void addElement(InteractionRect&);
     InteractionRect* getRect() { return &backRect; }
     sf::View* getView() { return &scrollView; }
@@ -35,7 +35,7 @@ public:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
 
-ScrollContainer::ScrollContainer(float _posX, float _posY, float _width, float _height, 
+ScrollContainer::ScrollContainer(float _posX, float _posY, float _width, float _height,
                                  sf::FloatRect viewport, int multiplier = 10)
 {
     backRect = InteractionRect(_posX, _posY, _width, _height);
@@ -107,10 +107,10 @@ bool ScrollContainer::isActivated(sf::Event& event)
 void ScrollContainer::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
     sf::View tmpView = target.getView();
-    
+
     target.draw(backRect);
     target.setView(scrollView);
-    
+
     target.draw(scrollBoundRect);
     target.draw(scrollRect);
 

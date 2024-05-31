@@ -86,7 +86,7 @@ bool Button::isActivated(sf::Event& event) {
         }
     }
     if (event.type == sf::Event::MouseButtonPressed &&
-        OnTheButton(event.mouseButton.x, event.mouseButton.y) && 
+        OnTheButton(event.mouseButton.x, event.mouseButton.y) &&
         event.mouseButton.button == sf::Mouse::Button::Left) {
             Pushed = true;
             sprite.setTexture(*pushedTexture);

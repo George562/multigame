@@ -43,6 +43,6 @@ bool NumBox::isActivated(sf::Event& event)
         drawRect.setFillColor(readInput ? activeColor : inactiveColor);
         return true;
     }
-    
+
     return false;
 }

@@ -16,7 +16,7 @@ public:
             itemPrices[(*stock)[i]->id] = prices[i];
         }
     }
-    
+
     void setShop(std::vector<Item*>* stock, std::vector<int> prices) {
         for (int i = 0; i < stock->size(); i++) {
             soldItems.addItem((*stock)[i]);
