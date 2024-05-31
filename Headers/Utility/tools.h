@@ -113,10 +113,21 @@ sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
     return sf::Vector2f(a.x * b.x, a.y * b.y);
 }
 
-sf::Packet& operator<<(sf::Packet& packet, sf::Vector2i& a) {
+template <typename T>
+std::ostream& operator<<(std::ostream& stream, sf::Vector2<T>& a) {
+    return stream << a.x << ", " << a.y;
+}
+template <typename T>
+std::istream& operator>>(std::istream& stream, sf::Vector2<T>& a) {
+    return stream >> a.x >> a.y;
+}
+
+template <typename T>
+sf::Packet& operator<<(sf::Packet& packet, sf::Vector2<T>& a) {
     return packet << a.x << a.y;
 }
-sf::Packet& operator>>(sf::Packet& packet, sf::Vector2i& a) {
+template <typename T>
+sf::Packet& operator>>(sf::Packet& packet, sf::Vector2<T>& a) {
     return packet >> a.x >> a.y;
 }
 

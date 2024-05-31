@@ -991,12 +991,15 @@ void draw() {
 
 void drawFloor() {
     std::vector<sf::Texture>::iterator it = FloorTextureRects.begin();
+    sf::RenderStates states;
     for (int i = 0; i < CurLocation->n; i++) {
         for (int j = 0; j < CurLocation->m; j++) {
             if (CurLocation->EnableTiles[i][j]) {
                 FLoorTileSprite.setTexture(*it);
                 FLoorTileSprite.setPosition(size * j, size * i);
-                preRenderTexture.draw(FLoorTileSprite);
+                states.shader = (random(i, j) <= 0.9) ? nullptr : &Shaders::WaveMix;
+                Shaders::WaveMix.setUniform("uPosition", sf::Vector2f(j, i));
+                preRenderTexture.draw(FLoorTileSprite, states);
                 it++;
             }
         }
@@ -2166,6 +2169,8 @@ void updateShaders() {
     Shaders::Bullet.setUniform("uTime", uTime);
 
     Shaders::Fire.setUniform("uTime", uTime);
+
+    Shaders::WaveMix.setUniform("uTime", uTime);
 }
 //==============================================================================================
 
