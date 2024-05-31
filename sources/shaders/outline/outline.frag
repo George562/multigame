@@ -4,7 +4,7 @@ uniform vec2 uResolution;  // Canvas size (width, height)
 
 void main() {
     vec4 pixel = texture2D(overlay, gl_TexCoord[0].xy);
-    
+
     float width = 3.;
 
     if (pixel.a == 0.) {

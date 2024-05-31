@@ -34,7 +34,7 @@ public:
     size_t TextSize()                   { return getString().getSize(); }
     void insert(int pos, sf::String t)  { setString(getString().substring(0, pos) + t + getString().substring(pos, TextSize())); }
 
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { 
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (ShowText) {
             target.draw(static_cast<sf::Text>(*this), states);
         }

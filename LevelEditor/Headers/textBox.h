@@ -69,13 +69,13 @@ bool TextBox::isActivated(sf::Event& event)
 
         else if(event.key.code == sf::Keyboard::Semicolon)
             text.setString(text.getString() + (char)(';' - event.key.shift));
-        
+
         else if(event.key.code == sf::Keyboard::Backslash && !event.key.shift)
             text.setString(text.getString() + '\\');
 
         else if(event.key.code == sf::Keyboard::Slash && !event.key.shift)
             text.setString(text.getString() + '/');
-        
+
         fullString = (std::string)text.getString();
         setSize(std::max((int)initialWidth, (int)(text.getGlobalBounds().width + text.getCharacterSize() / 3)), height);
         return true;

@@ -133,7 +133,7 @@ void loadTextures() {
     Textures::Box                       .loadFromFile("sources/textures/Box.png");
     Textures::floor1x                   .loadFromFile("sources/textures/floors/floor1x.png");
     Textures::Puddle                    .loadFromFile("sources/textures/Puddle.png");
-    Textures::Fire                      .loadFromFile("sources/textures/Fire.png");
+    Textures::Fire.create(140.f, 174.f);
     Textures::Architect                 .loadFromFile("sources/textures/Architect.png");
     Textures::Noise                     .loadFromFile("sources/textures/noise.png");
 
@@ -158,7 +158,7 @@ void loadTextures() {
     Textures::ShopBG                    .loadFromFile("sources/textures/Panels/ShopBG.png");
     Textures::ShopSectionFrame          .loadFromFile("sources/textures/Panels/ShopSectionFrame.png");
     Textures::ShopItemPhotoFrame        .loadFromFile("sources/textures/Panels/ShopItemPhotoFrame.png");
-       
+
     Textures::INVISIBLE                 .create(size, size);
 
     Textures::PH_gun                    .loadFromFile("sources/textures/Placeholders/kitchengun.png");

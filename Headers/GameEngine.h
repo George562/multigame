@@ -439,6 +439,8 @@ void init() {
 
     Shaders::Bullet.setUniform("noise_png", Textures::Noise);
 
+    Shaders::Fire.setUniform("noise_png", Textures::Noise);
+
     IPPanel       .setTexture(Textures::YellowPanel);
     ListOfPlayers .setTexture(Textures::SteelFrame);
 
@@ -884,7 +886,7 @@ void initShop() {
     shopBuyButton.setSize(400, 150);
     shopBuyButton.setPosition(shopPlayerInventoryFrame.getPosition().x + (0.4 * scw - xOffset) / 5,
                               sch - 150 - 1.5 * yOffset);
-    
+
     shopPlayerCoinsText.setCharacterSize(40);
     shopPlayerCoinsText.setPosition(shopBuyButton.hitbox.getPosition() - sf::Vector2f(0, 100));
 
@@ -1056,7 +1058,7 @@ void drawMiniMap() {
         MMBoxRect.setPosition(i->hitbox.getPosition() * ScaleParam);
         window.draw(MMBoxRect);
     }
-    
+
     MMPuddleRect.setPosition(puddle.hitbox.getPosition() * ScaleParam);
     window.draw(MMPuddleRect);
 
@@ -1233,7 +1235,7 @@ void drawInventory() {
             if (isChoosingComponent)
                 window.draw(compListBG);
             break;
-        
+
         case inventoryPage::Stats:
             for (sf::Drawable*& elem : invPageElements[inventoryPage::Stats])
                 window.draw(*elem);
@@ -1262,7 +1264,7 @@ void drawShop() {
 
     window.draw(playerCoinSprite);
     window.draw(*playerCoinSlot.amountText);
-    
+
     window.setView(ShopStockView);
     sf::Transform viewTransform = sf::Transform::Identity;
     viewTransform = viewTransform.scale(1, 1 / shopItemsViewSizeY);
@@ -1811,7 +1813,7 @@ void setArtifact(Interactable*& artifact) {
 }
 
 void setFire(Interactable*& fire) {
-    fire->setAnimation(Textures::Fire, &Shaders::Player);
+    fire->setAnimation(Textures::Fire, &Shaders::Fire);
     fire->setSize(70.f, 70.f);
 }
 
@@ -2162,6 +2164,8 @@ void updateShaders() {
     Shaders::Distortion2.setUniform("uTime", uTime);
 
     Shaders::Bullet.setUniform("uTime", uTime);
+
+    Shaders::Fire.setUniform("uTime", uTime);
 }
 //==============================================================================================
 
@@ -2266,7 +2270,7 @@ void MainLoop() {
         }
 
         player.UpdateState();
-    
+
         if (CurLocation == &LabyrinthLocation) {
             if (Musics::Fight1.getDuration() - Musics::Fight1.getPlayingOffset() < sf::seconds(0.3f)) {
                 Musics::Fight2.play();
