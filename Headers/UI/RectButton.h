@@ -8,7 +8,7 @@
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Button : public sf::Drawable {
+class RectButton : public sf::Drawable {
 public:
     sf::Texture* texture, *pushedTexture;
     sf::Sprite sprite;
@@ -17,13 +17,14 @@ public:
     void (*buttonFunction)(void);
     CollisionRect hitbox;
 
-    Button() {}
-    Button(sf::String, void (*)(void));
+    RectButton() {}
+    RectButton(sf::String, void (*)(void));
 
     void setPosition(float, float);
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
     void setCenter(float x, float y) { setPosition(x - hitbox.getSize().x / 2, y - hitbox.getSize().y / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
+    void setFunction(void (*func)()) { buttonFunction = func; }
 
     void setSize(float, float);
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
@@ -41,27 +42,27 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Button::Button(sf::String word, void (*foo)(void)) {
+RectButton::RectButton(sf::String word, void (*foo)(void)) {
     ButtonText.setCharacterSize(150);
     ButtonText.setFillColor(sf::Color(199, 199, 199));
     setWord(word);
     buttonFunction = foo;
 }
 
-void Button::setTexture(sf::Texture& texture, sf::Texture& pushedTexture) {
+void RectButton::setTexture(sf::Texture& texture, sf::Texture& pushedTexture) {
     this->texture = &texture;
     this->pushedTexture = &pushedTexture;
     sprite.setTexture(texture);
     setSize(texture.getSize().x, texture.getSize().y);
 }
 
-void Button::setPosition(float x, float y) {
+void RectButton::setPosition(float x, float y) {
     hitbox.setPosition(x, y);
     sprite.setPosition(x, y);
     ButtonText.setCenter(hitbox.getCenter());
 }
 
-void Button::setSize(float w, float h) {
+void RectButton::setSize(float w, float h) {
     if (hitbox.getSize().x != 0 && hitbox.getSize().y != 0) {
         sprite.setScale(w / hitbox.getSize().x, h / hitbox.getSize().y);
     }
@@ -69,14 +70,14 @@ void Button::setSize(float w, float h) {
     ButtonText.setCenter(hitbox.getCenter());
 }
 
-void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+void RectButton::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (ShowButton) {
         target.draw(sprite, states);
         target.draw(ButtonText, states);
     }
 }
 
-bool Button::isActivated(sf::Event& event) {
+bool RectButton::isActivated(sf::Event& event) {
     if (Pushed && event.type == sf::Event::MouseButtonReleased) {
         Pushed = false;
         sprite.setTexture(*texture);

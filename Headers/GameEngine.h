@@ -3,7 +3,8 @@
 #include "Entities/player.h"
 #include "Multiplayer/chat.h"
 #include "Multiplayer/client.h"
-#include "UI/button.h"
+#include "UI/RectButton.h"
+#include "UI/PolygonButton.h"
 #include "UI/panel.h"
 #include "UI/bar.h"
 #include "UI/tempText.h"
@@ -69,22 +70,22 @@ std::vector<sf::Drawable*> invCommonElements; // These elements appear on every 
 std::vector<std::vector<sf::Drawable*>> invPageElements; // These elements only appear on certain pages
 sf::Sprite invBackground;
 
-Button invBackButton("Back", [](){
+RectButton invBackButton("Back", [](){
     isDrawInventory = false;
 });
-Button itemsPageButton("Items", [](){
+RectButton itemsPageButton("Items", [](){
     activeInventoryPage = inventoryPage::Items;
 });
-Button weaponsPageButton("Weapons", [](){
+RectButton weaponsPageButton("Weapons", [](){
     activeInventoryPage = inventoryPage::Arsenal;
 });
-Button equipablesPageButton("Equipables", [](){
+RectButton equipablesPageButton("Equipables", [](){
     activeInventoryPage = inventoryPage::Equipables;
 });
-Button perksPageButton("Perks", [](){
+RectButton perksPageButton("Perks", [](){
     activeInventoryPage = inventoryPage::Perks;
 });
-Button statsPageButton("Stats", [](){
+RectButton statsPageButton("Stats", [](){
     activeInventoryPage = inventoryPage::Stats;
 });
 
@@ -122,18 +123,28 @@ sf::Sprite arsWeaponImage;
 PlacedText arsWeaponNameText,
            arsWeaponInfoText,
            arsWeaponStatsText;
-        
-Button arsCompGeneratorShape;
-Button arsCompFormFactorShape;
-Button arsCompConverterShape;
-Button arsCompTargetingShape;
+    
+sf::ConvexShape arsCompGeneratorOutline;
+sf::ConvexShape arsCompFormFactorOutline;
+sf::ConvexShape arsCompConverterOutline;
+sf::ConvexShape arsCompTargetingOutline;
+
+PolygonButton arsCompGeneratorBtn;
+PolygonButton arsCompFormFactorBtn;
+PolygonButton arsCompConverterBtn;
+PolygonButton arsCompTargetingBtn;
+
+// DEBUG
+sf::CircleShape tri1, tri2, tri3, center1, center2;
+// DEBUG
 
 bool isChoosingComponent = false;
+int compType = 0;
 
 // ARSENAL COMPONENT CHOICE ELEMENTS
-sf::Sprite itemListBG;
+sf::Sprite compListBG;
 std::vector<ItemSlot> arsCompSlotsElements;
-std::vector<Button> arsCompBtns;
+std::vector<RectButton> arsCompBtns;
 
 std::vector<bool> doInventoryUpdate(inventoryPage::NONE, false);
 
@@ -320,7 +331,7 @@ Panel ListOfPlayers;
 
 
 //////////////////////////////////////////////////////////// Buttons
-Button HostButton("Host", [](){
+RectButton HostButton("Host", [](){
     listener.listen(53000);
     selector.add(listener);
     ListOfPlayers.setWord(MyIP);
@@ -330,7 +341,7 @@ Button HostButton("Host", [](){
     HostTread.launch();
 });
 
-Button EscapeButton("Exit", [](){
+RectButton EscapeButton("Exit", [](){
     if (HostFuncRun) {
         mutex.lock();
         SendPacket << pacetStates::disconnect;
@@ -363,11 +374,11 @@ Button EscapeButton("Exit", [](){
     saveGame();
 });
 
-Button shopBackButton("Back", [](){
+RectButton shopBackButton("Back", [](){
     isDrawShop = false;
     shopSelectedItem = nullptr;
 });
-Button shopBuyButton("Buy", [](){
+RectButton shopBuyButton("Buy", [](){
     curShop->buyFunction();
 });
 
@@ -636,25 +647,85 @@ void initInventory() {
     arsWeaponStatsText.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
                                    sch / 8 + 180);
 
-    arsCompGeneratorShape = Button();
-    arsCompGeneratorShape.setTexture(Textures::BluePanel, Textures::BluePanelPushed);
-    arsCompGeneratorShape.setPosition(scw / 8, sch / 2 + 20);
-    arsCompGeneratorShape.setSize(100, 100);
 
-    arsCompFormFactorShape = Button();
-    arsCompFormFactorShape.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
-    arsCompFormFactorShape.setPosition(scw / 3, 0.75 * sch);
-    arsCompFormFactorShape.setSize(100, 100);
+    std::vector<sf::Vector2f> starShape{
+        sf::Vector2f(0, 100), sf::Vector2f(50, 50), sf::Vector2f(100, 50),
+        sf::Vector2f(75, 0), sf::Vector2f(100, -50), sf::Vector2f(50, -50),
+        sf::Vector2f(0, -100), sf::Vector2f(-50, -50), sf::Vector2f(-100, -50),
+        sf::Vector2f(-75, 0), sf::Vector2f(-100, 50), sf::Vector2f(-50, 50)
+    };
+    std::vector<sf::Vector2f> rectShape{
+        sf::Vector2f(-100, -50), sf::Vector2f(-100, 50), sf::Vector2f(100, 50), sf::Vector2f(100, -50)
+    };
+    std::vector<sf::Vector2f> triangleShape{
+        sf::Vector2f(-75, -75), sf::Vector2f(-75, 75), sf::Vector2f(75, -75)
+    };
+    std::vector<sf::Vector2f> frustumShape{
+        sf::Vector2f(-75, -75), sf::Vector2f(-30, 75), sf::Vector2f(30, 75), sf::Vector2f(75, -75)
+    };
+    std::vector<sf::Vector2f> rotatedTri;
+    for (int i = 0; i < triangleShape.size(); i++)
+        rotatedTri.push_back(RotateOn(-DegToRad(30), triangleShape[i]));
+    std::vector<sf::Vector2f> rotatedFrustum;
+    for (int i = 0; i < frustumShape.size(); i++)
+        rotatedFrustum.push_back(RotateOn(DegToRad(60), frustumShape[i]));
+    
+    arsCompGeneratorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+    arsCompGeneratorBtn.hitbox.setPoints(starShape);
+    arsCompGeneratorBtn.setPosition(scw / 8, sch / 2 + 20);
+    arsCompGeneratorBtn.setFunction([](){ isChoosingComponent = true; compType = 0; });
 
-    arsCompConverterShape = Button();
-    arsCompConverterShape.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
-    arsCompConverterShape.setPosition(0.6 * scw, 0.7 * sch);
-    arsCompConverterShape.setSize(100, 100);
+    arsCompGeneratorOutline = sf::ConvexShape(12);
+    for (int i = 0; i < arsCompGeneratorBtn.hitbox.getPointCount(); i++)
+        arsCompGeneratorOutline.setPoint(i, arsCompGeneratorBtn.hitbox.getPoint(i));
+    arsCompGeneratorOutline.setFillColor(sf::Color::Transparent);
+    arsCompGeneratorOutline.setOutlineThickness(3);
+    arsCompGeneratorOutline.setOutlineColor(sf::Color(192, 192, 255, 255));
 
-    arsCompTargetingShape = Button();
-    arsCompTargetingShape.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
-    arsCompTargetingShape.setPosition(0.85 * scw, sch / 2 + 60);
-    arsCompTargetingShape.setSize(100, 100);
+
+    arsCompFormFactorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+    arsCompFormFactorBtn.hitbox.setPoints(rectShape);
+    arsCompFormFactorBtn.setPosition(scw / 3, 0.7 * sch);
+    arsCompFormFactorBtn.setFunction([](){ isChoosingComponent = true; compType = 1; });
+
+    arsCompFormFactorOutline = sf::ConvexShape(4);
+    for (int i = 0; i < arsCompFormFactorBtn.hitbox.getPointCount(); i++)
+        arsCompFormFactorOutline.setPoint(i, arsCompFormFactorBtn.hitbox.getPoint(i));
+    arsCompFormFactorOutline.setFillColor(sf::Color::Transparent);
+    arsCompFormFactorOutline.setOutlineThickness(3);
+    arsCompFormFactorOutline.setOutlineColor(sf::Color(255, 255, 192, 255));
+
+
+    arsCompConverterBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+    arsCompConverterBtn.hitbox.setPoints(rotatedTri);
+    arsCompConverterBtn.setPosition(0.65 * scw, 0.65 * sch);
+    arsCompConverterBtn.setFunction([](){ isChoosingComponent = true; compType = 2; });
+
+    arsCompConverterOutline = sf::ConvexShape(3);
+    for (int i = 0; i < arsCompConverterBtn.hitbox.getPointCount(); i++)
+        arsCompConverterOutline.setPoint(i, arsCompConverterBtn.hitbox.getPoint(i));
+    arsCompConverterOutline.setFillColor(sf::Color::Transparent);
+    arsCompConverterOutline.setOutlineThickness(3);
+    arsCompConverterOutline.setOutlineColor(sf::Color(192, 255, 192, 255));
+
+
+    arsCompTargetingBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+    arsCompTargetingBtn.hitbox.setPoints(rotatedFrustum);
+    arsCompTargetingBtn.setPosition(0.8 * scw, sch / 2);
+    arsCompTargetingBtn.setFunction([](){ isChoosingComponent = true; compType = 3; });
+
+    arsCompTargetingOutline = sf::ConvexShape(4);
+    for (int i = 0; i < arsCompTargetingBtn.hitbox.getPointCount(); i++)
+        arsCompTargetingOutline.setPoint(i, arsCompTargetingBtn.hitbox.getPoint(i));
+    arsCompTargetingOutline.setFillColor(sf::Color::Transparent);
+    arsCompTargetingOutline.setOutlineThickness(3);
+    arsCompTargetingOutline.setOutlineColor(sf::Color(255, 192, 192, 255));
+
+
+    compListBG.setTexture(Textures::SteelFrame);
+    compListBG.setPosition(scw / 8, sch / 4);
+    compListBG.setScale((scw - 2 * scw / 8 - 200) / Textures::SteelFrame.getSize().x,
+                        (sch - 2 * sch / 4) / Textures::SteelFrame.getSize().y);
 
     invPageElements[inventoryPage::Items].push_back(&itemListBG);
     invPageElements[inventoryPage::Items].push_back(&playerCoinSprite);
@@ -663,10 +734,14 @@ void initInventory() {
     invPageElements[inventoryPage::Arsenal].push_back(&arsWeaponNameText);
     invPageElements[inventoryPage::Arsenal].push_back(&arsWeaponInfoText);
     invPageElements[inventoryPage::Arsenal].push_back(&arsWeaponStatsText);
-    invPageElements[inventoryPage::Arsenal].push_back(&arsCompGeneratorShape);
-    invPageElements[inventoryPage::Arsenal].push_back(&arsCompFormFactorShape);
-    invPageElements[inventoryPage::Arsenal].push_back(&arsCompConverterShape);
-    invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingShape);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompGeneratorBtn);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompFormFactorBtn);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompConverterBtn);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingBtn);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompGeneratorOutline);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompFormFactorOutline);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompConverterOutline);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingOutline);
 
     invPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
     invPageElements[inventoryPage::Stats].push_back(&statsHPBar);
@@ -684,8 +759,8 @@ void initInventory() {
 }
 
 void initShop() {
-    shopItemSlotsElements.resize(MaxItemID, ShopSlot());
-    shopPlayerSlotsElements.resize(MaxItemID, ShopSlot());
+    shopItemSlotsElements.resize(MaxItemID);
+    shopPlayerSlotsElements.resize(MaxItemID);
     shopItemSlotsRects.resize(MaxItemID);
     mainMenuShop.setShop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100)},
                          std::vector<int>{20, 100, 199});
@@ -1154,6 +1229,9 @@ void drawInventory() {
         case inventoryPage::Arsenal:
             for (sf::Drawable*& elem : invPageElements[activeInventoryPage])
                 window.draw(*elem);
+            
+            if (isChoosingComponent)
+                window.draw(compListBG);
             break;
         
         case inventoryPage::Stats:
@@ -1560,40 +1638,47 @@ void inventoryHandler(sf::Event& event) {
     perksPageButton.isActivated(event);
     statsPageButton.isActivated(event);
 
-    // if ((player.ManaRecovery != 0 && player.Mana.fromTop() != 0) ||
-    //     (player.HealthRecovery != 0 && player.Health.fromTop() != 0)) {
-    //     doInventoryUpdate[inventoryPage::Stats] = true;
-    // }
-
     bool isAnythingHovered = false;
-    if (activeInventoryPage != inventoryPage::Stats) {
-        int itemTypeCount = 0;
-        for (Item*& item : player.inventory.items) {
-            if (!invItemSlotsRects.empty() && invItemSlotsRects[item->id] != nullptr &&
-                invItemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
-                if (item->id != prevItemDescID) {
-                    prevItemDescID = ItemID::NONE;
-                    isItemDescDrawn = false;
-                }
-                isAnythingHovered = true;
-                if (event.mouseButton.button == sf::Mouse::Button::Right) {
-                    isItemDescDrawn = true;
-                    itemDescText.setString(itemDesc[item->id]);
-                    prevItemDescID = item->id;
-                }
-                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(item)) {
-                    if (item->amount <= 0) {
-                        itemTypeCount--;
+    int itemTypeCount = 0;
+    switch(activeInventoryPage) {
+        case inventoryPage::Stats:
+            for (Item*& item : player.inventory.items) {
+                if (!invItemSlotsRects.empty() && invItemSlotsRects[item->id] != nullptr &&
+                    invItemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
+                    if (item->id != prevItemDescID) {
+                        prevItemDescID = ItemID::NONE;
                         isItemDescDrawn = false;
-                        player.inventory.removeItem(item, false);
                     }
-                    doInventoryUpdate[inventoryPage::Items] = true;
+                    isAnythingHovered = true;
+                    if (event.mouseButton.button == sf::Mouse::Button::Right) {
+                        isItemDescDrawn = true;
+                        itemDescText.setString(itemDesc[item->id]);
+                        prevItemDescID = item->id;
+                    }
+                    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(item)) {
+                        if (item->amount <= 0) {
+                            itemTypeCount--;
+                            isItemDescDrawn = false;
+                            player.inventory.removeItem(item, false);
+                        }
+                        doInventoryUpdate[inventoryPage::Items] = true;
+                    }
                 }
+                itemTypeCount++;
             }
-            itemTypeCount++;
-        }
-        if (itemTypeCount != prevItemTypeCount) createSlotRects();
-        prevItemTypeCount = itemTypeCount;
+            if (itemTypeCount != prevItemTypeCount) createSlotRects();
+            prevItemTypeCount = itemTypeCount;
+            break;
+        
+        case inventoryPage::Arsenal:
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape &&
+                isChoosingComponent)
+                isChoosingComponent = false;
+            arsCompGeneratorBtn.isActivated(event);
+            arsCompFormFactorBtn.isActivated(event);
+            arsCompConverterBtn.isActivated(event);
+            arsCompTargetingBtn.isActivated(event);
+            break;
     }
     if (!isAnythingHovered)
         isItemDescDrawn = false;
