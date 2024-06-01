@@ -8,6 +8,8 @@
 #pragma pack(push, 1)
 class Panel : public sf::Transformable, public sf::Drawable {
 public:
+    bool visible = true;
+
     sf::Sprite sprite;
     PlacedText text;
     std::vector<sf::String> lines;
@@ -53,7 +55,9 @@ void Panel::setCenter(float x, float y) {
 }
 
 void Panel::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    states.transform *= getTransform();
-    target.draw(sprite, states);
-    target.draw(text, states);
+    if (visible) {
+        states.transform *= getTransform();
+        target.draw(sprite, states);
+        target.draw(text, states);
+    }
 }

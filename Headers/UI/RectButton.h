@@ -13,7 +13,7 @@ public:
     sf::Texture* texture, *pushedTexture;
     sf::Sprite sprite;
     PlacedText ButtonText;
-    bool Pushed = false, ShowButton = true;
+    bool Pushed = false, visible = true;
     void (*buttonFunction)(void);
     CollisionRect hitbox;
 
@@ -71,7 +71,7 @@ void RectButton::setSize(float w, float h) {
 }
 
 void RectButton::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    if (ShowButton) {
+    if (visible) {
         target.draw(sprite, states);
         target.draw(ButtonText, states);
     }

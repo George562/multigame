@@ -105,16 +105,14 @@ namespace Textures {
                 BluePanelPushed,
                 YellowPanel,
                 YellowPanelPushed,
-                SteelFrame,
+                GradientFrame,
                 ItemPanel,
                 Frame4,
 
                 NPCDialogueFrame_Square,
                 NPCDialogueFrame_Wide,
 
-                ShopBG,
-                ShopSectionFrame,
-                ShopItemPhotoFrame,
+                GridBG,
 
                 INVISIBLE,
                 PH_gun
@@ -148,16 +146,14 @@ void loadTextures() {
     Textures::BluePanelPushed           .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
     Textures::YellowPanel               .loadFromFile("sources/textures/Panels/YellowPanel.png");
     Textures::YellowPanelPushed         .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
-    Textures::SteelFrame                .loadFromFile("sources/textures/Panels/SteelFrame.png");
+    Textures::GradientFrame             .loadFromFile("sources/textures/Panels/GradientFrame.png");
     Textures::ItemPanel                 .loadFromFile("sources/textures/Panels/ItemPanel.png");
     Textures::Frame4                    .loadFromFile("sources/textures/Panels/frame4.png");
 
     Textures::NPCDialogueFrame_Square   .loadFromFile("sources/textures/Panels/NPCDialogueFrame_Square.png");
     Textures::NPCDialogueFrame_Wide     .loadFromFile("sources/textures/Panels/NPCDialogueFrame_Wide.png");
 
-    Textures::ShopBG                    .loadFromFile("sources/textures/Panels/ShopBG.png");
-    Textures::ShopSectionFrame          .loadFromFile("sources/textures/Panels/ShopSectionFrame.png");
-    Textures::ShopItemPhotoFrame        .loadFromFile("sources/textures/Panels/ShopItemPhotoFrame.png");
+    Textures::GridBG                    .loadFromFile("sources/textures/Panels/GridBackground.png");
 
     Textures::INVISIBLE                 .create(size, size);
 

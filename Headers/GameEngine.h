@@ -142,7 +142,10 @@ bool isChoosingComponent = false;
 int compType = 0;
 
 // ARSENAL COMPONENT CHOICE ELEMENTS
-sf::Sprite compListBG;
+std::vector<sf::Drawable*> arsCompUpgradeElements;
+PlacedText compListText;
+Panel compListFade;
+Panel compListBG;
 std::vector<ItemSlot> arsCompSlotsElements;
 std::vector<RectButton> arsCompBtns;
 
@@ -442,7 +445,7 @@ void init() {
     Shaders::Fire.setUniform("noise_png", Textures::Noise);
 
     IPPanel       .setTexture(Textures::YellowPanel);
-    ListOfPlayers .setTexture(Textures::SteelFrame);
+    ListOfPlayers .setTexture(Textures::GradientFrame);
 
     EscapeButton .setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     HostButton   .setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
@@ -534,44 +537,43 @@ void initInventory() {
     invItemSlotsElements.resize(MaxItemID, ItemSlot());
     invItemSlotsRects.resize(MaxItemID);
 
-    invBackground.setTexture(Textures::SteelFrame);
-    invBackground.setScale((float)scw / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y);
+    invBackground.setTexture(Textures::GridBG);
     invBackground.setPosition(0, 0);
 
     int xOffset = 50, yOffset = 50;
 
     invBackButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     invBackButton.setCharacterSize(52);
-    invBackButton.setPosition(xOffset, yOffset);
+    invBackButton.setPosition(0, 0);
     invBackButton.setSize(300, 150);
 
     itemsPageButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     itemsPageButton.setCharacterSize(32);
-    itemsPageButton.setPosition(xOffset, (sch - yOffset) * 0.9);
-    itemsPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    itemsPageButton.setPosition(0, (sch) * 0.9);
+    itemsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
     weaponsPageButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     weaponsPageButton.setCharacterSize(32);
-    weaponsPageButton.setPosition((scw - xOffset) * 0.2, (sch - yOffset) * 0.9);
-    weaponsPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    weaponsPageButton.setPosition((scw) * 0.2, (sch) * 0.9);
+    weaponsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
     equipablesPageButton.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
     equipablesPageButton.setCharacterSize(32);
-    equipablesPageButton.setPosition((scw - xOffset) * 0.4, (sch - yOffset) * 0.9);
-    equipablesPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    equipablesPageButton.setPosition((scw) * 0.4, (sch) * 0.9);
+    equipablesPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
     perksPageButton.setTexture(Textures::BluePanel, Textures::BluePanelPushed);
     perksPageButton.setCharacterSize(32);
-    perksPageButton.setPosition((scw - xOffset) * 0.6, (sch - yOffset) * 0.9);
-    perksPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    perksPageButton.setPosition((scw) * 0.6, (sch) * 0.9);
+    perksPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
     statsPageButton.setTexture(Textures::ItemPanel, Textures::ItemPanel);
     statsPageButton.setCharacterSize(32);
-    statsPageButton.setPosition((scw - xOffset) * 0.8, (sch - yOffset) * 0.9);
-    statsPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    statsPageButton.setPosition((scw) * 0.8, (sch) * 0.9);
+    statsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
-    itemListBG.setTexture(Textures::SteelFrame);
-    itemListBG.setScale((float)(scw - 300) / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y * 0.6);
+    itemListBG.setTexture(Textures::GradientFrame);
+    itemListBG.setScale((float)(scw - 300) / Textures::GradientFrame.getSize().x, (float)sch / Textures::GradientFrame.getSize().y * 0.6);
     itemListBG.setPosition(150, sch * 0.2);
 
     invCommonElements.push_back(&invBackground);
@@ -724,10 +726,28 @@ void initInventory() {
     arsCompTargetingOutline.setOutlineColor(sf::Color(255, 192, 192, 255));
 
 
-    compListBG.setTexture(Textures::SteelFrame);
+    compListText.setCharacterSize(40);
+    compListText.setString("Choose a ");
+    compListText.setPosition(scw / 2, sch / 8);
+
+    sf::Texture* fadeTexture = new sf::Texture();
+    sf::Image fadeTexturePixels = sf::Image();
+    fadeTexturePixels.create(scw, sch, sf::Color(255, 255, 255, 128));
+    for (int i = 0; i < scw; i++)
+        for (int j = 0; j < sch; j++)
+            if (i >= scw / 8 && i <= scw - scw / 8 &&
+                j >= sch / 4 && j <= sch - sch / 4) {
+                float gradVal = 25 * (((i - scw / 8 + j - sch / 4) / (255)) % 25);
+                fadeTexturePixels.setPixel(i, j, sf::Color(gradVal, gradVal, gradVal, 255));
+            }
+    fadeTexture->create(scw, sch);
+    fadeTexture->update(fadeTexturePixels);
+    compListFade.sprite.setTexture(*fadeTexture);
+
+    compListBG.setTexture(Textures::GradientFrame);
+    compListBG.setScale((float) (scw - 2 * scw / 8) / Textures::GradientFrame.getSize().x,
+                        (float) (sch - 2 * sch / 4) / Textures::GradientFrame.getSize().y);
     compListBG.setPosition(scw / 8, sch / 4);
-    compListBG.setScale((scw - 2 * scw / 8 - 200) / Textures::SteelFrame.getSize().x,
-                        (sch - 2 * sch / 4) / Textures::SteelFrame.getSize().y);
 
     invPageElements[inventoryPage::Items].push_back(&itemListBG);
     invPageElements[inventoryPage::Items].push_back(&playerCoinSprite);
@@ -744,6 +764,9 @@ void initInventory() {
     invPageElements[inventoryPage::Arsenal].push_back(&arsCompFormFactorOutline);
     invPageElements[inventoryPage::Arsenal].push_back(&arsCompConverterOutline);
     invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingOutline);
+    arsCompUpgradeElements.push_back(&compListFade);
+    arsCompUpgradeElements.push_back(&compListBG);
+    arsCompUpgradeElements.push_back(&compListText);
 
     invPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
     invPageElements[inventoryPage::Stats].push_back(&statsHPBar);
@@ -787,77 +810,67 @@ void initShop() {
         }
     });
 
-    int xOffset = 50, yOffset = 50;
-
-    shopBG.setTexture(Textures::SteelFrame);
-    shopBG.setScale((float) scw / Textures::SteelFrame.getSize().x, (float) sch / Textures::SteelFrame.getSize().y);
-    shopBGPattern.setPosition(0, 0);
-
-    shopBGPattern.setTexture(Textures::ShopBG);
-    shopBGPattern.setColor(sf::Color(0x10, 0xBB, 0xFF));
-    shopBGPattern.setScale((float) (scw  - 2 * xOffset) / Textures::ShopBG.getSize().x, (float) (sch - 2 * yOffset) / Textures::ShopBG.getSize().y);
-    shopBGPattern.setPosition(xOffset, yOffset);
+    shopBG.setTexture(Textures::GridBG);
 
     shopBackButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     shopBackButton.setCharacterSize(36);
-    shopBackButton.setPosition(xOffset, yOffset);
-    shopBackButton.setSize(250, yOffset);
+    shopBackButton.setSize(250, 50);
 
-    shopNPCTextFrame.setTexture(Textures::NPCDialogueFrame_Wide);
+    shopNPCTextFrame.setTexture(Textures::GradientFrame);
     shopNPCTextFrame.setColor(sf::Color(0x10, 0xBB, 0xFF));
-    shopNPCTextFrame.setScale((float) (scw - 2 * xOffset) / Textures::NPCDialogueFrame_Wide.getSize().x,
-                              200.0 / Textures::NPCDialogueFrame_Wide.getSize().y);
-    shopNPCTextFrame.setPosition(xOffset, shopBackButton.hitbox.getBottom() + yOffset / 5);
+    shopNPCTextFrame.setScale((float) (scw - 100) / Textures::GradientFrame.getSize().x,
+                              200.0 / Textures::GradientFrame.getSize().y);
+    shopNPCTextFrame.setPosition(50, shopBackButton.hitbox.getBottom() + 50 / 5);
 
     shopNPCSprite.setTexture(Textures::DistortedScientist);
-    shopNPCSprite.setScale((shopNPCTextFrame.getGlobalBounds().height - 2 * yOffset) / shopNPCSprite.getTexture()->getSize().x,
-                           (shopNPCTextFrame.getGlobalBounds().height - 2 * yOffset) / shopNPCSprite.getTexture()->getSize().y);
-    shopNPCSprite.setPosition(shopNPCTextFrame.getPosition() + sf::Vector2f(2 * xOffset, yOffset));
+    shopNPCSprite.setScale((shopNPCTextFrame.getGlobalBounds().height - 100) / shopNPCSprite.getTexture()->getSize().x,
+                           (shopNPCTextFrame.getGlobalBounds().height - 100) / shopNPCSprite.getTexture()->getSize().y);
+    shopNPCSprite.setPosition(shopNPCTextFrame.getPosition() + sf::Vector2f(100, 50));
 
     shopNPCName.setCharacterSize(32);
-    shopNPCName.setPosition(shopNPCSprite.getPosition().x + shopNPCSprite.getGlobalBounds().width + xOffset,
-                            shopNPCSprite.getPosition().y + shopNPCSprite.getGlobalBounds().height / 2 - yOffset / 2);
+    shopNPCName.setPosition(shopNPCSprite.getPosition().x + shopNPCSprite.getGlobalBounds().width + 50,
+                            shopNPCSprite.getPosition().y + shopNPCSprite.getGlobalBounds().height / 2 - 50 / 2);
     shopNPCName.setString(textWrap("Shop keeper", 20));
 
     shopNPCText.setCharacterSize(32);
     shopNPCText.setPosition(shopNPCTextFrame.getPosition().x + shopNPCTextFrame.getGlobalBounds().width * 0.25,
-                            shopNPCTextFrame.getPosition().y + yOffset);
+                            shopNPCTextFrame.getPosition().y + 50);
 
-    shopItemsFrame.setTexture(Textures::ShopSectionFrame);
+    shopItemsFrame.setTexture(Textures::GradientFrame);
     shopItemsFrame.setColor(sf::Color(0xCC, 0xAA, 0x11));
-    shopItemsFrame.setScale((0.6 * scw - 2 * xOffset) / (Textures::ShopSectionFrame.getSize().x),
-                            (0.35 * sch - yOffset) / (Textures::ShopSectionFrame.getSize().y));
-    shopItemsFrame.setPosition(xOffset, shopBackButton.hitbox.getBottom() + 200.0 + yOffset / 2);
+    shopItemsFrame.setScale((0.6 * scw - 100) / (Textures::GradientFrame.getSize().x),
+                            (0.35 * sch - 50) / (Textures::GradientFrame.getSize().y));
+    shopItemsFrame.setPosition(50, shopBackButton.hitbox.getBottom() + 200.0 + 50 / 2);
 
-    shopItemsViewSizeX = (0.6 * scw - 2 * xOffset) / scw;
-    shopItemsViewSizeY = (0.35 * sch - yOffset) / sch;
-    ShopStockView.setViewport(sf::FloatRect((shopItemsFrame.getPosition().x + xOffset) / scw,
-                                            (shopItemsFrame.getPosition().y + yOffset / 3) / sch,
+    shopItemsViewSizeX = (0.6 * scw - 100) / scw;
+    shopItemsViewSizeY = (0.35 * sch - 50) / sch;
+    ShopStockView.setViewport(sf::FloatRect((shopItemsFrame.getPosition().x + 50) / scw,
+                                            (shopItemsFrame.getPosition().y + 50 / 3) / sch,
                                             shopItemsViewSizeX, shopItemsViewSizeY));
 
-    shopPlayerInventoryFrame.setTexture(Textures::ShopSectionFrame);
+    shopPlayerInventoryFrame.setTexture(Textures::GradientFrame);
     shopPlayerInventoryFrame.setColor(sf::Color(0xBB, 0x40, 0x40));
-    shopPlayerInventoryFrame.setScale((0.4 * scw - xOffset) / (Textures::ShopSectionFrame.getSize().x),
-                                      (0.35 * sch - yOffset) / (Textures::ShopSectionFrame.getSize().y));
+    shopPlayerInventoryFrame.setScale((0.4 * scw - 50) / (Textures::GradientFrame.getSize().x),
+                                      (0.35 * sch - 50) / (Textures::GradientFrame.getSize().y));
     shopPlayerInventoryFrame.setPosition(0.6 * scw, shopItemsFrame.getPosition().y);
 
-    shopPlayerInvViewSizeX = (0.6 * scw - 2 * xOffset) / scw;
-    shopPlayerInvViewSizeY = (0.35 * sch - yOffset) / sch;
-    ShopPlayerInvView.setViewport(sf::FloatRect((shopPlayerInventoryFrame.getPosition().x + xOffset) / scw,
-                                                (shopPlayerInventoryFrame.getPosition().y + yOffset) / sch,
+    shopPlayerInvViewSizeX = (0.6 * scw - 100) / scw;
+    shopPlayerInvViewSizeY = (0.35 * sch - 50) / sch;
+    ShopPlayerInvView.setViewport(sf::FloatRect((shopPlayerInventoryFrame.getPosition().x + 50) / scw,
+                                                (shopPlayerInventoryFrame.getPosition().y + 50) / sch,
                                                 shopPlayerInvViewSizeX, shopPlayerInvViewSizeY));
 
-    shopItemStatsFrame.setTexture(Textures::ShopSectionFrame);
+    shopItemStatsFrame.setTexture(Textures::GradientFrame);
     shopItemStatsFrame.setColor(sf::Color(0xCC, 0xAA, 0x11));
-    shopItemStatsFrame.setScale((0.6 * scw - 2 * xOffset) / (Textures::ShopSectionFrame.getSize().x),
-                                (0.35 * sch - yOffset) / (Textures::ShopSectionFrame.getSize().y));
-    shopItemStatsFrame.setPosition(xOffset, shopItemsFrame.getPosition().y + 0.35 * sch - yOffset + yOffset / 2);
+    shopItemStatsFrame.setScale((0.6 * scw - 100) / (Textures::GradientFrame.getSize().x),
+                                (0.35 * sch - 50) / (Textures::GradientFrame.getSize().y));
+    shopItemStatsFrame.setPosition(50, shopItemsFrame.getPosition().y + 0.35 * sch - 50 + 50 / 2);
 
-    shopItemSpriteFrame.setTexture(Textures::ShopItemPhotoFrame);
-    shopItemSpriteFrame.setScale(0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ShopItemPhotoFrame.getSize().x,
-                                 0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ShopItemPhotoFrame.getSize().y);
-    shopItemSpriteFrame.setPosition(shopItemStatsFrame.getPosition().x + xOffset,
-                                    shopItemStatsFrame.getPosition().y + yOffset * 0.3);
+    shopItemSpriteFrame.setTexture(Textures::ItemPanel);
+    shopItemSpriteFrame.setScale(0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ItemPanel.getSize().x,
+                                 0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ItemPanel.getSize().y);
+    shopItemSpriteFrame.setPosition(shopItemStatsFrame.getPosition().x + 50,
+                                    shopItemStatsFrame.getPosition().y + 50 * 0.3);
     shopItemSpriteFrame.setColor(sf::Color(0xAA, 0x88, 0x00));
 
     shopItemSprite.setTexture(Textures::INVISIBLE, true);
@@ -884,14 +897,13 @@ void initShop() {
     shopBuyButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     shopBuyButton.setCharacterSize(70);
     shopBuyButton.setSize(400, 150);
-    shopBuyButton.setPosition(shopPlayerInventoryFrame.getPosition().x + (0.4 * scw - xOffset) / 5,
-                              sch - 150 - 1.5 * yOffset);
+    shopBuyButton.setPosition(shopPlayerInventoryFrame.getPosition().x + (0.4 * scw - 50) / 5,
+                              sch - 150 - 1.5 * 50);
 
     shopPlayerCoinsText.setCharacterSize(40);
     shopPlayerCoinsText.setPosition(shopBuyButton.hitbox.getPosition() - sf::Vector2f(0, 100));
 
     shopUIElements.push_back(&shopBG);
-    shopUIElements.push_back(&shopBGPattern);
     shopUIElements.push_back(&shopBackButton);
     shopUIElements.push_back(&shopNPCTextFrame);
     shopUIElements.push_back(&shopNPCSprite);
@@ -1232,12 +1244,39 @@ void drawInventory() {
             break;
 
         case inventoryPage::Arsenal:
+        {
             for (sf::Drawable*& elem : invPageElements[activeInventoryPage])
                 window.draw(*elem);
-            
-            if (isChoosingComponent)
-                window.draw(compListBG);
+            float compListBGVal = 128 * std::pow(std::sin(GameClock->getElapsedTime().asSeconds()), 2);
+            if (isChoosingComponent) {
+                switch (compType) {
+                    case 0:
+                        compListBG.sprite.setColor(sf::Color(0, 0, compListBGVal));
+                        break;
+                    case 1:
+                        compListBG.sprite.setColor(sf::Color(compListBGVal, compListBGVal, 0));
+                        break;
+                    case 2:
+                        compListBG.sprite.setColor(sf::Color(0, compListBGVal, 0));
+                        break;
+                    case 3:
+                        compListBG.sprite.setColor(sf::Color(compListBGVal, 0, 0));
+                        break;
+                }
+                for (sf::Drawable*& elem : arsCompUpgradeElements)
+                    window.draw(*elem);
+                
+                for (Item*& item : player.inventory.items) {
+                    if (item->isComponent && invItemSlotsElements[item->id].isInitialized) {
+                        window.draw(*invItemSlotsElements[item->id].background);
+
+                        if (item->amount >= 1) window.draw(*invItemSlotsElements[item->id].amountText);
+                    }
+                    window.draw(*item);
+                }
+            }
             break;
+        }
 
         case inventoryPage::Stats:
             for (sf::Drawable*& elem : invPageElements[inventoryPage::Stats])
@@ -1567,6 +1606,7 @@ void EventHandler() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         Musics::MainMenu.pause();
                         window.close();
+                        return;
                     }
                 }
             } else if (CurLocation ==  &LabyrinthLocation) {
@@ -1633,8 +1673,9 @@ void EventHandler() {
 }
 
 void inventoryHandler(sf::Event& event) {
-    if (event.key.code == sf::Keyboard::Escape) {
-        isDrawInventory = false;
+    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+        invBackButton.buttonFunction();
+        return;
     }
     invBackButton.isActivated(event);
     itemsPageButton.isActivated(event);
@@ -1645,53 +1686,51 @@ void inventoryHandler(sf::Event& event) {
 
     bool isAnythingHovered = false;
     int itemTypeCount = 0;
-    switch(activeInventoryPage) {
-        case inventoryPage::Stats:
-            for (Item*& item : player.inventory.items) {
-                if (!invItemSlotsRects.empty() && invItemSlotsRects[item->id] != nullptr &&
-                    invItemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
-                    if (item->id != prevItemDescID) {
-                        prevItemDescID = ItemID::NONE;
-                        isItemDescDrawn = false;
-                    }
-                    isAnythingHovered = true;
-                    if (event.mouseButton.button == sf::Mouse::Button::Right) {
-                        isItemDescDrawn = true;
-                        itemDescText.setString(itemDesc[item->id]);
-                        prevItemDescID = item->id;
-                    }
-                    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(item)) {
-                        if (item->amount <= 0) {
-                            itemTypeCount--;
-                            isItemDescDrawn = false;
-                            player.inventory.removeItem(item, false);
-                        }
-                        doInventoryUpdate[inventoryPage::Items] = true;
-                    }
+    if (activeInventoryPage == inventoryPage::Items) {
+        for (Item*& item : player.inventory.items) {
+            if (!invItemSlotsRects.empty() && invItemSlotsRects[item->id] != nullptr &&
+                invItemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
+                if (item->id != prevItemDescID) {
+                    prevItemDescID = ItemID::NONE;
+                    isItemDescDrawn = false;
                 }
-                itemTypeCount++;
+                isAnythingHovered = true;
+                if (event.mouseButton.button == sf::Mouse::Button::Right) {
+                    isItemDescDrawn = true;
+                    itemDescText.setString(itemDesc[item->id]);
+                    prevItemDescID = item->id;
+                }
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(item)) {
+                    if (item->amount <= 0) {
+                        itemTypeCount--;
+                        isItemDescDrawn = false;
+                        player.inventory.removeItem(item, false);
+                    }
+                    doInventoryUpdate[inventoryPage::Items] = true;
+                }
             }
-            if (itemTypeCount != prevItemTypeCount) createSlotRects();
-            prevItemTypeCount = itemTypeCount;
-            break;
-        
-        case inventoryPage::Arsenal:
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape &&
-                isChoosingComponent)
-                isChoosingComponent = false;
-            arsCompGeneratorBtn.isActivated(event);
-            arsCompFormFactorBtn.isActivated(event);
-            arsCompConverterBtn.isActivated(event);
-            arsCompTargetingBtn.isActivated(event);
-            break;
+            itemTypeCount++;
+        }
+        if (itemTypeCount != prevItemTypeCount) createSlotRects();
+        prevItemTypeCount = itemTypeCount;
+    }
+    if (activeInventoryPage == inventoryPage::Arsenal) {
+        if (event.type == sf::Event::MouseButtonPressed &&
+            event.mouseButton.button == sf::Mouse::Right && isChoosingComponent)
+            isChoosingComponent = false;
+        arsCompGeneratorBtn.isActivated(event);
+        arsCompFormFactorBtn.isActivated(event);
+        arsCompConverterBtn.isActivated(event);
+        arsCompTargetingBtn.isActivated(event);
     }
     if (!isAnythingHovered)
         isItemDescDrawn = false;
 }
 
 void shopHandler(sf::Event& event) {
-    if (event.key.code == sf::Keyboard::Escape) {
-        isDrawShop = false;
+    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+        shopBackButton.buttonFunction();
+        return;
     }
     shopBackButton.isActivated(event);
     shopBuyButton.isActivated(event);

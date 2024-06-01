@@ -117,7 +117,7 @@ public:
     int amount = 0; // -1 if an item is infinite
     bool pickupable = true;
     bool isDropable = true;
-    bool isEquippable = false;
+    bool isComponent = false;
     bool isKeyItem = false;
     bool isInInventory = true;
 
@@ -135,13 +135,13 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Item::Item(ItemID::Type _id, int _amount, bool _pickupable, bool _isInInventory, bool _isDropable, bool _isKeyItem, bool _isEquippable) {
+Item::Item(ItemID::Type _id, int _amount, bool _pickupable, bool _isInInventory, bool _isDropable, bool _isKeyItem, bool _isComponent) {
     id            = _id;
     amount        = _amount;
     pickupable    = _pickupable;
     isDropable    = _isDropable;
     isInInventory = _isInInventory;
-    isEquippable  = _isEquippable;
+    isComponent   = _isComponent;
     isKeyItem     = _isKeyItem;
     if (itemTextureDuration[id] != sf::Time::Zero) {
         setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
@@ -156,7 +156,7 @@ Item::Item(const Item& item) {
     pickupable    = item.pickupable;
     isDropable    = item.isDropable;
     isInInventory = item.isInInventory;
-    isEquippable  = item.isEquippable;
+    isComponent   = item.isComponent;
     isKeyItem     = item.isKeyItem;
     if (itemTextureDuration[id] != sf::Time::Zero) {
         setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
