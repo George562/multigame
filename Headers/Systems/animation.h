@@ -30,6 +30,7 @@ public:
 
     void setTexture(sf::Texture& name);
     void setShader(sf::Shader* shader);
+    void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
     void setAnimationLevel(int);
     void setSize(sf::Vector2f size);
     sf::Vector2f getGlobalSize() const;
@@ -49,19 +50,11 @@ Animation::Animation() {
 }
 
 Animation::Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader) : Animation() {
-    this->sprite.setTexture(texture);
-    this->frameAmount = FrameAmount;
-    this->maxLevel = maxLevel;
-    this->duration = duration;
-    this->shader = shader;
+    setAnimation(texture, FrameAmount, maxLevel, duration, shader);                 // Actual black magic
 }
 
 Animation::Animation(sf::Texture& texture, sf::Shader* shader) : Animation() {
-    this->sprite.setTexture(texture);
-    this->frameAmount = 1;
-    this->maxLevel = 1;
-    this->duration = sf::Time::Zero;
-    this->shader = shader;
+    setAnimation(texture, 1, 1, sf::Time::Zero, shader);                            // Actual black magic
 }
 
 Animation::~Animation() {
@@ -105,6 +98,14 @@ void Animation::stop() {
 
 void Animation::setTexture(sf::Texture& texture) {
     sprite.setTexture(texture);
+}
+
+void Animation::setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader) {
+    this->sprite.setTexture(texture);
+    this->frameAmount = FrameAmount;
+    this->maxLevel = maxLevel;
+    this->duration = duration;
+    this->shader = shader;
 }
 
 void Animation::setShader(sf::Shader* shader) {

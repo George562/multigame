@@ -613,7 +613,7 @@ void initInventory() {
     statsCurLevelsText.setString("Current Levels: " + std::to_string(curLevel));
     statsCurLevelsText.setPosition(scw / 10, 8 * sch / 10);
 
-    playerCoinSprite = Animation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+    playerCoinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                   1, itemTextureDuration[ItemID::coin]);
     playerCoinSprite.play();
     playerCoinSlot.background = new sf::Sprite();
@@ -897,8 +897,8 @@ void initShop() {
     shopItemCoins.setPosition(shopItemSpriteFrame.getPosition().x + shopItemSpriteFrame.getGlobalBounds().width * 0.3,
                               shopItemSpriteFrame.getPosition().y + shopItemSpriteFrame.getGlobalBounds().height * 1.2);
 
-    shopItemCoinsSprite = Animation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
-                                    1, itemTextureDuration[ItemID::coin]);
+    shopItemCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+                                     1, itemTextureDuration[ItemID::coin]);
     shopItemCoinsSprite.setPosition(shopItemSpriteFrame.getPosition().x + shopItemSpriteFrame.getGlobalBounds().width * 0.5,
                                     shopItemSpriteFrame.getPosition().y + shopItemSpriteFrame.getGlobalBounds().height);
     shopItemCoinsSprite.setSize(sf::Vector2f(100.0, 100.0));
