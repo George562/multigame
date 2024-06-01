@@ -701,7 +701,7 @@ void initInventory() {
         compImgPanel.setTexture(Textures::PH_CochGen);
     });
 
-    arsCompGeneratorOutline = sf::ConvexShape(12);
+    arsCompGeneratorOutline.setPointCount(12);
     for (int i = 0; i < arsCompGeneratorBtn.hitbox.getPointCount(); i++)
         arsCompGeneratorOutline.setPoint(i, arsCompGeneratorBtn.hitbox.getPoint(i));
     arsCompGeneratorOutline.setFillColor(sf::Color::Transparent);
@@ -719,7 +719,7 @@ void initInventory() {
         compImgPanel.setTexture(Textures::PH_FormFactor);
     });
 
-    arsCompFormFactorOutline = sf::ConvexShape(4);
+    arsCompFormFactorOutline.setPointCount(4);
     for (int i = 0; i < arsCompFormFactorBtn.hitbox.getPointCount(); i++)
         arsCompFormFactorOutline.setPoint(i, arsCompFormFactorBtn.hitbox.getPoint(i));
     arsCompFormFactorOutline.setFillColor(sf::Color::Transparent);
@@ -737,7 +737,7 @@ void initInventory() {
         compImgPanel.setTexture(Textures::PH_Converter);
     });
 
-    arsCompConverterOutline = sf::ConvexShape(3);
+    arsCompConverterOutline.setPointCount(3);
     for (int i = 0; i < arsCompConverterBtn.hitbox.getPointCount(); i++)
         arsCompConverterOutline.setPoint(i, arsCompConverterBtn.hitbox.getPoint(i));
     arsCompConverterOutline.setFillColor(sf::Color::Transparent);
@@ -755,7 +755,7 @@ void initInventory() {
         compImgPanel.setTexture(Textures::PH_Targeting);
     });
 
-    arsCompTargetingOutline = sf::ConvexShape(4);
+    arsCompTargetingOutline.setPointCount(4);
     for (int i = 0; i < arsCompTargetingBtn.hitbox.getPointCount(); i++)
         arsCompTargetingOutline.setPoint(i, arsCompTargetingBtn.hitbox.getPoint(i));
     arsCompTargetingOutline.setFillColor(sf::Color::Transparent);
@@ -969,7 +969,7 @@ void draw() {
         }
 
         for (Enemy*& enemy: Enemies) {
-            EnemyHealthBar.setPosition(enemy->hitbox.getPosition() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->hitbox.getRadius() + 50.f));
+            EnemyHealthBar.setPosition(enemy->hitbox.getCenter() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->hitbox.getRadius() + 50.f));
             EnemyHealthBar.setValue(enemy->Health);
             preRenderTexture.draw(EnemyHealthBar);
         }
@@ -2166,7 +2166,7 @@ bool useItem(Item*& item) {
 void updateShaders() {
     sf::Vector2f uMouse(sf::Mouse::getPosition());
     float uTime = GameClock->getElapsedTime().asSeconds();
-    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.hitbox.getCenter()));
+    sf::Vector2f uPlayerPosition(player.hitbox.getCenter() - GameView.getCenter() + GameView.getSize() / 2.f);
 
     Shaders::Flashlight.setUniform("uMouse", uMouse);
     Shaders::Flashlight.setUniform("uPlayerPosition", uPlayerPosition);
