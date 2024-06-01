@@ -674,7 +674,7 @@ void initInventory() {
     arsCompGeneratorBtn.setPosition(scw / 8, sch / 2 + 20);
     arsCompGeneratorBtn.setFunction([](){ isChoosingComponent = true; compType = 0; });
 
-    arsCompGeneratorOutline = sf::ConvexShape(12);
+    arsCompGeneratorOutline.setPointCount(12);
     for (int i = 0; i < arsCompGeneratorBtn.hitbox.getPointCount(); i++)
         arsCompGeneratorOutline.setPoint(i, arsCompGeneratorBtn.hitbox.getPoint(i));
     arsCompGeneratorOutline.setFillColor(sf::Color::Transparent);
@@ -687,7 +687,7 @@ void initInventory() {
     arsCompFormFactorBtn.setPosition(scw / 3, 0.7 * sch);
     arsCompFormFactorBtn.setFunction([](){ isChoosingComponent = true; compType = 1; });
 
-    arsCompFormFactorOutline = sf::ConvexShape(4);
+    arsCompFormFactorOutline.setPointCount(4);
     for (int i = 0; i < arsCompFormFactorBtn.hitbox.getPointCount(); i++)
         arsCompFormFactorOutline.setPoint(i, arsCompFormFactorBtn.hitbox.getPoint(i));
     arsCompFormFactorOutline.setFillColor(sf::Color::Transparent);
@@ -700,7 +700,7 @@ void initInventory() {
     arsCompConverterBtn.setPosition(0.65 * scw, 0.65 * sch);
     arsCompConverterBtn.setFunction([](){ isChoosingComponent = true; compType = 2; });
 
-    arsCompConverterOutline = sf::ConvexShape(3);
+    arsCompConverterOutline.setPointCount(3);
     for (int i = 0; i < arsCompConverterBtn.hitbox.getPointCount(); i++)
         arsCompConverterOutline.setPoint(i, arsCompConverterBtn.hitbox.getPoint(i));
     arsCompConverterOutline.setFillColor(sf::Color::Transparent);
@@ -713,7 +713,7 @@ void initInventory() {
     arsCompTargetingBtn.setPosition(0.8 * scw, sch / 2);
     arsCompTargetingBtn.setFunction([](){ isChoosingComponent = true; compType = 3; });
 
-    arsCompTargetingOutline = sf::ConvexShape(4);
+    arsCompTargetingOutline.setPointCount(4);
     for (int i = 0; i < arsCompTargetingBtn.hitbox.getPointCount(); i++)
         arsCompTargetingOutline.setPoint(i, arsCompTargetingBtn.hitbox.getPoint(i));
     arsCompTargetingOutline.setFillColor(sf::Color::Transparent);
@@ -726,7 +726,7 @@ void initInventory() {
     compListText.setPosition(scw / 2, sch / 8);
 
     sf::Texture* fadeTexture = new sf::Texture();
-    sf::Image fadeTexturePixels = sf::Image();
+    sf::Image fadeTexturePixels;
     fadeTexturePixels.create(scw, sch, sf::Color(255, 255, 255, 128));
     for (int i = 0; i < scw; i++)
         for (int j = 0; j < sch; j++)
