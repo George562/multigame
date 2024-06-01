@@ -950,7 +950,7 @@ void draw() {
         }
 
         for (Enemy*& enemy: Enemies) {
-            EnemyHealthBar.setPosition(enemy->hitbox.getPosition() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->hitbox.getRadius() + 50.f));
+            EnemyHealthBar.setPosition(enemy->hitbox.getCenter() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->hitbox.getRadius() + 50.f));
             EnemyHealthBar.setValue(enemy->Health);
             preRenderTexture.draw(EnemyHealthBar);
         }
@@ -2152,7 +2152,7 @@ bool useItem(Item*& item) {
 void updateShaders() {
     sf::Vector2f uMouse(sf::Mouse::getPosition());
     float uTime = GameClock->getElapsedTime().asSeconds();
-    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.hitbox.getCenter()));
+    sf::Vector2f uPlayerPosition(player.hitbox.getCenter() - GameView.getCenter() + GameView.getSize() / 2.f);
 
     Shaders::Flashlight.setUniform("uMouse", uMouse);
     Shaders::Flashlight.setUniform("uPlayerPosition", uPlayerPosition);
