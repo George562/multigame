@@ -24,16 +24,16 @@ std::map<ItemID::Type, std::string> itemName {
     {ItemID::keyCard,        "Keycard"},
     {ItemID::protectiveSuit, "Protective suit"},
     {ItemID::regenDrug,      "Regen drug"},
-    {ItemID::coin,           "Coin"}
+    {ItemID::coin,           "Coin"},
 };
 
 std::map<ItemID::Type, std::string> itemDesc { // Descriptions of items
     {ItemID::regenDrug, "Substance for stabilizing the state of dimension of an object"}, // Gives +1 HP/s for the next 10 seconds
-    {ItemID::coin, "Moneh :D"}
+    {ItemID::coin, "Moneh :D"},
 };
 
 //////////////////////////////////////////////////////////// Item Animation params
-std::map<ItemID::Type, sf::Texture*> itemTextureName {
+std::map<ItemID::Type, sf::Texture*> itemTexture {
     {ItemID::gunParts,       new sf::Texture},
     {ItemID::repairKit,      new sf::Texture},
     {ItemID::keyCard,        new sf::Texture},
@@ -64,7 +64,7 @@ std::map<ItemID::Type, sf::Shader *> itemTextureShader {
 };
 
 //////////////////////////////////////////////////////////// Pickup Item Animation params
-std::map<ItemID::Type, sf::Texture*> pickupItemTextureName {
+std::map<ItemID::Type, sf::Texture*> pickupItemTexture {
     {ItemID::generic,      new sf::Texture},
     {ItemID::medkit,       new sf::Texture},
     {ItemID::regenDrug,    new sf::Texture},
@@ -97,13 +97,13 @@ void loadItemTextures() {
     // itemTextureName[ItemID::repairKit]      ->loadFromFile("sources/textures/repairKitItem.png");
     // itemTextureName[ItemID::keyCard]        ->loadFromFile("sources/textures/keyCardItem.png");
     // itemTextureName[ItemID::protectiveSuit] ->loadFromFile("sources/textures/protectiveSuitItem.png");
-    itemTextureName[ItemID::regenDrug]      ->loadFromFile("sources/textures/regenDrugItem.png");
-    itemTextureName[ItemID::coin]           ->loadFromFile("sources/textures/coin.png");
+    itemTexture[ItemID::regenDrug]              ->loadFromFile("sources/textures/regenDrugItem.png");
+    itemTexture[ItemID::coin]                   ->loadFromFile("sources/textures/coin.png");
 
     // pickupItemTextureName[ItemID::generic]   ->loadFromFile("sources/textures/genericPickup.png");
     // pickupItemTextureName[ItemID::medkit]    ->loadFromFile("sources/textures/medkitPickup.png");
-    pickupItemTextureName[ItemID::regenDrug]    ->loadFromFile("sources/textures/regenDrugPickup.png");
-    pickupItemTextureName[ItemID::coin]         ->loadFromFile("sources/textures/coin.png");
+    pickupItemTexture[ItemID::regenDrug]        ->loadFromFile("sources/textures/regenDrugPickup.png");
+    pickupItemTexture[ItemID::coin]             ->loadFromFile("sources/textures/coin.png");
 }
 
 ////////////////////////////////////////////////////////////
@@ -144,9 +144,9 @@ Item::Item(ItemID::Type _id, int _amount, bool _pickupable, bool _isInInventory,
     isComponent   = _isComponent;
     isKeyItem     = _isKeyItem;
     if (itemTextureDuration[id] != sf::Time::Zero) {
-        setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
+        setAnimation(*itemTexture[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
     } else {
-        setAnimation(*itemTextureName[id], itemTextureShader[id]);
+        setAnimation(*itemTexture[id], itemTextureShader[id]);
     }
 }
 
@@ -159,9 +159,9 @@ Item::Item(const Item& item) {
     isComponent   = item.isComponent;
     isKeyItem     = item.isKeyItem;
     if (itemTextureDuration[id] != sf::Time::Zero) {
-        setAnimation(*itemTextureName[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
+        setAnimation(*itemTexture[id], itemTextureFrameAmount[id], 1, itemTextureDuration[id], itemTextureShader[id]);
     } else {
-        setAnimation(*itemTextureName[id], itemTextureShader[id]);
+        setAnimation(*itemTexture[id], itemTextureShader[id]);
     }
 }
 
@@ -185,9 +185,9 @@ bool Item::isActivated(CollisionCircle& player, sf::Event& event) {
 
 void Item::dropTo(sf::Vector2f pos) {
     if (pickupItemTextureDuration[id] != sf::Time::Zero) {
-        setAnimation(*pickupItemTextureName[id], pickupItemTextureFrameAmount[id], 1, pickupItemTextureDuration[id], pickupItemTextureShader[id]);
+        setAnimation(*pickupItemTexture[id], pickupItemTextureFrameAmount[id], 1, pickupItemTextureDuration[id], pickupItemTextureShader[id]);
     } else {
-        setAnimation(*pickupItemTextureName[id], pickupItemTextureShader[id]);
+        setAnimation(*pickupItemTexture[id], pickupItemTextureShader[id]);
     }
     setPosition(pos);
     isInInventory = false;

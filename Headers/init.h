@@ -105,6 +105,7 @@ namespace Textures {
                 YellowPanel,
                 YellowPanelPushed,
                 GradientFrame,
+                GradientFrameAlpha,
                 ItemPanel,
                 Frame4,
 
@@ -114,7 +115,11 @@ namespace Textures {
                 GridBG,
 
                 INVISIBLE,
-                PH_gun
+                PH_gun,
+                PH_CochGen,
+                PH_FormFactor,
+                PH_Converter,
+                PH_Targeting
                 ;
 }
 
@@ -136,26 +141,28 @@ void loadTextures() {
     Textures::Eff_HPRegen             .loadFromFile("sources/textures/effects/HPRegenEffect.png");
     Textures::Eff_Burn                .loadFromFile("sources/textures/effects/BurnEffect.png");
 
-    Textures::GreenPanel                .loadFromFile("sources/textures/Panels/GreenPanel.png");
-    Textures::GreenPanelPushed          .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
-    Textures::RedPanel                  .loadFromFile("sources/textures/Panels/RedPanel.png");
-    Textures::RedPanelPushed            .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
-    Textures::BluePanel                 .loadFromFile("sources/textures/Panels/BluePanel.png");
-    Textures::BluePanelPushed           .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
-    Textures::YellowPanel               .loadFromFile("sources/textures/Panels/YellowPanel.png");
-    Textures::YellowPanelPushed         .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
-    Textures::GradientFrame             .loadFromFile("sources/textures/Panels/GradientFrame.png");
-    Textures::ItemPanel                 .loadFromFile("sources/textures/Panels/ItemPanel.png");
-    Textures::Frame4                    .loadFromFile("sources/textures/Panels/frame4.png");
+    Textures::GreenPanel              .loadFromFile("sources/textures/Panels/GreenPanel.png");
+    Textures::GreenPanelPushed        .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
+    Textures::RedPanel                .loadFromFile("sources/textures/Panels/RedPanel.png");
+    Textures::RedPanelPushed          .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
+    Textures::BluePanel               .loadFromFile("sources/textures/Panels/BluePanel.png");
+    Textures::BluePanelPushed         .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
+    Textures::YellowPanel             .loadFromFile("sources/textures/Panels/YellowPanel.png");
+    Textures::YellowPanelPushed       .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
+    Textures::GradientFrame           .loadFromFile("sources/textures/Panels/GradientFrame.png");
+    Textures::GradientFrameAlpha      .loadFromFile("sources/textures/Panels/GradientFrameAlpha.png");
+    Textures::ItemPanel               .loadFromFile("sources/textures/Panels/ItemPanel.png");
+    Textures::Frame4                  .loadFromFile("sources/textures/Panels/frame4.png");
 
-    Textures::NPCDialogueFrame_Square .loadFromFile("sources/textures/Panels/NPCDialogueFrame_Square.png");
-    Textures::NPCDialogueFrame_Wide   .loadFromFile("sources/textures/Panels/NPCDialogueFrame_Wide.png");
-
-    Textures::GridBG                    .loadFromFile("sources/textures/Panels/GridBackground.png");
+    Textures::GridBG                  .loadFromFile("sources/textures/Panels/GridBackground.png");
 
     Textures::INVISIBLE               .create(size, size);
 
     Textures::PH_gun                  .loadFromFile("sources/textures/Placeholders/kitchengun.png");
+    Textures::PH_CochGen              .loadFromFile("sources/textures/Placeholders/CockGen.png");
+    Textures::PH_FormFactor           .loadFromFile("sources/textures/Placeholders/formFactor.jpg");
+    Textures::PH_Converter            .loadFromFile("sources/textures/Placeholders/converter.jpg");
+    Textures::PH_Targeting            .loadFromFile("sources/textures/Placeholders/targeting.jpg");
 }
 
 namespace Shaders {

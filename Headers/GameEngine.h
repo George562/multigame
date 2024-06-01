@@ -123,28 +123,22 @@ PlacedText arsWeaponNameText,
            arsWeaponInfoText,
            arsWeaponStatsText;
     
-sf::ConvexShape arsCompGeneratorOutline;
-sf::ConvexShape arsCompFormFactorOutline;
-sf::ConvexShape arsCompConverterOutline;
-sf::ConvexShape arsCompTargetingOutline;
-
-PolygonButton arsCompGeneratorBtn;
-PolygonButton arsCompFormFactorBtn;
-PolygonButton arsCompConverterBtn;
-PolygonButton arsCompTargetingBtn;
-
-// DEBUG
-sf::CircleShape tri1, tri2, tri3, center1, center2;
-// DEBUG
+sf::ConvexShape arsCompGeneratorOutline,
+                arsCompFormFactorOutline,
+                arsCompConverterOutline,
+                arsCompTargetingOutline;
+PolygonButton arsCompGeneratorBtn,
+              arsCompFormFactorBtn,
+              arsCompConverterBtn,
+              arsCompTargetingBtn;
 
 bool isChoosingComponent = false;
 int compType = 0;
 
 // ARSENAL COMPONENT CHOICE ELEMENTS
 std::vector<sf::Drawable*> arsCompUpgradeElements;
-PlacedText compListText;
-Panel compListFade;
-Panel compListBG;
+Panel compListTextPanel, compListFade, compListBG;
+Panel compImgPanel;
 std::vector<ItemSlot> arsCompSlotsElements;
 std::vector<RectButton> arsCompBtns;
 
@@ -333,7 +327,7 @@ Panel ListOfPlayers;
 RectButton HostButton("Host", [](){
     listener.listen(53000);
     selector.add(listener);
-    ListOfPlayers.setWord(MyIP);
+    ListOfPlayers.setString(MyIP);
     ComputerID = 0;
     ConnectedPlayers.push_back(*(new Player()));
     HostFuncRun = true;
@@ -356,7 +350,7 @@ RectButton EscapeButton("Exit", [](){
         SelfDisconnect();
     }
     EscapeMenuActivated = false;
-    ListOfPlayers.clear();
+    ListOfPlayers.clearText();
     clearVectorOfPointer(Bullets);
     clearVectorOfPointer(Enemies);
     clearVectorOfPointer(TempTextsOnGround);
@@ -441,7 +435,7 @@ void init() {
     Shaders::Fire.setUniform("noise_png", Textures::Noise);
 
     IPPanel       .setTexture(Textures::YellowPanel);
-    ListOfPlayers .setTexture(Textures::GradientFrame);
+    ListOfPlayers .setTexture(Textures::GradientFrameAlpha);
 
     EscapeButton .setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     HostButton   .setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
@@ -567,8 +561,8 @@ void initInventory() {
     statsPageButton.setPosition((scw) * 0.8, (sch) * 0.9);
     statsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
-    itemListBG.setTexture(Textures::GradientFrame);
-    itemListBG.setScale((float)(scw - 300) / Textures::GradientFrame.getSize().x, (float)sch / Textures::GradientFrame.getSize().y * 0.6);
+    itemListBG.setTexture(Textures::GradientFrameAlpha);
+    itemListBG.setScale((float)(scw - 300) / Textures::GradientFrameAlpha.getSize().x, (float)sch / Textures::GradientFrameAlpha.getSize().y * 0.6);
     itemListBG.setPosition(150, sch * 0.2);
 
     invCommonElements.push_back(&invBackground);
@@ -619,7 +613,7 @@ void initInventory() {
     statsCurLevelsText.setString("Current Levels: " + std::to_string(curLevel));
     statsCurLevelsText.setPosition(scw / 10, 8 * sch / 10);
 
-    playerCoinSprite = Animation(*itemTextureName[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+    playerCoinSprite = Animation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                   1, itemTextureDuration[ItemID::coin]);
     playerCoinSprite.play();
     playerCoinSlot.background = new sf::Sprite();
@@ -646,12 +640,40 @@ void initInventory() {
     arsWeaponStatsText.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
                                    sch / 8 + 180);
 
+    sf::Texture* fadeTexture = new sf::Texture();
+    sf::Image fadeTexturePixels = sf::Image();
+    fadeTexturePixels.create(scw, sch, sf::Color(255, 255, 255, 128));
+    for (int i = 0; i < scw; i++)
+        for (int j = 0; j < sch; j++)
+            if (i >= scw / 8 && i <= scw - scw / 8 &&
+                j >= sch / 4 && j <= sch - sch / 4) {
+                float gradVal = 25 * (((int) (i - scw / 8 + j - sch / 4) / (255)) % 25);
+                fadeTexturePixels.setPixel(i, j, sf::Color(gradVal, gradVal, gradVal, 255));
+            }
+    fadeTexture->create(scw, sch);
+    fadeTexture->update(fadeTexturePixels);
+    compListFade.sprite.setTexture(*fadeTexture);
+
+    compListTextPanel.setTexture(Textures::GradientFrame);
+    compListTextPanel.setSize(scw - 2 * scw / 8, sch / 8);
+    compListTextPanel.setPosition(scw / 8, 100);
+    compListTextPanel.setString("Choose a component upgrade");
+    compListTextPanel.setCharacterSize(40);
+
+    compListBG.setTexture(Textures::GradientFrameAlpha);
+    compListBG.setSize(scw - 2 * scw / 8, sch - 2 * sch / 4);
+    compListBG.setPosition(scw / 8, sch / 4);
+
+    compImgPanel.setTexture(Textures::PH_FormFactor);
+    compImgPanel.setSize(scw / 6, sch / 6);
+    compImgPanel.setPosition(scw / 8 + 100, sch / 4 + 100);
+
 
     std::vector<sf::Vector2f> starShape{
-        sf::Vector2f(0, 100), sf::Vector2f(50, 50), sf::Vector2f(100, 50),
-        sf::Vector2f(75, 0), sf::Vector2f(100, -50), sf::Vector2f(50, -50),
+        sf::Vector2f(0, 100),  sf::Vector2f(50, 50),   sf::Vector2f(100, 50),
+        sf::Vector2f(75, 0),   sf::Vector2f(100, -50), sf::Vector2f(50, -50),
         sf::Vector2f(0, -100), sf::Vector2f(-50, -50), sf::Vector2f(-100, -50),
-        sf::Vector2f(-75, 0), sf::Vector2f(-100, 50), sf::Vector2f(-50, 50)
+        sf::Vector2f(-75, 0),  sf::Vector2f(-100, 50), sf::Vector2f(-50, 50)
     };
     std::vector<sf::Vector2f> rectShape{
         sf::Vector2f(-100, -50), sf::Vector2f(-100, 50), sf::Vector2f(100, 50), sf::Vector2f(100, -50)
@@ -672,7 +694,12 @@ void initInventory() {
     arsCompGeneratorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
     arsCompGeneratorBtn.hitbox.setPoints(starShape);
     arsCompGeneratorBtn.setPosition(scw / 8, sch / 2 + 20);
-    arsCompGeneratorBtn.setFunction([](){ isChoosingComponent = true; compType = 0; });
+    arsCompGeneratorBtn.setFunction([](){
+        isChoosingComponent = true;
+        compType = 0;
+        compListTextPanel.setString("Choose a Coch Generator upgrade   (press RMB to close)");
+        compImgPanel.setTexture(Textures::PH_CochGen);
+    });
 
     arsCompGeneratorOutline = sf::ConvexShape(12);
     for (int i = 0; i < arsCompGeneratorBtn.hitbox.getPointCount(); i++)
@@ -685,7 +712,12 @@ void initInventory() {
     arsCompFormFactorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
     arsCompFormFactorBtn.hitbox.setPoints(rectShape);
     arsCompFormFactorBtn.setPosition(scw / 3, 0.7 * sch);
-    arsCompFormFactorBtn.setFunction([](){ isChoosingComponent = true; compType = 1; });
+    arsCompFormFactorBtn.setFunction([](){
+        isChoosingComponent = true;
+        compType = 1;
+        compListTextPanel.setString("Choose a Form-factor upgrade   (press RMB to close)");
+        compImgPanel.setTexture(Textures::PH_FormFactor);
+    });
 
     arsCompFormFactorOutline = sf::ConvexShape(4);
     for (int i = 0; i < arsCompFormFactorBtn.hitbox.getPointCount(); i++)
@@ -698,7 +730,12 @@ void initInventory() {
     arsCompConverterBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
     arsCompConverterBtn.hitbox.setPoints(rotatedTri);
     arsCompConverterBtn.setPosition(0.65 * scw, 0.65 * sch);
-    arsCompConverterBtn.setFunction([](){ isChoosingComponent = true; compType = 2; });
+    arsCompConverterBtn.setFunction([](){
+        isChoosingComponent = true;
+        compType = 2;
+        compListTextPanel.setString("Choose a Converter upgrade   (press RMB to close)");
+        compImgPanel.setTexture(Textures::PH_Converter);
+    });
 
     arsCompConverterOutline = sf::ConvexShape(3);
     for (int i = 0; i < arsCompConverterBtn.hitbox.getPointCount(); i++)
@@ -711,7 +748,12 @@ void initInventory() {
     arsCompTargetingBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
     arsCompTargetingBtn.hitbox.setPoints(rotatedFrustum);
     arsCompTargetingBtn.setPosition(0.8 * scw, sch / 2);
-    arsCompTargetingBtn.setFunction([](){ isChoosingComponent = true; compType = 3; });
+    arsCompTargetingBtn.setFunction([](){
+        isChoosingComponent = true;
+        compType = 3;
+        compListTextPanel.setString("Choose a Targeting mechanism upgrade   (press RMB to close)");
+        compImgPanel.setTexture(Textures::PH_Targeting);
+    });
 
     arsCompTargetingOutline = sf::ConvexShape(4);
     for (int i = 0; i < arsCompTargetingBtn.hitbox.getPointCount(); i++)
@@ -719,30 +761,6 @@ void initInventory() {
     arsCompTargetingOutline.setFillColor(sf::Color::Transparent);
     arsCompTargetingOutline.setOutlineThickness(3);
     arsCompTargetingOutline.setOutlineColor(sf::Color(255, 192, 192, 255));
-
-
-    compListText.setCharacterSize(40);
-    compListText.setString("Choose a ");
-    compListText.setPosition(scw / 2, sch / 8);
-
-    sf::Texture* fadeTexture = new sf::Texture();
-    sf::Image fadeTexturePixels = sf::Image();
-    fadeTexturePixels.create(scw, sch, sf::Color(255, 255, 255, 128));
-    for (int i = 0; i < scw; i++)
-        for (int j = 0; j < sch; j++)
-            if (i >= scw / 8 && i <= scw - scw / 8 &&
-                j >= sch / 4 && j <= sch - sch / 4) {
-                float gradVal = 25 * (((i - scw / 8 + j - sch / 4) / (255)) % 25);
-                fadeTexturePixels.setPixel(i, j, sf::Color(gradVal, gradVal, gradVal, 255));
-            }
-    fadeTexture->create(scw, sch);
-    fadeTexture->update(fadeTexturePixels);
-    compListFade.sprite.setTexture(*fadeTexture);
-
-    compListBG.setTexture(Textures::GradientFrame);
-    compListBG.setScale((float) (scw - 2 * scw / 8) / Textures::GradientFrame.getSize().x,
-                        (float) (sch - 2 * sch / 4) / Textures::GradientFrame.getSize().y);
-    compListBG.setPosition(scw / 8, sch / 4);
 
     invPageElements[inventoryPage::Items].push_back(&itemListBG);
     invPageElements[inventoryPage::Items].push_back(&playerCoinSprite);
@@ -761,7 +779,8 @@ void initInventory() {
     invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingOutline);
     arsCompUpgradeElements.push_back(&compListFade);
     arsCompUpgradeElements.push_back(&compListBG);
-    arsCompUpgradeElements.push_back(&compListText);
+    arsCompUpgradeElements.push_back(&compListTextPanel);
+    arsCompUpgradeElements.push_back(&compImgPanel);
 
     invPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
     invPageElements[inventoryPage::Stats].push_back(&statsHPBar);
@@ -811,10 +830,10 @@ void initShop() {
     shopBackButton.setCharacterSize(36);
     shopBackButton.setSize(250, 50);
 
-    shopNPCTextFrame.setTexture(Textures::GradientFrame);
+    shopNPCTextFrame.setTexture(Textures::GradientFrameAlpha);
     shopNPCTextFrame.setColor(sf::Color(0x10, 0xBB, 0xFF));
-    shopNPCTextFrame.setScale((float) (scw - 100) / Textures::GradientFrame.getSize().x,
-                              200.0 / Textures::GradientFrame.getSize().y);
+    shopNPCTextFrame.setScale((float) (scw - 100) / Textures::GradientFrameAlpha.getSize().x,
+                              200.0 / Textures::GradientFrameAlpha.getSize().y);
     shopNPCTextFrame.setPosition(50, shopBackButton.hitbox.getBottom() + 50 / 5);
 
     shopNPCSprite.setTexture(Textures::DistortedScientist);
@@ -831,10 +850,10 @@ void initShop() {
     shopNPCText.setPosition(shopNPCTextFrame.getPosition().x + shopNPCTextFrame.getGlobalBounds().width * 0.25,
                             shopNPCTextFrame.getPosition().y + 50);
 
-    shopItemsFrame.setTexture(Textures::GradientFrame);
+    shopItemsFrame.setTexture(Textures::GradientFrameAlpha);
     shopItemsFrame.setColor(sf::Color(0xCC, 0xAA, 0x11));
-    shopItemsFrame.setScale((0.6 * scw - 100) / (Textures::GradientFrame.getSize().x),
-                            (0.35 * sch - 50) / (Textures::GradientFrame.getSize().y));
+    shopItemsFrame.setScale((0.6 * scw - 100) / (Textures::GradientFrameAlpha.getSize().x),
+                            (0.35 * sch - 50) / (Textures::GradientFrameAlpha.getSize().y));
     shopItemsFrame.setPosition(50, shopBackButton.hitbox.getBottom() + 200.0 + 50 / 2);
 
     shopItemsViewSizeX = (0.6 * scw - 100) / scw;
@@ -843,10 +862,10 @@ void initShop() {
                                             (shopItemsFrame.getPosition().y + 50 / 3) / sch,
                                             shopItemsViewSizeX, shopItemsViewSizeY));
 
-    shopPlayerInventoryFrame.setTexture(Textures::GradientFrame);
+    shopPlayerInventoryFrame.setTexture(Textures::GradientFrameAlpha);
     shopPlayerInventoryFrame.setColor(sf::Color(0xBB, 0x40, 0x40));
-    shopPlayerInventoryFrame.setScale((0.4 * scw - 50) / (Textures::GradientFrame.getSize().x),
-                                      (0.35 * sch - 50) / (Textures::GradientFrame.getSize().y));
+    shopPlayerInventoryFrame.setScale((0.4 * scw - 50) / (Textures::GradientFrameAlpha.getSize().x),
+                                      (0.35 * sch - 50) / (Textures::GradientFrameAlpha.getSize().y));
     shopPlayerInventoryFrame.setPosition(0.6 * scw, shopItemsFrame.getPosition().y);
 
     shopPlayerInvViewSizeX = (0.6 * scw - 100) / scw;
@@ -855,10 +874,10 @@ void initShop() {
                                                 (shopPlayerInventoryFrame.getPosition().y + 50) / sch,
                                                 shopPlayerInvViewSizeX, shopPlayerInvViewSizeY));
 
-    shopItemStatsFrame.setTexture(Textures::GradientFrame);
+    shopItemStatsFrame.setTexture(Textures::GradientFrameAlpha);
     shopItemStatsFrame.setColor(sf::Color(0xCC, 0xAA, 0x11));
-    shopItemStatsFrame.setScale((0.6 * scw - 100) / (Textures::GradientFrame.getSize().x),
-                                (0.35 * sch - 50) / (Textures::GradientFrame.getSize().y));
+    shopItemStatsFrame.setScale((0.6 * scw - 100) / (Textures::GradientFrameAlpha.getSize().x),
+                                (0.35 * sch - 50) / (Textures::GradientFrameAlpha.getSize().y));
     shopItemStatsFrame.setPosition(50, shopItemsFrame.getPosition().y + 0.35 * sch - 50 + 50 / 2);
 
     shopItemSpriteFrame.setTexture(Textures::ItemPanel);
@@ -878,7 +897,7 @@ void initShop() {
     shopItemCoins.setPosition(shopItemSpriteFrame.getPosition().x + shopItemSpriteFrame.getGlobalBounds().width * 0.3,
                               shopItemSpriteFrame.getPosition().y + shopItemSpriteFrame.getGlobalBounds().height * 1.2);
 
-    shopItemCoinsSprite = Animation(*itemTextureName[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+    shopItemCoinsSprite = Animation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                     1, itemTextureDuration[ItemID::coin]);
     shopItemCoinsSprite.setPosition(shopItemSpriteFrame.getPosition().x + shopItemSpriteFrame.getGlobalBounds().width * 0.5,
                                     shopItemSpriteFrame.getPosition().y + shopItemSpriteFrame.getGlobalBounds().height);
@@ -1253,15 +1272,6 @@ void drawInventory() {
                 }
                 for (sf::Drawable*& elem : arsCompUpgradeElements)
                     window.draw(*elem);
-                
-                for (Item*& item : player.inventory.items) {
-                    if (item->isComponent && invItemSlotsElements[item->id].isInitialized) {
-                        window.draw(*invItemSlotsElements[item->id].background);
-
-                        if (item->amount >= 1) window.draw(*invItemSlotsElements[item->id].amountText);
-                    }
-                    window.draw(*item);
-                }
             }
             break;
         }
@@ -1665,12 +1675,15 @@ void inventoryHandler(sf::Event& event) {
         invBackButton.buttonFunction();
         return;
     }
-    invBackButton.isActivated(event);
-    itemsPageButton.isActivated(event);
-    weaponsPageButton.isActivated(event);
-    equipablesPageButton.isActivated(event);
-    perksPageButton.isActivated(event);
-    statsPageButton.isActivated(event);
+
+    if (!isChoosingComponent) {
+        invBackButton.isActivated(event);
+        itemsPageButton.isActivated(event);
+        weaponsPageButton.isActivated(event);
+        equipablesPageButton.isActivated(event);
+        perksPageButton.isActivated(event);
+        statsPageButton.isActivated(event);
+    }
 
     bool isAnythingHovered = false;
     int itemTypeCount = 0;
@@ -1683,7 +1696,7 @@ void inventoryHandler(sf::Event& event) {
                     isItemDescDrawn = false;
                 }
                 isAnythingHovered = true;
-                if (event.mouseButton.button == sf::Mouse::Button::Right) {
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Right) {
                     isItemDescDrawn = true;
                     itemDescText.setString(itemDesc[item->id]);
                     prevItemDescID = item->id;
@@ -1701,18 +1714,19 @@ void inventoryHandler(sf::Event& event) {
         }
         if (itemTypeCount != prevItemTypeCount) createSlotRects();
         prevItemTypeCount = itemTypeCount;
+        if (!isAnythingHovered) isItemDescDrawn = false;
     }
     if (activeInventoryPage == inventoryPage::Arsenal) {
         if (event.type == sf::Event::MouseButtonPressed &&
             event.mouseButton.button == sf::Mouse::Right && isChoosingComponent)
             isChoosingComponent = false;
-        arsCompGeneratorBtn.isActivated(event);
-        arsCompFormFactorBtn.isActivated(event);
-        arsCompConverterBtn.isActivated(event);
-        arsCompTargetingBtn.isActivated(event);
+        if (!isChoosingComponent) {
+            arsCompGeneratorBtn.isActivated(event);
+            arsCompFormFactorBtn.isActivated(event);
+            arsCompConverterBtn.isActivated(event);
+            arsCompTargetingBtn.isActivated(event);
+        }
     }
-    if (!isAnythingHovered)
-        isItemDescDrawn = false;
 }
 
 void shopHandler(sf::Event& event) {
@@ -1735,7 +1749,7 @@ void shopHandler(sf::Event& event) {
                 shopSelectedItem = item;
                 shopItemCoins.setString(sf::String(std::to_string(curShop->itemPrices[item->id])));
                 shopItemStats.setString(textWrap(itemDesc[item->id], 65));
-                shopItemSprite.setTexture(*itemTextureName[item->id], true);
+                shopItemSprite.setTexture(*itemTexture[item->id], true);
             }
     }
     window.setView(ShopView);
@@ -1986,7 +2000,7 @@ void LoadMainMenu() {
     InteractibeStuff.push_back(&shopSector);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
-    newItem->setAnimation(*itemTextureName[ItemID::regenDrug]);
+    newItem->setAnimation(*itemTexture[ItemID::regenDrug]);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.hitbox.getCenter() + sf::Vector2f(100, 100));
@@ -2409,7 +2423,7 @@ void ClientConnect() {
 
         DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
 
-        for (int i = 0; i < ListOfPlayers.size(); i++) {
+        for (int i = 0; i < ListOfPlayers.getLineCount(); i++) {
             SendPacket << pacetStates::PlayerConnect << ListOfPlayers[i];
         }
 

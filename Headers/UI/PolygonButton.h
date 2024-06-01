@@ -24,8 +24,8 @@ public:
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
     void setCenter(float x, float y) { setPosition(x - hitbox.getSize().x / 2, y - hitbox.getSize().y / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
-    void setFunction(void (*func)()) { buttonFunction = func; }
 
+    void setFunction(void (*func)()) { buttonFunction = func; }
     void setWord(sf::String word) { ButtonText.setString(word); ButtonText.setCenter(hitbox.getCenter()); }
     void setTexture(sf::Texture&, sf::Texture&);
     void setCharacterSize(int size) { ButtonText.setCharacterSize(size); ButtonText.setCenter(hitbox.getCenter()); }
