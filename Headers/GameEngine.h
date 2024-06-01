@@ -2087,15 +2087,13 @@ void updateEffects(Creature* creature) {
                     break;
                 case Effects::Burn:
                     if (!effectVec[i]->active) {
-                        effectVec[i]->parameters[1] += 1;
-                        creature->getDamage(creature->HealthRecovery +
-                                            effectVec[i]->parameters[0] * effectVec[i]->parameters[1]);
+                        creature->getDamage(effectVec[i]->parameters[0]);
+                        creature->HealthRecoveryActive = false;
                         effectVec[i]->active = true;
                     }
-                    if (effectVec[i]->customTickClock->getElapsedTime().asSeconds() >= effectVec[i]->customTick.asSeconds()) {
-                        creature->getDamage(creature->HealthRecovery +
-                                            effectVec[i]->parameters[0] * effectVec[i]->parameters[1]);
-                        effectVec[i]->parameters[1] += 1;
+                    if (effectVec[i]->customTickClock->getElapsedTime() >= effectVec[i]->customTick) {
+                        creature->getDamage(effectVec[i]->parameters[0]);
+                        creature->HealthRecoveryActive = false;
                         effectVec[i]->customTickClock->restart();
                     }
                     break;
@@ -2139,6 +2137,10 @@ void clearEffect(Creature& owner, Effect* effect) {
     switch (effect->type) {
         case Effects::HPRegen:
             owner.HealthRecovery -= effect->parameters[0];
+            break;
+        case Effects::Burn:
+            owner.HealthRecoveryActive = true;
+            owner.effectStacks[effect->type] -= 1;
             break;
         default:
             owner.effectStacks[effect->type] -= 1;

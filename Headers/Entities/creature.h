@@ -14,8 +14,10 @@ public:
     faction::Type faction;
 
     Scale<float> Health;
+    bool HealthRecoveryActive = true;
     float HealthRecovery;
     Scale<float> Mana;
+    bool ManaRecoveryActive = true;
     float ManaRecovery;
     Scale<float> Armor; // blocking damage = min(1, damage - armor)
 
@@ -102,8 +104,8 @@ public:
     }
 
     virtual void UpdateState() {
-        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        Mana += ManaRecovery * ManaRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        Health += HealthRecovery * HealthRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
         LastStateCheck = localClock->getElapsedTime();
     }
 
