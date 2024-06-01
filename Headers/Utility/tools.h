@@ -41,7 +41,7 @@ std::string stringLower(std::string text) {
 
 void CreateImage() {
     sf::Image img, res;
-    img.loadFromFile("sources/textures/floor1x.png");
+    img.loadFromFile("sources/textures/floor.png");
     res.create(32 * 100, 32 * 100);
     for (int y = 0; y < 100; y++) {
         for (int x = 0; x < 100; x++) {

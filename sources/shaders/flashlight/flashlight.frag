@@ -15,6 +15,6 @@ void main() {
     vec2 lightPosition = vec2(uMouse.x, uResolution.y - uMouse.y) - playerPosition;
     float intensity = smoothstep(0.65, 0.85, dot(normalize(normal), normalize(lightPosition)));
     intensity += smoothstep(1.6, -0.2, length(normal) / u_playerRadius - 1.0);
-    intensity = clamp(intensity, 0.25, 1.);
+    intensity = clamp(intensity, 0.1, 1.);
     gl_FragColor = gl_Color * vec4(pixel.xyz * intensity, pixel.w);
 }

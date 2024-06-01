@@ -42,7 +42,6 @@ std::vector<Player> ConnectedPlayers;
 
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect, FLoorTileSprite;
-std::vector<sf::Texture> FloorTextureRects;
 std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround, DamageText, MessageText;
 Bar<float> EnemyHealthBar;
 sf::Sprite undergroundBG;
@@ -277,7 +276,6 @@ void shopHandler(sf::Event&);
 //---------------------------- LEVEL GENERATION FUNCTIONS
 void LevelGenerate(int, int);
 void LoadMainMenu();
-void FillFloorRects();
 
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
@@ -325,8 +323,6 @@ void funcOfClient();
 //////////////////////////////////////////////////////////// Threads
 sf::Thread HostTread(funcOfHost);
 sf::Thread ClientTread(funcOfClient);
-sf::Thread FillFloorRectsThread(FillFloorRects);
-
 
 //////////////////////////////////////////////////////////// Panels
 Panel IPPanel("IP:");
@@ -423,7 +419,7 @@ void init() {
     Musics::Fight1.setVolume(5);
     Musics::Fight2.setVolume(5);
 
-    portal.setAnimation(Textures::PortalAnimation2, 9, 1, sf::seconds(1), &Shaders::Portal);
+    portal.setAnimation(Textures::Portal, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
     player.setAnimation(Textures::Player, &Shaders::Player);
     puddle.setAnimation(Textures::Puddle);
@@ -449,8 +445,6 @@ void init() {
 
     EscapeButton .setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     HostButton   .setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
-
-    WallRect.setTexture(Textures::Wall);
 
     CurWeapon.looped = true;
 
@@ -513,7 +507,8 @@ void init() {
     EnemyHealthBar.setWallWidth(1);
     EnemyHealthBar.ShowText = false;
 
-    FLoorTileSprite.setScale(3.f, 3.f);
+    FLoorTileSprite.setScale(5.f, 5.f);
+    FLoorTileSprite.setTexture(Textures::floor);
 
     undergroundBG.setTexture(Textures::Noise);
     undergroundBG.setPosition(0, 0);
@@ -1002,17 +997,14 @@ void draw() {
 }
 
 void drawFloor() {
-    std::vector<sf::Texture>::iterator it = FloorTextureRects.begin();
     sf::RenderStates states;
     for (int i = 0; i < CurLocation->n; i++) {
         for (int j = 0; j < CurLocation->m; j++) {
             if (CurLocation->EnableTiles[i][j]) {
-                FLoorTileSprite.setTexture(*it);
                 FLoorTileSprite.setPosition(size * j, size * i);
                 states.shader = (random(i, j) <= 0.9) ? nullptr : &Shaders::WaveMix;
                 Shaders::WaveMix.setUniform("uPosition", sf::Vector2f(j, i));
                 preRenderTexture.draw(FLoorTileSprite, states);
-                it++;
             }
         }
     }
@@ -1030,11 +1022,7 @@ void drawWalls() {
             if (CurLocation->walls[i][j]) {
                 CurLocation->SeenWalls[i][j] = CurLocation->SeenWalls[i][j] || CameraRect.intersect(CurLocation->wallsRect[i][j]);
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
-                WallRect.setTextureRect(sf::IntRect(
-                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].getSize().x) * random(i, j),
-                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].getSize().y) * random(j, i),
-                        CurLocation->wallsRect[i][j].getSize().x,
-                        CurLocation->wallsRect[i][j].getSize().y));
+                WallRect.setTexture((i % 2 == 1) ? Textures::WallV : Textures::WallG, true);
                 preRenderTexture.draw(WallRect);
             }
         }
@@ -1757,28 +1745,6 @@ void shopHandler(sf::Event& event) {
 
 
 //============================================================================================== LEVEL GENERATION FUNCTIONS
-void FillFloorRects() {
-    sf::Image res, src = Textures::floor1x.copyToImage();
-    auto CreateOneFLoor = [&src](sf::Image& res){
-        for (int y = 0; y < 5; y++) {
-            for (int x = 0; x < 5; x++) {
-                res.copy(src, x * 32, y * 32, {(std::rand() % 5) * 32, 0, 32, 32});
-            }
-        }
-    };
-    res.create(160, 160);
-    FloorTextureRects.clear();
-    for (int i = 0; i < CurLocation->n; i++) {
-        for (int j = 0; j < CurLocation->m; j++) {
-            if (CurLocation->EnableTiles[i][j]) {
-                CreateOneFLoor(res);
-                FloorTextureRects.push_back(sf::Texture());
-                FloorTextureRects.rbegin()->loadFromImage(res); // MEMORY LEAK!
-            }
-        }
-    }
-}
-
 void setBox(Interactable*& box) {
     box->setAnimation(Textures::Box);
     box->setSize(105.f, 117.f);
@@ -1866,8 +1832,6 @@ void LevelGenerate(int n, int m) {
 
     LabyrinthLocation.GenerateLocation(n, m, player.hitbox.getCenter() / float(size));
 
-    FillFloorRectsThread.launch();
-
     portal.setCenter(player.hitbox.getCenter());
     puddle.setCenter(player.hitbox.getCenter() + sf::Vector2f(size, size));
 
@@ -1914,7 +1878,6 @@ void LevelGenerate(int n, int m) {
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
         Enemies.push_back(new DistortedScientist());
-        // Enemies.push_back(new ScottPilgrim());
         Enemies.push_back(new Distorted());
     }
 
@@ -1924,7 +1887,6 @@ void LevelGenerate(int n, int m) {
         } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->hitbox.getPosition().y / size][(int)Enemies[i]->hitbox.getPosition().x / size] ||
                  distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
     }
-    FillFloorRectsThread.wait();
 }
 
 void LoadMainMenu() {
@@ -1939,7 +1901,6 @@ void LoadMainMenu() {
 
     sf::Vector2f PlayerPos = player.hitbox.getCenter() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
-    FillFloorRectsThread.launch();
 
     portal.setFunction([](Interactable* i){
         clearVectorOfPointer(PickupStuff);
@@ -2045,8 +2006,6 @@ void LoadMainMenu() {
 
     InteractibeStuff.push_back(listOfArtifact[0]);
     DrawableStuff.push_back(listOfArtifact[0]);
-
-    FillFloorRectsThread.wait();
 }
 //==============================================================================================
 
