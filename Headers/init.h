@@ -49,7 +49,7 @@ namespace inventoryPage {
         Equipables,
         Perks,
         Stats,
-        NONE,
+        PageCount,
     };
 }
 
@@ -108,6 +108,14 @@ namespace Textures {
                 GradientFrameAlpha,
                 ItemPanel,
                 Frame4,
+//////////////////////////////////////////////////////////// Button Tetures
+                BlueButton,
+                CyanButton,
+                GreenButton,
+                GreyButton,
+                MagentaButton,
+                RedButton,
+                YellowButton,
 
                 NPCDialogueFrame_Square,
                 NPCDialogueFrame_Wide,
@@ -153,6 +161,14 @@ void loadTextures() {
     Textures::GradientFrameAlpha      .loadFromFile("sources/textures/Panels/GradientFrameAlpha.png");
     Textures::ItemPanel               .loadFromFile("sources/textures/Panels/ItemPanel.png");
     Textures::Frame4                  .loadFromFile("sources/textures/Panels/frame4.png");
+
+    Textures::BlueButton              .loadFromFile("sources/textures/BUttons/BlueButton.png");
+    Textures::CyanButton              .loadFromFile("sources/textures/BUttons/CyanButton.png");
+    Textures::GreenButton             .loadFromFile("sources/textures/BUttons/GreenButton.png");
+    Textures::GreyButton              .loadFromFile("sources/textures/BUttons/GreyButton.png");
+    Textures::MagentaButton           .loadFromFile("sources/textures/BUttons/MagentaButton.png");
+    Textures::RedButton               .loadFromFile("sources/textures/BUttons/RedButton.png");
+    Textures::YellowButton            .loadFromFile("sources/textures/BUttons/YellowButton.png");
 
     Textures::GridBG                  .loadFromFile("sources/textures/Panels/GridBackground.png");
 

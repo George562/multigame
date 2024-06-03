@@ -13,10 +13,9 @@ namespace ItemID {
         medkit,
         regenDrug,
         coin,
-        NONE
+        ItemCount
     };
 }
-int MaxItemID = ItemID::NONE;
 
 std::map<ItemID::Type, std::string> itemName {
     {ItemID::gunParts,       "Gun parts"},

@@ -59,8 +59,8 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
-std::vector<sf::Sprite*> effectIcons(numberOfEffects);
-std::vector<TempText*> effectIconsTimers(numberOfEffects);
+std::vector<sf::Sprite*> effectIcons(Effects::EffectCount);
+std::vector<TempText*> effectIconsTimers(Effects::EffectCount);
 
 
 //////////////////////////////////////////////////////////// InventoryStuff
@@ -142,7 +142,7 @@ Panel compImgPanel;
 std::vector<ItemSlot> arsCompSlotsElements;
 std::vector<RectButton> arsCompBtns;
 
-std::vector<bool> doInventoryUpdate(inventoryPage::NONE, false);
+std::vector<bool> doInventoryUpdate(inventoryPage::PageCount, false);
 
 
 //////////////////////////////////////////////////////////// Shop Interface
@@ -508,7 +508,7 @@ void init() {
     undergroundBG.setPosition(0, 0);
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
-    for (int i = 0; i < numberOfEffects; i++) {
+    for (int i = 0; i < Effects::EffectCount; i++) {
         effectIconsTimers[i] = new TempText(sf::Time::Zero);
         effectIcons[i] = new sf::Sprite();
     }
@@ -522,9 +522,9 @@ void init() {
 }
 
 void initInventory() {
-    invPageElements.resize(inventoryPage::NONE);
-    invItemSlotsElements.resize(MaxItemID, ItemSlot());
-    invItemSlotsRects.resize(MaxItemID);
+    invPageElements.resize(inventoryPage::PageCount);
+    invItemSlotsElements.resize(ItemID::ItemCount, ItemSlot());
+    invItemSlotsRects.resize(ItemID::ItemCount);
 
     invBackground.setTexture(Textures::GridBG);
     invBackground.setPosition(0, 0);
@@ -616,9 +616,7 @@ void initInventory() {
     playerCoinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                   1, itemTextureDuration[ItemID::coin]);
     playerCoinSprite.play();
-    playerCoinSlot.background = new sf::Sprite();
-    playerCoinSlot.amountText = new PlacedText();
-    playerCoinSlot.isInitialized = true;
+    playerCoinSlot.init();
 
 
     arsWeaponImage.setTexture(Textures::PH_gun);
@@ -798,9 +796,9 @@ void initInventory() {
 }
 
 void initShop() {
-    shopItemSlotsElements.resize(MaxItemID);
-    shopPlayerSlotsElements.resize(MaxItemID);
-    shopItemSlotsRects.resize(MaxItemID);
+    shopItemSlotsElements.resize(ItemID::ItemCount);
+    shopPlayerSlotsElements.resize(ItemID::ItemCount);
+    shopItemSlotsRects.resize(ItemID::ItemCount);
     mainMenuShop.setShop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100)},
                          std::vector<int>{20, 100, 199});
     mainMenuShop.setFunction([](){
@@ -1190,8 +1188,8 @@ void drawInterface() {
 void drawEffects() {
     int count = 0;
     int xOffset = 175, yOffset = 175;
-    std::vector<int> seenEffects(numberOfEffects, 0);
-    std::vector<sf::Time> effectTimersTimes(numberOfEffects, sf::Time::Zero);
+    std::vector<int> seenEffects(Effects::EffectCount, 0);
+    std::vector<sf::Time> effectTimersTimes(Effects::EffectCount, sf::Time::Zero);
     for (Effect* eff : player.effects) {
         if (eff->type != Effects::Heal && eff->type != Effects::Damage && eff->active) {
             if (seenEffects[eff->type] == 0) {
@@ -1456,7 +1454,7 @@ void updateShopUI() {
 void createSlotRects() {
     for (int i = 0; i < invItemSlotsRects.size(); i++)
         DeletePointerFromVector(invItemSlotsRects, i--);
-    invItemSlotsRects.resize(MaxItemID);
+    invItemSlotsRects.resize(ItemID::ItemCount);
 
     int slotNumber = 0;
     for (Item*& item : player.inventory.items) {
@@ -1475,7 +1473,7 @@ void createSlotRects() {
 void createShopSlotsRects() {
     for (int i = 0; i < shopItemSlotsRects.size(); i++)
         DeletePointerFromVector(shopItemSlotsRects, i--);
-    shopItemSlotsRects.resize(MaxItemID);
+    shopItemSlotsRects.resize(ItemID::ItemCount);
 
     int slotNumber = 0;
     for (Item*& item : curShop->soldItems.items) {
@@ -1694,7 +1692,7 @@ void inventoryHandler(sf::Event& event) {
             if (!invItemSlotsRects.empty() && invItemSlotsRects[item->id] != nullptr &&
                 invItemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
                 if (item->id != prevItemDescID) {
-                    prevItemDescID = ItemID::NONE;
+                    prevItemDescID = ItemID::ItemCount;
                     isItemDescDrawn = false;
                 }
                 isAnythingHovered = true;
