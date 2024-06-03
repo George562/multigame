@@ -213,11 +213,11 @@ Bullet* tempBullet;
 //////////////////////////////////////////////////////////// Weapons
 Pistol pistol;
 Shotgun shotgun;
-Revolver revolver;
+// Revolver revolver;
 Rifle rifle;
-Bubblegun bubblegun;
-Armageddon armageddon;
-Chaotic chaotic;
+// Bubblegun bubblegun;
+// Armageddon armageddon;
+// Chaotic chaotic;
 std::vector<Weapon*> arsenal = {
     &pistol,
     &shotgun,
@@ -1115,7 +1115,7 @@ void drawInterface() {
         window.draw(*d);
     }
 
-    if (player.CurWeapon != nullptr && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
+    if (player.CurWeapon != nullptr && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet.getStat()) {
         window.draw(ReloadWeaponText);
     }
 
@@ -1131,13 +1131,15 @@ void drawInterface() {
         AmmoBar.setPosition(20, sch - 20 - (arsenal.size() - i) * (AmmoBar.getSize().y + 10));
 
         if (arsenal[i]->holstered) {
-            float holsterPercent = std::min(arsenal[i]->HolsterTimer->getElapsedTime().asSeconds() / arsenal[i]->TimeToHolster, 1.0f);
+            float holsterPercent = std::min(arsenal[i]->HolsterTimer->getElapsedTime().asSeconds() /
+                                            arsenal[i]->TimeToHolster.getStat().asSeconds(), 1.0f);
             sf::Color wallColor(255 - 155 * holsterPercent, 255 - 155 * holsterPercent, 255, 160);
             sf::Color foreColor(128 - 96 * holsterPercent, 128 - 96 * holsterPercent, 128, 160);
             sf::Color backColor(32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 160);
             AmmoBar.setColors(wallColor, foreColor, backColor);
         } else {
-            float dispatchPercent = std::min(arsenal[i]->DispatchTimer->getElapsedTime().asSeconds() / arsenal[i]->TimeToDispatch, 1.0f);
+            float dispatchPercent = std::min(arsenal[i]->DispatchTimer->getElapsedTime().asSeconds() /
+                                             arsenal[i]->TimeToDispatch.getStat().asSeconds(), 1.0f);
             sf::Color wallColor(100 + 155 * dispatchPercent, 100 + 155 * dispatchPercent, 255, 160);
             sf::Color foreColor(32 + 96 * dispatchPercent, 32 + 96 * dispatchPercent, 128, 160);
             sf::Color backColor(32 * dispatchPercent, 32 * dispatchPercent, 32 * dispatchPercent, 160);
@@ -1820,8 +1822,8 @@ void setArtifact(Interactable*& artifact) {
             case 1: player.Mana.top += 1; break;
             case 2: player.HealthRecovery += 0.4; break;
             case 3: player.ManaRecovery += 0.1; break;
-            case 4: player.CurWeapon->ReloadSpeed += 1; break;
-            case 5: player.CurWeapon->ManaStorage.top += 1.f; break;
+            case 4: player.CurWeapon->ReloadSpeed.addToStats(1.f); break;
+            case 5: player.CurWeapon->MaxManaStorage.addToStats(1.f); break;
             default: break;
         }
         tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
@@ -2211,9 +2213,9 @@ void saveGame() {
     fileToSave << player.ManaRecovery << '\n';
     fileToSave << player.inventory.money << '\n';
     fileToSave << completedLevels << '\n';
-    fileToSave << pistol.ReloadSpeed << ' ' << pistol.ManaStorage << '\n';
-    fileToSave << shotgun.ReloadSpeed << ' ' << shotgun.ManaStorage << '\n';
-    fileToSave << rifle.ReloadSpeed << ' ' << rifle.ManaStorage << '\n';
+    fileToSave << pistol << '\n';
+    fileToSave << shotgun << '\n';
+    fileToSave << rifle << '\n';
 
     fileToSave.close();
 }
@@ -2232,9 +2234,9 @@ void loadSaves() {
         fileToSave >> player.ManaRecovery;
         fileToSave >> player.inventory.money;
         fileToSave >> completedLevels;
-        fileToSave >> pistol.ReloadSpeed >> pistol.ManaStorage;
-        fileToSave >> shotgun.ReloadSpeed >> shotgun.ManaStorage;
-        fileToSave >> rifle.ReloadSpeed >> rifle.ManaStorage;
+        fileToSave >> pistol;
+        fileToSave >> shotgun;
+        fileToSave >> rifle;
     }
     fileToSave.close();
 }

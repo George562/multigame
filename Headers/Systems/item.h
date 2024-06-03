@@ -93,15 +93,9 @@ std::map<ItemID::Type, sf::Shader *> pickupItemTextureShader {
 };
 
 void loadItemTextures() {
-    // itemTextureName[ItemID::gunParts]       ->loadFromFile("sources/textures/gunPartsItem.png");
-    // itemTextureName[ItemID::repairKit]      ->loadFromFile("sources/textures/repairKitItem.png");
-    // itemTextureName[ItemID::keyCard]        ->loadFromFile("sources/textures/keyCardItem.png");
-    // itemTextureName[ItemID::protectiveSuit] ->loadFromFile("sources/textures/protectiveSuitItem.png");
     itemTexture[ItemID::regenDrug]              ->loadFromFile("sources/textures/regenDrugItem.png");
     itemTexture[ItemID::coin]                   ->loadFromFile("sources/textures/coin.png");
 
-    // pickupItemTextureName[ItemID::generic]   ->loadFromFile("sources/textures/genericPickup.png");
-    // pickupItemTextureName[ItemID::medkit]    ->loadFromFile("sources/textures/medkitPickup.png");
     pickupItemTexture[ItemID::regenDrug]        ->loadFromFile("sources/textures/regenDrugPickup.png");
     pickupItemTexture[ItemID::coin]             ->loadFromFile("sources/textures/coin.png");
 }
