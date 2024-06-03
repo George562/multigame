@@ -7,10 +7,9 @@ namespace Effects {
         Heal,
         HPRegen,
         Burn,
-        NONE,
+        EffectCount,
     };
 };
-int numberOfEffects = Effects::NONE;
 
 class Effect {
 public:

@@ -8,7 +8,7 @@ public:
     void (*buyFunction)();
 
     Shop() {
-        itemPrices.assign(MaxItemID, 0);
+        itemPrices.assign(ItemID::ItemCount, 0);
     }
     Shop(std::vector<Item*>* stock, std::vector<int> prices) : Shop() {
         for (int i = 0; i < stock->size(); i++) {

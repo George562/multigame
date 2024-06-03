@@ -49,7 +49,7 @@ namespace inventoryPage {
         Equipables,
         Perks,
         Stats,
-        NONE,
+        PageCount,
     };
 }
 
