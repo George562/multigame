@@ -25,8 +25,8 @@ public:
         Acceleration = MaxVelocity * 5.f;
         hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
-        CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet.getStat();
-        CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet.getStat();
+        CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
         CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
 
         setAnimation(Textures::DistortedScientist, &Shaders::Flashlight);
@@ -55,8 +55,8 @@ public:
         Acceleration = MaxVelocity * 5.f;
         hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
-        CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet.getStat();
-        CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet.getStat();
+        CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
         CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
 
         setAnimation(Textures::Distorted, &Shaders::Distortion2);

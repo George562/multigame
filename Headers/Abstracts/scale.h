@@ -32,15 +32,15 @@ void normalize(Scale<T>& scale) {
     }
 }
 
-template <class T>
-Scale<T>& operator+=(Scale<T>& scale, T x) {
+template <class T, class Q>
+Scale<T>& operator+=(Scale<T>& scale, Q x) {
     scale.cur += x;
     normalize(scale);
     return scale;
 }
 
-template <class T>
-Scale<T>& operator-=(Scale<T>& scale, T x) {
+template <class T, class Q>
+Scale<T>& operator-=(Scale<T>& scale, Q x) {
     return scale += -x;
 }
 

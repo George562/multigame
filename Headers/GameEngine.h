@@ -1113,7 +1113,7 @@ void drawInterface() {
         window.draw(*d);
     }
 
-    if (player.CurWeapon != nullptr && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet.getStat()) {
+    if (player.CurWeapon != nullptr && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
         window.draw(ReloadWeaponText);
     }
 
@@ -1129,15 +1129,15 @@ void drawInterface() {
         AmmoBar.setPosition(20, sch - 20 - (arsenal.size() - i) * (AmmoBar.getSize().y + 10));
 
         if (arsenal[i]->holstered) {
-            float holsterPercent = std::min(arsenal[i]->HolsterTimer->getElapsedTime().asSeconds() /
-                                            arsenal[i]->TimeToHolster.getStat().asSeconds(), 1.0f);
+            float holsterPercent = std::min(arsenal[i]->HolsterTimer->getElapsedTime() /
+                                            arsenal[i]->TimeToHolster, 1.0f);
             sf::Color wallColor(255 - 155 * holsterPercent, 255 - 155 * holsterPercent, 255, 160);
             sf::Color foreColor(128 - 96 * holsterPercent, 128 - 96 * holsterPercent, 128, 160);
             sf::Color backColor(32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 160);
             AmmoBar.setColors(wallColor, foreColor, backColor);
         } else {
-            float dispatchPercent = std::min(arsenal[i]->DispatchTimer->getElapsedTime().asSeconds() /
-                                             arsenal[i]->TimeToDispatch.getStat().asSeconds(), 1.0f);
+            float dispatchPercent = std::min(arsenal[i]->DispatchTimer->getElapsedTime() /
+                                             arsenal[i]->TimeToDispatch, 1.0f);
             sf::Color wallColor(100 + 155 * dispatchPercent, 100 + 155 * dispatchPercent, 255, 160);
             sf::Color foreColor(32 + 96 * dispatchPercent, 32 + 96 * dispatchPercent, 128, 160);
             sf::Color backColor(32 * dispatchPercent, 32 * dispatchPercent, 32 * dispatchPercent, 160);

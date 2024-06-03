@@ -40,18 +40,18 @@ public:
            std::vector<float> BulletVelocity, std::vector<float> scatter) {
         Name = name;
 
-        this->MaxManaStorage   = Upgradable(MaxManaStorage);
-        this->ReloadSpeed      = Upgradable(ReloadSpeed);
+        this->MaxManaStorage   .setStats(MaxManaStorage);
+        this->ReloadSpeed      .setStats(ReloadSpeed);
 
-        this->ManaCostOfBullet = Upgradable(ManaCostOfBullet);
-        this->Multishot        = Upgradable(Multishot);
-        this->FireRate         = Upgradable(FireRate);
+        this->ManaCostOfBullet .setStats(ManaCostOfBullet);
+        this->Multishot        .setStats(Multishot);
+        this->FireRate         .setStats(FireRate);
 
-        this->TimeToHolster    = Upgradable(TimeToHolster);
-        this->TimeToDispatch   = Upgradable(TimeToDispatch);
+        this->TimeToHolster    .setStats(TimeToHolster);
+        this->TimeToDispatch   .setStats(TimeToDispatch);
 
-        this->BulletVelocity   = Upgradable(BulletVelocity);
-        this->scatter          = Upgradable(scatter);
+        this->BulletVelocity   .setStats(BulletVelocity);
+        this->scatter          .setStats(scatter);
 
         ReloadTimer = new sf::Clock();
         HolsterTimer = new sf::Clock();
@@ -77,7 +77,7 @@ public:
     }
 
     virtual void Update(sf::Event& event) {
-        ManaStorage.top = MaxManaStorage.getStat();
+        ManaStorage.top = MaxManaStorage;
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
             lock = false;
         if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
@@ -85,9 +85,9 @@ public:
     }
 
     virtual bool CanShoot() {
-        if (ManaStorage.toBottom() < ManaCostOfBullet.getStat()) { lock = true; return false; }
-        if (lock || TimeFromLastShot->getElapsedTime() <= FireRate.getStat()) return false;
-        if (holstered || DispatchTimer->getElapsedTime() <= TimeToDispatch.getStat()) return false;
+        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return false; }
+        if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return false;
+        if (holstered || DispatchTimer->getElapsedTime() <= TimeToDispatch) return false;
         return true;
     }
 
@@ -97,17 +97,17 @@ public:
         sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
-        d = RotateOn(-M_PI_RAD * (rand() % (int)(scatter - scatter / 2.f)), d) * BulletVelocity.getStat() / len;
-        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity.getStat());
-        Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet.getStat()));
-        ManaStorage -= ManaCostOfBullet.getStat();
+        d = RotateOn(-M_PI_RAD * (rand() % (int)(scatter - scatter / 2.f)), d) * BulletVelocity / len;
+        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+        ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
     }
 
     virtual void Reload(Scale<float>& Mana) {               // Reloads ReloadSpeed/sec
         if (ManaStorage.fromTop() == 0) return;
-        if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster.getStat()) {
-            float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed.getStat(),
+        if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
+            float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed,
                                         ManaStorage.fromTop()), Mana.toBottom());
             Mana -= x;
             ManaStorage += x;
@@ -116,12 +116,12 @@ public:
     }
 
     virtual void HolsterAction() {          // Moves weapon to holster or takes it out of it
-        if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster.getStat()) {
+        if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
             holstered = false;
             DispatchTimer->restart();
             return;
         }
-        if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch.getStat()) {
+        if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch) {
             if (ManaStorage.fromTop() == 0) return;
             holstered = true;
             HolsterTimer->restart();
@@ -224,12 +224,12 @@ public:
         sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
-        d = RotateOn(-M_PI_RAD * (scatter / 2.f), d) * BulletVelocity.getStat() / len;
-        for (int i = 0; i < Multishot.getStat(); i++, d = RotateOn(M_PI_RAD * scatter.getStat() / (Multishot - 1), d)) {
-            sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity.getStat());
-            Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet.getStat()));
+        d = RotateOn(-M_PI_RAD * (scatter / 2.f), d) * BulletVelocity / len;
+        for (int i = 0; i < Multishot; i++, d = RotateOn(M_PI_RAD * scatter / (Multishot - 1), d)) {
+            sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+            Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
         }
-        ManaStorage -= ManaCostOfBullet.getStat();
+        ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
         lock = true;
     }
@@ -271,10 +271,10 @@ public:
 //         sf::Vector2f d = direction - shooter.getCenter();
 //         float len = hypotf(d.x, d.y);
 //         if (len == 0) return;
-//         d = RotateOn(-M_PI_RAD * (rand() % (int)(scatter - scatter / 2.f)), d) * BulletVelocity.getStat() / len;
-//         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity.getStat());
-//         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet.getStat(), COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(1)));
-//         ManaStorage -= ManaCostOfBullet.getStat();
+//         d = RotateOn(-M_PI_RAD * (rand() % (int)(scatter - scatter / 2.f)), d) * BulletVelocity / len;
+//         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+//         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet, COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(1)));
+//         ManaStorage -= ManaCostOfBullet;
 //         TimeFromLastShot->restart();
 //         if (--(Multishot.stats[Multishot.curLevel]) == 0) {
 //             Multishot = 10;
@@ -299,11 +299,11 @@ public:
 //     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
 //         if (!CanShoot()) return;
 
-//         sf::Vector2f d{0, BulletVelocity.getStat()};
-//         d = RotateOn(float(-M_PI * Multishot.getStat()) / 12, d);
-//         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity.getStat());
-//         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet.getStat()));
-//         ManaStorage -= ManaCostOfBullet.getStat();
+//         sf::Vector2f d{0, BulletVelocity};
+//         d = RotateOn(float(-M_PI * Multishot) / 12, d);
+//         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+//         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+//         ManaStorage -= ManaCostOfBullet;
 //         Multishot.stats[Multishot.curLevel]++;
 //         TimeFromLastShot->restart();
 //     }
@@ -318,11 +318,11 @@ public:
 //     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
 //         if (!CanShoot()) return;
 
-//         sf::Vector2f d{0, BulletVelocity.getStat()};
+//         sf::Vector2f d{0, BulletVelocity};
 //         d = RotateOn(float(rand()), d);
-//         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity.getStat());
-//         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet.getStat()));
-//         ManaStorage -= ManaCostOfBullet.getStat();
+//         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+//         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+//         ManaStorage -= ManaCostOfBullet;
 //         TimeFromLastShot->restart();
 //     }
 // };
