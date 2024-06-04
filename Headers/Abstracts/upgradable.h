@@ -14,7 +14,7 @@ public:
 
     T getStat() { return stats[curLevel]; }
 
-    void setStats(std::vector<T>) {
+    void setStats(std::vector<T> stats) {
         this->stats = stats;
         this->maxLevel = stats.size();
         curLevel = 0;
@@ -23,11 +23,6 @@ public:
     void addToStats(T val) {
         for (int i = 0; i < maxLevel; i++)
             stats[i] += val;
-    }
-
-    void multiplyToStats(T val) {
-        for (int i = 0; i < maxLevel; i++)
-            stats[i] *= val;
     }
 
     operator T() const { return stats[curLevel]; }
@@ -56,7 +51,7 @@ template <class T, class Q> Q operator*(Q val, Upgradable<T> upg) { return val *
 template <class T, class Q> Q operator/(Upgradable<T> upg, Q val) { return upg.getStat() / val; }
 template <class T, class Q> Q operator/(Q val, Upgradable<T> upg) { return val / upg.getStat(); }
 float operator/(Upgradable<sf::Time> upg, sf::Time val) { return upg.getStat() / val; }
-float operator/(sf::Time val, Upgradable<sf::Time> upg) { return upg.getStat() / val; }
+float operator/(sf::Time val, Upgradable<sf::Time> upg) { return val / upg.getStat(); }
 
 template <class T> bool operator< (Upgradable<T> upg, T val) { return upg.getStat() < val;  }
 template <class T> bool operator< (T val, Upgradable<T> upg) { return val < upg.getStat();  }

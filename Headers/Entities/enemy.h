@@ -29,7 +29,7 @@ public:
         CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
         CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
 
-        setAnimation(Textures::DistortedScientist, &Shaders::Flashlight);
+        setAnimation(Textures::DistortedScientist);
 
         addItem(new Item(ItemID::regenDrug, 1));
     }

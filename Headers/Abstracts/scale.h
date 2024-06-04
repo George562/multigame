@@ -17,6 +17,12 @@ struct Scale {
         this->cur = x; normalize(*this);
         return *this;
     }
+    void setScale(T bottom, T top, T cur) {
+        this->bottom = bottom;
+        this->top = top;
+        this->cur = cur;
+        normalize(*this);
+    }   
 };
 
 template <class T>

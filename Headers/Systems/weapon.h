@@ -4,6 +4,42 @@
 
 #define M_PI_RAD M_PI / 180.f
 
+namespace WeaponStats {
+    namespace Pistol {
+        std::vector<float>    MaxManaStorage   {10, 12, 15, 20, 25};
+        std::vector<float>    ReloadSpeed      {2, 3, 5, 8};
+        std::vector<sf::Time> TimeToHolster    {sf::seconds(0.5), sf::seconds(0.35), sf::seconds(0.2)};
+        std::vector<sf::Time> TimeToDispatch   {sf::seconds(1), sf::seconds(0.8), sf::seconds(0.5)};
+        std::vector<sf::Time> FireRate         {sf::seconds(0.35), sf::seconds(0.3), sf::seconds(0.225), sf::seconds(0.15)};
+        std::vector<float>    ManaCostOfBullet {2, 3, 4, 5};
+        std::vector<int>      Multishot        {1}; 
+        std::vector<float>    BulletVelocity   {800, 1100, 1500};
+        std::vector<float>    scatter          {20, 15, 8, 1};
+    };
+    namespace Shotgun {
+        std::vector<float>    MaxManaStorage   {15, 25, 40, 60};
+        std::vector<float>    ReloadSpeed      {2.5, 5};
+        std::vector<sf::Time> TimeToHolster    {sf::seconds(1.5), sf::seconds(1.2), sf::seconds(0.9)};
+        std::vector<sf::Time> TimeToDispatch   {sf::seconds(2), sf::seconds(1.5), sf::seconds(1)};
+        std::vector<sf::Time> FireRate         {sf::seconds(1), sf::seconds(0.75), sf::seconds(0.25)};
+        std::vector<float>    ManaCostOfBullet {5, 10};
+        std::vector<int>      Multishot        {10, 12, 15, 20};
+        std::vector<float>    BulletVelocity   {600, 900, 1300};
+        std::vector<float>    scatter          {50, 40};
+    };
+    namespace Rifle {
+        std::vector<float>    MaxManaStorage   {30, 50, 80, 120};
+        std::vector<float>    ReloadSpeed      {1, 2, 4};
+        std::vector<sf::Time> TimeToHolster    {sf::seconds(2), sf::seconds(1.5), sf::seconds(1)};
+        std::vector<sf::Time> TimeToDispatch   {sf::seconds(1.5), sf::seconds(1)};
+        std::vector<sf::Time> FireRate         {sf::seconds(0.25), sf::seconds(0.2), sf::seconds(0.1)};
+        std::vector<float>    ManaCostOfBullet {1, 2, 3};
+        std::vector<int>      Multishot        {1};
+        std::vector<float>    BulletVelocity   {700, 900, 1200};
+        std::vector<float>    scatter          {20, 10, 5};
+    };
+};
+
 ////////////////////////////////////////////////////////////
 // Weapon
 #pragma pack(push, 1)
@@ -27,7 +63,7 @@ public:
     Upgradable<sf::Time> FireRate;
     
     Upgradable<float> BulletVelocity;
-    Upgradable<float> scatter; // at degree
+    Upgradable<float> scatter;                  // at degree
 
     sf::Clock* TimeFromLastShot = nullptr;
     bool lock;                                  // Bullets are like a stream and "lock" is blocking the stream
@@ -58,7 +94,7 @@ public:
         TimeFromLastShot = new sf::Clock();
         DispatchTimer = new sf::Clock();
         holstered = false;
-        ManaStorage = {0, MaxManaStorage[0], MaxManaStorage[0]};
+        ManaStorage.setScale(0, MaxManaStorage[0], MaxManaStorage[0]);
         lock = true;
     }
     virtual ~Weapon() {
@@ -104,7 +140,7 @@ public:
         TimeFromLastShot->restart();
     }
 
-    virtual void Reload(Scale<float>& Mana) {               // Reloads ReloadSpeed/sec
+    virtual void Reload(Scale<float>& Mana) { // Reloads ReloadSpeed/sec
         if (ManaStorage.fromTop() == 0) return;
         if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
             float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed,
@@ -115,7 +151,7 @@ public:
         }
     }
 
-    virtual void HolsterAction() {          // Moves weapon to holster or takes it out of it
+    virtual void HolsterAction() {            // Moves weapon to holster or takes it out of it
         if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
             holstered = false;
             DispatchTimer->restart();
@@ -174,18 +210,18 @@ std::istream& operator>>(std::istream& stream, Weapon& weapon) {
 class Pistol : public Weapon {
 public:
     Pistol() : Weapon("Pistol",
-                      std::vector<float>{10, 12, 15, 20, 25},
-                      std::vector<float>{2, 3, 5, 8},
+                      WeaponStats::Pistol::MaxManaStorage  ,
+                      WeaponStats::Pistol::ReloadSpeed     ,
 
-                      std::vector<sf::Time>{sf::seconds(0.5), sf::seconds(0.35), sf::seconds(0.2)},
-                      std::vector<sf::Time>{sf::seconds(1), sf::seconds(0.8), sf::seconds(0.5)},
+                      WeaponStats::Pistol::TimeToHolster   ,
+                      WeaponStats::Pistol::TimeToDispatch  ,
 
-                      std::vector<sf::Time>{sf::seconds(0.35), sf::seconds(0.3), sf::seconds(0.225), sf::seconds(0.15)},
-                      std::vector<float>{2, 3, 4, 5},
-                      std::vector<int>{1}, 
+                      WeaponStats::Pistol::FireRate        ,
+                      WeaponStats::Pistol::ManaCostOfBullet,
+                      WeaponStats::Pistol::Multishot       ,
 
-                      std::vector<float>{800, 1100, 1500},
-                      std::vector<float>{20, 15, 8, 1}) {}
+                      WeaponStats::Pistol::BulletVelocity  ,
+                      WeaponStats::Pistol::scatter          ) {}
 };
 
 // Revolver
@@ -205,18 +241,18 @@ public:
 class Shotgun : public Weapon {
 public:
     Shotgun() : Weapon("Shotgun",
-                       std::vector<float>{15, 25, 40, 60},
-                       std::vector<float>{2.5, 5},
-                       
-                       std::vector<sf::Time>{sf::seconds(1.5), sf::seconds(1.2), sf::seconds(0.9)},
-                       std::vector<sf::Time>{sf::seconds(2), sf::seconds(1.5), sf::seconds(1)},
-                       
-                       std::vector<sf::Time>{sf::seconds(1), sf::seconds(0.75), sf::seconds(0.25)},
-                       std::vector<float>{5, 10},
-                       std::vector<int>{10, 12, 15, 20},
-                       
-                       std::vector<float>{600, 900, 1300},
-                       std::vector<float>{50, 40}) {}
+                       WeaponStats::Shotgun::MaxManaStorage  ,
+                       WeaponStats::Shotgun::ReloadSpeed     ,
+
+                       WeaponStats::Shotgun::TimeToHolster   ,
+                       WeaponStats::Shotgun::TimeToDispatch  ,
+
+                       WeaponStats::Shotgun::FireRate        ,
+                       WeaponStats::Shotgun::ManaCostOfBullet,
+                       WeaponStats::Shotgun::Multishot       ,
+
+                       WeaponStats::Shotgun::BulletVelocity  ,
+                       WeaponStats::Shotgun::scatter          ) {}
     
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (!CanShoot()) return;
@@ -239,18 +275,18 @@ public:
 class Rifle : public Weapon {
 public:
     Rifle() : Weapon("Rifle",
-                     std::vector<float>{30, 50, 80, 120},
-                     std::vector<float>{1, 2, 4},
-                     
-                     std::vector<sf::Time>{sf::seconds(2), sf::seconds(1.5), sf::seconds(1)},
-                     std::vector<sf::Time>{sf::seconds(1.5), sf::seconds(1)},
-                     
-                     std::vector<sf::Time>{sf::seconds(0.25), sf::seconds(0.2), sf::seconds(0.1)},
-                     std::vector<float>{1, 2, 3},
-                     std::vector<int>{1},
-                     
-                     std::vector<float>{700, 900, 1200},
-                     std::vector<float>{20, 10, 5}) {}
+                     WeaponStats::Rifle::MaxManaStorage  ,
+                     WeaponStats::Rifle::ReloadSpeed     ,
+
+                     WeaponStats::Rifle::TimeToHolster   ,
+                     WeaponStats::Rifle::TimeToDispatch  ,
+
+                     WeaponStats::Rifle::FireRate        ,
+                     WeaponStats::Rifle::ManaCostOfBullet,
+                     WeaponStats::Rifle::Multishot       ,
+
+                     WeaponStats::Rifle::BulletVelocity  ,
+                     WeaponStats::Rifle::scatter          ) {}
 };
 
 // Bubblegun
