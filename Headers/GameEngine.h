@@ -1736,7 +1736,7 @@ void shopHandler(sf::Event& event) {
         shopBackButton.buttonFunction();
         return;
     }
-    shopBackButton.isActivated(event);
+    if (shopBackButton.isActivated(event)) return;
     shopBuyButton.isActivated(event);
 
     if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left) {
@@ -1944,7 +1944,7 @@ void LoadMainMenu() {
             completedLevels = std::max(curLevel, completedLevels);
             curLevel++;
         }
-        LevelGenerate(START_N, START_M);
+        LevelGenerate(START_N + curLevel * 2, START_M + curLevel);
         FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);

@@ -52,6 +52,12 @@ public:
         this->cur = j["cur"];
         this->looped = j["looped"];
     }
+    void setScale(T bottom, T top, T cur) {
+        this->bottom = bottom;
+        this->top = top;
+        this->cur = cur;
+        normalize(*this);
+    }   
 };
 
 template <class T>
