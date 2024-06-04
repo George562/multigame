@@ -1,14 +1,52 @@
 #pragma once
 #include "creature.h"
+#include "../Abstracts/serializable.h"
+using nlohmann::json;
 
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
-class Player : public Creature {
+class Player : public Creature, public Serializable {
 public:
     Player();
     void move(Location*) override;
+
+    json writeJSON() {
+        json j;
+        j["Name"]           = this->Name.getString();
+        j["Health"]         = this->Health.writeJSON();
+        j["HealthRecovery"] = this->HealthRecovery;
+        j["Mana"]           = this->Mana.writeJSON();
+        j["ManaRecovery"]   = this->ManaRecovery;
+        j["Inventory"]      = json({});
+        j["Money"]          = this->inventory.money;
+
+        for (Item*& item : this->inventory.items) {
+            if (item->id == ItemID::coin)
+                continue;
+            j["Inventory"][itemName[item->id]] =  item->amount;
+        }
+        
+        return j;
+    }
+
+    void readJSON(json j) {
+        this->Name.setString((std::string)j["Name"]);
+        this->Health.readJSON(j["Health"]);
+        this->HealthRecovery = j["HealthRecovery"];
+        this->Mana.readJSON(j["Mana"]);
+        this->ManaRecovery = j["ManaRecovery"];
+        this->inventory.money = j["Money"];
+        for (int id = 0; id < ItemID::ItemCount; id++) {
+            if (id == ItemID::coin)
+                continue;
+            if (j["Inventory"].contains(itemName[id])) {
+                Item* newItem = new Item(id, j["Inventory"][itemName[id]]);
+                this->inventory.addItem(newItem);
+            }
+        }
+    }
 };
 
 ////////////////////////////////////////////////////////////

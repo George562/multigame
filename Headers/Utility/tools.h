@@ -81,6 +81,48 @@ void clearVectorOfPointer(std::vector<T>& arr) {
     arr.clear();
 }
 
+enum timeType {
+    seconds,
+    milliseconds,
+    microseconds
+};
+
+std::vector<float> timeToFloat(std::vector<sf::Time> arr, timeType type) {
+    std::vector<float> floatArr(arr.size());
+    for (int i = 0; i < arr.size(); i++) {
+        switch(type) {
+            case seconds:
+                floatArr[i] = arr[i].asSeconds();
+                break;
+            case milliseconds:
+                floatArr[i] = arr[i].asMilliseconds();
+                break;
+            case microseconds:
+                floatArr[i] = arr[i].asMicroseconds();
+                break;
+        }
+    }
+    return floatArr;
+}
+
+std::vector<sf::Time> floatToTime(std::vector<float> arr, timeType type) {
+    std::vector<sf::Time> timeArr(arr.size());
+    for (int i = 0; i < arr.size(); i++) {
+        switch(type) {
+            case seconds:
+                timeArr[i] = sf::seconds(arr[i]);
+                break;
+            case milliseconds:
+                timeArr[i] = sf::seconds(arr[i]);
+                break;
+            case microseconds:
+                timeArr[i] = sf::microseconds(arr[i]);
+                break;
+        }
+    }
+    return timeArr;
+}
+
 sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
     return sf::Vector2f(a.x * b.x, a.y * b.y);
 }

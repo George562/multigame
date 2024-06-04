@@ -1,0 +1,90 @@
+{
+    "BulletVelocity": {
+        "curLevel": 0,
+        "maxLevel": 3,
+        "stats": [
+            600.0,
+            900.0,
+            1300.0
+        ]
+    },
+    "FireRate": {
+        "curLevel": 0,
+        "maxLevel": 3,
+        "stats": [
+            1.0,
+            0.75,
+            0.25
+        ]
+    },
+    "ManaCostOfBullet": {
+        "curLevel": 0,
+        "maxLevel": 2,
+        "stats": [
+            5.0,
+            10.0
+        ]
+    },
+    "ManaStorage": {
+        "bottom": 0.0,
+        "cur": 15.0,
+        "looped": false,
+        "top": 15.0
+    },
+    "MaxManaStorage": {
+        "curLevel": 0,
+        "maxLevel": 4,
+        "stats": [
+            15.0,
+            25.0,
+            40.0,
+            60.0
+        ]
+    },
+    "Multishot": {
+        "curLevel": 0,
+        "maxLevel": 4,
+        "stats": [
+            10,
+            12,
+            15,
+            20
+        ]
+    },
+    "Name": "Shotgun",
+    "ReloadSpeed": {
+        "curLevel": 0,
+        "maxLevel": 2,
+        "stats": [
+            2.5,
+            5.0
+        ]
+    },
+    "Scatter": {
+        "curLevel": 0,
+        "maxLevel": 2,
+        "stats": [
+            50.0,
+            40.0
+        ]
+    },
+    "TimeToDispatch": {
+        "curLevel": 0,
+        "maxLevel": 3,
+        "stats": [
+            2.0,
+            1.5,
+            1.0
+        ]
+    },
+    "TimeToHolster": {
+        "curLevel": 0,
+        "maxLevel": 3,
+        "stats": [
+            1.5,
+            1.2000000476837158,
+            0.8999999761581421
+        ]
+    },
+    "holstered": false
+}

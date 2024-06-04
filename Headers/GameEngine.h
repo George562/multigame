@@ -211,10 +211,10 @@ Bullet* tempBullet;
 
 
 //////////////////////////////////////////////////////////// Weapons
-Pistol pistol;
-Shotgun shotgun;
+Weapon pistol;
+Weapon shotgun;
 // Revolver revolver;
-Rifle rifle;
+Weapon rifle;
 // Bubblegun bubblegun;
 // Armageddon armageddon;
 // Chaotic chaotic;
@@ -223,7 +223,7 @@ std::vector<Weapon*> arsenal = {
     &shotgun,
     &rifle,
 };
-Scale<int> CurWeapon{0, 2, 0};
+Scale<int> CurWeapon;
 
 
 //////////////////////////////////////////////////////////// Enemies
@@ -298,7 +298,7 @@ void updateShaders();
 bool CanSomethingBeActivated();
 
 void saveGame();
-void loadSaves();
+void loadSave();
 //----------------------------
 
 
@@ -406,7 +406,7 @@ void init() {
     loadFonts();
     loadShaders();
     loadMusics();
-    loadSaves();
+    loadSave();
 
     Musics::MainMenu.setLoop(true);
     Musics::MainMenu.setVolume(5);
@@ -514,6 +514,8 @@ void init() {
     }
     effectIcons[2]->setTexture(Textures::Eff_HPRegen);
     effectIcons[3]->setTexture(Textures::Eff_Burn);
+
+    CurWeapon = {0, 2, 0};
 
     initInventory();
     initShop();
@@ -2203,40 +2205,45 @@ bool CanSomethingBeActivated() {
 }
 
 void saveGame() {
-    std::ofstream fileToSave("save.save");
-    fileToSave << player.Name.getString().toAnsiString() << '\n';
-    fileToSave << player.Health << '\n';
-    fileToSave << player.HealthRecovery << '\n';
-    fileToSave << player.Mana << '\n';
-    fileToSave << player.ManaRecovery << '\n';
-    fileToSave << player.inventory.money << '\n';
-    fileToSave << completedLevels << '\n';
-    fileToSave << pistol << '\n';
-    fileToSave << shotgun << '\n';
-    fileToSave << rifle << '\n';
+    std::ofstream fileToSave("Saves/save.json");
+    json j;
+    j["Player"]   = player.writeJSON();
+    j["Pistol"]   = pistol.writeJSON();
+    j["Shotgun"]  = shotgun.writeJSON();
+    j["Rifle"]    = rifle.writeJSON();
+    fileToSave << j.dump(4);
 
     fileToSave.close();
 }
 
-void loadSaves() {
-    std::ifstream fileToSave("save.save");
-    if (!fileToSave.is_open()) {
+void loadSave() {
+    std::ifstream saveFile("Saves/save.json");
+    if (!saveFile.is_open()) {
         std::rand();
         player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
+
+        std::ifstream defaultWeapon("sources/JSON/defaultPistol.json");
+        json j = json::parse(defaultWeapon);
+        pistol.readJSON(j);
+        defaultWeapon.close();
+
+        defaultWeapon.open("sources/JSON/defaultShotgun.json");
+        j = json::parse(defaultWeapon);
+        shotgun.readJSON(j);
+        defaultWeapon.close();
+
+        defaultWeapon.open("sources/JSON/defaultRifle.json");
+        j = json::parse(defaultWeapon);
+        rifle.readJSON(j);
+        defaultWeapon.close();
     } else {
-        char name[13]; fileToSave.getline(name, 13);
-        player.Name.setString(name);
-        fileToSave >> player.Health;
-        fileToSave >> player.HealthRecovery;
-        fileToSave >> player.Mana;
-        fileToSave >> player.ManaRecovery;
-        fileToSave >> player.inventory.money;
-        fileToSave >> completedLevels;
-        fileToSave >> pistol;
-        fileToSave >> shotgun;
-        fileToSave >> rifle;
+        nlohmann::json j = nlohmann::json::parse(saveFile);
+        player  .readJSON(j["Player"]);
+        pistol  .readJSON(j["Pistol"]);
+        shotgun .readJSON(j["Shotgun"]);
+        rifle   .readJSON(j["Rifle"]);
     }
-    fileToSave.close();
+    saveFile.close();
 }
 //==============================================================================================
 

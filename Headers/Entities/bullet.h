@@ -24,7 +24,7 @@ public:
     float damage;
     int penetration;
     sf::Vector2f Velocity;
-    Scale<float> ExplosionRadius = {1, 12, 1};
+    Scale<float> ExplosionRadius;
     faction::Type fromWho;
     sf::Clock* localClock = nullptr;
     sf::Time timer;
@@ -42,6 +42,7 @@ public:
         damage = dmg;
         penetration = penetr;
         Velocity = velocity;
+        ExplosionRadius = {1, 12, 1};
         fromWho = faction;
         timer = time;
         switch (type) {

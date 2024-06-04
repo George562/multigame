@@ -1,9 +1,11 @@
 #pragma once
 #include <vector>
 #include "../../SFML-2.5.1/include/SFML/System.hpp"
+#include "serializable.h"
+using nlohmann::json;
 
 template <class T>
-class Upgradable {
+class Upgradable : public Serializable {
 public:
     std::vector<T> stats;
     int maxLevel;
@@ -14,10 +16,10 @@ public:
 
     T getStat() { return stats[curLevel]; }
 
-    void setStats(std::vector<T>) {
+    void setStats(std::vector<T> stats) {
         this->stats = stats;
         this->maxLevel = stats.size();
-        curLevel = 0;
+        this->curLevel = 0;
     }
 
     void addToStats(T val) {
@@ -31,6 +33,41 @@ public:
     }
 
     operator T() const { return stats[curLevel]; }
+
+    json writeJSON() {
+        json j;
+        j["maxLevel"] = this->maxLevel;
+        json statArr = json::array();
+
+        if constexpr(std::is_same_v<T, sf::Time>) {
+            std::vector<float> floatStats = timeToFloat(this->stats, timeType::seconds);
+            for (int i = 0; i < this->maxLevel; i++)
+                statArr.push_back(floatStats[i]);
+        }
+        else {
+            for (int i = 0; i < this->maxLevel; i++)
+                statArr.push_back(this->stats[i]);
+        }
+
+        j["stats"] = statArr;
+        j["curLevel"] = this->curLevel;
+        return j;
+    }
+
+    void readJSON(json j) {
+        Upgradable<T>* upg =  new Upgradable<T>();
+        this->maxLevel = j["maxLevel"];
+
+        if constexpr(std::is_same_v<T, sf::Time>) {
+            std::vector<float> floatStats = j["stats"];
+            this->stats = floatToTime(floatStats, timeType::seconds);
+        }
+        else {
+            this->stats = (std::vector<T>)j["stats"];
+        }
+
+        this->curLevel = j["curLevel"];
+    }
 };
 
 
@@ -86,7 +123,7 @@ std::istream& operator>>(std::istream& stream, Upgradable<T>& upg) {
 
 std::ostream& operator<<(std::ostream& stream, Upgradable<sf::Time>& upg) {
     stream << upg.maxLevel << ' ';
-for (int i = 0; i < upg.maxLevel; i++)
+    for (int i = 0; i < upg.maxLevel; i++)
         stream << upg.stats[i].asSeconds() << ' ';
     return stream << upg.curLevel;
 }

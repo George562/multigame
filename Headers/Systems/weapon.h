@@ -1,13 +1,15 @@
 #pragma once
 #include "../Entities/bullet.h"
 #include "../Abstracts/upgradable.h"
+#include "../Abstracts/scale.h"
+#include "../Abstracts/serializable.h"
 
 #define M_PI_RAD M_PI / 180.f
 
 ////////////////////////////////////////////////////////////
 // Weapon
 #pragma pack(push, 1)
-class Weapon {
+class Weapon : public Serializable {
 public:
     std::string Name;
 
@@ -27,7 +29,7 @@ public:
     Upgradable<sf::Time> FireRate;
     
     Upgradable<float> BulletVelocity;
-    Upgradable<float> scatter; // at degree
+    Upgradable<float> Scatter; // at degree
 
     sf::Clock* TimeFromLastShot = nullptr;
     bool lock;                                  // Bullets are like a stream and "lock" is blocking the stream
@@ -37,7 +39,7 @@ public:
            std::vector<float> MaxManaStorage, std::vector<float> ReloadSpeed,
            std::vector<sf::Time> TimeToHolster, std::vector<sf::Time> TimeToDispatch,
            std::vector<sf::Time> FireRate, std::vector<float> ManaCostOfBullet, std::vector<int> Multishot,
-           std::vector<float> BulletVelocity, std::vector<float> scatter) {
+           std::vector<float> BulletVelocity, std::vector<float> Scatter) {
         Name = name;
 
         this->MaxManaStorage   .setStats(MaxManaStorage);
@@ -51,7 +53,7 @@ public:
         this->TimeToDispatch   .setStats(TimeToDispatch);
 
         this->BulletVelocity   .setStats(BulletVelocity);
-        this->scatter          .setStats(scatter);
+        this->Scatter          .setStats(Scatter);
 
         ReloadTimer = new sf::Clock();
         HolsterTimer = new sf::Clock();
@@ -97,9 +99,13 @@ public:
         sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
-        d = RotateOn(-M_PI_RAD * (rand() % (int)(scatter - scatter / 2.f)), d) * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
-        Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+        // d = RotateOn(-M_PI_RAD * (rand() % (int)(Scatter - Scatter / 2.f)), d) * BulletVelocity / len;
+        // sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        // Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+        for (int i = 0; i < Multishot; i++, d = RotateOn(M_PI_RAD * Scatter / (Multishot - 1), d)) {
+            sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+            Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+        }
         ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
     }
@@ -128,6 +134,48 @@ public:
             return;
         }
     }
+
+    json writeJSON() {
+        json j;
+        j["Name"]               = this->Name;
+        j["ManaStorage"]        = this->ManaStorage.writeJSON();
+        j["MaxManaStorage"]     = this->MaxManaStorage.writeJSON();
+        j["ReloadSpeed"]        = this->ReloadSpeed.writeJSON();
+        j["TimeToHolster"]      = this->TimeToHolster.writeJSON();
+        j["TimeToDispatch"]     = this->TimeToDispatch.writeJSON();
+        j["holstered"]          = this->holstered;
+        j["ManaCostOfBullet"]   = this->ManaCostOfBullet.writeJSON();
+        j["Multishot"]          = this->Multishot.writeJSON();
+        j["FireRate"]           = this->FireRate.writeJSON();
+        j["BulletVelocity"]     = this->BulletVelocity.writeJSON();
+        j["Scatter"]            = this->Scatter.writeJSON();
+
+        return j;
+    }
+
+    void readJSON(json j) {
+        this->Name = j["Name"];
+        this->MaxManaStorage   .readJSON(j["MaxManaStorage"]);
+        this->ReloadSpeed      .readJSON(j["ReloadSpeed"]);
+
+        this->ManaCostOfBullet .readJSON(j["ManaCostOfBullet"]);
+        this->Multishot        .readJSON(j["Multishot"]);
+        this->FireRate         .readJSON(j["FireRate"]);
+
+        this->TimeToHolster    .readJSON(j["TimeToHolster"]);
+        this->TimeToDispatch   .readJSON(j["TimeToDispatch"]);
+
+        this->BulletVelocity   .readJSON(j["BulletVelocity"]);
+        this->Scatter          .readJSON(j["Scatter"]);
+
+        this->ReloadTimer = new sf::Clock();
+        this->HolsterTimer = new sf::Clock();
+        this->TimeFromLastShot = new sf::Clock();
+        this->DispatchTimer = new sf::Clock();
+        this->holstered = false;
+        this->ManaStorage = {0, this->MaxManaStorage, this->MaxManaStorage};
+        this->lock = true;
+    }
 };
 #pragma pack(pop)
 ////////////////////////////////////////////////////////////
@@ -147,7 +195,7 @@ std::ostream& operator<<(std::ostream& stream, Weapon& weapon) {
     stream << weapon.FireRate << ' ';
     
     stream << weapon.BulletVelocity << ' ';
-    stream << weapon.scatter << ' ';
+    stream << weapon.Scatter << ' ';
     return stream;
 }
 
@@ -166,7 +214,15 @@ std::istream& operator>>(std::istream& stream, Weapon& weapon) {
     stream >> weapon.FireRate;
     
     stream >> weapon.BulletVelocity;
-    stream >> weapon.scatter;
+    stream >> weapon.Scatter;
+
+    weapon.ReloadTimer = new sf::Clock();
+    weapon.HolsterTimer = new sf::Clock();
+    weapon.TimeFromLastShot = new sf::Clock();
+    weapon.DispatchTimer = new sf::Clock();
+    weapon.holstered = false;
+    weapon.ManaStorage = {0, weapon.MaxManaStorage, weapon.MaxManaStorage};
+    weapon.lock = true;
     return stream;
 }
 
@@ -193,7 +249,7 @@ public:
 // public:
 //     Revolver() : Weapon("Revolver", 6, 2, 0, 5, 0.5, 0.5) {
 //         BulletVelocity = Upgradable(std::vector<int>(5, 960));
-//         scatter = Upgradable(std::vector<int>(5, 10));
+//         Scatter = Upgradable(std::vector<int>(5, 10));
 //     }
 //     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
 //         Weapon::Shoot(shooter, direction, f);
@@ -224,8 +280,8 @@ public:
         sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
-        d = RotateOn(-M_PI_RAD * (scatter / 2.f), d) * BulletVelocity / len;
-        for (int i = 0; i < Multishot; i++, d = RotateOn(M_PI_RAD * scatter / (Multishot - 1), d)) {
+        d = RotateOn(-M_PI_RAD * (Scatter / 2.f), d) * BulletVelocity / len;
+        for (int i = 0; i < Multishot; i++, d = RotateOn(M_PI_RAD * Scatter / (Multishot - 1), d)) {
             sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
             Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
         }
@@ -259,7 +315,7 @@ public:
 //     Bubblegun() : Weapon("Bubblegun", 30, 3, 0.03, 4, 3, 1) {
 //         BulletVelocity = Upgradable(std::vector<int>(5, 540));
 //         Multishot = Upgradable(std::vector<int>(5, 10));
-//         scatter = Upgradable(std::vector<int>(5, 40));
+//         Scatter = Upgradable(std::vector<int>(5, 40));
 //     }
 //     void Update(sf::Event& event) {
 //         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
@@ -271,7 +327,7 @@ public:
 //         sf::Vector2f d = direction - shooter.getCenter();
 //         float len = hypotf(d.x, d.y);
 //         if (len == 0) return;
-//         d = RotateOn(-M_PI_RAD * (rand() % (int)(scatter - scatter / 2.f)), d) * BulletVelocity / len;
+//         d = RotateOn(-M_PI_RAD * (rand() % (int)(Scatter - Scatter / 2.f)), d) * BulletVelocity / len;
 //         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
 //         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet, COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(1)));
 //         ManaStorage -= ManaCostOfBullet;
