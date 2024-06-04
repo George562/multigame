@@ -33,7 +33,7 @@ public:
         damage = dmg;
         penetration = penetr;
         Velocity = velocity;
-        ExplosionRadius = {1, 12, 1};
+
         fromWho = faction;
         timer = time;
         hitbox.setRadius(COMMON_BULLET_RADIUS);
