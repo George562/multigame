@@ -2,7 +2,6 @@
 #include <vector>
 #include "../../SFML-2.5.1/include/SFML/System.hpp"
 #include "serializable.h"
-using nlohmann::json;
 
 template <class T>
 class Upgradable : public Serializable {
@@ -49,7 +48,7 @@ public:
         return j;
     }
 
-    void readJSON(json j) {
+    void readJSON(json& j) {
         Upgradable<T>* upg =  new Upgradable<T>();
         this->maxLevel = j["maxLevel"];
 

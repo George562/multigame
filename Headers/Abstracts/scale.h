@@ -1,7 +1,6 @@
 #pragma once
 #include "../../SFML-2.5.1/include/SFML/Graphics.hpp"
 #include "serializable.h"
-using nlohmann::json;
 
 ////////////////////////////////////////////////////////////
 /// \param bottom smallest value
@@ -46,7 +45,7 @@ public:
         return j;
     }
 
-    void readJSON(json j) {
+    void readJSON(json& j) {
         this->bottom = j["bottom"];
         this->top = j["top"];
         this->cur = j["cur"];

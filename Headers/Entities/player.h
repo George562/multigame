@@ -1,7 +1,6 @@
 #pragma once
 #include "creature.h"
 #include "../Abstracts/serializable.h"
-using nlohmann::json;
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -31,7 +30,7 @@ public:
         return j;
     }
 
-    void readJSON(json j) {
+    void readJSON(json& j) {
         this->Name.setString((std::string)j["Name"]);
         this->Health.readJSON(j["Health"]);
         this->HealthRecovery = j["HealthRecovery"];

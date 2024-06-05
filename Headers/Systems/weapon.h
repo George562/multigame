@@ -189,7 +189,7 @@ public:
         return j;
     }
 
-    void readJSON(json j) {
+    void readJSON(json& j) {
         this->Name = j["Name"];
         this->MaxManaStorage   .readJSON(j["MaxManaStorage"]);
         this->ReloadSpeed      .readJSON(j["ReloadSpeed"]);
