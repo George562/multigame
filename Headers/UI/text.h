@@ -15,12 +15,12 @@ void loadFonts() {
 #pragma pack(push, 1)
 class PlacedText : public sf::Text {
 public:
-    bool ShowText = true;
+    bool visible = true;
     float Width, Height;
 
     PlacedText();
 
-    void setCenter(float x, float y)    { setPosition(x - Width / 2, y - Height / 2); }
+    void setCenter(float x, float y)    { Text::setPosition(x - Width / 2, y - Height / 2); }
     void setCenter(sf::Vector2f v)      { setCenter(v.x, v.y); }
 
     sf::Vector2f getSize() const        { return {Width, Height}; }
@@ -34,8 +34,8 @@ public:
     size_t TextSize()                   { return getString().getSize(); }
     void insert(int pos, sf::String t)  { setString(getString().substring(0, pos) + t + getString().substring(pos, TextSize())); }
 
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const { 
-        if (ShowText) {
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        if (visible) {
             target.draw(static_cast<sf::Text>(*this), states);
         }
     };

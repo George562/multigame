@@ -196,7 +196,7 @@ void App::init()
     editorViewY = optionsContainer.getRect()->getY();
     editorViewWidth = wndW - editorViewX - wndW / 10;
     editorViewHeight = wndH - editorViewY - wndH * 3 / 20;
-    
+
     editorRect = InteractionRect(editorViewX, editorViewY, editorViewWidth, editorViewHeight);
     editorRect.setFillColor(sf::Color::White);
     editorRect.setOutlineColor(sf::Color::Black);
@@ -210,7 +210,7 @@ void App::init()
     itemOptionHeight = editorRect.getHeight() / 5;
     itemOptionX = editorRect.getRight() - itemOptionWidth;
     itemOptionY = editorRect.getY();
-    
+
     itemOptionRect = InteractionRect(itemOptionX, itemOptionY, itemOptionWidth, itemOptionHeight);
     itemOptionRect.setFillColor(sf::Color::White);
     itemOptionRect.setOutlineColor(sf::Color::Black);
@@ -283,11 +283,11 @@ void App::init()
     universalDrawnElements.push_back(&systemMessageLabel);
     // Done [Editor window elements] //
 
-    // [Save window elements]. Simple enough if you know at what path you want to save your file beforehand. 
+    // [Save window elements]. Simple enough if you know at what path you want to save your file beforehand.
     // A graphical solution would be way too overkill for what is a very situational app.
     fileNameLabel = Label(wndW / 10, wndH / 10, 20, font);
     fileNameLabel.setText("Level file name");
-    
+
     fileNameBox = TextBox(fileNameLabel.getX(), fileNameLabel.getY() + 30, wndW / 2 - wndW / 10, 40, font);
 
     filePathLabel = Label(fileNameBox.getX(), fileNameBox.getBottom() + 40, 20, font);
@@ -368,7 +368,7 @@ void App::poll(sf::Event& event)
                 itemOptionYBox.isActivated(event);
             }
 
-            if(!levelMatrix.empty() && 
+            if(!levelMatrix.empty() &&
                 (!isMapItemSelected || !in(itemOptionRect, event.mouseButton)))
                     {
                         sf::Event newEvent = convertToViewEvent(event, mainView);
@@ -384,21 +384,21 @@ void App::poll(sf::Event& event)
                 if(arrowMoveAmountIndex < 0)
                     arrowMoveAmountIndex = (int)(arrowMoveAmount.size()) - 1;
                 if(event.key.code == sf::Keyboard::Key::Add || event.key.code == sf::Keyboard::Key::Subtract)
-                    systemMessageLabel.setText("Changed arrow move amount to " + 
+                    systemMessageLabel.setText("Changed arrow move amount to " +
                                             std::to_string(arrowMoveAmount[arrowMoveAmountIndex]) + " pixels.");
             }
             break;
-        
+
         case saving:
-            fileNameBox.isActivated(event); 
+            fileNameBox.isActivated(event);
             filePathBox.isActivated(event);
 
             if(saveFileButton.isActivated(event))
-                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, false), 
+                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, false),
                                                 systemMessageLabel.getCharacterSize(), systemMessageRect.getWidth(), systemMessageRect.getHeight()));
 
             if(overWriteButton.isActivated(event))
-                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, true), 
+                systemMessageLabel.setText(fitText(saveMap(filePathBox.getText(), fileNameBox.getText(), levelMatrixHeight, levelMatrixWidth, true),
                                                 systemMessageLabel.getCharacterSize(), systemMessageRect.getWidth(), systemMessageRect.getHeight()));
 
             if(backButton.isActivated(event))
@@ -565,7 +565,7 @@ void App::interactionViewPoll(sf::Event& event)
         bool moveRight = viewEvent.key.code == sf::Keyboard::Key::Right;
         if(moveUp || moveDown || moveLeft || moveRight)
         {
-            selectedMapItem.second->move((moveRight - moveLeft) * arrowMoveAmount[arrowMoveAmountIndex], 
+            selectedMapItem.second->move((moveRight - moveLeft) * arrowMoveAmount[arrowMoveAmountIndex],
                                          (moveDown - moveUp) * arrowMoveAmount[arrowMoveAmountIndex]);
             itemOptionXBox.setText(std::to_string((int)selectedMapItem.second->getX()));
             itemOptionYBox.setText(std::to_string((int)selectedMapItem.second->getY()));
@@ -599,10 +599,10 @@ void App::draw()
     case editing:
         for(int i = 0; i < editorDrawnElements.size(); i++)
             mainWindow->draw(*(editorDrawnElements[i]));
-        
+
         for(int i = 0; i < scrollContainersList.size(); i++)
             scrollContainersList[i]->draw(*mainWindow, sf::RenderStates::Default);
-    
+
         if(isMapItemSelected)
             for(int i = 0; i < editorItemPropertyElements.size(); i++)
                 mainWindow->draw(*(editorItemPropertyElements[i]));
@@ -614,7 +614,7 @@ void App::draw()
             for(int i = 0; i < levelMatrix.size(); i++)
                 for(int j = 0; j < levelMatrix[i].size(); j++)
                     mainWindow->draw(*(levelMatrix[i][j]));
-            
+
             for(int i = 0; i < levelMatrixSquares.size(); i++)
                 for(int j = 0; j < levelMatrixSquares[i].size(); j++)
                     mainWindow->draw(*(levelMatrixSquares[i][j]));
@@ -635,7 +635,7 @@ void App::draw()
     default:
         break;
     }
-        
+
     if(isMapItemSelected)
         for(int i = 0; i < editorItemPropertyElements.size(); i++)
             mainWindow->draw(*(editorItemPropertyElements[i]));
@@ -717,7 +717,7 @@ std::string App::saveMap(std::string path, std::string fileName, int n, int m, b
 
     if(fileName.empty())
         return "Input the name for your map file!";
-    
+
     for(int i = 0; i < 9; i++)
         if(std::find(fileName.begin(), fileName.end(), forbiddenChars[i]) != fileName.end())
             return "File name cannot have any of theese symbols: \\ / : \" * ? < > |";
@@ -765,10 +765,10 @@ std::string App::saveMap(std::string path, std::string fileName, int n, int m, b
     for(int item = 2; item < mapItemName.size(); item++)
         if(mapItemDict[(mapItem)item].size() != 0)
             for(PushTile* tile : mapItemDict[(mapItem)item])
-                levelFile << item - 1 << ' ' << 
-                tile->getX() - 30 - columnWidth * ((int)tile->getX() / (int)rowWidth)<< ' ' 
+                levelFile << item - 1 << ' ' <<
+                tile->getX() - 30 - columnWidth * ((int)tile->getX() / (int)rowWidth)<< ' '
                 << tile->getY() - 30 - rowHeight * ((int)tile->getY() / (int)columnHeight) << "\n";
-    
+
     levelFile.close();
 
     return "Map saved as " + fileName + ".txt at \"" + filePath + "\"";

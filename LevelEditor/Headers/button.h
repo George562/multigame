@@ -48,7 +48,7 @@ bool Button::isActivated(sf::Event& event)
         setFillColor(pressed ? pressColor : inactiveColor);
         return false;
     }
-    
+
     if(event.type == sf::Event::MouseButtonReleased && pressed)
     {
         pressed = false;

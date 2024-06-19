@@ -7,7 +7,7 @@ vec3 pallete(float t) {
     vec3 b = vec3(0.358, 1.090, 0.657);
     vec3 c = vec3(1.077, 0.360, 0.328);
     vec3 d = vec3(0.965, 2.265, 0.837);
-    
+
     return a + b * cos(6.28318 * (c * t + d));
 }
 

@@ -67,7 +67,7 @@
 
     #include <GLES/gl.h>
     #include <GLES/glext.h>
-    
+
     // We're not using OpenGL ES 2+ yet, but we can use the sRGB extension
     #include <GLES2/gl2platform.h>
     #include <GLES2/gl2ext.h>

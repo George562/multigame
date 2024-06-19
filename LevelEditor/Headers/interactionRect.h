@@ -30,7 +30,7 @@ public:
 
     void setSize(int _width, int _height) { width = _width; height = _height; drawRect.setSize(sf::Vector2f(width, height)); }
     void setTexture(sf::Texture& _texture)
-    {        
+    {
         sprite.setTexture(_texture);
         sprite.setScale(width / sprite.getTexture()->getSize().x, height / sprite.getTexture()->getSize().y);
         hasTexture = true;

@@ -23,13 +23,13 @@ public:
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
-        setRadius(60.f);
+        hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
-        CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
-        CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
-        CurWeapon->damage += curLevel;
+        CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
 
-        setAnimation(Textures::DistortedScientist, &Shaders::Flashlight);
+        setAnimation(Textures::DistortedScientist);
 
         addItem(new Item(ItemID::regenDrug, 1));
     }
@@ -37,38 +37,7 @@ public:
     void move(Location* location) override {
         VelocityBuff = 1;
 
-        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
-        Creature::move(location);
-    }
-};
-
-// ScottPilgrim
-class ScottPilgrim : public Enemy {
-public:
-    ScottPilgrim() : Enemy("Scott Pilgrim") {
-        Health = {0, 10 + 4.f * curLevel, 10 + 4.f * curLevel};
-        HealthRecovery = 1;
-        Mana   = {0, 10, 10};
-        ManaRecovery   = 1;
-        Armor  = {0, 100, 100};
-        Velocity = {0, 0}; MaxVelocity = 400.f;
-        Acceleration = MaxVelocity * 5.f;
-        setRadius(60.f);
-        CurWeapon = new Pistol();
-        CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
-        CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
-        CurWeapon->damage += curLevel;
-
-        setAnimation(Textures::ScottPilgrim, 8, 2, sf::seconds(1), &Shaders::Flashlight);
-
-        addItem(new Item(ItemID::regenDrug, 1));
-    }
-
-    void move(Location* location) override {
-        VelocityBuff = 1;
-
-        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
-        animation->setAnimationLevel(target.x - getCenter().x < 0);
+        setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
 };
@@ -84,11 +53,11 @@ public:
         Armor  = {0, 100, 100};
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
-        setRadius(60.f);
+        hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
-        CurWeapon->ManaStorage.top = 100 * CurWeapon->ManaCostOfBullet;
-        CurWeapon->ManaStorage.cur = 100 * CurWeapon->ManaCostOfBullet;
-        CurWeapon->damage += curLevel;
+        CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
 
         setAnimation(Textures::Distorted, &Shaders::Distortion2);
 
@@ -98,7 +67,7 @@ public:
     void move(Location* location) override {
         VelocityBuff = 1;
 
-        setTarget(TheWayToPlayer[int(getCenter().y) / size][int(getCenter().x) / size]);
+        setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
 };

@@ -3,12 +3,12 @@
 #include "Entities/player.h"
 #include "Multiplayer/chat.h"
 #include "Multiplayer/client.h"
-#include "UI/button.h"
+#include "UI/RectButton.h"
+#include "UI/PolygonButton.h"
 #include "UI/panel.h"
 #include "UI/bar.h"
 #include "UI/tempText.h"
-#include "UI/ItemSlot.h"
-#include "UI/shopSlot.h"
+#include "UI/Slot.h"
 #include "Systems/effect.h"
 #include "Systems/shop.h"
 
@@ -42,7 +42,6 @@ std::vector<Player> ConnectedPlayers;
 
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect, FLoorTileSprite;
-std::vector<sf::Texture> FloorTextureRects;
 std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround, DamageText, MessageText;
 Bar<float> EnemyHealthBar;
 sf::Sprite undergroundBG;
@@ -60,40 +59,44 @@ PlacedText WeaponNameText;
 PlacedText ReloadWeaponText;
 sf::Sprite XButtonSprite;
 
-std::vector<sf::Sprite*> effectIcons(numberOfEffects);
-std::vector<TempText*> effectIconsTimers(numberOfEffects);
+std::vector<sf::Sprite*> effectIcons(Effects::EffectCount);
+std::vector<TempText*> effectIconsTimers(Effects::EffectCount);
 
 
 //////////////////////////////////////////////////////////// InventoryStuff
 inventoryPage::Type activeInventoryPage = inventoryPage::Items;
 std::vector<sf::Drawable*> invCommonElements; // These elements appear on every page
-int prevItemTypeCount = 0;
+std::vector<std::vector<sf::Drawable*>> invPageElements; // These elements only appear on certain pages
+sf::Sprite invBackground;
 
-Button invBackButton("Back", [](){
+RectButton invBackButton("Back", [](){
     isDrawInventory = false;
 });
-Button itemsPageButton("Items", [](){
+RectButton itemsPageButton("Items", [](){
     activeInventoryPage = inventoryPage::Items;
 });
-Button weaponsPageButton("Weapons", [](){
-    activeInventoryPage = inventoryPage::Weapons;
+RectButton weaponsPageButton("Weapons", [](){
+    activeInventoryPage = inventoryPage::Arsenal;
 });
-Button equipablesPageButton("Equipables", [](){
+RectButton equipablesPageButton("Equipables", [](){
     activeInventoryPage = inventoryPage::Equipables;
 });
-Button perksPageButton("Perks", [](){
+RectButton perksPageButton("Perks", [](){
     activeInventoryPage = inventoryPage::Perks;
 });
-Button statsPageButton("Stats", [](){
+RectButton statsPageButton("Stats", [](){
     activeInventoryPage = inventoryPage::Stats;
 });
-sf::Sprite invBackground;
+
+// ITEM INVENTORY ELEMENTS
+int prevItemTypeCount = 0;
+bool isItemDescDrawn = false;
+
 sf::Sprite itemListBG;
 
 Animation playerCoinSprite;
-ItemSlot playerCoinSlot;   // Special slot, so that it can be conveniently used other than in the inventory
+ItemSlot playerCoinSlot;        // Special slot, so that it can be conveniently used other than in the inventory
 
-std::vector<std::vector<sf::Drawable*>> invPageElements; // These elements only appear on certain pages
 std::vector<ItemSlot> invItemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
 std::vector<sf::FloatRect*> invItemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
@@ -109,10 +112,37 @@ PlacedText statsArmorText,
            statsCompletedLevelsText,
            statsCurLevelsText;
 
-bool isItemDescDrawn = false;
-std::vector<bool> doInventoryUpdate(inventoryPage::NONE, false);
 PlacedText itemDescText;
 ItemID::Type prevItemDescID;
+
+
+// ARSENAL ELEMENTS
+sf::Sprite arsWeaponImage;
+
+PlacedText arsWeaponNameText,
+           arsWeaponInfoText,
+           arsWeaponStatsText;
+    
+sf::ConvexShape arsCompGeneratorOutline,
+                arsCompFormFactorOutline,
+                arsCompConverterOutline,
+                arsCompTargetingOutline;
+PolygonButton arsCompGeneratorBtn,
+              arsCompFormFactorBtn,
+              arsCompConverterBtn,
+              arsCompTargetingBtn;
+
+bool isChoosingComponent = false;
+int compType = 0;
+
+// ARSENAL COMPONENT CHOICE ELEMENTS
+std::vector<sf::Drawable*> arsCompUpgradeElements;
+Panel compListTextPanel, compListFade, compListBG;
+Panel compImgPanel;
+std::vector<ItemSlot> arsCompSlotsElements;
+std::vector<RectButton> arsCompBtns;
+
+std::vector<bool> doInventoryUpdate(inventoryPage::PageCount, false);
 
 
 //////////////////////////////////////////////////////////// Shop Interface
@@ -181,19 +211,19 @@ Bullet* tempBullet;
 
 
 //////////////////////////////////////////////////////////// Weapons
-Pistol pistol;
-Shotgun shotgun;
-Revolver revolver;
-Rifle rifle;
-Bubblegun bubblegun;
-Armageddon armageddon;
-Chaotic chaotic;
+Weapon pistol;
+Weapon shotgun;
+// Revolver revolver;
+Weapon rifle;
+// Bubblegun bubblegun;
+// Armageddon armageddon;
+// Chaotic chaotic;
 std::vector<Weapon*> arsenal = {
     &pistol,
     &shotgun,
     &rifle,
 };
-Scale<int> CurWeapon{0, 2, 0};
+Scale<int> CurWeapon;
 
 
 //////////////////////////////////////////////////////////// Enemies
@@ -240,7 +270,6 @@ void shopHandler(sf::Event&);
 //---------------------------- LEVEL GENERATION FUNCTIONS
 void LevelGenerate(int, int);
 void LoadMainMenu();
-void FillFloorRects();
 
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
@@ -269,7 +298,7 @@ void updateShaders();
 bool CanSomethingBeActivated();
 
 void saveGame();
-void loadSaves();
+void loadSave();
 //----------------------------
 
 
@@ -288,8 +317,6 @@ void funcOfClient();
 //////////////////////////////////////////////////////////// Threads
 sf::Thread HostTread(funcOfHost);
 sf::Thread ClientTread(funcOfClient);
-sf::Thread FillFloorRectsThread(FillFloorRects);
-
 
 //////////////////////////////////////////////////////////// Panels
 Panel IPPanel("IP:");
@@ -297,17 +324,17 @@ Panel ListOfPlayers;
 
 
 //////////////////////////////////////////////////////////// Buttons
-Button HostButton("Host", [](){
+RectButton HostButton("Host", [](){
     listener.listen(53000);
     selector.add(listener);
-    ListOfPlayers.setWord(MyIP);
+    ListOfPlayers.setString(MyIP);
     ComputerID = 0;
     ConnectedPlayers.push_back(*(new Player()));
     HostFuncRun = true;
     HostTread.launch();
 });
 
-Button EscapeButton("Exit", [](){
+RectButton EscapeButton("Exit", [](){
     if (HostFuncRun) {
         mutex.lock();
         SendPacket << pacetStates::disconnect;
@@ -323,7 +350,7 @@ Button EscapeButton("Exit", [](){
         SelfDisconnect();
     }
     EscapeMenuActivated = false;
-    ListOfPlayers.clear();
+    ListOfPlayers.clearText();
     clearVectorOfPointer(Bullets);
     clearVectorOfPointer(Enemies);
     clearVectorOfPointer(TempTextsOnGround);
@@ -340,11 +367,11 @@ Button EscapeButton("Exit", [](){
     saveGame();
 });
 
-Button shopBackButton("Back", [](){
+RectButton shopBackButton("Back", [](){
     isDrawShop = false;
     shopSelectedItem = nullptr;
 });
-Button shopBuyButton("Buy", [](){
+RectButton shopBuyButton("Buy", [](){
     curShop->buyFunction();
 });
 
@@ -379,14 +406,14 @@ void init() {
     loadFonts();
     loadShaders();
     loadMusics();
-    loadSaves();
+    loadSave();
 
     Musics::MainMenu.setLoop(true);
     Musics::MainMenu.setVolume(5);
     Musics::Fight1.setVolume(5);
     Musics::Fight2.setVolume(5);
 
-    portal.setAnimation(Textures::PortalAnimation2, 9, 1, sf::seconds(1), &Shaders::Portal);
+    portal.setAnimation(Textures::Portal, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
     player.setAnimation(Textures::Player, &Shaders::Player);
     puddle.setAnimation(Textures::Puddle);
@@ -395,7 +422,7 @@ void init() {
     shopSector.setPosition(0, 2 * size);
 
     Shaders::Flashlight.setUniform("uResolution", sf::Vector2f(scw, sch));
-    Shaders::Flashlight.setUniform("u_playerRadius", player.getRadius());
+    Shaders::Flashlight.setUniform("u_playerRadius", player.hitbox.getRadius());
 
     Shaders::Distortion1.setUniform("noise_png", Textures::Noise);
 
@@ -405,13 +432,13 @@ void init() {
 
     Shaders::Bullet.setUniform("noise_png", Textures::Noise);
 
+    Shaders::Fire.setUniform("noise_png", Textures::Noise);
+
     IPPanel       .setTexture(Textures::YellowPanel);
-    ListOfPlayers .setTexture(Textures::SteelFrame);
+    ListOfPlayers .setTexture(Textures::GradientFrameAlpha);
 
     EscapeButton .setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     HostButton   .setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
-
-    WallRect.setTexture(Textures::Wall);
 
     CurWeapon.looped = true;
 
@@ -457,13 +484,13 @@ void init() {
     XButtonSprite.setTexture(Textures::XButton);
     XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
 
-    MMPortalRect.setSize(portal.getSize() * ScaleParam);
+    MMPortalRect.setSize(portal.hitbox.getSize() * ScaleParam);
     MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
 
     MMBoxRect.setSize(sf::Vector2f(105.f, 117.f) * ScaleParam);
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
 
-    MMPuddleRect.setSize(puddle.getSize() * ScaleParam);
+    MMPuddleRect.setSize(puddle.hitbox.getSize() * ScaleParam);
     MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
 
     MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
@@ -474,18 +501,21 @@ void init() {
     EnemyHealthBar.setWallWidth(1);
     EnemyHealthBar.ShowText = false;
 
-    FLoorTileSprite.setScale(3.f, 3.f);
+    FLoorTileSprite.setScale(5.f, 5.f);
+    FLoorTileSprite.setTexture(Textures::floor);
 
     undergroundBG.setTexture(Textures::Noise);
     undergroundBG.setPosition(0, 0);
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 
-    for (int i = 0; i < numberOfEffects; i++) {
+    for (int i = 0; i < Effects::EffectCount; i++) {
         effectIconsTimers[i] = new TempText(sf::Time::Zero);
         effectIcons[i] = new sf::Sprite();
     }
     effectIcons[2]->setTexture(Textures::Eff_HPRegen);
     effectIcons[3]->setTexture(Textures::Eff_Burn);
+
+    CurWeapon = {0, 2, 0};
 
     initInventory();
     initShop();
@@ -494,48 +524,47 @@ void init() {
 }
 
 void initInventory() {
-    invPageElements.resize(inventoryPage::NONE);
-    invItemSlotsElements.resize(MaxItemID, ItemSlot());
-    invItemSlotsRects.resize(MaxItemID);
+    invPageElements.resize(inventoryPage::PageCount);
+    invItemSlotsElements.resize(ItemID::ItemCount, ItemSlot());
+    invItemSlotsRects.resize(ItemID::ItemCount);
 
-    invBackground.setTexture(Textures::SteelFrame);
-    invBackground.setScale((float)scw / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y);
+    invBackground.setTexture(Textures::GridBG);
     invBackground.setPosition(0, 0);
 
     int xOffset = 50, yOffset = 50;
 
     invBackButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     invBackButton.setCharacterSize(52);
-    invBackButton.setPosition(xOffset, yOffset);
+    invBackButton.setPosition(0, 0);
     invBackButton.setSize(300, 150);
 
     itemsPageButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     itemsPageButton.setCharacterSize(32);
-    itemsPageButton.setPosition(xOffset, (sch - yOffset) * 0.9);
-    itemsPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    itemsPageButton.setPosition(0, (sch) * 0.9);
+    itemsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
     weaponsPageButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     weaponsPageButton.setCharacterSize(32);
-    weaponsPageButton.setPosition((scw - xOffset) * 0.2, (sch - yOffset) * 0.9);
-    weaponsPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    weaponsPageButton.setPosition((scw) * 0.2, (sch) * 0.9);
+    weaponsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
     equipablesPageButton.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
     equipablesPageButton.setCharacterSize(32);
-    equipablesPageButton.setPosition((scw - xOffset) * 0.4, (sch - yOffset) * 0.9);
-    equipablesPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    equipablesPageButton.setPosition((scw) * 0.4, (sch) * 0.9);
+    equipablesPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
     perksPageButton.setTexture(Textures::BluePanel, Textures::BluePanelPushed);
     perksPageButton.setCharacterSize(32);
-    perksPageButton.setPosition((scw - xOffset) * 0.6, (sch - yOffset) * 0.9);
-    perksPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    perksPageButton.setPosition((scw) * 0.6, (sch) * 0.9);
+    perksPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
     statsPageButton.setTexture(Textures::ItemPanel, Textures::ItemPanel);
     statsPageButton.setCharacterSize(32);
-    statsPageButton.setPosition((scw - xOffset) * 0.8, (sch - yOffset) * 0.9);
-    statsPageButton.setSize((scw - xOffset) * 0.2, (sch - yOffset) * 0.1);
+    statsPageButton.setPosition((scw) * 0.8, (sch) * 0.9);
+    statsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
-    itemListBG.setTexture(Textures::SteelFrame);
-    itemListBG.setScale((float)(scw - 300) / Textures::SteelFrame.getSize().x, (float)sch / Textures::SteelFrame.getSize().y * 0.6);
+    itemListBG.setTexture(Textures::GradientFrameAlpha);
+    itemListBG.setScale((float)(scw - 300) / Textures::GradientFrameAlpha.getSize().x, (float)sch / Textures::GradientFrameAlpha.getSize().y * 0.6);
     itemListBG.setPosition(150, sch * 0.2);
 
     invCommonElements.push_back(&invBackground);
@@ -586,15 +615,173 @@ void initInventory() {
     statsCurLevelsText.setString("Current Levels: " + std::to_string(curLevel));
     statsCurLevelsText.setPosition(scw / 10, 8 * sch / 10);
 
-    playerCoinSprite = Animation(*itemTextureName[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+    playerCoinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                   1, itemTextureDuration[ItemID::coin]);
     playerCoinSprite.play();
-    playerCoinSlot.background = new sf::Sprite();
-    playerCoinSlot.amountText = new PlacedText();
-    playerCoinSlot.isInitialized = true;
+    playerCoinSlot.init();
+
+
+    arsWeaponImage.setTexture(Textures::PH_gun);
+    arsWeaponImage.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
+                               (sch - Textures::PH_gun.getSize().y) / 2);
+
+    arsWeaponNameText.setCharacterSize(30);
+    arsWeaponNameText.setString("Name");
+    arsWeaponNameText.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
+                                  sch / 8);
+
+    arsWeaponInfoText.setCharacterSize(30);
+    arsWeaponInfoText.setString("Info");
+    arsWeaponInfoText.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
+                                  sch / 8 + 60);
+
+    arsWeaponStatsText.setCharacterSize(30);
+    arsWeaponStatsText.setString("Stats");
+    arsWeaponStatsText.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
+                                   sch / 8 + 180);
+
+    sf::Texture* fadeTexture = new sf::Texture();
+    sf::Image fadeTexturePixels = sf::Image();
+    fadeTexturePixels.create(scw, sch, sf::Color(255, 255, 255, 128));
+    for (int i = 0; i < scw; i++)
+        for (int j = 0; j < sch; j++)
+            if (i >= scw / 8 && i <= scw - scw / 8 &&
+                j >= sch / 4 && j <= sch - sch / 4) {
+                float gradVal = 25 * (((int) (i - scw / 8 + j - sch / 4) / (255)) % 25);
+                fadeTexturePixels.setPixel(i, j, sf::Color(gradVal, gradVal, gradVal, 255));
+            }
+    fadeTexture->create(scw, sch);
+    fadeTexture->update(fadeTexturePixels);
+    compListFade.sprite.setTexture(*fadeTexture);
+
+    compListTextPanel.setTexture(Textures::GradientFrame);
+    compListTextPanel.setSize(scw - 2 * scw / 8, sch / 8);
+    compListTextPanel.setPosition(scw / 8, 100);
+    compListTextPanel.setString("Choose a component upgrade");
+    compListTextPanel.setCharacterSize(40);
+
+    compListBG.setTexture(Textures::GradientFrameAlpha);
+    compListBG.setSize(scw - 2 * scw / 8, sch - 2 * sch / 4);
+    compListBG.setPosition(scw / 8, sch / 4);
+
+    compImgPanel.setTexture(Textures::PH_FormFactor);
+    compImgPanel.setSize(scw / 6, sch / 6);
+    compImgPanel.setPosition(scw / 8 + 100, sch / 4 + 100);
+
+
+    std::vector<sf::Vector2f> starShape{
+        sf::Vector2f(0, 100),  sf::Vector2f(50, 50),   sf::Vector2f(100, 50),
+        sf::Vector2f(75, 0),   sf::Vector2f(100, -50), sf::Vector2f(50, -50),
+        sf::Vector2f(0, -100), sf::Vector2f(-50, -50), sf::Vector2f(-100, -50),
+        sf::Vector2f(-75, 0),  sf::Vector2f(-100, 50), sf::Vector2f(-50, 50)
+    };
+    std::vector<sf::Vector2f> rectShape{
+        sf::Vector2f(-100, -50), sf::Vector2f(-100, 50), sf::Vector2f(100, 50), sf::Vector2f(100, -50)
+    };
+    std::vector<sf::Vector2f> triangleShape{
+        sf::Vector2f(-75, -75), sf::Vector2f(-75, 75), sf::Vector2f(75, -75)
+    };
+    std::vector<sf::Vector2f> frustumShape{
+        sf::Vector2f(-75, -75), sf::Vector2f(-30, 75), sf::Vector2f(30, 75), sf::Vector2f(75, -75)
+    };
+    std::vector<sf::Vector2f> rotatedTri;
+    for (int i = 0; i < triangleShape.size(); i++)
+        rotatedTri.push_back(RotateOn(-DegToRad(30), triangleShape[i]));
+    std::vector<sf::Vector2f> rotatedFrustum;
+    for (int i = 0; i < frustumShape.size(); i++)
+        rotatedFrustum.push_back(RotateOn(DegToRad(60), frustumShape[i]));
+    
+    arsCompGeneratorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+    arsCompGeneratorBtn.hitbox.setPoints(starShape);
+    arsCompGeneratorBtn.setPosition(scw / 8, sch / 2 + 20);
+    arsCompGeneratorBtn.setFunction([](){
+        isChoosingComponent = true;
+        compType = 0;
+        compListTextPanel.setString("Choose a Coch Generator upgrade   (press RMB to close)");
+        compImgPanel.setTexture(Textures::PH_CochGen);
+    });
+
+    arsCompGeneratorOutline.setPointCount(12);
+    for (int i = 0; i < arsCompGeneratorBtn.hitbox.getPointCount(); i++)
+        arsCompGeneratorOutline.setPoint(i, arsCompGeneratorBtn.hitbox.getPoint(i));
+    arsCompGeneratorOutline.setFillColor(sf::Color::Transparent);
+    arsCompGeneratorOutline.setOutlineThickness(3);
+    arsCompGeneratorOutline.setOutlineColor(sf::Color(192, 192, 255, 255));
+
+
+    arsCompFormFactorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+    arsCompFormFactorBtn.hitbox.setPoints(rectShape);
+    arsCompFormFactorBtn.setPosition(scw / 3, 0.7 * sch);
+    arsCompFormFactorBtn.setFunction([](){
+        isChoosingComponent = true;
+        compType = 1;
+        compListTextPanel.setString("Choose a Form-factor upgrade   (press RMB to close)");
+        compImgPanel.setTexture(Textures::PH_FormFactor);
+    });
+
+    arsCompFormFactorOutline.setPointCount(4);
+    for (int i = 0; i < arsCompFormFactorBtn.hitbox.getPointCount(); i++)
+        arsCompFormFactorOutline.setPoint(i, arsCompFormFactorBtn.hitbox.getPoint(i));
+    arsCompFormFactorOutline.setFillColor(sf::Color::Transparent);
+    arsCompFormFactorOutline.setOutlineThickness(3);
+    arsCompFormFactorOutline.setOutlineColor(sf::Color(255, 255, 192, 255));
+
+
+    arsCompConverterBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+    arsCompConverterBtn.hitbox.setPoints(rotatedTri);
+    arsCompConverterBtn.setPosition(0.65 * scw, 0.65 * sch);
+    arsCompConverterBtn.setFunction([](){
+        isChoosingComponent = true;
+        compType = 2;
+        compListTextPanel.setString("Choose a Converter upgrade   (press RMB to close)");
+        compImgPanel.setTexture(Textures::PH_Converter);
+    });
+
+    arsCompConverterOutline.setPointCount(3);
+    for (int i = 0; i < arsCompConverterBtn.hitbox.getPointCount(); i++)
+        arsCompConverterOutline.setPoint(i, arsCompConverterBtn.hitbox.getPoint(i));
+    arsCompConverterOutline.setFillColor(sf::Color::Transparent);
+    arsCompConverterOutline.setOutlineThickness(3);
+    arsCompConverterOutline.setOutlineColor(sf::Color(192, 255, 192, 255));
+
+
+    arsCompTargetingBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+    arsCompTargetingBtn.hitbox.setPoints(rotatedFrustum);
+    arsCompTargetingBtn.setPosition(0.8 * scw, sch / 2);
+    arsCompTargetingBtn.setFunction([](){
+        isChoosingComponent = true;
+        compType = 3;
+        compListTextPanel.setString("Choose a Targeting mechanism upgrade   (press RMB to close)");
+        compImgPanel.setTexture(Textures::PH_Targeting);
+    });
+
+    arsCompTargetingOutline.setPointCount(4);
+    for (int i = 0; i < arsCompTargetingBtn.hitbox.getPointCount(); i++)
+        arsCompTargetingOutline.setPoint(i, arsCompTargetingBtn.hitbox.getPoint(i));
+    arsCompTargetingOutline.setFillColor(sf::Color::Transparent);
+    arsCompTargetingOutline.setOutlineThickness(3);
+    arsCompTargetingOutline.setOutlineColor(sf::Color(255, 192, 192, 255));
 
     invPageElements[inventoryPage::Items].push_back(&itemListBG);
     invPageElements[inventoryPage::Items].push_back(&playerCoinSprite);
+
+    invPageElements[inventoryPage::Arsenal].push_back(&arsWeaponImage);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsWeaponNameText);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsWeaponInfoText);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsWeaponStatsText);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompGeneratorBtn);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompFormFactorBtn);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompConverterBtn);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingBtn);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompGeneratorOutline);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompFormFactorOutline);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompConverterOutline);
+    invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingOutline);
+    arsCompUpgradeElements.push_back(&compListFade);
+    arsCompUpgradeElements.push_back(&compListBG);
+    arsCompUpgradeElements.push_back(&compListTextPanel);
+    arsCompUpgradeElements.push_back(&compImgPanel);
+
     invPageElements[inventoryPage::Stats].push_back(&statsPlayerImage);
     invPageElements[inventoryPage::Stats].push_back(&statsHPBar);
     invPageElements[inventoryPage::Stats].push_back(&statsMPBar);
@@ -607,12 +794,13 @@ void initInventory() {
     invPageElements[inventoryPage::Stats].push_back(&statsCurLevelsText);
 
     doInventoryUpdate[inventoryPage::Stats] = true;
+    doInventoryUpdate[inventoryPage::Arsenal] = true;
 }
 
 void initShop() {
-    shopItemSlotsElements.resize(MaxItemID, ShopSlot());
-    shopPlayerSlotsElements.resize(MaxItemID, ShopSlot());
-    shopItemSlotsRects.resize(MaxItemID);
+    shopItemSlotsElements.resize(ItemID::ItemCount);
+    shopPlayerSlotsElements.resize(ItemID::ItemCount);
+    shopItemSlotsRects.resize(ItemID::ItemCount);
     mainMenuShop.setShop(new std::vector<Item*>{new Item(ItemID::regenDrug, 100)},
                          std::vector<int>{20, 100, 199});
     mainMenuShop.setFunction([](){
@@ -636,77 +824,67 @@ void initShop() {
         }
     });
 
-    int xOffset = 50, yOffset = 50;
-
-    shopBG.setTexture(Textures::SteelFrame);
-    shopBG.setScale((float) scw / Textures::SteelFrame.getSize().x, (float) sch / Textures::SteelFrame.getSize().y);
-    shopBGPattern.setPosition(0, 0);
-
-    shopBGPattern.setTexture(Textures::ShopBG);
-    shopBGPattern.setColor(sf::Color(0x10, 0xBB, 0xFF));
-    shopBGPattern.setScale((float) (scw  - 2 * xOffset) / Textures::ShopBG.getSize().x, (float) (sch - 2 * yOffset) / Textures::ShopBG.getSize().y);
-    shopBGPattern.setPosition(xOffset, yOffset);
+    shopBG.setTexture(Textures::GridBG);
 
     shopBackButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
     shopBackButton.setCharacterSize(36);
-    shopBackButton.setPosition(xOffset, yOffset);
-    shopBackButton.setSize(250, yOffset);
+    shopBackButton.setSize(250, 50);
 
-    shopNPCTextFrame.setTexture(Textures::NPCDialogueFrame_Wide);
+    shopNPCTextFrame.setTexture(Textures::GradientFrameAlpha);
     shopNPCTextFrame.setColor(sf::Color(0x10, 0xBB, 0xFF));
-    shopNPCTextFrame.setScale((float) (scw - 2 * xOffset) / Textures::NPCDialogueFrame_Wide.getSize().x,
-                              200.0 / Textures::NPCDialogueFrame_Wide.getSize().y);
-    shopNPCTextFrame.setPosition(xOffset, shopBackButton.getBottom() + yOffset / 5);
+    shopNPCTextFrame.setScale((float) (scw - 100) / Textures::GradientFrameAlpha.getSize().x,
+                              200.0 / Textures::GradientFrameAlpha.getSize().y);
+    shopNPCTextFrame.setPosition(50, shopBackButton.hitbox.getBottom() + 50 / 5);
 
     shopNPCSprite.setTexture(Textures::DistortedScientist);
-    shopNPCSprite.setScale((shopNPCTextFrame.getGlobalBounds().height - 2 * yOffset) / shopNPCSprite.getTexture()->getSize().x,
-                           (shopNPCTextFrame.getGlobalBounds().height - 2 * yOffset) / shopNPCSprite.getTexture()->getSize().y);
-    shopNPCSprite.setPosition(shopNPCTextFrame.getPosition() + sf::Vector2f(2 * xOffset, yOffset));
+    shopNPCSprite.setScale((shopNPCTextFrame.getGlobalBounds().height - 100) / shopNPCSprite.getTexture()->getSize().x,
+                           (shopNPCTextFrame.getGlobalBounds().height - 100) / shopNPCSprite.getTexture()->getSize().y);
+    shopNPCSprite.setPosition(shopNPCTextFrame.getPosition() + sf::Vector2f(100, 50));
 
     shopNPCName.setCharacterSize(32);
-    shopNPCName.setPosition(shopNPCSprite.getPosition().x + shopNPCSprite.getGlobalBounds().width + xOffset,
-                            shopNPCSprite.getPosition().y + shopNPCSprite.getGlobalBounds().height / 2 - yOffset / 2);
+    shopNPCName.setPosition(shopNPCSprite.getPosition().x + shopNPCSprite.getGlobalBounds().width + 50,
+                            shopNPCSprite.getPosition().y + shopNPCSprite.getGlobalBounds().height / 2 - 50 / 2);
     shopNPCName.setString(textWrap("Shop keeper", 20));
 
     shopNPCText.setCharacterSize(32);
     shopNPCText.setPosition(shopNPCTextFrame.getPosition().x + shopNPCTextFrame.getGlobalBounds().width * 0.25,
-                            shopNPCTextFrame.getPosition().y + yOffset);
+                            shopNPCTextFrame.getPosition().y + 50);
 
-    shopItemsFrame.setTexture(Textures::ShopSectionFrame);
+    shopItemsFrame.setTexture(Textures::GradientFrameAlpha);
     shopItemsFrame.setColor(sf::Color(0xCC, 0xAA, 0x11));
-    shopItemsFrame.setScale((0.6 * scw - 2 * xOffset) / (Textures::ShopSectionFrame.getSize().x),
-                            (0.35 * sch - yOffset) / (Textures::ShopSectionFrame.getSize().y));
-    shopItemsFrame.setPosition(xOffset, shopBackButton.getBottom() + 200.0 + yOffset / 2);
+    shopItemsFrame.setScale((0.6 * scw - 100) / (Textures::GradientFrameAlpha.getSize().x),
+                            (0.35 * sch - 50) / (Textures::GradientFrameAlpha.getSize().y));
+    shopItemsFrame.setPosition(50, shopBackButton.hitbox.getBottom() + 200.0 + 50 / 2);
 
-    shopItemsViewSizeX = (0.6 * scw - 2 * xOffset) / scw;
-    shopItemsViewSizeY = (0.35 * sch - yOffset) / sch;
-    ShopStockView.setViewport(sf::FloatRect((shopItemsFrame.getPosition().x + xOffset) / scw,
-                                            (shopItemsFrame.getPosition().y + yOffset / 3) / sch,
+    shopItemsViewSizeX = (0.6 * scw - 100) / scw;
+    shopItemsViewSizeY = (0.35 * sch - 50) / sch;
+    ShopStockView.setViewport(sf::FloatRect((shopItemsFrame.getPosition().x + 50) / scw,
+                                            (shopItemsFrame.getPosition().y + 50 / 3) / sch,
                                             shopItemsViewSizeX, shopItemsViewSizeY));
 
-    shopPlayerInventoryFrame.setTexture(Textures::ShopSectionFrame);
+    shopPlayerInventoryFrame.setTexture(Textures::GradientFrameAlpha);
     shopPlayerInventoryFrame.setColor(sf::Color(0xBB, 0x40, 0x40));
-    shopPlayerInventoryFrame.setScale((0.4 * scw - xOffset) / (Textures::ShopSectionFrame.getSize().x),
-                                      (0.35 * sch - yOffset) / (Textures::ShopSectionFrame.getSize().y));
+    shopPlayerInventoryFrame.setScale((0.4 * scw - 50) / (Textures::GradientFrameAlpha.getSize().x),
+                                      (0.35 * sch - 50) / (Textures::GradientFrameAlpha.getSize().y));
     shopPlayerInventoryFrame.setPosition(0.6 * scw, shopItemsFrame.getPosition().y);
 
-    shopPlayerInvViewSizeX = (0.6 * scw - 2 * xOffset) / scw;
-    shopPlayerInvViewSizeY = (0.35 * sch - yOffset) / sch;
-    ShopPlayerInvView.setViewport(sf::FloatRect((shopPlayerInventoryFrame.getPosition().x + xOffset) / scw,
-                                                (shopPlayerInventoryFrame.getPosition().y + yOffset) / sch,
+    shopPlayerInvViewSizeX = (0.6 * scw - 100) / scw;
+    shopPlayerInvViewSizeY = (0.35 * sch - 50) / sch;
+    ShopPlayerInvView.setViewport(sf::FloatRect((shopPlayerInventoryFrame.getPosition().x + 50) / scw,
+                                                (shopPlayerInventoryFrame.getPosition().y + 50) / sch,
                                                 shopPlayerInvViewSizeX, shopPlayerInvViewSizeY));
 
-    shopItemStatsFrame.setTexture(Textures::ShopSectionFrame);
+    shopItemStatsFrame.setTexture(Textures::GradientFrameAlpha);
     shopItemStatsFrame.setColor(sf::Color(0xCC, 0xAA, 0x11));
-    shopItemStatsFrame.setScale((0.6 * scw - 2 * xOffset) / (Textures::ShopSectionFrame.getSize().x),
-                                (0.35 * sch - yOffset) / (Textures::ShopSectionFrame.getSize().y));
-    shopItemStatsFrame.setPosition(xOffset, shopItemsFrame.getPosition().y + 0.35 * sch - yOffset + yOffset / 2);
+    shopItemStatsFrame.setScale((0.6 * scw - 100) / (Textures::GradientFrameAlpha.getSize().x),
+                                (0.35 * sch - 50) / (Textures::GradientFrameAlpha.getSize().y));
+    shopItemStatsFrame.setPosition(50, shopItemsFrame.getPosition().y + 0.35 * sch - 50 + 50 / 2);
 
-    shopItemSpriteFrame.setTexture(Textures::ShopItemPhotoFrame);
-    shopItemSpriteFrame.setScale(0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ShopItemPhotoFrame.getSize().x,
-                                 0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ShopItemPhotoFrame.getSize().y);
-    shopItemSpriteFrame.setPosition(shopItemStatsFrame.getPosition().x + xOffset,
-                                    shopItemStatsFrame.getPosition().y + yOffset * 0.3);
+    shopItemSpriteFrame.setTexture(Textures::ItemPanel);
+    shopItemSpriteFrame.setScale(0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ItemPanel.getSize().x,
+                                 0.5 * shopItemStatsFrame.getGlobalBounds().height / Textures::ItemPanel.getSize().y);
+    shopItemSpriteFrame.setPosition(shopItemStatsFrame.getPosition().x + 50,
+                                    shopItemStatsFrame.getPosition().y + 50 * 0.3);
     shopItemSpriteFrame.setColor(sf::Color(0xAA, 0x88, 0x00));
 
     shopItemSprite.setTexture(Textures::INVISIBLE, true);
@@ -719,8 +897,8 @@ void initShop() {
     shopItemCoins.setPosition(shopItemSpriteFrame.getPosition().x + shopItemSpriteFrame.getGlobalBounds().width * 0.3,
                               shopItemSpriteFrame.getPosition().y + shopItemSpriteFrame.getGlobalBounds().height * 1.2);
 
-    shopItemCoinsSprite = Animation(*itemTextureName[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
-                                    1, itemTextureDuration[ItemID::coin]);
+    shopItemCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+                                     1, itemTextureDuration[ItemID::coin]);
     shopItemCoinsSprite.setPosition(shopItemSpriteFrame.getPosition().x + shopItemSpriteFrame.getGlobalBounds().width * 0.5,
                                     shopItemSpriteFrame.getPosition().y + shopItemSpriteFrame.getGlobalBounds().height);
     shopItemCoinsSprite.setSize(sf::Vector2f(100.0, 100.0));
@@ -733,14 +911,13 @@ void initShop() {
     shopBuyButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
     shopBuyButton.setCharacterSize(70);
     shopBuyButton.setSize(400, 150);
-    shopBuyButton.setPosition(shopPlayerInventoryFrame.getPosition().x + (0.4 * scw - xOffset) / 5,
-                              sch - 150 - 1.5 * yOffset);
-    
+    shopBuyButton.setPosition(shopPlayerInventoryFrame.getPosition().x + (0.4 * scw - 50) / 5,
+                              sch - 150 - 1.5 * 50);
+
     shopPlayerCoinsText.setCharacterSize(40);
-    shopPlayerCoinsText.setPosition(shopBuyButton.getPosition() - sf::Vector2f(0, 100));
+    shopPlayerCoinsText.setPosition(shopBuyButton.hitbox.getPosition() - sf::Vector2f(0, 100));
 
     shopUIElements.push_back(&shopBG);
-    shopUIElements.push_back(&shopBGPattern);
     shopUIElements.push_back(&shopBackButton);
     shopUIElements.push_back(&shopNPCTextFrame);
     shopUIElements.push_back(&shopNPCSprite);
@@ -785,15 +962,14 @@ void draw() {
             if (d == CurInteractable) {
                 outlineRenderTexture.clear(sf::Color::Transparent);
                 outlineRenderTexture.draw(*d); outlineRenderTexture.display();
-                outlineRenderTexture.draw(outlineRenderSprite, &Shaders::Outline);
-                preRenderTexture.draw(outlineRenderSprite);
+                preRenderTexture.draw(outlineRenderSprite, &Shaders::Outline);
             } else {
                 preRenderTexture.draw(*d);
             }
         }
 
         for (Enemy*& enemy: Enemies) {
-            EnemyHealthBar.setPosition(enemy->getPosition() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->getRadius() + 50.f));
+            EnemyHealthBar.setPosition(enemy->hitbox.getCenter() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->hitbox.getRadius() + 50.f));
             EnemyHealthBar.setValue(enemy->Health);
             preRenderTexture.draw(EnemyHealthBar);
         }
@@ -840,14 +1016,14 @@ void draw() {
 }
 
 void drawFloor() {
-    std::vector<sf::Texture>::iterator it = FloorTextureRects.begin();
+    sf::RenderStates states;
     for (int i = 0; i < CurLocation->n; i++) {
         for (int j = 0; j < CurLocation->m; j++) {
             if (CurLocation->EnableTiles[i][j]) {
-                FLoorTileSprite.setTexture(*it);
                 FLoorTileSprite.setPosition(size * j, size * i);
-                preRenderTexture.draw(FLoorTileSprite);
-                it++;
+                states.shader = (random(i, j) <= 0.9) ? nullptr : &Shaders::WaveMix;
+                Shaders::WaveMix.setUniform("uPosition", sf::Vector2f(j, i));
+                preRenderTexture.draw(FLoorTileSprite, states);
             }
         }
     }
@@ -865,11 +1041,7 @@ void drawWalls() {
             if (CurLocation->walls[i][j]) {
                 CurLocation->SeenWalls[i][j] = CurLocation->SeenWalls[i][j] || CameraRect.intersect(CurLocation->wallsRect[i][j]);
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
-                WallRect.setTextureRect(sf::IntRect(
-                        (Textures::Wall.getSize().x - CurLocation->wallsRect[i][j].getSize().x) * random(i, j),
-                        (Textures::Wall.getSize().y - CurLocation->wallsRect[i][j].getSize().y) * random(j, i),
-                        CurLocation->wallsRect[i][j].getSize().x,
-                        CurLocation->wallsRect[i][j].getSize().y));
+                WallRect.setTexture((i % 2 == 1) ? Textures::WallV : Textures::WallG, true);
                 preRenderTexture.draw(WallRect);
             }
         }
@@ -879,7 +1051,7 @@ void drawWalls() {
 void drawMiniMap() {
     if (MiniMapHoldOnPlayer) {
         if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            MiniMapView.setCenter(player.getCenter() * ScaleParam);
+            MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
         }
     }
 
@@ -901,35 +1073,35 @@ void drawMiniMap() {
         }
     }
 
-    MMPortalRect.setPosition(portal.getPosition() * ScaleParam);
+    MMPortalRect.setPosition(portal.hitbox.getPosition() * ScaleParam);
     window.draw(MMPortalRect);
 
     for (Interactable*& i: listOfBox) {
-        MMBoxRect.setPosition(i->getPosition() * ScaleParam);
+        MMBoxRect.setPosition(i->hitbox.getPosition() * ScaleParam);
         window.draw(MMBoxRect);
     }
-    
-    MMPuddleRect.setPosition(puddle.getPosition() * ScaleParam);
+
+    MMPuddleRect.setPosition(puddle.hitbox.getPosition() * ScaleParam);
     window.draw(MMPuddleRect);
 
     for (Interactable*& i: listOfArtifact) {
-        MMArtifact.setPosition(i->getPosition() * ScaleParam);
+        MMArtifact.setPosition(i->hitbox.getPosition() * ScaleParam);
         window.draw(MMArtifact);
     }
 
     for (Enemy*& enemy: Enemies) {
-        MMEnemyCircle.setPosition(enemy->getPosition() * ScaleParam);
+        MMEnemyCircle.setPosition(enemy->hitbox.getPosition() * ScaleParam);
         window.draw(MMEnemyCircle);
     }
 
     // draw players
     if (ClientFuncRun || HostFuncRun) {
         for (Player& p: ConnectedPlayers) {
-            MMPlayerCircle.setPosition(p.getPosition() * ScaleParam);
+            MMPlayerCircle.setPosition(p.hitbox.getPosition() * ScaleParam);
             window.draw(MMPlayerCircle);
         }
     } else {
-        MMPlayerCircle.setPosition(player.getCenter() * ScaleParam);
+        MMPlayerCircle.setPosition(player.hitbox.getCenter() * ScaleParam);
         window.draw(MMPlayerCircle);
     }
     window.setView(GameView);
@@ -959,13 +1131,15 @@ void drawInterface() {
         AmmoBar.setPosition(20, sch - 20 - (arsenal.size() - i) * (AmmoBar.getSize().y + 10));
 
         if (arsenal[i]->holstered) {
-            float holsterPercent = std::min(arsenal[i]->HolsterTimer->getElapsedTime().asSeconds() / arsenal[i]->TimeToHolster, 1.0f);
+            float holsterPercent = std::min(arsenal[i]->HolsterTimer->getElapsedTime() /
+                                            arsenal[i]->TimeToHolster, 1.0f);
             sf::Color wallColor(255 - 155 * holsterPercent, 255 - 155 * holsterPercent, 255, 160);
             sf::Color foreColor(128 - 96 * holsterPercent, 128 - 96 * holsterPercent, 128, 160);
             sf::Color backColor(32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 160);
             AmmoBar.setColors(wallColor, foreColor, backColor);
         } else {
-            float dispatchPercent = std::min(arsenal[i]->DispatchTimer->getElapsedTime().asSeconds() / arsenal[i]->TimeToDispatch, 1.0f);
+            float dispatchPercent = std::min(arsenal[i]->DispatchTimer->getElapsedTime() /
+                                             arsenal[i]->TimeToDispatch, 1.0f);
             sf::Color wallColor(100 + 155 * dispatchPercent, 100 + 155 * dispatchPercent, 255, 160);
             sf::Color foreColor(32 + 96 * dispatchPercent, 32 + 96 * dispatchPercent, 128, 160);
             sf::Color backColor(32 * dispatchPercent, 32 * dispatchPercent, 32 * dispatchPercent, 160);
@@ -1016,8 +1190,8 @@ void drawInterface() {
 void drawEffects() {
     int count = 0;
     int xOffset = 175, yOffset = 175;
-    std::vector<int> seenEffects(numberOfEffects, 0);
-    std::vector<sf::Time> effectTimersTimes(numberOfEffects, sf::Time::Zero);
+    std::vector<int> seenEffects(Effects::EffectCount, 0);
+    std::vector<sf::Time> effectTimersTimes(Effects::EffectCount, sf::Time::Zero);
     for (Effect* eff : player.effects) {
         if (eff->type != Effects::Heal && eff->type != Effects::Damage && eff->active) {
             if (seenEffects[eff->type] == 0) {
@@ -1078,6 +1252,32 @@ void drawInventory() {
             }
             break;
 
+        case inventoryPage::Arsenal:
+        {
+            for (sf::Drawable*& elem : invPageElements[activeInventoryPage])
+                window.draw(*elem);
+            float compListBGVal = 128 * std::pow(std::sin(GameClock->getElapsedTime().asSeconds()), 2);
+            if (isChoosingComponent) {
+                switch (compType) {
+                    case 0:
+                        compListBG.sprite.setColor(sf::Color(0, 0, compListBGVal));
+                        break;
+                    case 1:
+                        compListBG.sprite.setColor(sf::Color(compListBGVal, compListBGVal, 0));
+                        break;
+                    case 2:
+                        compListBG.sprite.setColor(sf::Color(0, compListBGVal, 0));
+                        break;
+                    case 3:
+                        compListBG.sprite.setColor(sf::Color(compListBGVal, 0, 0));
+                        break;
+                }
+                for (sf::Drawable*& elem : arsCompUpgradeElements)
+                    window.draw(*elem);
+            }
+            break;
+        }
+
         case inventoryPage::Stats:
             for (sf::Drawable*& elem : invPageElements[inventoryPage::Stats])
                 window.draw(*elem);
@@ -1106,7 +1306,7 @@ void drawShop() {
 
     window.draw(playerCoinSprite);
     window.draw(*playerCoinSlot.amountText);
-    
+
     window.setView(ShopStockView);
     sf::Transform viewTransform = sf::Transform::Identity;
     viewTransform = viewTransform.scale(1, 1 / shopItemsViewSizeY);
@@ -1148,11 +1348,8 @@ void updateInventoryUI() {
             float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
             float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
 
-            if (!invItemSlotsElements[drawnItem->id].isInitialized) {
-                invItemSlotsElements[drawnItem->id].background = new sf::Sprite();
-                invItemSlotsElements[drawnItem->id].amountText = new PlacedText();
-                invItemSlotsElements[drawnItem->id].isInitialized = true;
-            }
+            if (!invItemSlotsElements[drawnItem->id].isInitialized) invItemSlotsElements[drawnItem->id].init();
+
             sf::Sprite& slotBG = *invItemSlotsElements[drawnItem->id].background;
             slotBG.setPosition(itemX, itemY);
             slotBG.setScale(0.5, 0.5);
@@ -1170,7 +1367,7 @@ void updateInventoryUI() {
         }
 
         playerCoinSprite.setScale(1, 1);
-        playerCoinSprite.setPosition(invBackButton.getRight() + 100, invBackButton.getPosition().y - 20);
+        playerCoinSprite.setPosition(invBackButton.hitbox.getRight() + 100, invBackButton.hitbox.getPosition().y - 20);
         playerCoinSlot.background->setTexture(Textures::INVISIBLE);
         playerCoinSlot.amountText->setString(std::to_string(player.inventory.money));
         playerCoinSlot.amountText->setCharacterSize(40);
@@ -1194,12 +1391,8 @@ void updateShopUI() {
         float itemX = (slotNumber % 5) * 200 + 30;
         float itemY = (slotNumber / 5) * 200 + 20;
 
-        if (!shopItemSlotsElements[drawnItem->id].isInitialized) {
-            shopItemSlotsElements[drawnItem->id].background = new sf::Sprite();
-            shopItemSlotsElements[drawnItem->id].amountText = new PlacedText();
-            shopItemSlotsElements[drawnItem->id].priceText = new PlacedText();
-            shopItemSlotsElements[drawnItem->id].isInitialized = true;
-        }
+        if (!shopItemSlotsElements[drawnItem->id].isInitialized) shopItemSlotsElements[drawnItem->id].init();
+
         sf::Sprite& slotBG = *shopItemSlotsElements[drawnItem->id].background;
         slotBG.setPosition(itemX, itemY);
         slotBG.setTexture(Textures::ItemPanel, true);
@@ -1228,12 +1421,8 @@ void updateShopUI() {
 
         float itemX = (slotNumber % 3) * 200 + 30;
         float itemY = (slotNumber / 3) * 200 + 20;
-        if (!shopPlayerSlotsElements[drawnItem->id].isInitialized) {
-            shopPlayerSlotsElements[drawnItem->id].background = new sf::Sprite();
-            shopPlayerSlotsElements[drawnItem->id].amountText = new PlacedText();
-            shopPlayerSlotsElements[drawnItem->id].priceText = new PlacedText();
-            shopPlayerSlotsElements[drawnItem->id].isInitialized = true;
-        }
+        if (!shopPlayerSlotsElements[drawnItem->id].isInitialized) shopPlayerSlotsElements[drawnItem->id].init();
+
         sf::Sprite& slotBG = *shopPlayerSlotsElements[drawnItem->id].background;
         slotBG.setPosition(itemX, itemY);
         slotBG.setTexture(Textures::ItemPanel, true);
@@ -1267,7 +1456,7 @@ void updateShopUI() {
 void createSlotRects() {
     for (int i = 0; i < invItemSlotsRects.size(); i++)
         DeletePointerFromVector(invItemSlotsRects, i--);
-    invItemSlotsRects.resize(MaxItemID);
+    invItemSlotsRects.resize(ItemID::ItemCount);
 
     int slotNumber = 0;
     for (Item*& item : player.inventory.items) {
@@ -1286,7 +1475,7 @@ void createSlotRects() {
 void createShopSlotsRects() {
     for (int i = 0; i < shopItemSlotsRects.size(); i++)
         DeletePointerFromVector(shopItemSlotsRects, i--);
-    shopItemSlotsRects.resize(MaxItemID);
+    shopItemSlotsRects.resize(ItemID::ItemCount);
 
     int slotNumber = 0;
     for (Item*& item : curShop->soldItems.items) {
@@ -1380,15 +1569,15 @@ void EventHandler() {
             }
 
             for (Interactable*& x: InteractibeStuff) {
-                if (x->CanBeActivated(player)) {
-                    x->isActivated(player, event);
+                if (x->CanBeActivated(player.hitbox)) {
+                    x->isActivated(player.hitbox, event);
                     break;
                 }
             }
 
             for (int i = 0; i < PickupStuff.size(); i++) {
-                if (PickupStuff[i]->CanBeActivated(player)) {
-                    if (PickupStuff[i]->isActivated(player, event)) {
+                if (PickupStuff[i]->CanBeActivated(player.hitbox)) {
+                    if (PickupStuff[i]->isActivated(player.hitbox, event)) {
                         player.addItem(PickupStuff[i]);
                         doInventoryUpdate[inventoryPage::Items] = true;
                         DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
@@ -1417,6 +1606,7 @@ void EventHandler() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         Musics::MainMenu.pause();
                         window.close();
+                        return;
                     }
                 }
             } else if (CurLocation ==  &LabyrinthLocation) {
@@ -1424,7 +1614,7 @@ void EventHandler() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         EscapeMenuActivated = true;
                     } else if (event.key.code == sf::Keyboard::H) {
-                        player.setCenter(size, size);
+                        player.hitbox.setCenter(size, size);
                         CurLocation = &WaitingRoomLoaction;
                     }
                 }
@@ -1483,33 +1673,32 @@ void EventHandler() {
 }
 
 void inventoryHandler(sf::Event& event) {
-    if (event.key.code == sf::Keyboard::Escape) {
-        isDrawInventory = false;
+    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+        invBackButton.buttonFunction();
+        return;
     }
-    invBackButton.isActivated(event);
-    itemsPageButton.isActivated(event);
-    weaponsPageButton.isActivated(event);
-    equipablesPageButton.isActivated(event);
-    perksPageButton.isActivated(event);
-    statsPageButton.isActivated(event);
 
-    // if ((player.ManaRecovery != 0 && player.Mana.fromTop() != 0) ||
-    //     (player.HealthRecovery != 0 && player.Health.fromTop() != 0)) {
-    //     doInventoryUpdate[inventoryPage::Stats] = true;
-    // }
+    if (!isChoosingComponent) {
+        invBackButton.isActivated(event);
+        itemsPageButton.isActivated(event);
+        weaponsPageButton.isActivated(event);
+        equipablesPageButton.isActivated(event);
+        perksPageButton.isActivated(event);
+        statsPageButton.isActivated(event);
+    }
 
     bool isAnythingHovered = false;
-    if (activeInventoryPage != inventoryPage::Stats) {
-        int itemTypeCount = 0;
+    int itemTypeCount = 0;
+    if (activeInventoryPage == inventoryPage::Items) {
         for (Item*& item : player.inventory.items) {
             if (!invItemSlotsRects.empty() && invItemSlotsRects[item->id] != nullptr &&
                 invItemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
                 if (item->id != prevItemDescID) {
-                    prevItemDescID = ItemID::NONE;
+                    prevItemDescID = ItemID::ItemCount;
                     isItemDescDrawn = false;
                 }
                 isAnythingHovered = true;
-                if (event.mouseButton.button == sf::Mouse::Button::Right) {
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Right) {
                     isItemDescDrawn = true;
                     itemDescText.setString(itemDesc[item->id]);
                     prevItemDescID = item->id;
@@ -1527,16 +1716,27 @@ void inventoryHandler(sf::Event& event) {
         }
         if (itemTypeCount != prevItemTypeCount) createSlotRects();
         prevItemTypeCount = itemTypeCount;
+        if (!isAnythingHovered) isItemDescDrawn = false;
     }
-    if (!isAnythingHovered)
-        isItemDescDrawn = false;
+    if (activeInventoryPage == inventoryPage::Arsenal) {
+        if (event.type == sf::Event::MouseButtonPressed &&
+            event.mouseButton.button == sf::Mouse::Right && isChoosingComponent)
+            isChoosingComponent = false;
+        if (!isChoosingComponent) {
+            arsCompGeneratorBtn.isActivated(event);
+            arsCompFormFactorBtn.isActivated(event);
+            arsCompConverterBtn.isActivated(event);
+            arsCompTargetingBtn.isActivated(event);
+        }
+    }
 }
 
 void shopHandler(sf::Event& event) {
-    if (event.key.code == sf::Keyboard::Escape) {
-        isDrawShop = false;
+    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+        shopBackButton.buttonFunction();
+        return;
     }
-    shopBackButton.isActivated(event);
+    if (shopBackButton.isActivated(event)) return;
     shopBuyButton.isActivated(event);
 
     if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left) {
@@ -1551,7 +1751,7 @@ void shopHandler(sf::Event& event) {
                 shopSelectedItem = item;
                 shopItemCoins.setString(sf::String(std::to_string(curShop->itemPrices[item->id])));
                 shopItemStats.setString(textWrap(itemDesc[item->id], 65));
-                shopItemSprite.setTexture(*itemTextureName[item->id], true);
+                shopItemSprite.setTexture(*itemTexture[item->id], true);
             }
     }
     window.setView(ShopView);
@@ -1561,28 +1761,6 @@ void shopHandler(sf::Event& event) {
 
 
 //============================================================================================== LEVEL GENERATION FUNCTIONS
-void FillFloorRects() {
-    sf::Image res, src = Textures::floor1x.copyToImage();
-    auto CreateOneFLoor = [&src](sf::Image& res){
-        for (int y = 0; y < 5; y++) {
-            for (int x = 0; x < 5; x++) {
-                res.copy(src, x * 32, y * 32, {(std::rand() % 5) * 32, 0, 32, 32});
-            }
-        }
-    };
-    res.create(160, 160);
-    FloorTextureRects.clear();
-    for (int i = 0; i < CurLocation->n; i++) {
-        for (int j = 0; j < CurLocation->m; j++) {
-            if (CurLocation->EnableTiles[i][j]) {
-                CreateOneFLoor(res);
-                FloorTextureRects.push_back(sf::Texture());
-                FloorTextureRects.rbegin()->loadFromImage(res); // MEMORY LEAK!
-            }
-        }
-    }
-}
-
 void setBox(Interactable*& box) {
     box->setAnimation(Textures::Box);
     box->setSize(105.f, 117.f);
@@ -1644,8 +1822,8 @@ void setArtifact(Interactable*& artifact) {
             case 1: player.Mana.top += 1; break;
             case 2: player.HealthRecovery += 0.4; break;
             case 3: player.ManaRecovery += 0.1; break;
-            case 4: player.CurWeapon->ReloadSpeed += 1; break;
-            case 5: player.CurWeapon->ManaStorage.top += 1.f; break;
+            case 4: player.CurWeapon->ReloadSpeed.addToStats(1.f); break;
+            case 5: player.CurWeapon->MaxManaStorage.addToStats(1.f); break;
             default: break;
         }
         tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
@@ -1659,7 +1837,7 @@ void setArtifact(Interactable*& artifact) {
 }
 
 void setFire(Interactable*& fire) {
-    fire->setAnimation(Textures::Fire, &Shaders::Player);
+    fire->setAnimation(Textures::Fire, &Shaders::Fire);
     fire->setSize(70.f, 70.f);
 }
 
@@ -1668,12 +1846,10 @@ void LevelGenerate(int n, int m) {
     MiniMapZoom = std::pow(1.1, -10);
     MiniMapView.zoom(MiniMapZoom);
 
-    LabyrinthLocation.GenerateLocation(n, m, player.getCenter() / float(size));
+    LabyrinthLocation.GenerateLocation(n, m, player.hitbox.getCenter() / float(size));
 
-    FillFloorRectsThread.launch();
-
-    portal.setCenter(player.getCenter());
-    puddle.setCenter(player.getCenter() + sf::Vector2f(size, size));
+    portal.setCenter(player.hitbox.getCenter());
+    puddle.setCenter(player.hitbox.getCenter() + sf::Vector2f(size, size));
 
     clearVectorOfPointer(listOfBox);
     for (int i = 0; i < 10; i++) {
@@ -1681,8 +1857,8 @@ void LevelGenerate(int n, int m) {
         setBox(listOfBox[i]);
         do {
             listOfBox[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
-            sf::Vector2f(std::rand() % int(size - listOfBox[i]->getSize().x), std::rand() % int(size - listOfBox[i]->getSize().y)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->getPosition().y / size][(int)listOfBox[i]->getPosition().x / size]);
+            sf::Vector2f(std::rand() % int(size - listOfBox[i]->hitbox.getSize().x), std::rand() % int(size - listOfBox[i]->hitbox.getSize().y)));
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->hitbox.getPosition().y / size][(int)listOfBox[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfBox[i]);
         DrawableStuff.push_back(listOfBox[i]);
@@ -1695,7 +1871,7 @@ void LevelGenerate(int n, int m) {
         do {
             listOfArtifact[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
             sf::Vector2f(std::rand() % (size - Textures::Architect.getSize().x / 4), std::rand() % (size - Textures::Architect.getSize().y / 4)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->getPosition().y / size][(int)listOfArtifact[i]->getPosition().x / size]);
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->hitbox.getPosition().y / size][(int)listOfArtifact[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfArtifact[i]);
         DrawableStuff.push_back(listOfArtifact[i]);
@@ -1708,7 +1884,7 @@ void LevelGenerate(int n, int m) {
         do {
             listOfFire[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
             sf::Vector2f(std::rand() % (size - Textures::Fire.getSize().x / 4), std::rand() % (size - Textures::Fire.getSize().y / 4)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfFire[i]->getPosition().y / size][(int)listOfFire[i]->getPosition().x / size]);
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfFire[i]->hitbox.getPosition().y / size][(int)listOfFire[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfFire[i]);
         DrawableStuff.push_back(listOfFire[i]);
@@ -1718,32 +1894,29 @@ void LevelGenerate(int n, int m) {
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
         Enemies.push_back(new DistortedScientist());
-        // Enemies.push_back(new ScottPilgrim());
         Enemies.push_back(new Distorted());
     }
 
     for (int i = 0; i < Enemies.size(); i++) {
         do {
-            Enemies[i]->setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
-        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->getPosition().y / size][(int)Enemies[i]->getPosition().x / size] ||
-                 distance(Enemies[i]->getPosition(), player.getCenter()) < size * 3);
+            Enemies[i]->hitbox.setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
+        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->hitbox.getPosition().y / size][(int)Enemies[i]->hitbox.getPosition().x / size] ||
+                 distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
     }
-    FillFloorRectsThread.wait();
 }
 
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
 
-    player.setCenter(3.5f * size, 2.5f * size);
-    FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
+    player.hitbox.setCenter(3.5f * size, 2.5f * size);
+    FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
     player.ChangeWeapon(arsenal[CurWeapon.cur]);
 
     portal.setPosition(1612.5, 1545);
     puddle.setPosition(1012.5, 1545);
 
-    sf::Vector2f PlayerPos = player.getCenter() / (float)size;
+    sf::Vector2f PlayerPos = player.hitbox.getCenter() / (float)size;
     CurLocation->FindEnableTilesFrom(PlayerPos);
-    FillFloorRectsThread.launch();
 
     portal.setFunction([](Interactable* i){
         clearVectorOfPointer(PickupStuff);
@@ -1753,13 +1926,13 @@ void LoadMainMenu() {
         InterfaceStuff.clear();
         InteractibeStuff.clear();
 
-        player.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
+        player.hitbox.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
 
         MiniMapActivated = false;
         EscapeMenuActivated = false;
 
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter(player.getCenter() * ScaleParam);
+        MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
 
         Musics::MainMenu.pause();
         if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
@@ -1771,8 +1944,8 @@ void LoadMainMenu() {
             completedLevels = std::max(curLevel, completedLevels);
             curLevel++;
         }
-        LevelGenerate(START_N, START_M);
-        FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
+        LevelGenerate(START_N + curLevel * 2, START_M + curLevel);
+        FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);
         DrawableStuff.push_back(&portal);
@@ -1805,8 +1978,8 @@ void LoadMainMenu() {
     });
 
     // Set cameras
-    GameView.setCenter(player.getCenter());
-    MiniMapView.setCenter(player.getCenter() * ScaleParam);
+    GameView.setCenter(player.hitbox.getCenter());
+    MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
     InterfaceView.setCenter({scw / 2.f, sch / 2.f});
 
     Musics::Fight1.stop();
@@ -1829,10 +2002,10 @@ void LoadMainMenu() {
     InteractibeStuff.push_back(&shopSector);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
-    newItem->setAnimation(*itemTextureName[ItemID::regenDrug]);
+    newItem->setAnimation(*itemTexture[ItemID::regenDrug]);
     PickupStuff.push_back(newItem);
     DrawableStuff.push_back(PickupStuff[0]);
-    PickupStuff[0]->dropTo(player.getCenter() + sf::Vector2f(100, 100));
+    PickupStuff[0]->dropTo(player.hitbox.getCenter() + sf::Vector2f(100, 100));
 
     curShop = &mainMenuShop;
 
@@ -1849,8 +2022,6 @@ void LoadMainMenu() {
 
     InteractibeStuff.push_back(listOfArtifact[0]);
     DrawableStuff.push_back(listOfArtifact[0]);
-
-    FillFloorRectsThread.wait();
 }
 //==============================================================================================
 
@@ -1863,13 +2034,13 @@ void updateBullets() {
             DeletePointerFromVector(Bullets, i--);
         } else {
             Bullets[i]->move(CurLocation);
-            if (!faction::friends(Bullets[i]->fromWho, player.faction) && player.intersect(*Bullets[i])) {
+            if (!faction::friends(Bullets[i]->fromWho, player.faction) && player.hitbox.intersect(Bullets[i]->hitbox)) {
                 player.getDamage(Bullets[i]->damage);
                 Bullets[i]->penetration--;
             }
             else {
                 for (Enemy*& enemy: Enemies) {
-                    if (!faction::friends(Bullets[i]->fromWho, enemy->faction) && enemy->intersect(*Bullets[i])) {
+                    if (!faction::friends(Bullets[i]->fromWho, enemy->faction) && enemy->hitbox.intersect(Bullets[i]->hitbox)) {
                         enemy->getDamage(Bullets[i]->damage);
                         Bullets[i]->penetration--;
                         TempText* tempText = new TempText(sf::seconds(1.5f));
@@ -1878,7 +2049,7 @@ void updateBullets() {
                         tempText->setOutlineThickness(3);
                         tempText->setString(std::to_string(int(Bullets[i]->damage)));
                         tempText->setFillColor(sf::Color(250, 50, 50, 200));
-                        tempText->setCenter(enemy->getPosition());
+                        tempText->setCenter(enemy->hitbox.getPosition());
                         DamageText.push_back(tempText);
                         break;
                     }
@@ -1918,15 +2089,13 @@ void updateEffects(Creature* creature) {
                     break;
                 case Effects::Burn:
                     if (!effectVec[i]->active) {
-                        effectVec[i]->parameters[1] += 1;
-                        creature->getDamage(creature->HealthRecovery +
-                                            effectVec[i]->parameters[0] * effectVec[i]->parameters[1]);
+                        creature->getDamage(effectVec[i]->parameters[0]);
+                        creature->HealthRecoveryActive = false;
                         effectVec[i]->active = true;
                     }
-                    if (effectVec[i]->customTickClock->getElapsedTime().asSeconds() >= effectVec[i]->customTick.asSeconds()) {
-                        creature->getDamage(creature->HealthRecovery +
-                                            effectVec[i]->parameters[0] * effectVec[i]->parameters[1]);
-                        effectVec[i]->parameters[1] += 1;
+                    if (effectVec[i]->customTickClock->getElapsedTime() >= effectVec[i]->customTick) {
+                        creature->getDamage(effectVec[i]->parameters[0]);
+                        creature->HealthRecoveryActive = false;
                         effectVec[i]->customTickClock->restart();
                     }
                     break;
@@ -1971,6 +2140,10 @@ void clearEffect(Creature& owner, Effect* effect) {
         case Effects::HPRegen:
             owner.HealthRecovery -= effect->parameters[0];
             break;
+        case Effects::Burn:
+            owner.HealthRecoveryActive = true;
+            owner.effectStacks[effect->type] -= 1;
+            break;
         default:
             owner.effectStacks[effect->type] -= 1;
             break;
@@ -1997,7 +2170,7 @@ bool useItem(Item*& item) {
 void updateShaders() {
     sf::Vector2f uMouse(sf::Mouse::getPosition());
     float uTime = GameClock->getElapsedTime().asSeconds();
-    sf::Vector2f uPlayerPosition(window.mapCoordsToPixel(player.getCenter()));
+    sf::Vector2f uPlayerPosition(player.hitbox.getCenter() - GameView.getCenter() + GameView.getSize() / 2.f);
 
     Shaders::Flashlight.setUniform("uMouse", uMouse);
     Shaders::Flashlight.setUniform("uPlayerPosition", uPlayerPosition);
@@ -2010,6 +2183,10 @@ void updateShaders() {
     Shaders::Distortion2.setUniform("uTime", uTime);
 
     Shaders::Bullet.setUniform("uTime", uTime);
+
+    Shaders::Fire.setUniform("uTime", uTime);
+
+    Shaders::WaveMix.setUniform("uTime", uTime);
 }
 //==============================================================================================
 
@@ -2019,7 +2196,7 @@ void updateShaders() {
 bool CanSomethingBeActivated() {
     CurInteractable = nullptr;
     for (Interactable*& x: InteractibeStuff) {
-        if (x->CanBeActivated(player)) {
+        if (x->CanBeActivated(player.hitbox)) {
             CurInteractable = x;
             return true;
         }
@@ -2028,40 +2205,45 @@ bool CanSomethingBeActivated() {
 }
 
 void saveGame() {
-    std::ofstream fileToSave("save.save");
-    fileToSave << player.Name.getString().toAnsiString() << '\n';
-    fileToSave << player.Health << '\n';
-    fileToSave << player.HealthRecovery << '\n';
-    fileToSave << player.Mana << '\n';
-    fileToSave << player.ManaRecovery << '\n';
-    fileToSave << player.inventory.money << '\n';
-    fileToSave << completedLevels << '\n';
-    fileToSave << pistol.ReloadSpeed << ' ' << pistol.ManaStorage << '\n';
-    fileToSave << shotgun.ReloadSpeed << ' ' << shotgun.ManaStorage << '\n';
-    fileToSave << rifle.ReloadSpeed << ' ' << rifle.ManaStorage << '\n';
+    std::ofstream fileToSave("sources/saves/save.json");
+    json j;
+    j["Player"]   = player.writeJSON();
+    j["Pistol"]   = pistol.writeJSON();
+    j["Shotgun"]  = shotgun.writeJSON();
+    j["Rifle"]    = rifle.writeJSON();
+    fileToSave << j.dump(4);
 
     fileToSave.close();
 }
 
-void loadSaves() {
-    std::ifstream fileToSave("save.save");
-    if (!fileToSave.is_open()) {
+void loadSave() {
+    std::ifstream saveFile("sources/saves/save.json");
+    if (!saveFile.is_open()) {
         std::rand();
         player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
+
+        std::ifstream defaultWeapon("sources/JSON/defaultPistol.json");
+        json j = json::parse(defaultWeapon);
+        pistol.readJSON(j);
+        defaultWeapon.close();
+
+        defaultWeapon.open("sources/JSON/defaultShotgun.json");
+        j = json::parse(defaultWeapon);
+        shotgun.readJSON(j);
+        defaultWeapon.close();
+
+        defaultWeapon.open("sources/JSON/defaultRifle.json");
+        j = json::parse(defaultWeapon);
+        rifle.readJSON(j);
+        defaultWeapon.close();
     } else {
-        char name[13]; fileToSave.getline(name, 13);
-        player.Name.setString(name);
-        fileToSave >> player.Health;
-        fileToSave >> player.HealthRecovery;
-        fileToSave >> player.Mana;
-        fileToSave >> player.ManaRecovery;
-        fileToSave >> player.inventory.money;
-        fileToSave >> completedLevels;
-        fileToSave >> pistol.ReloadSpeed >> pistol.ManaStorage;
-        fileToSave >> shotgun.ReloadSpeed >> shotgun.ManaStorage;
-        fileToSave >> rifle.ReloadSpeed >> rifle.ManaStorage;
+        nlohmann::json j = nlohmann::json::parse(saveFile);
+        player  .readJSON(j["Player"]);
+        pistol  .readJSON(j["Pistol"]);
+        shotgun .readJSON(j["Shotgun"]);
+        rifle   .readJSON(j["Rifle"]);
     }
-    fileToSave.close();
+    saveFile.close();
 }
 //==============================================================================================
 
@@ -2079,7 +2261,7 @@ void MainLoop() {
             if (Enemies[i]->Health.toBottom() == 0) {
                 if (Enemies[i]->dropInventory) {
                     for (Item*& item : Enemies[i]->inventory.items) {
-                        item->dropTo(Enemies[i]->getPosition());
+                        item->dropTo(Enemies[i]->hitbox.getPosition());
 
                         PickupStuff.push_back(item);
                         DrawableStuff.push_back(item);
@@ -2104,17 +2286,17 @@ void MainLoop() {
                     }
                 }
             } else {
-                Enemies[i]->setTarget(player.getCenter());
+                Enemies[i]->setTarget(player.hitbox.getCenter());
                 Enemies[i]->move(CurLocation);
                 Enemies[i]->UpdateState();
                 Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(*Enemies[i], player.getCenter(), Enemies[i]->faction);
+                Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, player.hitbox.getCenter(), Enemies[i]->faction);
                 Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
             }
         }
 
         player.UpdateState();
-    
+
         if (CurLocation == &LabyrinthLocation) {
             if (Musics::Fight1.getDuration() - Musics::Fight1.getPlayingOffset() < sf::seconds(0.3f)) {
                 Musics::Fight2.play();
@@ -2125,7 +2307,7 @@ void MainLoop() {
         }
         if (!window.hasFocus()) {
             if (player.CurWeapon != nullptr) {
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
+                player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             updateBullets();
 
@@ -2145,8 +2327,8 @@ void MainLoop() {
         } else {
             if (!chat.inputted && !isDrawInventory && !isDrawShop) {
                 player.move(CurLocation);
-                GameView.setCenter(player.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
-                FindAllWaysTo(CurLocation, player.getCenter(), TheWayToPlayer);
+                GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
+                FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
                     player.CurWeapon->HolsterAction();
                 }
@@ -2154,7 +2336,7 @@ void MainLoop() {
             int wasBulletsSize = Bullets.size();
 
             if (player.CurWeapon != nullptr) {
-                player.CurWeapon->Shoot(player, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
+                player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             for (Weapon*& weapon : arsenal)
                 if (weapon->holstered) weapon->Reload(player.Mana);
@@ -2177,7 +2359,7 @@ void MainLoop() {
             updateBullets();
 
             if (HostFuncRun || ClientFuncRun) {
-                ConnectedPlayers[ComputerID].setPosition(player.getCenter());
+                ConnectedPlayers[ComputerID].hitbox.setPosition(player.hitbox.getCenter());
                 mutex.lock();
                 SendPacket << pacetStates::PlayerPos;
                 if (HostFuncRun) {
@@ -2203,11 +2385,11 @@ void MainLoop() {
 
         draw();
 
-        if (puddle.intersect(player))
+        if (puddle.hitbox.intersect(player.hitbox))
             applyEffect(player, new Effect(Effects::Heal, std::vector<float>{30.f}, sf::seconds(1.5f)));
 
         for (int i = 0; i < listOfFire.size(); i++) {
-            if (listOfFire[i]->intersect(player))
+            if (listOfFire[i]->hitbox.intersect(player.hitbox))
                 applyEffect(player, new Effect(Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
         }
         processEffects();
@@ -2245,12 +2427,12 @@ void ClientConnect() {
         selector.add(*client);
 
         ConnectedPlayers.push_back(*(new Player()));
-        ConnectedPlayers[ConnectedPlayers.size() - 1].setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
+        ConnectedPlayers[ConnectedPlayers.size() - 1].hitbox.setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
         SendPacket << pacetStates::PlayersAmount << (sf::Int32)ConnectedPlayers.size() - 1;
 
         DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
 
-        for (int i = 0; i < ListOfPlayers.size(); i++) {
+        for (int i = 0; i < ListOfPlayers.getLineCount(); i++) {
             SendPacket << pacetStates::PlayerConnect << ListOfPlayers[i];
         }
 
@@ -2416,8 +2598,8 @@ void funcOfClient() {
                             for (Player& x: ConnectedPlayers) {
                                 ReceivePacket >> x;
                             }
-                            player.setCenter(ConnectedPlayers[ComputerID].getPosition());
-                            GameView.setCenter(player.getCenter());
+                            player.hitbox.setCenter(ConnectedPlayers[ComputerID].hitbox.getPosition());
+                            GameView.setCenter(player.hitbox.getCenter());
                             break;
                         case pacetStates::ChatEvent:
                             ReceivePacket >> PacetData;

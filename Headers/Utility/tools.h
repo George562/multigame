@@ -41,7 +41,7 @@ std::string stringLower(std::string text) {
 
 void CreateImage() {
     sf::Image img, res;
-    img.loadFromFile("sources/textures/floor1x.png");
+    img.loadFromFile("sources/textures/floor.png");
     res.create(32 * 100, 32 * 100);
     for (int y = 0; y < 100; y++) {
         for (int x = 0; x < 100; x++) {
@@ -81,38 +81,67 @@ void clearVectorOfPointer(std::vector<T>& arr) {
     arr.clear();
 }
 
-void RotateOn(float phi, float& x, float& y) {
-    float oldX = x, OldY = y;
-    x =   oldX * cos(phi) + OldY * sin(phi);
-    y = - oldX * sin(phi) + OldY * cos(phi);
-}
-sf::Vector2f RotateOn(float phi, sf::Vector2f& a) {
-    sf::Vector2f newA;
-    newA.x =   a.x * cos(phi) + a.y * sin(phi);
-    newA.y = - a.x * sin(phi) + a.y * cos(phi);
-    return newA;
+enum timeType {
+    seconds,
+    milliseconds,
+    microseconds
+};
+
+std::vector<float> timeToFloat(std::vector<sf::Time> arr, timeType type) {
+    std::vector<float> floatArr(arr.size());
+    for (int i = 0; i < arr.size(); i++) {
+        switch(type) {
+            case seconds:
+                floatArr[i] = arr[i].asSeconds();
+                break;
+            case milliseconds:
+                floatArr[i] = arr[i].asMilliseconds();
+                break;
+            case microseconds:
+                floatArr[i] = arr[i].asMicroseconds();
+                break;
+        }
+    }
+    return floatArr;
 }
 
-void RotateAround(float phi, float& x, float& y, float& X, float& Y) {
-    float oldX = x, OldY = y;
-    x =   (oldX - X) * cos(phi) + (OldY - Y) * sin(phi) + X;
-    y = - (oldX - X) * sin(phi) + (OldY - Y) * cos(phi) + Y;
-}
-sf::Vector2f RotateAround(float phi, sf::Vector2f& a, float& X, float& Y) {
-    sf::Vector2f newA;
-    newA.x =   (a.x - X) * cos(phi) + (a.y - Y) * sin(phi) + X;
-    newA.y = - (a.x - X) * sin(phi) + (a.y - Y) * cos(phi) + Y;
-    return newA;
+std::vector<sf::Time> floatToTime(std::vector<float> arr, timeType type) {
+    std::vector<sf::Time> timeArr(arr.size());
+    for (int i = 0; i < arr.size(); i++) {
+        switch(type) {
+            case seconds:
+                timeArr[i] = sf::seconds(arr[i]);
+                break;
+            case milliseconds:
+                timeArr[i] = sf::seconds(arr[i]);
+                break;
+            case microseconds:
+                timeArr[i] = sf::microseconds(arr[i]);
+                break;
+        }
+    }
+    return timeArr;
 }
 
 sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
     return sf::Vector2f(a.x * b.x, a.y * b.y);
 }
 
-sf::Packet& operator<<(sf::Packet& packet, sf::Vector2i& a) {
+template <typename T>
+std::ostream& operator<<(std::ostream& stream, sf::Vector2<T>& a) {
+    return stream << a.x << ", " << a.y;
+}
+template <typename T>
+std::istream& operator>>(std::istream& stream, sf::Vector2<T>& a) {
+    return stream >> a.x >> a.y;
+}
+
+template <typename T>
+sf::Packet& operator<<(sf::Packet& packet, sf::Vector2<T>& a) {
     return packet << a.x << a.y;
 }
-sf::Packet& operator>>(sf::Packet& packet, sf::Vector2i& a) {
+template <typename T>
+sf::Packet& operator>>(sf::Packet& packet, sf::Vector2<T>& a) {
     return packet >> a.x >> a.y;
 }
 

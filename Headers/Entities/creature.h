@@ -9,13 +9,15 @@
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Creature : public CollisionCircle, public sf::Drawable {
+class Creature : public sf::Drawable {
 public:
     faction::Type faction;
 
     Scale<float> Health;
+    bool HealthRecoveryActive = true;
     float HealthRecovery;
     Scale<float> Mana;
+    bool ManaRecoveryActive = true;
     float ManaRecovery;
     Scale<float> Armor; // blocking damage = min(1, damage - armor)
 
@@ -40,7 +42,9 @@ public:
     std::vector<Effect*> effects;
     std::vector<int> effectStacks;
 
-    Creature(sf::String name, faction::Type f) : CollisionCircle() {
+    CollisionCircle hitbox;
+
+    Creature(sf::String name, faction::Type f) {
         Name.setString(name);
         Name.setCharacterSize(25);
         Name.setOutlineThickness(2);
@@ -55,7 +59,7 @@ public:
         animation = nullptr;
         dropInventory = true;
 
-        effectStacks.assign(numberOfEffects, 0);
+        effectStacks.assign(Effects::EffectCount, 0);
     }
     ~Creature() {
         if (localClock) {
@@ -68,10 +72,10 @@ public:
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         if (animation != nullptr) {
-            animation->setPosition(getCenter());
+            animation->setPosition(hitbox.getCenter());
             target.draw(*animation, states);
         }
-        Name.setPosition(getCenter().x - Name.Width / 2.f, getPosition().y - Name.Height);
+        Name.setPosition(hitbox.getCenter().x - Name.Width / 2.f, hitbox.getPosition().y - Name.Height);
         target.draw(Name, states);
     }
 
@@ -79,7 +83,7 @@ public:
 
     virtual void move(Location* location) {
         float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), oneOverSixty);
-        sf::Vector2f dist = target - getCenter();
+        sf::Vector2f dist = target - hitbox.getCenter();
         float len = std::sqrt(dist.x * dist.x + dist.y * dist.y);
         sf::Vector2f VelocityTarget(std::clamp(dist.x, -std::abs(dist.x) * MaxVelocity * VelocityBuff / len, std::abs(dist.x) * MaxVelocity * VelocityBuff / len),
                                     std::clamp(dist.y, -std::abs(dist.y) * MaxVelocity * VelocityBuff / len, std::abs(dist.y) * MaxVelocity * VelocityBuff / len));
@@ -90,18 +94,18 @@ public:
         Velocity += Direction * ElapsedTimeAsSecond;
         // visualization https://www.desmos.com/calculator/oumleenz1s
 
-        sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, *this, Velocity * ElapsedTimeAsSecond);
+        sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, hitbox, Velocity * ElapsedTimeAsSecond);
 
         if (tempv.x == -1) Velocity.x = 0;
         if (tempv.y == -1) Velocity.y = 0;
 
-        CollisionCircle::move(Velocity * ElapsedTimeAsSecond);
+        hitbox.move(Velocity * ElapsedTimeAsSecond);
         LastMoveCheck = localClock->getElapsedTime();
     }
 
     virtual void UpdateState() {
-        Mana += ManaRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        Health += HealthRecovery * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        Mana += ManaRecovery * ManaRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
+        Health += HealthRecovery * HealthRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
         LastStateCheck = localClock->getElapsedTime();
     }
 
@@ -110,7 +114,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
-        animation->setSize(getSize());
+        animation->setSize(hitbox.getSize());
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
     }
@@ -120,7 +124,7 @@ public:
             delete animation;
         }
         animation = new Animation(texture, shader);
-        animation->setSize(getSize());
+        animation->setSize(hitbox.getSize());
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
     };

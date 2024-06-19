@@ -20,7 +20,7 @@ vec3 pallete(float t) {
     vec3 b = vec3(0.5, 0.5, 0.5);
     vec3 c = vec3(1.0, 1.0, 1.0);
     vec3 d = vec3(0.263, 0.416, 0.557);
-    
+
     return a + b * cos(6.28318 * (c * t + d));
 }
 
@@ -29,7 +29,7 @@ vec3 blueColor = vec3(0.0, 0.0, 1.0);
 float PI = 3.14159265359;
 float PI2 = 3.14159265359 * 2.0;
 
-void main() {   
+void main() {
     vec2 uv = (gl_FragCoord.xy - iResolution.xy / 2.) / iResolution.xy;
 
     float d = length(uv);

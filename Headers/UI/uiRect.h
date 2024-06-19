@@ -47,7 +47,7 @@ struct UIRect {
                              std::min(PosY + Height, rect.PosY + rect.Height) - intersection.PosY);
         return intersect(rect);
     }
-    
+
     // Check if a point is inside the rectangle's area
     bool contains(float x, float y) const {
         return PosX <= x && x <= PosX + Width && PosY <= y && y <= PosY + Height;

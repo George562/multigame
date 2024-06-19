@@ -1,14 +1,51 @@
 #pragma once
 #include "creature.h"
+#include "../Abstracts/serializable.h"
 
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
-class Player : public Creature {
+class Player : public Creature, public Serializable {
 public:
     Player();
     void move(Location*) override;
+
+    json writeJSON() {
+        json j;
+        j["Name"]           = this->Name.getString();
+        j["Health"]         = this->Health.writeJSON();
+        j["HealthRecovery"] = this->HealthRecovery;
+        j["Mana"]           = this->Mana.writeJSON();
+        j["ManaRecovery"]   = this->ManaRecovery;
+        j["Inventory"]      = json({});
+        j["Money"]          = this->inventory.money;
+
+        for (Item*& item : this->inventory.items) {
+            if (item->id == ItemID::coin)
+                continue;
+            j["Inventory"][itemName[item->id]] =  item->amount;
+        }
+        
+        return j;
+    }
+
+    void readJSON(json& j) {
+        this->Name.setString((std::string)j["Name"]);
+        this->Health.readJSON(j["Health"]);
+        this->HealthRecovery = j["HealthRecovery"];
+        this->Mana.readJSON(j["Mana"]);
+        this->ManaRecovery = j["ManaRecovery"];
+        this->inventory.money = j["Money"];
+        for (int id = 0; id < ItemID::ItemCount; id++) {
+            if (id == ItemID::coin)
+                continue;
+            if (j["Inventory"].contains(itemName[id])) {
+                Item* newItem = new Item(id, j["Inventory"][itemName[id]]);
+                this->inventory.addItem(newItem);
+            }
+        }
+    }
 };
 
 ////////////////////////////////////////////////////////////
@@ -19,7 +56,7 @@ Player::Player() : Creature("Player", faction::Player) {
     Health = {0.f, 20.f, 20.f}; HealthRecovery = Health.top / 5;
     Mana = {0.f, 10.f, 10.f}; ManaRecovery = Mana.top / 5;
     Armor = {0.f, 0.f, 0.f};
-    setRadius(60.f);
+    hitbox.setRadius(60.f);
     Velocity = {0.f, 0.f}; MaxVelocity = 900.f;
     Acceleration = 10000.f;
     Name.setOutlineColor(sf::Color::Green);
@@ -38,16 +75,16 @@ void Player::move(Location* location) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
         VelocityBuff *= 2;
 
-    setTarget(getCenter() + sf::Vector2f(PressedKeys[3] - PressedKeys[1], PressedKeys[2] - PressedKeys[0]) * MaxVelocity * VelocityBuff);
+    setTarget(hitbox.getCenter() + sf::Vector2f(PressedKeys[3] - PressedKeys[1], PressedKeys[2] - PressedKeys[0]) * MaxVelocity * VelocityBuff);
     Creature::move(location);
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Player& a) {
-    return packet << a.getCenter().x << a.getCenter().y;
+    return packet << a.hitbox.getCenter().x << a.hitbox.getCenter().y;
 }
 sf::Packet& operator>>(sf::Packet& packet, Player& a) {
     sf::Vector2f v;
     packet >> v.x >> v.y;
-    a.setCenter(v);
+    a.hitbox.setCenter(v);
     return packet;
 }

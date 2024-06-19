@@ -7,10 +7,9 @@ namespace Effects {
         Heal,
         HPRegen,
         Burn,
-        NONE,
+        EffectCount,
     };
 };
-int numberOfEffects = Effects::NONE;
 
 class Effect {
 public:
@@ -33,7 +32,7 @@ public:
             this->customTickClock = new sf::Clock();
         }
     }
-    
+
     ~Effect() {
         if (localClock) {
             delete localClock;
