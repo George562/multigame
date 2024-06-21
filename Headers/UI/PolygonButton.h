@@ -15,6 +15,7 @@ public:
     bool Pushed = false, visible = true;
     void (*buttonFunction)(void);
     CollisionShape hitbox;
+    sf::ConvexShape outline;
 
     PolygonButton() {}
     PolygonButton(sf::String, void (*)(void));
@@ -61,6 +62,7 @@ void PolygonButton::draw(sf::RenderTarget& target, sf::RenderStates states) cons
     if (visible) {
         target.draw(sprite, states);
         target.draw(ButtonText, states);
+        target.draw(outline, states);
     }
 }
 

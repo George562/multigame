@@ -1,5 +1,6 @@
 #pragma once
 #include "../../SFML-2.5.1/include/SFML/Graphics.hpp"
+#include "fontString.h"
 
 //////////////////////////////////////////////////////////// Fonts
 sf::Font ljk_InkyFont;
@@ -19,15 +20,19 @@ public:
     float Width, Height;
 
     PlacedText();
+    PlacedText(sf::String);
+    PlacedText(FontString);
 
     void setCenter(float x, float y)    { Text::setPosition(x - Width / 2, y - Height / 2); }
     void setCenter(sf::Vector2f v)      { setCenter(v.x, v.y); }
 
     sf::Vector2f getSize() const        { return {Width, Height}; }
+    sf::Vector2f getRight() const       { return {getPosition().x + getSize().x, getPosition().y}; }
     void setSize(float w, float h)      { Width = w; Height = h; }
     void setSize(sf::Vector2f v)        { setSize(v.x, v.y); }
 
     void setString(sf::String s);
+    void setString(FontString s);
     void setCharacterSize(int x);
     void setScale(sf::Vector2f);
     void setScale(float, float);
@@ -50,8 +55,25 @@ PlacedText::PlacedText() : sf::Text() {
     setFont(ljk_InkyFont);
 }
 
+PlacedText::PlacedText(sf::String s) : sf::Text() {
+    setFont(ljk_InkyFont);
+    setString(s);
+}
+
+PlacedText::PlacedText(FontString s) : sf::Text() {
+    setFont(ljk_InkyFont);
+    setString(s);
+}
+
 void PlacedText::setString(sf::String s) {
     sf::Text::setString(s);
+    setSize(getGlobalBounds().width, getGlobalBounds().height);
+}
+
+void PlacedText::setString(FontString s) {
+    sf::Text::setString(s.text);
+    setCharacterSize(s.charSize);
+    sf::Text::setFillColor(s.fillColor);
     setSize(getGlobalBounds().width, getGlobalBounds().height);
 }
 

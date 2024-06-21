@@ -1,5 +1,6 @@
 #pragma once
 #include "text.h"
+#include "fontString.h"
 #include "../CollisionShapes/collisionRect.h"
 
 ////////////////////////////////////////////////////////////
@@ -18,16 +19,19 @@ public:
 
     RectButton() {}
     RectButton(sf::String, void (*)(void));
+    RectButton(FontString, void (*)(void), sf::Texture&, sf::Texture&);
 
     void setPosition(float, float);
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
     void setCenter(float x, float y) { setPosition(x - hitbox.getSize().x / 2, y - hitbox.getSize().y / 2); }
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
-    void setFunction(void (*func)()) { buttonFunction = func; }
-
     void setSize(float, float);
     void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
+    void setRect(float x, float y, float w, float h) { setPosition(x, y); setSize(w, h); }
+    void setRect(sf::Vector2f pos, sf::Vector2f size) { setRect(pos.x, pos.y, size.x, size.y); }
+    void setRect(sf::FloatRect rect) { setRect(rect.getPosition(), rect.getSize()); }
 
+    void setFunction(void (*func)()) { buttonFunction = func; }
     void setWord(sf::String word) { ButtonText.setString(word); ButtonText.setCenter(hitbox.getCenter()); }
     void setTexture(sf::Texture&, sf::Texture&);
     void setCharacterSize(int size) { ButtonText.setCharacterSize(size); ButtonText.setCenter(hitbox.getCenter()); }
@@ -43,9 +47,18 @@ public:
 
 RectButton::RectButton(sf::String word, void (*foo)(void)) {
     ButtonText.setCharacterSize(150);
-    ButtonText.setFillColor(sf::Color(199, 199, 199));
+    ButtonText.setFillColor(sf::Color(200, 200, 200));
     setWord(word);
     buttonFunction = foo;
+}
+
+RectButton::RectButton(FontString string, void (*foo)(void),
+                       sf::Texture& texture, sf::Texture& pushedTexture) {
+    ButtonText.setCharacterSize(string.charSize);
+    ButtonText.setFillColor(string.fillColor);
+    setWord(string.text);
+    buttonFunction = foo;
+    setTexture(texture, pushedTexture);
 }
 
 void RectButton::setTexture(sf::Texture& texture, sf::Texture& pushedTexture) {

@@ -67,11 +67,11 @@ int completedLevels = 0;
 int curLevel = 1;
 
 sf::View GameView({0, 0, (float)scw, (float)sch});
-sf::View InterfaceView({0, 0, (float)scw, (float)sch});
+sf::View HUDView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
 
 sf::View InventoryView({0, 0, (float)scw, (float)sch});
-sf::View ShopView({0, 0, (float)scw, (float)sch});
+sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View ShopStockView;
 sf::View ShopPlayerInvView;
 

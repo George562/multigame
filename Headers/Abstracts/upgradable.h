@@ -26,6 +26,14 @@ public:
             stats[i] += val;
     }
 
+    void upgrade(int amount) {
+        if (amount < 0)
+            return;
+        curLevel = std::min(maxLevel, curLevel + amount);
+    }
+
+    bool maxed() { return curLevel + 1 >= maxLevel; }
+
     operator T() const { return stats[curLevel]; }
 
     json writeJSON() {
