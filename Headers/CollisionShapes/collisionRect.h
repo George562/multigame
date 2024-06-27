@@ -48,6 +48,8 @@ public:
     void setRect(float x, float y, float w, float h) { size.x = w; size.y = h; setPosition(x, y); }
     void setRect(sf::Vector2f pos, sf::Vector2f size) { this->size = size; setPosition(pos); }
     void setRect(CollisionRect rect) { size = rect.size; setPosition(rect.getPosition()); }
+
+    sf::FloatRect getBounds() const { return sf::FloatRect(points[0], size); }
 };
 
 using vr = std::vector<CollisionRect>;

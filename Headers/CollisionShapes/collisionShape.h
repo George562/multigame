@@ -57,8 +57,13 @@ public:
 
     std::size_t getPointCount() { return pointCount; }
 
+    virtual sf::FloatRect getBounds() const { return sf::FloatRect(position, size); }
+
     bool contains(float x, float y) const { return contains(sf::Vector2f(x, y)); }
     bool contains(sf::Vector2f point) const {
+        if (!getBounds().contains(point)) {
+            return false;
+        }
         bool s = false;
         sf::Vector2f e, w;
         for(int i = 0, j = pointCount - 1; i < pointCount; j = i, i++) {
@@ -72,9 +77,7 @@ public:
     }
 
     bool intersect(CollisionShape& shape) {
-        sf::Vector2f pos  =       getPosition(), size  =       getSize(),
-                     pos2 = shape.getPosition(), size2 = shape.getSize();
-        if (!(pos2.x <= pos.x + size.x && pos.x <= pos2.x + size2.x && pos2.y <= pos.y + size.y && pos.y <= pos2.y + size2.y)) {
+        if (!getBounds().intersects(shape.getBounds())) {
             return false;
         }
         for (int i = 0; i < shape.pointCount; i++) {

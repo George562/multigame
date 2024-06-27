@@ -42,6 +42,8 @@ public:
     void setCircle(float x, float y, float r) { center.x = x; center.y = y; Radius = r; updateShape(); }
     void setCircle(sf::Vector2f pos, float r) { center = pos; Radius = r; updateShape(); }
     void setCircle(CollisionCircle circle) { center = circle.center; Radius = circle.Radius; updateShape(); }
+
+    sf::FloatRect getBounds() const { return sf::FloatRect(getPosition(), getSize()); }
 };
 
 
