@@ -581,27 +581,27 @@ void initInventory() {
     invBackButton.setPosition(0, 0);
     invBackButton.setSize(300, 150);
 
-    itemsPageButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
+    itemsPageButton.setTexture(Textures::YellowButton, Textures::YellowButtonPushed);
     itemsPageButton.setCharacterSize(32);
     itemsPageButton.setPosition(0, (sch) * 0.9);
     itemsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
-    weaponsPageButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
+    weaponsPageButton.setTexture(Textures::RedButton, Textures::RedButtonPushed);
     weaponsPageButton.setCharacterSize(32);
     weaponsPageButton.setPosition((scw) * 0.2, (sch) * 0.9);
     weaponsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
-    equipablesPageButton.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
+    equipablesPageButton.setTexture(Textures::GreenButton, Textures::GreenButtonPushed);
     equipablesPageButton.setCharacterSize(32);
     equipablesPageButton.setPosition((scw) * 0.4, (sch) * 0.9);
     equipablesPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
-    perksPageButton.setTexture(Textures::BluePanel, Textures::BluePanelPushed);
+    perksPageButton.setTexture(Textures::BlueButton, Textures::BlueButtonPushed);
     perksPageButton.setCharacterSize(32);
     perksPageButton.setPosition((scw) * 0.6, (sch) * 0.9);
     perksPageButton.setSize((scw) * 0.2, (sch) * 0.1);
 
-    statsPageButton.setTexture(Textures::ItemPanel, Textures::ItemPanel);
+    statsPageButton.setTexture(Textures::GreyButton, Textures::GreyButtonPushed);
     statsPageButton.setCharacterSize(32);
     statsPageButton.setPosition((scw) * 0.8, (sch) * 0.9);
     statsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
@@ -1145,7 +1145,7 @@ void initShops() {
                         upgradeStat(&player, &pistol, 50, &pistol.MaxManaStorage, compUpgCosts[0][0]);
                     if (!pistol.MaxManaStorage.maxed()) pistol.ManaStorage.top = pistol.MaxManaStorage;
                 },
-                Textures::BluePanel, Textures::BluePanelPushed
+                Textures::BlueButton, Textures::BlueButtonPushed
             )
         );
         compUpgBtns[0][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
@@ -1158,7 +1158,7 @@ void initShops() {
                 [](){
                     upgradeStat(&player, &pistol, 70, &(pistol.ReloadSpeed), compUpgCosts[0][1]);
                 },
-                Textures::GreenPanel, Textures::GreenPanelPushed
+                Textures::GreenButton, Textures::GreenButtonPushed
             )
         );
         compUpgBtns[0][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
@@ -1171,7 +1171,7 @@ void initShops() {
                 [](){ 
                     upgradeStat(&player, &pistol, 25, &pistol.TimeToHolster, compUpgCosts[1][0]);
                 },
-                Textures::BluePanel, Textures::BluePanelPushed
+                Textures::BlueButton, Textures::BlueButtonPushed
             )
         );
         compUpgBtns[1][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
@@ -1184,7 +1184,7 @@ void initShops() {
                 [](){ 
                     upgradeStat(&player, &pistol, 25, &pistol.TimeToDispatch, compUpgCosts[1][1]);
                 },
-                Textures::GreenPanel, Textures::GreenPanelPushed
+                Textures::GreenButton, Textures::GreenButtonPushed
             )
         );
         compUpgBtns[1][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
@@ -1197,7 +1197,7 @@ void initShops() {
                 [](){ 
                     upgradeStat(&player, &pistol, 35, &pistol.FireRate, compUpgCosts[2][0]);
                 },
-                Textures::BluePanel, Textures::BluePanelPushed
+                Textures::BlueButton, Textures::BlueButtonPushed
             )
         );
         compUpgBtns[2][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
@@ -1210,7 +1210,7 @@ void initShops() {
                 [](){ 
                     upgradeStat(&player, &pistol, 80, &pistol.ManaCostOfBullet, compUpgCosts[2][1]);
                 },
-                Textures::GreenPanel, Textures::GreenPanelPushed
+                Textures::GreenButton, Textures::GreenButtonPushed
             )
         );
         compUpgBtns[2][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
@@ -1224,7 +1224,7 @@ void initShops() {
                     if (player.CurWeapon == &shotgun)
                         upgradeStat(&player, &pistol, 80, &shotgun.Multishot, compUpgCosts[2][2]);
                 },
-                Textures::RedPanel, Textures::RedPanelPushed
+                Textures::RedButton, Textures::RedButtonPushed
             )
         );
         compUpgBtns[2][2]->setRect(imgPanel.getPosition().x + 1000, imgPanel.getPosition().y, 250, 100);
@@ -1237,7 +1237,7 @@ void initShops() {
                 [](){ 
                     upgradeStat(&player, &pistol, 65, &pistol.BulletVelocity, compUpgCosts[3][0]);
                 },
-                Textures::BluePanel, Textures::BluePanelPushed
+                Textures::BlueButton, Textures::BlueButtonPushed
             )
         );
         compUpgBtns[3][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
@@ -1250,7 +1250,7 @@ void initShops() {
                 [](){ 
                     upgradeStat(&player, &pistol, 65, &pistol.Scatter, compUpgCosts[3][1]);
                 },
-                Textures::GreenPanel, Textures::GreenPanelPushed
+                Textures::GreenButton, Textures::GreenButtonPushed
             )
         );
         compUpgBtns[3][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);

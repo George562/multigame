@@ -110,12 +110,19 @@ namespace Textures {
                 Frame4,
 //////////////////////////////////////////////////////////// Button Tetures
                 BlueButton,
+                BlueButtonPushed,
                 CyanButton,
+                CyanButtonPushed,
                 GreenButton,
+                GreenButtonPushed,
                 GreyButton,
+                GreyButtonPushed,
                 MagentaButton,
+                MagentaButtonPushed,
                 RedButton,
+                RedButtonPushed,
                 YellowButton,
+                YellowButtonPushed,
 
                 NPCDialogueFrame_Square,
                 NPCDialogueFrame_Wide,
@@ -162,13 +169,20 @@ void loadTextures() {
     Textures::ItemPanel               .loadFromFile("sources/textures/Panels/ItemPanel.png");
     Textures::Frame4                  .loadFromFile("sources/textures/Panels/frame4.png");
 
-    Textures::BlueButton              .loadFromFile("sources/textures/BUttons/BlueButton.png");
-    Textures::CyanButton              .loadFromFile("sources/textures/BUttons/CyanButton.png");
-    Textures::GreenButton             .loadFromFile("sources/textures/BUttons/GreenButton.png");
-    Textures::GreyButton              .loadFromFile("sources/textures/BUttons/GreyButton.png");
-    Textures::MagentaButton           .loadFromFile("sources/textures/BUttons/MagentaButton.png");
-    Textures::RedButton               .loadFromFile("sources/textures/BUttons/RedButton.png");
-    Textures::YellowButton            .loadFromFile("sources/textures/BUttons/YellowButton.png");
+    Textures::BlueButton              .loadFromFile("sources/textures/Buttons/BlueButton.png");
+    Textures::BlueButtonPushed        .loadFromFile("sources/textures/Buttons/BlueButtonPushed.png");
+    Textures::CyanButton              .loadFromFile("sources/textures/Buttons/CyanButton.png");
+    Textures::CyanButtonPushed        .loadFromFile("sources/textures/Buttons/CyanButtonPushed.png");
+    Textures::GreenButton             .loadFromFile("sources/textures/Buttons/GreenButton.png");
+    Textures::GreenButtonPushed       .loadFromFile("sources/textures/Buttons/GreenButtonPushed.png");
+    Textures::GreyButton              .loadFromFile("sources/textures/Buttons/GreyButton.png");
+    Textures::GreyButtonPushed        .loadFromFile("sources/textures/Buttons/GreyButtonPushed.png");
+    Textures::MagentaButton           .loadFromFile("sources/textures/Buttons/MagentaButton.png");
+    Textures::MagentaButtonPushed     .loadFromFile("sources/textures/Buttons/MagentaButtonPushed.png");
+    Textures::RedButton               .loadFromFile("sources/textures/Buttons/RedButton.png");
+    Textures::RedButtonPushed         .loadFromFile("sources/textures/Buttons/RedButtonPushed.png");
+    Textures::YellowButton            .loadFromFile("sources/textures/Buttons/YellowButton.png");
+    Textures::YellowButtonPushed      .loadFromFile("sources/textures/Buttons/YellowButtonPushed.png");
 
     Textures::GridBG                  .loadFromFile("sources/textures/Panels/GridBackground.png");
 
