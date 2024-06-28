@@ -41,7 +41,7 @@ public:
         Creature::move(location);
     }
 
-    void shift(sf::Vector2f shift) {
+    void shift(sf::Vector2f shift) override {
         Velocity += sf::Vector2f(normalize(shift).x * length(Velocity)/4, normalize(shift).y * length(Velocity)/4);
     }
 };
@@ -75,7 +75,7 @@ public:
         Creature::move(location);
     }
 
-    void shift(sf::Vector2f shift) {
+    void shift(sf::Vector2f shift) override {
         Velocity += sf::Vector2f(normalize(shift).x * length(Velocity)/4, normalize(shift).y * length(Velocity)/4);
     }
 };

@@ -103,6 +103,8 @@ public:
         LastMoveCheck = localClock->getElapsedTime();
     }
 
+    virtual void shift(sf::Vector2f shift) {}
+
     virtual void UpdateState() {
         Mana += ManaRecovery * ManaRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
         Health += HealthRecovery * HealthRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();

@@ -22,8 +22,6 @@ bool MiniMapHoldOnPlayer = true;
 //////////////////////////////////////////////////////////// Stuff for work with system and screen
 sf::ContextSettings settings;
 
-// временно указатель на траекторию пули (в режиме разработки)
-sf::ConvexShape* convex = new sf::ConvexShape();
 
 sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscreen, settings);
 sf::RenderTexture preRenderTexture, outlineRenderTexture;
@@ -1905,10 +1903,6 @@ void LevelGenerate(int n, int m) {
         } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->hitbox.getPosition().y / size][(int)Enemies[i]->hitbox.getPosition().x / size] ||
                  distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
     }
-
-    DrawableStuff.push_back(convex);
-    convex->setFillColor(sf::Color::Blue);
-    convex->setPointCount(4);
 }
 
 void LoadMainMenu() {
@@ -2292,11 +2286,9 @@ void MainLoop() {
                     }
                 }
             } else {
-                Enemies[i]->setTarget(player.hitbox.getCenter());
-                CollisionShape bullet_path = CollisionShape();
+                CollisionShape bullet_path;
                 for (int j = 0; j < Bullets.size(); j++) {
                     if (!faction::friends(Bullets[j]->fromWho, Enemies[i]->faction)) {
-                        // все нижеобъявленные переменные нужны только один раз, потом цикл прервётся
                         bullet_path.setPoints(
                             std::vector<sf::Vector2f>{
                                 Bullets[j]->hitbox.getCenter() - sf::Vector2f(10.f, 0.f),
@@ -2309,21 +2301,10 @@ void MainLoop() {
                         if (bullet_path.intersect(Enemies[i]->hitbox)) {
                             // присутствует небольшой сдвиг у вектора (не страшно) 
                             sf::Vector2f toRotate90 = bullet_path.getPoint(2) - bullet_path.getPoint(1);
-                            int sign;
-                            if (rand() % 2) sign = 1;
-                            else sign = -1;
-                            float shift = Enemies[i]->hitbox.getRadius() * 3;
-                            sf::Vector2f shiftVector(sign*toRotate90.y, -sign*toRotate90.x);
-                            // такое приведение типов временно
-                            ((Distorted*)Enemies[i])->shift(shiftVector);
+                            int sign = (rand() % 2) ? 1 : -1;
+                            Enemies[i]->shift(sf::Vector2f(sign*toRotate90.y, -sign*toRotate90.x));
                             break;
                         }
-                        // нужно для наглядности, потом удалим
-                        convex->setPoint(0, Bullets[j]->hitbox.getCenter() - sf::Vector2f(10.f, 0.f));
-                        convex->setPoint(1, Bullets[j]->hitbox.getCenter() + sf::Vector2f(10.f, 0.f));
-                        // вместо velocity надо сделать длину в 8 радиусов врага
-                        convex->setPoint(2, Bullets[j]->hitbox.getCenter() + sf::Vector2f(10.f, 0.f) + Bullets[j]->Velocity);
-                        convex->setPoint(3, Bullets[j]->hitbox.getCenter() - sf::Vector2f(10.f, 0.f) + Bullets[j]->Velocity);
                     }
                 }
                 Enemies[i]->move(CurLocation);
