@@ -53,7 +53,7 @@ public:
 ////////////////////////////////////////////////////////////
 
 Player::Player() : Creature("Player", faction::Player) {
-    Health = {0.f, 2000.f, 20.f}; HealthRecovery = Health.top / 5;
+    Health = {0.f, 20.f, 20.f}; HealthRecovery = Health.top / 5;
     Mana = {0.f, 10.f, 10.f}; ManaRecovery = Mana.top / 5;
     Armor = {0.f, 0.f, 0.f};
     hitbox.setRadius(60.f);

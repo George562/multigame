@@ -1896,7 +1896,7 @@ void LevelGenerate(int n, int m) {
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
     amountOfEveryEnemiesOnLevel = 2;
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
-        //Enemies.push_back(new DistortedScientist());
+        Enemies.push_back(new DistortedScientist());
         Enemies.push_back(new Distorted());
     }
 
@@ -2315,6 +2315,7 @@ void MainLoop() {
                             else sign = -1;
                             float shift = Enemies[i]->hitbox.getRadius() * 3;
                             sf::Vector2f shiftVector(sign*toRotate90.y, -sign*toRotate90.x);
+                            // такое приведение типов временно
                             ((Distorted*)Enemies[i])->shift(shiftVector);
                             break;
                         }
