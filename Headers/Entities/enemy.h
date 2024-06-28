@@ -70,4 +70,8 @@ public:
         setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
+
+    void shift(sf::Vector2f shift) {
+        Velocity += sf::Vector2f(normalize(shift).x * length(Velocity)/4, normalize(shift).y * length(Velocity)/4);
+    }
 };
