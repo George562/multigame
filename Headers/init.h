@@ -92,7 +92,6 @@ namespace Textures {
                 Fire,
                 Architect,
                 Noise,
-                Path,
 //////////////////////////////////////////////////////////// Effect Textures
                 Eff_HPRegen,
                 Eff_Burn,
@@ -146,7 +145,6 @@ void loadTextures() {
     Textures::Fire                    .create(140.f, 175.f);
     Textures::Architect               .loadFromFile("sources/textures/Architect.png");
     Textures::Noise                   .loadFromFile("sources/textures/noise.png");
-    Textures::Path                    .loadFromFile("sources/textures/path.png");
 
     Textures::Eff_HPRegen             .loadFromFile("sources/textures/effects/HPRegenEffect.png");
     Textures::Eff_Burn                .loadFromFile("sources/textures/effects/BurnEffect.png");
