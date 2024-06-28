@@ -104,6 +104,7 @@ public:
     }
 
     virtual void shift(sf::Vector2f shift) {}
+    virtual void shift(float x, float y) {}
 
     virtual void UpdateState() {
         Mana += ManaRecovery * ManaRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();

@@ -2300,9 +2300,8 @@ void MainLoop() {
                         );
                         if (bullet_path.intersect(Enemies[i]->hitbox)) {
                             // присутствует небольшой сдвиг у вектора (не страшно) 
-                            sf::Vector2f toRotate90 = bullet_path.getPoint(2) - bullet_path.getPoint(1);
-                            int sign = (rand() % 2) ? 1 : -1;
-                            Enemies[i]->shift(sf::Vector2f(sign*toRotate90.y, -sign*toRotate90.x));
+                            sf::Vector2f toRotate90 = Bullets[j]->hitbox.getCenter() - Enemies[i]->hitbox.getCenter();
+                            Enemies[i]->shift(sf::Vector2f(toRotate90.y, -toRotate90.x) * ((rand() % 2) ? 1.f : -1.f));
                             break;
                         }
                     }

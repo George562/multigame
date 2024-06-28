@@ -41,9 +41,8 @@ public:
         Creature::move(location);
     }
 
-    void shift(sf::Vector2f shift) override {
-        Velocity += sf::Vector2f(normalize(shift).x * length(Velocity)/4, normalize(shift).y * length(Velocity)/4);
-    }
+    void shift(sf::Vector2f shift) override { Velocity += normalize(shift) * length(Velocity) / 4.f; }
+    void shift(float x, float y) override { Velocity += normalize(sf::Vector2f(x, y)) * length(Velocity) / 4.f; }
 };
 
 // Distorted
@@ -75,7 +74,6 @@ public:
         Creature::move(location);
     }
 
-    void shift(sf::Vector2f shift) override {
-        Velocity += sf::Vector2f(normalize(shift).x * length(Velocity)/4, normalize(shift).y * length(Velocity)/4);
-    }
+    void shift(sf::Vector2f shift) override { Velocity += normalize(shift) * length(Velocity) / 4.f; }
+    void shift(float x, float y) override { Velocity += normalize(sf::Vector2f(x, y)) * length(Velocity) / 4.f; }
 };
