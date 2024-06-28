@@ -583,28 +583,28 @@ void initInventory() {
 
     itemsPageButton.setTexture(Textures::YellowButton, Textures::YellowButtonPushed);
     itemsPageButton.setCharacterSize(32);
-    itemsPageButton.setPosition(0, (sch) * 0.9);
-    itemsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
+    itemsPageButton.setPosition(0, sch * 0.9);
+    itemsPageButton.setSize(scw * 0.2, sch * 0.1);
 
     weaponsPageButton.setTexture(Textures::RedButton, Textures::RedButtonPushed);
     weaponsPageButton.setCharacterSize(32);
-    weaponsPageButton.setPosition((scw) * 0.2, (sch) * 0.9);
-    weaponsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
+    weaponsPageButton.setPosition(scw * 0.2, sch * 0.9);
+    weaponsPageButton.setSize(scw * 0.2, sch * 0.1);
 
     equipablesPageButton.setTexture(Textures::GreenButton, Textures::GreenButtonPushed);
     equipablesPageButton.setCharacterSize(32);
-    equipablesPageButton.setPosition((scw) * 0.4, (sch) * 0.9);
-    equipablesPageButton.setSize((scw) * 0.2, (sch) * 0.1);
+    equipablesPageButton.setPosition(scw * 0.4, sch * 0.9);
+    equipablesPageButton.setSize(scw * 0.2, sch * 0.1);
 
     perksPageButton.setTexture(Textures::BlueButton, Textures::BlueButtonPushed);
     perksPageButton.setCharacterSize(32);
-    perksPageButton.setPosition((scw) * 0.6, (sch) * 0.9);
-    perksPageButton.setSize((scw) * 0.2, (sch) * 0.1);
+    perksPageButton.setPosition(scw * 0.6, sch * 0.9);
+    perksPageButton.setSize(scw * 0.2, sch * 0.1);
 
     statsPageButton.setTexture(Textures::GreyButton, Textures::GreyButtonPushed);
     statsPageButton.setCharacterSize(32);
-    statsPageButton.setPosition((scw) * 0.8, (sch) * 0.9);
-    statsPageButton.setSize((scw) * 0.2, (sch) * 0.1);
+    statsPageButton.setPosition(scw * 0.8, sch * 0.9);
+    statsPageButton.setSize(scw * 0.2, sch * 0.1);
 
     itemListBG.setTexture(Textures::GradientFrameAlpha);
     itemListBG.setScale((float)(scw - 300) / Textures::GradientFrameAlpha.getSize().x, (float)sch / Textures::GradientFrameAlpha.getSize().y * 0.6);
@@ -623,40 +623,40 @@ void initInventory() {
     statsPlayerImage.setPosition(5 * scw / 6 - Textures::Player.getSize().x / 2, sch / 2 - Textures::Player.getSize().y / 2);
 
     statsHPBar.setValue(player.Health);
-    statsHPBar.setSize(scw / 10, sch / 20);
-    statsHPBar.setPosition(3 * scw / 10, 2 * sch / 10);
+    statsHPBar.setSize(scw / 10.f, sch / 20.f);
+    statsHPBar.setPosition(3 * scw / 10.f, 2 * sch / 10.f);
     statsHPBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
     statsHPText.setCharacterSize(24);
     statsHPText.setString("Health");
-    statsHPText.setPosition(scw / 10, 2 * sch / 10);
+    statsHPText.setPosition(scw / 10.f, 2 * sch / 10.f);
 
     statsMPBar.setValue(player.Mana);
-    statsMPBar.setSize(scw / 10, sch / 20);
-    statsMPBar.setPosition(3 * scw / 10, 3 * sch / 10);
+    statsMPBar.setSize(scw / 10.f, sch / 20);
+    statsMPBar.setPosition(3 * scw / 10.f, 3 * sch / 10.f);
     statsMPBar.setColors(CommonColors::barWall, sf::Color(0, 0, 192, 160), CommonColors::barBG);
     statsMPText.setCharacterSize(24);
     statsMPText.setString("Mana");
-    statsMPText.setPosition(scw / 10, 3 * sch / 10);
+    statsMPText.setPosition(scw / 10.f, 3 * sch / 10.f);
 
     statsHPRegenText.setCharacterSize(24);
     statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
-    statsHPRegenText.setPosition(scw / 10, 4 * sch / 10);
+    statsHPRegenText.setPosition(scw / 10.f, 4 * sch / 10.f);
 
     statsMPRegenText.setCharacterSize(24);
     statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
-    statsMPRegenText.setPosition(scw / 10, 5 * sch / 10);
+    statsMPRegenText.setPosition(scw / 10.f, 5 * sch / 10.f);
 
     statsArmorText.setCharacterSize(24);
     statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
-    statsArmorText.setPosition(scw / 10, 6 * sch / 10);
+    statsArmorText.setPosition(scw / 10.f, 6 * sch / 10.f);
 
     statsCompletedLevelsText.setCharacterSize(24);
     statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
-    statsCompletedLevelsText.setPosition(scw / 10, 7 * sch / 10);
+    statsCompletedLevelsText.setPosition(scw / 10.f, 7 * sch / 10.f);
 
     statsCurLevelsText.setCharacterSize(24);
     statsCurLevelsText.setString("Current Levels: " + std::to_string(curLevel));
-    statsCurLevelsText.setPosition(scw / 10, 8 * sch / 10);
+    statsCurLevelsText.setPosition(scw / 10.f, 8 * sch / 10.f);
 
     playerCoinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                   1, itemTextureDuration[ItemID::coin]);
