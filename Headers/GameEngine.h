@@ -1894,7 +1894,6 @@ void LevelGenerate(int n, int m) {
 
     clearVectorOfPointer(Enemies);
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
-    amountOfEveryEnemiesOnLevel = 2;
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
         Enemies.push_back(new DistortedScientist());
         Enemies.push_back(new Distorted());
