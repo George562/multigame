@@ -40,6 +40,9 @@ public:
         setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
+
+    void shift(sf::Vector2f shift) override { Velocity += normalize(shift) * 4.f; }
+    void shift(float x, float y) override { Velocity += normalize(sf::Vector2f(x, y)) * 4.f; }
 };
 
 // Distorted
@@ -70,4 +73,7 @@ public:
         setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
+
+    void shift(sf::Vector2f shift) override { Velocity += normalize(shift) * 4.f; }
+    void shift(float x, float y) override { Velocity += normalize(sf::Vector2f(x, y)) * 4.f; }
 };
