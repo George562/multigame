@@ -945,8 +945,8 @@ void initShops() {
 
         itemCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                             1, itemTextureDuration[ItemID::coin]);
-        itemCoinsSprite.setPosition(itemSpriteFrame.getPosition().x + itemSpriteFrame.getGlobalBounds().width * 0.5,
-                                            itemSpriteFrame.getPosition().y + itemSpriteFrame.getGlobalBounds().height);
+        itemCoinsSprite.setPosition(itemSpriteFrame.getPosition().x + itemSpriteFrame.getGlobalBounds().width * 0.5 + 50,
+                                            itemSpriteFrame.getPosition().y + itemSpriteFrame.getGlobalBounds().height + 25);
         itemCoinsSprite.setSize(sf::Vector2f(100.0, 100.0));
         itemCoinsSprite.play();
 
@@ -1753,11 +1753,11 @@ void updateInventoryUI() {
         }
 
         playerCoinSprite.setScale(1, 1);
-        playerCoinSprite.setPosition(invBackButton.hitbox.getRight() + 100, invBackButton.hitbox.getPosition().y - 20);
+        playerCoinSprite.setPosition(invBackButton.hitbox.getRight() + 200, invBackButton.hitbox.getPosition().y + 30);
         playerCoinSlot.background->setTexture(Textures::INVISIBLE);
         playerCoinSlot.amountText->setString(std::to_string(player.inventory.money));
         playerCoinSlot.amountText->setCharacterSize(40);
-        playerCoinSlot.amountText->setPosition(playerCoinSprite.getPosition().x + playerCoinSprite.getGlobalSize().x,
+        playerCoinSlot.amountText->setPosition(playerCoinSprite.getPosition().x + playerCoinSprite.getGlobalSize().x + 50,
                                                playerCoinSprite.getPosition().y + playerCoinSprite.getGlobalSize().y / 2 - 20);
 
         doInventoryUpdate[inventoryPage::Items] = false;
@@ -1831,11 +1831,11 @@ void updateShopUI() {
         slotNumber++;
     }
     playerCoinSprite.setScale(0.75, 0.75);
-    playerCoinSprite.setPosition(MenuShop::playerCoinsText.getPosition().x + MenuShop::playerCoinsText.getGlobalBounds().width - 20,
+    playerCoinSprite.setPosition(MenuShop::playerCoinsText.getPosition().x + MenuShop::playerCoinsText.getGlobalBounds().width + 80,
                                  MenuShop::playerCoinsText.getPosition().y - playerCoinSprite.getGlobalSize().y / 3);
     playerCoinSlot.amountText->setString(std::to_string(player.inventory.money));
     playerCoinSlot.amountText->setCharacterSize(40);
-    playerCoinSlot.amountText->setPosition(playerCoinSprite.getPosition().x + playerCoinSprite.getGlobalSize().x - 20,
+    playerCoinSlot.amountText->setPosition(playerCoinSprite.getPosition().x + playerCoinSprite.getGlobalSize().x - 120,
                                            MenuShop::playerCoinsText.getPosition().y);
 }
 
@@ -2696,7 +2696,7 @@ void upgradeStat(Player* player, Weapon* weapon, int cost, Upgradable<T>* stat, 
 }
 
 void saveGame() {
-    std::ofstream fileToSave("Saves/save.json");
+    std::ofstream fileToSave("sources/saves/save.json");
     json j;
     j["Player"]   = player.writeJSON();
     j["Pistol"]   = pistol.writeJSON();
@@ -2708,7 +2708,7 @@ void saveGame() {
 }
 
 void loadSave() {
-    std::ifstream saveFile("Saves/save.json");
+    std::ifstream saveFile("sources/saves/save.json");
     if (!saveFile.is_open()) {
         std::rand();
         player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
