@@ -279,6 +279,7 @@ void setFire(Interactable*&);
 
 //---------------------------- GAME STATE FUNCTIONS
 void updateBullets();
+void updateEnemies();
 
 bool useItem(Item*&);
 
@@ -2059,6 +2060,56 @@ void updateBullets() {
     }
 }
 
+void updateEnemies() {
+    for (int i = 0; i < Enemies.size(); i++) {
+        if (Enemies[i]->Health.toBottom() == 0) {
+            if (Enemies[i]->dropInventory) {
+                for (Item*& item : Enemies[i]->inventory.items) {
+                    item->dropTo(Enemies[i]->hitbox.getPosition());
+
+                    PickupStuff.push_back(item);
+                    DrawableStuff.push_back(item);
+                }
+            }
+            Enemies[i]->inventory.items.clear();
+
+            DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
+            DeletePointerFromVector(Enemies, i--);
+
+            if (Enemies.size() == 0) {
+                TempText* enemiesKilledText = new TempText(sf::seconds(10));
+                enemiesKilledText->setCharacterSize(40);
+                enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
+                enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
+                TempTextsOnScreen.push_back(enemiesKilledText);
+
+                if (CurLocation == &LabyrinthLocation) {
+                    if (!in(InteractibeStuff, (Interactable*)&portal)) {
+                        InteractibeStuff.push_back(&portal);
+                    }
+                }
+            }
+        } else {
+            sf::Vector2f bullet_path;
+            for (int j = 0; j < Bullets.size(); j++) {
+                if (!faction::friends(Bullets[j]->fromWho, Enemies[i]->faction)) {
+                    bullet_path = Bullets[j]->hitbox.getCenter() + distance(Bullets[j]->hitbox.getCenter(), Enemies[i]->hitbox.getCenter()) * normalize(Bullets[j]->Velocity);
+                    if (Enemies[i]->hitbox.contains(bullet_path)) {
+                        sf::Vector2f toRotate90 = Bullets[j]->hitbox.getCenter() - Enemies[i]->hitbox.getCenter();
+                        Enemies[i]->shift(sf::Vector2f(toRotate90.y, -toRotate90.x) * (random(i, i) < 0.5f ? 1.f : -1.f));
+                        break;
+                    }
+                }
+            }
+            Enemies[i]->move(CurLocation);
+            Enemies[i]->UpdateState();
+            Enemies[i]->CurWeapon->lock = false;
+            Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, player.hitbox.getCenter(), Enemies[i]->faction);
+            Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
+        }
+    }
+}
+
 void processEffects() {
     updateEffects(&player);
     for (Enemy*& enemy : Enemies)
@@ -2257,63 +2308,7 @@ void MainLoop() {
             EscapeButton.buttonFunction();
         }
 
-        for (int i = 0; i < Enemies.size(); i++) {
-            if (Enemies[i]->Health.toBottom() == 0) {
-                if (Enemies[i]->dropInventory) {
-                    for (Item*& item : Enemies[i]->inventory.items) {
-                        item->dropTo(Enemies[i]->hitbox.getPosition());
-
-                        PickupStuff.push_back(item);
-                        DrawableStuff.push_back(item);
-                    }
-                }
-                Enemies[i]->inventory.items.clear();
-
-                DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
-                DeletePointerFromVector(Enemies, i--);
-
-                if (Enemies.size() == 0) {
-                    TempText* enemiesKilledText = new TempText(sf::seconds(10));
-                    enemiesKilledText->setCharacterSize(40);
-                    enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
-                    enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
-                    TempTextsOnScreen.push_back(enemiesKilledText);
-
-                    if (CurLocation == &LabyrinthLocation) {
-                        if (!in(InteractibeStuff, (Interactable*)&portal)) {
-                            InteractibeStuff.push_back(&portal);
-                        }
-                    }
-                }
-            } else {
-                CollisionShape bullet_path;
-                for (int j = 0; j < Bullets.size(); j++) {
-                    if (!faction::friends(Bullets[j]->fromWho, Enemies[i]->faction)) {
-                        bullet_path.setPoints(
-                            std::vector<sf::Vector2f>{
-                                Bullets[j]->hitbox.getCenter() - sf::Vector2f(10.f, 0.f),
-                                Bullets[j]->hitbox.getCenter() + sf::Vector2f(10.f, 0.f),
-                                // вместо velocity надо сделать длину в 8 радиусов врага
-                                Bullets[j]->hitbox.getCenter() + sf::Vector2f(10.f, 0.f) + Bullets[j]->Velocity,
-                                Bullets[j]->hitbox.getCenter() - sf::Vector2f(10.f, 0.f) + Bullets[j]->Velocity
-                            }
-                        );
-                        if (bullet_path.intersect(Enemies[i]->hitbox)) {
-                            // присутствует небольшой сдвиг у вектора (не страшно) 
-                            sf::Vector2f toRotate90 = Bullets[j]->hitbox.getCenter() - Enemies[i]->hitbox.getCenter();
-                            Enemies[i]->shift(sf::Vector2f(toRotate90.y, -toRotate90.x) * ((rand() % 2) ? 1.f : -1.f));
-                            break;
-                        }
-                    }
-                }
-                Enemies[i]->move(CurLocation);
-                Enemies[i]->UpdateState();
-                Enemies[i]->CurWeapon->lock = false;
-                Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, player.hitbox.getCenter(), Enemies[i]->faction);
-                Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
-            }
-        }
-
+        updateEnemies();
         player.UpdateState();
 
         if (CurLocation == &LabyrinthLocation) {
