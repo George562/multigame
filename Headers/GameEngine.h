@@ -252,10 +252,10 @@ Bullet* tempBullet;
 
 
 //////////////////////////////////////////////////////////// Weapons
-Weapon pistol;
-Weapon shotgun;
+Pistol pistol;
+Shotgun shotgun;
 // Revolver revolver;
-Weapon rifle;
+Rifle rifle;
 // Bubblegun bubblegun;
 // Armageddon armageddon;
 // Chaotic chaotic;
@@ -277,6 +277,7 @@ std::vector<Enemy*> Enemies;
 void init();
 void initInventory();
 void initShops();
+void initInterface();
 //----------------------------
 
 
@@ -300,7 +301,7 @@ void createSlotRects();
 void updateShopUI();                // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
 void createShopSlotsRects();        // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
 
-void updateUpgradeInterfaceUI();        // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
+void updateUpgradeInterfaceUI();    // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
 void createUpgInterfaceSlotsRects();// Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
 //----------------------------
 
@@ -326,6 +327,7 @@ void setFire(Interactable*&);
 //---------------------------- GAME STATE FUNCTIONS
 void updateBullets();
 void updateEnemies();
+void openUpgradeShop();
 
 bool useItem(Item*&);
 
@@ -344,7 +346,7 @@ void updateShaders();
 //---------------------------- HELPER FUNCTIONS
 bool CanSomethingBeActivated();
 template <class T> void updateCostText(PlacedText*, Upgradable<T>*, int);
-template <class T> void upgradeStat(Player*, Weapon*, int, Upgradable<T>*, PlacedText* costText = nullptr);
+template <class T> void upgradeStat(int, Upgradable<T>*, PlacedText* costText = nullptr);
 
 void saveGame();
 void loadSave();
@@ -490,67 +492,7 @@ void init() {
     MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
     std::cout << "LocalAddress: " << MyIP << "\nPublicAddress: " << MySocket.getRemoteAddress().getPublicAddress().toString() << '\n';
 
-    EscapeButton.setCharacterSize(110);
-    IPPanel.text.setCharacterSize(80);
-    ListOfPlayers.text.setCharacterSize(60);
-
-    EscapeButton.setCenter  (scw / 2, sch * 3 / 4);
-
-    ListOfPlayers.setCenter (scw / 2, sch / 4);
-
-    MMPlayerCircle.setRadius(9);
-    MMPlayerCircle.setFillColor(sf::Color(0, 180, 0));
-    MMPlayerCircle.setOrigin(MMPlayerCircle.getRadius(), MMPlayerCircle.getRadius());
-
-    MMEnemyCircle.setRadius(9);
-    MMEnemyCircle.setFillColor(sf::Color(180, 0, 0));
-    MMEnemyCircle.setOrigin(MMEnemyCircle.getRadius(), MMEnemyCircle.getRadius());
-
-    HpBar.setSize(360, 50);
-    HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
-    HpBar.setValue(player.Health);
-    HpBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
-
-    ManaBar.setSize(240, 50);
-    ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
-    ManaBar.setValue(player.Mana);
-    ManaBar.setColors(CommonColors::barWall, sf::Color(0, 0, 192, 160), CommonColors::barBG);
-
-    AmmoBar.setSize(160, 50);
-    AmmoBar.setColors(CommonColors::barWall, sf::Color(128, 128, 128, 160), CommonColors::barBG);
-
-    WeaponNameText.setFillColor(sf::Color(25, 192, 25, 160));
-    WeaponNameText.setOutlineColor(sf::Color::Black);
-
-    ReloadWeaponText.setFillColor(sf::Color(255, 20, 20));
-    ReloadWeaponText.setCharacterSize(100);
-
-    XButtonSprite.setTexture(Textures::XButton);
-    XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
-
-    MMPortalRect.setSize(portal.hitbox.getSize() * ScaleParam);
-    MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
-
-    MMBoxRect.setSize(sf::Vector2f(105.f, 117.f) * ScaleParam);
-    MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
-
-    MMPuddleRect.setSize(puddle.hitbox.getSize() * ScaleParam);
-    MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
-
-    MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
-    MMArtifact.setFillColor(sf::Color::White);
-
-    EnemyHealthBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
-    EnemyHealthBar.setSize(125.f, 15.f);
-    EnemyHealthBar.setWallWidth(1);
-    EnemyHealthBar.ShowText = false;
-
-    FLoorTileSprite.setScale(5.f, 5.f);
-    FLoorTileSprite.setTexture(Textures::floor);
-
-    undergroundBG.setTexture(Textures::Noise);
-    undergroundBG.setPosition(0, 0);
-    undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
+    initInterface();
 
     for (int i = 0; i < Effects::EffectCount; i++) {
         effectIconsTimers[i] = new TempText(sf::Time::Zero);
@@ -1139,126 +1081,6 @@ void initShops() {
         compUpgCurStats.resize(4);
         compUpgNewStats.resize(4);
 
-        compUpgBtns[0].push_back(new RectButton(
-                FontString("Upgrade: Max Mana", 32),
-                [](){
-                    if (player.CurWeapon == &pistol)
-                        upgradeStat(&player, &pistol, 50, &pistol.MaxManaStorage, compUpgCosts[0][0]);
-                    if (!pistol.MaxManaStorage.maxed()) pistol.ManaStorage.top = pistol.MaxManaStorage;
-                },
-                Textures::BlueButton, Textures::BlueButtonPushed
-            )
-        );
-        compUpgBtns[0][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[0].push_back(new PlacedText());
-        updateCostText(compUpgCosts[0][0], &pistol.MaxManaStorage, 50);
-        compUpgCosts[0][0]->setPosition(compUpgBtns[0][0]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-        
-        compUpgBtns[0].push_back(new RectButton(
-                FontString("Upgrade: Reload Speed", 32),
-                [](){
-                    upgradeStat(&player, &pistol, 70, &(pistol.ReloadSpeed), compUpgCosts[0][1]);
-                },
-                Textures::GreenButton, Textures::GreenButtonPushed
-            )
-        );
-        compUpgBtns[0][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[0].push_back(new PlacedText());
-        updateCostText(compUpgCosts[0][1], &pistol.ReloadSpeed, 70);
-        compUpgCosts[0][1]->setPosition(compUpgBtns[0][1]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-
-        compUpgBtns[1].push_back(new RectButton(
-                FontString("Upgrade: Time To\nHolster", 32),
-                [](){ 
-                    upgradeStat(&player, &pistol, 25, &pistol.TimeToHolster, compUpgCosts[1][0]);
-                },
-                Textures::BlueButton, Textures::BlueButtonPushed
-            )
-        );
-        compUpgBtns[1][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[1].push_back(new PlacedText());
-        updateCostText(compUpgCosts[1][0], &pistol.TimeToHolster, 25);
-        compUpgCosts[1][0]->setPosition(compUpgBtns[1][0]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-
-        compUpgBtns[1].push_back(new RectButton(
-                FontString("Upgrade: Time To\nDispatch", 32),
-                [](){ 
-                    upgradeStat(&player, &pistol, 25, &pistol.TimeToDispatch, compUpgCosts[1][1]);
-                },
-                Textures::GreenButton, Textures::GreenButtonPushed
-            )
-        );
-        compUpgBtns[1][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[1].push_back(new PlacedText());
-        updateCostText(compUpgCosts[1][1], &pistol.TimeToDispatch, 25);
-        compUpgCosts[1][1]->setPosition(compUpgBtns[1][1]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-
-        compUpgBtns[2].push_back(new RectButton(
-                FontString("Upgrade: Fire Rate", 32),
-                [](){ 
-                    upgradeStat(&player, &pistol, 35, &pistol.FireRate, compUpgCosts[2][0]);
-                },
-                Textures::BlueButton, Textures::BlueButtonPushed
-            )
-        );
-        compUpgBtns[2][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[2].push_back(new PlacedText());
-        updateCostText(compUpgCosts[2][0], &pistol.FireRate, 35);
-        compUpgCosts[2][0]->setPosition(compUpgBtns[2][0]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-
-        compUpgBtns[2].push_back(new RectButton(
-                FontString("Upgrade: Mana Cost", 32),
-                [](){ 
-                    upgradeStat(&player, &pistol, 80, &pistol.ManaCostOfBullet, compUpgCosts[2][1]);
-                },
-                Textures::GreenButton, Textures::GreenButtonPushed
-            )
-        );
-        compUpgBtns[2][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[2].push_back(new PlacedText());
-        updateCostText(compUpgCosts[2][1], &pistol.ManaCostOfBullet, 80);
-        compUpgCosts[2][1]->setPosition(compUpgBtns[2][1]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-
-        compUpgBtns[2].push_back(new RectButton(
-                FontString("Upgrade: Multishot", 32),
-                [](){
-                    if (player.CurWeapon == &shotgun)
-                        upgradeStat(&player, &pistol, 80, &shotgun.Multishot, compUpgCosts[2][2]);
-                },
-                Textures::RedButton, Textures::RedButtonPushed
-            )
-        );
-        compUpgBtns[2][2]->setRect(imgPanel.getPosition().x + 1000, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[2].push_back(new PlacedText());
-        updateCostText(compUpgCosts[2][2], &shotgun.Multishot, 80);
-        compUpgCosts[2][2]->setPosition(compUpgBtns[2][2]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-
-        compUpgBtns[3].push_back(new RectButton(
-                FontString("Upgrade: Bullet Velocity", 32),
-                [](){ 
-                    upgradeStat(&player, &pistol, 65, &pistol.BulletVelocity, compUpgCosts[3][0]);
-                },
-                Textures::BlueButton, Textures::BlueButtonPushed
-            )
-        );
-        compUpgBtns[3][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[3].push_back(new PlacedText());
-        updateCostText(compUpgCosts[3][0], &pistol.BulletVelocity, 65);
-        compUpgCosts[3][0]->setPosition(compUpgBtns[3][0]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-
-        compUpgBtns[3].push_back(new RectButton(
-                FontString("Upgrade: Scatter", 32),
-                [](){ 
-                    upgradeStat(&player, &pistol, 65, &pistol.Scatter, compUpgCosts[3][1]);
-                },
-                Textures::GreenButton, Textures::GreenButtonPushed
-            )
-        );
-        compUpgBtns[3][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
-        compUpgCosts[3].push_back(new PlacedText());
-        updateCostText(compUpgCosts[3][1], &pistol.Scatter, 65);
-        compUpgCosts[3][1]->setPosition(compUpgBtns[3][1]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
-
 
         UIElements.push_back(&BG);
         UIElements.push_back(&backButton);
@@ -1281,6 +1103,70 @@ void initShops() {
         choiceUIElements.push_back(&playerCoinSprite);
         choiceUIElements.push_back(&playerCoinAmount);
     }
+}
+
+void initInterface() {
+    EscapeButton.setCharacterSize(110);
+    IPPanel.text.setCharacterSize(80);
+    ListOfPlayers.text.setCharacterSize(60);
+
+    EscapeButton.setCenter  (scw / 2, sch * 3 / 4);
+
+    ListOfPlayers.setCenter (scw / 2, sch / 4);
+
+    MMPlayerCircle.setRadius(9);
+    MMPlayerCircle.setFillColor(sf::Color(0, 180, 0));
+    MMPlayerCircle.setOrigin(MMPlayerCircle.getRadius(), MMPlayerCircle.getRadius());
+
+    MMEnemyCircle.setRadius(9);
+    MMEnemyCircle.setFillColor(sf::Color(180, 0, 0));
+    MMEnemyCircle.setOrigin(MMEnemyCircle.getRadius(), MMEnemyCircle.getRadius());
+
+    HpBar.setSize(360, 50);
+    HpBar.setPosition(scw - HpBar.getSize().x - 10, 20);
+    HpBar.setValue(player.Health);
+    HpBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
+
+    ManaBar.setSize(240, 50);
+    ManaBar.setPosition(scw - ManaBar.getSize().x - 10, HpBar.getPosition().y + HpBar.getSize().y);
+    ManaBar.setValue(player.Mana);
+    ManaBar.setColors(CommonColors::barWall, sf::Color(0, 0, 192, 160), CommonColors::barBG);
+
+    AmmoBar.setSize(160, 50);
+    AmmoBar.setColors(CommonColors::barWall, sf::Color(128, 128, 128, 160), CommonColors::barBG);
+
+    WeaponNameText.setFillColor(sf::Color(25, 192, 25, 160));
+    WeaponNameText.setOutlineColor(sf::Color::Black);
+
+    ReloadWeaponText.setFillColor(sf::Color(255, 20, 20));
+    ReloadWeaponText.setCharacterSize(100);
+
+    XButtonSprite.setTexture(Textures::XButton);
+    XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
+
+    MMPortalRect.setSize(portal.hitbox.getSize() * ScaleParam);
+    MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
+
+    MMBoxRect.setSize(sf::Vector2f(105.f, 117.f) * ScaleParam);
+    MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
+
+    MMPuddleRect.setSize(puddle.hitbox.getSize() * ScaleParam);
+    MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
+
+    MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
+    MMArtifact.setFillColor(sf::Color::White);
+
+    EnemyHealthBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
+    EnemyHealthBar.setSize(125.f, 15.f);
+    EnemyHealthBar.setWallWidth(1);
+    EnemyHealthBar.ShowText = false;
+
+    FLoorTileSprite.setScale(5.f, 5.f);
+    FLoorTileSprite.setTexture(Textures::floor);
+
+    undergroundBG.setTexture(Textures::Noise);
+    undergroundBG.setPosition(0, 0);
+    undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 }
 //==============================================================================================
 
@@ -2400,6 +2286,7 @@ void LoadMainMenu() {
 
     upgradeSector.setFunction([](Interactable* i){
         isDrawUpgradeInterface = true;
+        openUpgradeShop();
     });
 
     // Set cameras
@@ -2532,6 +2419,137 @@ void updateEnemies() {
             Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, player.hitbox.getCenter(), Enemies[i]->faction);
             Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
         }
+    }
+}
+
+void openUpgradeShop() {
+    {
+        using namespace upgradeInterface;
+
+        for (int i = 0; i < 4; i++) {
+            clearVectorOfPointer(compUpgBtns[i]);
+            clearVectorOfPointer(compUpgCosts[i]);
+            clearVectorOfPointer(compUpgCurStats[i]);
+            clearVectorOfPointer(compUpgNewStats[i]);
+        }
+
+        compUpgBtns[0].push_back(new RectButton(
+                FontString("Upgrade: Max Mana", 32),
+                [](){
+                    upgradeStat(50, &player.CurWeapon->MaxManaStorage, compUpgCosts[0][0]);
+                    if (!pistol.MaxManaStorage.maxed()) pistol.ManaStorage.top = pistol.MaxManaStorage;
+                },
+                Textures::BlueButton, Textures::BlueButtonPushed
+            )
+        );
+        compUpgBtns[0][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[0].push_back(new PlacedText());
+        updateCostText(compUpgCosts[0][0], &player.CurWeapon->MaxManaStorage, 50);
+        compUpgCosts[0][0]->setPosition(compUpgBtns[0][0]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
+        
+        compUpgBtns[0].push_back(new RectButton(
+                FontString("Upgrade: Reload Speed", 32),
+                [](){
+                    upgradeStat(70, &player.CurWeapon->ReloadSpeed, compUpgCosts[0][1]);
+                },
+                Textures::GreenButton, Textures::GreenButtonPushed
+            )
+        );
+        compUpgBtns[0][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[0].push_back(new PlacedText());
+        updateCostText(compUpgCosts[0][1], &player.CurWeapon->ReloadSpeed, 70);
+        compUpgCosts[0][1]->setPosition(compUpgBtns[0][1]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
+
+        compUpgBtns[1].push_back(new RectButton(
+                FontString("Upgrade: Time To\nHolster", 32),
+                [](){ 
+                    upgradeStat(25, &player.CurWeapon->TimeToHolster, compUpgCosts[1][0]);
+                },
+                Textures::BlueButton, Textures::BlueButtonPushed
+            )
+        );
+        compUpgBtns[1][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[1].push_back(new PlacedText());
+        updateCostText(compUpgCosts[1][0], &player.CurWeapon->TimeToHolster, 25);
+        compUpgCosts[1][0]->setPosition(compUpgBtns[1][0]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
+
+        compUpgBtns[1].push_back(new RectButton(
+                FontString("Upgrade: Time To\nDispatch", 32),
+                [](){ 
+                    upgradeStat(25, &player.CurWeapon->TimeToDispatch, compUpgCosts[1][1]);
+                },
+                Textures::GreenButton, Textures::GreenButtonPushed
+            )
+        );
+        compUpgBtns[1][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[1].push_back(new PlacedText());
+        updateCostText(compUpgCosts[1][1], &player.CurWeapon->TimeToDispatch, 25);
+        compUpgCosts[1][1]->setPosition(compUpgBtns[1][1]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
+
+        compUpgBtns[2].push_back(new RectButton(
+                FontString("Upgrade: Fire Rate", 32),
+                [](){ 
+                    upgradeStat(35, &player.CurWeapon->FireRate, compUpgCosts[2][0]);
+                },
+                Textures::BlueButton, Textures::BlueButtonPushed
+            )
+        );
+        compUpgBtns[2][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[2].push_back(new PlacedText());
+        updateCostText(compUpgCosts[2][0], &player.CurWeapon->FireRate, 35);
+        compUpgCosts[2][0]->setPosition(compUpgBtns[2][0]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
+
+        compUpgBtns[2].push_back(new RectButton(
+                FontString("Upgrade: Mana Cost", 32),
+                [](){ 
+                    upgradeStat(80, &player.CurWeapon->ManaCostOfBullet, compUpgCosts[2][1]);
+                },
+                Textures::GreenButton, Textures::GreenButtonPushed
+            )
+        );
+        compUpgBtns[2][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[2].push_back(new PlacedText());
+        updateCostText(compUpgCosts[2][1], &player.CurWeapon->ManaCostOfBullet, 80);
+        compUpgCosts[2][1]->setPosition(compUpgBtns[2][1]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
+
+        compUpgBtns[2].push_back(new RectButton(
+                FontString("Upgrade: Multishot", 32),
+                [](){
+                    upgradeStat(80, &player.CurWeapon->Multishot, compUpgCosts[2][2]);
+                },
+                Textures::RedButton, Textures::RedButtonPushed
+            )
+        );
+        compUpgBtns[2][2]->setRect(imgPanel.getPosition().x + 1000, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[2].push_back(new PlacedText());
+        updateCostText(compUpgCosts[2][2], &player.CurWeapon->Multishot, 80);
+        compUpgCosts[2][2]->setPosition(compUpgBtns[2][2]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
+
+        compUpgBtns[3].push_back(new RectButton(
+                FontString("Upgrade: Bullet Velocity", 32),
+                [](){ 
+                    upgradeStat(65, &player.CurWeapon->BulletVelocity, compUpgCosts[3][0]);
+                },
+                Textures::BlueButton, Textures::BlueButtonPushed
+            )
+        );
+        compUpgBtns[3][0]->setRect(imgPanel.getPosition().x + 400, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[3].push_back(new PlacedText());
+        updateCostText(compUpgCosts[3][0], &player.CurWeapon->BulletVelocity, 65);
+        compUpgCosts[3][0]->setPosition(compUpgBtns[3][0]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
+
+        compUpgBtns[3].push_back(new RectButton(
+                FontString("Upgrade: Scatter", 32),
+                [](){ 
+                    upgradeStat(65, &player.CurWeapon->Scatter, compUpgCosts[3][1]);
+                },
+                Textures::GreenButton, Textures::GreenButtonPushed
+            )
+        );
+        compUpgBtns[3][1]->setRect(imgPanel.getPosition().x + 700, imgPanel.getPosition().y, 250, 100);
+        compUpgCosts[3].push_back(new PlacedText());
+        updateCostText(compUpgCosts[3][1], &player.CurWeapon->Scatter, 65);
+        compUpgCosts[3][1]->setPosition(compUpgBtns[3][1]->hitbox.getLeftBottom() + sf::Vector2f(100, 25));
     }
 }
 
@@ -2687,9 +2705,9 @@ void updateCostText(PlacedText* costText, Upgradable<T>* stat, int cost) {
 }
 
 template <class T>
-void upgradeStat(Player* player, Weapon* weapon, int cost, Upgradable<T>* stat, PlacedText* costText) {
-    if (!stat->maxed() && player->CurWeapon == weapon && player->inventory.money >= cost * (1 + stat->curLevel)) {
-        player->inventory.money -= cost * (1 + stat->curLevel);
+void upgradeStat(int cost, Upgradable<T>* stat, PlacedText* costText) {
+    if (!stat->maxed() && player.inventory.money >= cost * (1 + stat->curLevel)) {
+        player.inventory.money -= cost * (1 + stat->curLevel);
         stat->upgrade(1);
     }
     if (costText != nullptr) updateCostText(costText, stat, cost);
@@ -2712,21 +2730,6 @@ void loadSave() {
     if (!saveFile.is_open()) {
         std::rand();
         player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
-
-        std::ifstream defaultWeapon("sources/JSON/defaultPistol.json");
-        json j = json::parse(defaultWeapon);
-        pistol.readJSON(j);
-        defaultWeapon.close();
-
-        defaultWeapon.open("sources/JSON/defaultShotgun.json");
-        j = json::parse(defaultWeapon);
-        shotgun.readJSON(j);
-        defaultWeapon.close();
-
-        defaultWeapon.open("sources/JSON/defaultRifle.json");
-        j = json::parse(defaultWeapon);
-        rifle.readJSON(j);
-        defaultWeapon.close();
     } else {
         nlohmann::json j = nlohmann::json::parse(saveFile);
         player  .readJSON(j["Player"]);

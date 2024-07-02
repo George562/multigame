@@ -6,42 +6,6 @@
 
 #define M_PI_RAD M_PI / 180.f
 
-namespace WeaponStats {
-    namespace Pistol {
-        std::vector<float>    MaxManaStorage   {10, 12, 15, 20, 25};
-        std::vector<float>    ReloadSpeed      {2, 3, 5, 8};
-        std::vector<sf::Time> TimeToHolster    {sf::seconds(0.5), sf::seconds(0.35), sf::seconds(0.2)};
-        std::vector<sf::Time> TimeToDispatch   {sf::seconds(1), sf::seconds(0.8), sf::seconds(0.5)};
-        std::vector<sf::Time> FireRate         {sf::seconds(0.35), sf::seconds(0.3), sf::seconds(0.225), sf::seconds(0.15)};
-        std::vector<float>    ManaCostOfBullet {2, 3, 4, 5};
-        std::vector<int>      Multishot        {1}; 
-        std::vector<float>    BulletVelocity   {800, 1100, 1500};
-        std::vector<float>    scatter          {20, 15, 8, 1};
-    };
-    namespace Shotgun {
-        std::vector<float>    MaxManaStorage   {15, 25, 40, 60};
-        std::vector<float>    ReloadSpeed      {2.5, 5};
-        std::vector<sf::Time> TimeToHolster    {sf::seconds(1.5), sf::seconds(1.2), sf::seconds(0.9)};
-        std::vector<sf::Time> TimeToDispatch   {sf::seconds(2), sf::seconds(1.5), sf::seconds(1)};
-        std::vector<sf::Time> FireRate         {sf::seconds(1), sf::seconds(0.75), sf::seconds(0.25)};
-        std::vector<float>    ManaCostOfBullet {5, 10};
-        std::vector<int>      Multishot        {10, 12, 15, 20};
-        std::vector<float>    BulletVelocity   {600, 900, 1300};
-        std::vector<float>    scatter          {50, 40};
-    };
-    namespace Rifle {
-        std::vector<float>    MaxManaStorage   {30, 50, 80, 120};
-        std::vector<float>    ReloadSpeed      {1, 2, 4};
-        std::vector<sf::Time> TimeToHolster    {sf::seconds(2), sf::seconds(1.5), sf::seconds(1)};
-        std::vector<sf::Time> TimeToDispatch   {sf::seconds(1.5), sf::seconds(1)};
-        std::vector<sf::Time> FireRate         {sf::seconds(0.25), sf::seconds(0.2), sf::seconds(0.1)};
-        std::vector<float>    ManaCostOfBullet {1, 2, 3};
-        std::vector<int>      Multishot        {1};
-        std::vector<float>    BulletVelocity   {700, 900, 1200};
-        std::vector<float>    scatter          {20, 10, 5};
-    };
-};
-
 ////////////////////////////////////////////////////////////
 // Weapon
 #pragma pack(push, 1)
@@ -70,48 +34,25 @@ public:
     sf::Clock* TimeFromLastShot = nullptr;
     bool lock;                                  // Bullets are like a stream and "lock" is blocking the stream
 
-    Weapon() {}
-    Weapon(std::string name,
-           std::vector<float> MaxManaStorage, std::vector<float> ReloadSpeed,
-           std::vector<sf::Time> TimeToHolster, std::vector<sf::Time> TimeToDispatch,
-           std::vector<sf::Time> FireRate, std::vector<float> ManaCostOfBullet, std::vector<int> Multishot,
-           std::vector<float> BulletVelocity, std::vector<float> Scatter) {
-        Name = name;
-
-        this->MaxManaStorage   .setStats(MaxManaStorage);
-        this->ReloadSpeed      .setStats(ReloadSpeed);
-
-        this->ManaCostOfBullet .setStats(ManaCostOfBullet);
-        this->Multishot        .setStats(Multishot);
-        this->FireRate         .setStats(FireRate);
-
-        this->TimeToHolster    .setStats(TimeToHolster);
-        this->TimeToDispatch   .setStats(TimeToDispatch);
-
-        this->BulletVelocity   .setStats(BulletVelocity);
-        this->Scatter          .setStats(Scatter);
-
-        ReloadTimer = new sf::Clock();
-        HolsterTimer = new sf::Clock();
+    Weapon() {
+        ReloadTimer      = new sf::Clock();
+        HolsterTimer     = new sf::Clock();
         TimeFromLastShot = new sf::Clock();
-        DispatchTimer = new sf::Clock();
+        DispatchTimer    = new sf::Clock();
         holstered = false;
-        ManaStorage.setScale(0, MaxManaStorage[0], MaxManaStorage[0]);
         lock = true;
     }
+    Weapon(std::string name) : Weapon() {
+        std::ifstream defaultWeapon("sources/JSON/default" + name + ".json");
+        json j = json::parse(defaultWeapon);
+        readJSON(j);
+        defaultWeapon.close();
+    }
     virtual ~Weapon() {
-        if (TimeFromLastShot) {
-            delete TimeFromLastShot;
-        }
-        if (ReloadTimer) {
-            delete ReloadTimer;
-        }
-        if (HolsterTimer) {
-            delete HolsterTimer;
-        }
-        if (DispatchTimer) {
-            delete DispatchTimer;
-        }
+        if (TimeFromLastShot) { delete TimeFromLastShot; }
+        if (ReloadTimer)      { delete ReloadTimer;      }
+        if (HolsterTimer)     { delete HolsterTimer;     }
+        if (DispatchTimer)    { delete DispatchTimer;    }
     }
 
     virtual void Update(sf::Event& event) {
@@ -135,13 +76,9 @@ public:
         sf::Vector2f d = direction - shooter.getCenter();
         float len = hypotf(d.x, d.y);
         if (len == 0) return;
-        // d = RotateOn(-M_PI_RAD * (rand() % (int)(Scatter - Scatter / 2.f)), d) * BulletVelocity / len;
-        // sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
-        // Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
-        for (int i = 0; i < Multishot; i++, d = RotateOn(M_PI_RAD * Scatter / (Multishot - 1), d)) {
-            sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
-            Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
-        }
+        d = RotateOn(M_PI_RAD * (rand() % (int)(Scatter) - Scatter / 2.f), d) * BulletVelocity / len;
+        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+        Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
         ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
     }
@@ -161,13 +98,10 @@ public:
         if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
             holstered = false;
             DispatchTimer->restart();
-            return;
-        }
-        if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch) {
+        } else if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch) {
             if (ManaStorage.fromTop() == 0) return;
             holstered = true;
             HolsterTimer->restart();
-            return;
         }
     }
 
@@ -204,10 +138,6 @@ public:
         this->BulletVelocity   .readJSON(j["BulletVelocity"]);
         this->Scatter          .readJSON(j["Scatter"]);
 
-        this->ReloadTimer = new sf::Clock();
-        this->HolsterTimer = new sf::Clock();
-        this->TimeFromLastShot = new sf::Clock();
-        this->DispatchTimer = new sf::Clock();
         this->holstered = false;
         this->ManaStorage = {0, this->MaxManaStorage, this->MaxManaStorage};
         this->lock = true;
@@ -265,19 +195,7 @@ std::istream& operator>>(std::istream& stream, Weapon& weapon) {
 // Pistol
 class Pistol : public Weapon {
 public:
-    Pistol() : Weapon("Pistol",
-                      WeaponStats::Pistol::MaxManaStorage  ,
-                      WeaponStats::Pistol::ReloadSpeed     ,
-
-                      WeaponStats::Pistol::TimeToHolster   ,
-                      WeaponStats::Pistol::TimeToDispatch  ,
-
-                      WeaponStats::Pistol::FireRate        ,
-                      WeaponStats::Pistol::ManaCostOfBullet,
-                      WeaponStats::Pistol::Multishot       ,
-
-                      WeaponStats::Pistol::BulletVelocity  ,
-                      WeaponStats::Pistol::scatter          ) {}
+    Pistol() : Weapon("Pistol") {}
 };
 
 // Revolver
@@ -296,19 +214,7 @@ public:
 // Shotgun
 class Shotgun : public Weapon {
 public:
-    Shotgun() : Weapon("Shotgun",
-                       WeaponStats::Shotgun::MaxManaStorage  ,
-                       WeaponStats::Shotgun::ReloadSpeed     ,
-
-                       WeaponStats::Shotgun::TimeToHolster   ,
-                       WeaponStats::Shotgun::TimeToDispatch  ,
-
-                       WeaponStats::Shotgun::FireRate        ,
-                       WeaponStats::Shotgun::ManaCostOfBullet,
-                       WeaponStats::Shotgun::Multishot       ,
-
-                       WeaponStats::Shotgun::BulletVelocity  ,
-                       WeaponStats::Shotgun::scatter          ) {}
+    Shotgun() : Weapon("Shotgun") {}
     
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (!CanShoot()) return;
@@ -330,19 +236,7 @@ public:
 // Rifle
 class Rifle : public Weapon {
 public:
-    Rifle() : Weapon("Rifle",
-                     WeaponStats::Rifle::MaxManaStorage  ,
-                     WeaponStats::Rifle::ReloadSpeed     ,
-
-                     WeaponStats::Rifle::TimeToHolster   ,
-                     WeaponStats::Rifle::TimeToDispatch  ,
-
-                     WeaponStats::Rifle::FireRate        ,
-                     WeaponStats::Rifle::ManaCostOfBullet,
-                     WeaponStats::Rifle::Multishot       ,
-
-                     WeaponStats::Rifle::BulletVelocity  ,
-                     WeaponStats::Rifle::scatter          ) {}
+    Rifle() : Weapon("Rifle") {}
 };
 
 // Bubblegun

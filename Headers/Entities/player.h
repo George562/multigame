@@ -22,8 +22,6 @@ public:
         j["Money"]          = this->inventory.money;
 
         for (Item*& item : this->inventory.items) {
-            if (item->id == ItemID::coin)
-                continue;
             j["Inventory"][itemName[item->id]] =  item->amount;
         }
         
@@ -38,8 +36,6 @@ public:
         this->ManaRecovery = j["ManaRecovery"];
         this->inventory.money = j["Money"];
         for (int id = 0; id < ItemID::ItemCount; id++) {
-            if (id == ItemID::coin)
-                continue;
             if (j["Inventory"].contains(itemName[id])) {
                 Item* newItem = new Item(id, j["Inventory"][itemName[id]]);
                 this->inventory.addItem(newItem);
