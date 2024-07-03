@@ -5,7 +5,8 @@
 //////////////////////////////////////////////////////////// Fonts
 namespace Fonts {
     sf::Font ljk_Inky,
-             consola;
+             consola
+             ;
 }
 
 void loadFonts() {
