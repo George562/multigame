@@ -2106,17 +2106,13 @@ std::vector<sf::String> artifactText = {
     "Health limit +2",
     "Mana limit +1",
     "Health Recovery +0.4",
-    "Mana Recovery +0.2",
-    "Reload Speed +1",
-    "Cur Weapon Mana Storage +1"
+    "Mana Recovery +0.2"
 };
 std::vector<sf::Color> artifactColors = {
     sf::Color(250, 50, 50),
     sf::Color(50, 50, 250),
     sf::Color(250, 80, 80),
-    sf::Color(80, 80, 250),
-    sf::Color(90, 90, 90),
-    sf::Color(160, 160, 160)
+    sf::Color(80, 80, 250)
 };
 void setArtifact(Interactable*& artifact) {
     artifact->setAnimation(Textures::Architect, &Shaders::Architect);
@@ -2135,8 +2131,6 @@ void setArtifact(Interactable*& artifact) {
             case 1: player.Mana.top += 1; break;
             case 2: player.HealthRecovery += 0.4; break;
             case 3: player.ManaRecovery += 0.1; break;
-            case 4: player.CurWeapon->ReloadSpeed.addToStats(1.f); break;
-            case 5: player.CurWeapon->MaxManaStorage.addToStats(1.f); break;
             default: break;
         }
         tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
