@@ -3,10 +3,14 @@
 #include "fontString.h"
 
 //////////////////////////////////////////////////////////// Fonts
-sf::Font ljk_InkyFont;
+namespace Fonts {
+    sf::Font ljk_Inky,
+             consola;
+}
 
 void loadFonts() {
-    ljk_InkyFont.loadFromFile("sources/fonts/ljk_Inky Thin Pixels.otf");
+    Fonts::ljk_Inky.loadFromFile("sources/fonts/Inky-Thin-Pixels.ttf");
+    Fonts::consola .loadFromFile("sources/fonts/consola.ttf");
 }
 
 ////////////////////////////////////////////////////////////
@@ -52,16 +56,16 @@ public:
 ////////////////////////////////////////////////////////////
 
 PlacedText::PlacedText() : sf::Text() {
-    setFont(ljk_InkyFont);
+    setFont(Fonts::ljk_Inky);
 }
 
 PlacedText::PlacedText(sf::String s) : sf::Text() {
-    setFont(ljk_InkyFont);
+    setFont(Fonts::ljk_Inky);
     setString(s);
 }
 
 PlacedText::PlacedText(FontString s) : sf::Text() {
-    setFont(ljk_InkyFont);
+    setFont(Fonts::ljk_Inky);
     setString(s);
 }
 

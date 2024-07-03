@@ -2092,6 +2092,15 @@ void setBox(Interactable*& box) {
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);
             delete i;
+        } else {
+            TempText* tempText = new TempText(sf::seconds(2.5f));
+            tempText->setCharacterSize(50);
+            tempText->setOutlineColor(sf::Color::White);
+            tempText->setOutlineThickness(3);
+            tempText->setString("Not enough Mana: " + std::to_string((int)player.Mana.cur) + "/20");
+            tempText->setFillColor(sf::Color(255, 0, 0));
+            tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
+            MessageText.push_back(tempText);
         }
     });
 }
