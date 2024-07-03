@@ -2123,7 +2123,7 @@ void setArtifact(Interactable*& artifact) {
         tempText->setOutlineColor(sf::Color::White);
         tempText->setOutlineThickness(3);
 
-        std::rand(); int r = std::rand() % 6;
+        std::rand(); int r = std::rand() % 4;
         tempText->setString(artifactText[r]);
         tempText->setFillColor(artifactColors[r]);
         switch (r) {
