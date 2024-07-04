@@ -2696,7 +2696,7 @@ void upgradeStat(int cost, Upgradable<T>* stat, PlacedText* costText) {
 }
 
 void saveGame() {
-    std::ofstream fileToSave("Saves/save.json");
+    std::ofstream fileToSave("sources/saves/save.json");
     json j;
     j["Player"]   = player;
     j["Pistol"]   = pistol;
@@ -2708,7 +2708,7 @@ void saveGame() {
 }
 
 void loadSave() {
-    std::ifstream saveFile("Saves/save.json");
+    std::ifstream saveFile("sources/saves/save.json");
     if (!saveFile.is_open()) {
         std::rand();
         player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
