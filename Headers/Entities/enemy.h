@@ -16,11 +16,11 @@ public:
 class DistortedScientist : public Enemy {
 public:
     DistortedScientist() : Enemy("Distorted Scientist") {
-        Health = {0, 10 + 4.f * curLevel, 10 + 4.f * curLevel};
+		Health = { {0, 10 + 4.f * curLevel, 10 + 4.f * curLevel} };
         HealthRecovery = 1;
-        Mana   = {0, 10, 10};
+		Mana = { {0, 10, 10} };
         ManaRecovery   = 1;
-        Armor  = {0, 100, 100};
+        Armor  = { {0, 100, 100} };
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
         hitbox.setRadius(60.f);
@@ -49,11 +49,11 @@ public:
 class Distorted : public Enemy {
 public:
     Distorted() : Enemy("Distorted") {
-        Health = {0, 10 + 4.f * curLevel, 10 + 4.f * curLevel};
+		Health = { {0, 10 + 4.f * curLevel, 10 + 4.f * curLevel} };
         HealthRecovery = 1;
-        Mana   = {0, 10, 10};
+		Mana = { {0, 10, 10} };
         ManaRecovery   = 1;
-        Armor  = {0, 100, 100};
+		Armor = { {0, 100, 100} };
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 5.f;
         hitbox.setRadius(60.f);

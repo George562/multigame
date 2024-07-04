@@ -1,6 +1,7 @@
 #pragma once
 #include "../../SFML-2.5.1/include/SFML/Graphics.hpp"
-#include "serializable.h"
+#include "../../nlohjson/json.hpp"
+using nlohmann::json;
 
 ////////////////////////////////////////////////////////////
 /// \param bottom smallest value
@@ -8,7 +9,7 @@
 /// \param cur current value
 ////////////////////////////////////////////////////////////
 template <class T>
-class Scale : public Serializable {
+class Scale {
 public:
     T bottom, top, cur;
     bool looped = false;
@@ -26,31 +27,15 @@ public:
 
         return *this;
     }
+
     Scale<T>& operator=(Scale<T> scale) {
         this->bottom = scale.bottom;
         this->top = scale.top;
-        this->cur = scale.bottom;
+        this->cur = scale.cur;
         
         return *this;
     }
 
-    json writeJSON() {
-        json j;
-        j = {
-            {"bottom", this->bottom},
-            {"top", this->top},
-            {"cur", this->cur},
-            {"looped", this->looped}
-        };
-        return j;
-    }
-
-    void readJSON(json& j) {
-        this->bottom = j["bottom"];
-        this->top = j["top"];
-        this->cur = j["cur"];
-        this->looped = j["looped"];
-    }
     void setScale(T bottom, T top, T cur) {
         this->bottom = bottom;
         this->top = top;
@@ -58,6 +43,24 @@ public:
         normalize(*this);
     }   
 };
+
+template <class T>
+void to_json(json& j, const Scale<T>& s) {
+	j = {
+		{"bottom", s.bottom},
+		{"top", s.top},
+		{"cur", s.cur},
+		{"looped", s.looped}
+	};
+}
+
+template <class T>
+void from_json(const json& j, Scale<T>& s) {
+	j.at("bottom").get_to(s.bottom);
+	j.at("top").get_to(s.top);
+	j.at("cur").get_to(s.cur);
+	j.at("looped").get_to(s.looped);
+}
 
 template <class T>
 void normalize(Scale<T>& scale) {

@@ -38,6 +38,7 @@ public:
 
     void setString(sf::String s);
     void setString(FontString s);
+    void addString(sf::String s)        { setString(getString() + s); }
     void setCharacterSize(int x);
     void setScale(sf::Vector2f);
     void setScale(float, float);

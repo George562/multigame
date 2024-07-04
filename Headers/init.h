@@ -134,7 +134,10 @@ namespace Textures {
                 PH_CochGen,
                 PH_FormFactor,
                 PH_Converter,
-                PH_Targeting
+                PH_Targeting,
+                PH_Pistol,
+                PH_Shotgun,
+                PH_Rifle
                 ;
 }
 
@@ -193,6 +196,7 @@ void loadTextures() {
     Textures::PH_FormFactor           .loadFromFile("sources/textures/Placeholders/formFactor.jpg");
     Textures::PH_Converter            .loadFromFile("sources/textures/Placeholders/converter.jpg");
     Textures::PH_Targeting            .loadFromFile("sources/textures/Placeholders/targeting.jpg");
+    Textures::PH_Pistol               .loadFromFile("sources/textures/Placeholders/Pistol.png");
 }
 
 namespace Shaders {
@@ -241,8 +245,10 @@ void loadMusics() {
 }
 
 float random(sf::Vector2f v) {
-    return std::modf( ( 1.f + std::sin( v.x * 12.9898f + v.y * 78.233f ) ) * 43758.5453123f, nullptr);
+    float whole;
+    return std::modf( ( 1.f + std::sin( v.x * 12.9898f + v.y * 78.233f ) ) * 43758.5453123f, &whole);
 }
 float random(float x, float y) {
-    return std::modf( ( 1.f + std::sin( x * 12.9898f + y * 78.233f ) ) * 43758.5453123f, nullptr);
+    float whole;
+    return std::modf( ( 1.f + std::sin( x * 12.9898f + y * 78.233f ) ) * 43758.5453123f, &whole);
 }

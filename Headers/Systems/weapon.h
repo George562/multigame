@@ -2,149 +2,165 @@
 #include "../Entities/bullet.h"
 #include "../Abstracts/upgradable.h"
 #include "../Abstracts/scale.h"
-#include "../Abstracts/serializable.h"
-
 #define M_PI_RAD M_PI / 180.f
+
+std::map<std::string, std::string> weaponDesc {
+    { "Pistol", "A basic device, that fires\na single accurate bullet per shot."
+        "\nBetter used as a backup to save mana on other weapons." },
+    { "Shotgun", "Powerful device. Sends out multiple bullets\nin a fan shape per single shot."
+                 "Deals high damage if all bullets hit,\nbut requires a lot of mana." },
+    { "Rifle", "This device rapidly shoots bullets in exchange for low accuracy.\n"
+        "Good attacking device, but takes a while to\nholster or deploy, so be considerate when to use it." }
+};
 
 ////////////////////////////////////////////////////////////
 // Weapon
 #pragma pack(push, 1)
-class Weapon : public Serializable {
+class Weapon {
 public:
-    std::string Name;
+	std::string Name;
 
-    Scale<float> ManaStorage;
-    Upgradable<float> MaxManaStorage;           // Is used so that we don't have an entire vector of scales, and just change the max for the storage
-    Upgradable<float> ReloadSpeed;
-    sf::Clock* ReloadTimer = nullptr;
+	Scale<float> ManaStorage;
+	Upgradable<float> MaxManaStorage;           // Is used so that we don't have an entire vector of scales, and just change the max for the storage
+	Upgradable<float> ReloadSpeed;
+	sf::Clock* ReloadTimer = nullptr;
 
-    Upgradable<sf::Time> TimeToHolster;
-    Upgradable<sf::Time> TimeToDispatch;
-    sf::Clock* HolsterTimer = nullptr;          // Putting the weapon in the holster to reload takes time
-    sf::Clock* DispatchTimer = nullptr;         // Same thing with getting it out
-    bool holstered;                             // All weapons are active by default. A holstered state for them is when they are being reloaded.
+	Upgradable<sf::Time> TimeToHolster;
+	Upgradable<sf::Time> TimeToDispatch;
+	sf::Clock* HolsterTimer = nullptr;          // Putting the weapon in the holster to reload takes time
+	sf::Clock* DispatchTimer = nullptr;         // Same thing with getting it out
+	bool holstered;                             // All weapons are active by default. A holstered state for them is when they are being reloaded.
 
-    Upgradable<float> ManaCostOfBullet;         // Is equal to the damage of bullet
-    Upgradable<int> Multishot;                  // How many projectiles to fire after 1 shot
-    Upgradable<sf::Time> FireRate;
-    
-    Upgradable<float> BulletVelocity;
-    Upgradable<float> Scatter; // at degree
+	Upgradable<float> ManaCostOfBullet;         // Is equal to the damage of bullet
+	Upgradable<int> Multishot;                  // How many projectiles to fire after 1 shot
+	Upgradable<sf::Time> FireRate;
 
-    sf::Clock* TimeFromLastShot = nullptr;
-    bool lock;                                  // Bullets are like a stream and "lock" is blocking the stream
+	Upgradable<float> BulletVelocity;
+	Upgradable<float> Scatter; // at degree
 
-    Weapon() {
-        ReloadTimer      = new sf::Clock();
-        HolsterTimer     = new sf::Clock();
-        TimeFromLastShot = new sf::Clock();
-        DispatchTimer    = new sf::Clock();
-        holstered = false;
-        lock = true;
-    }
-    Weapon(std::string name) : Weapon() {
-        std::ifstream defaultWeapon("sources/JSON/default" + name + ".json");
-        json j = json::parse(defaultWeapon);
-        readJSON(j);
-        defaultWeapon.close();
-    }
-    virtual ~Weapon() {
-        if (TimeFromLastShot) { delete TimeFromLastShot; }
-        if (ReloadTimer)      { delete ReloadTimer;      }
-        if (HolsterTimer)     { delete HolsterTimer;     }
-        if (DispatchTimer)    { delete DispatchTimer;    }
-    }
+	sf::Clock* TimeFromLastShot = nullptr;
+	bool lock;                                  // Bullets are like a stream and "lock" is blocking the stream
 
-    virtual void Update(sf::Event& event) {
-        ManaStorage.top = MaxManaStorage;
-        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
-            lock = false;
-        if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
-            lock = true;
-    }
+	Weapon() {
+		ReloadTimer = new sf::Clock();
+		HolsterTimer = new sf::Clock();
+		TimeFromLastShot = new sf::Clock();
+		DispatchTimer = new sf::Clock();
+		holstered = false;
+		lock = true;
+	}
+	Weapon(std::string name) : Weapon() {
+		std::ifstream defaultWeapon("sources/JSON/default" + name + ".json");
+		json j = json::parse(defaultWeapon);
+		this->Name = j["Name"].template get<std::string>();
+		this->ManaStorage = j["ManaStorage"].template get<Scale<float>>();
+		this->MaxManaStorage = j["MaxManaStorage"].template get<Upgradable<float>>();
+		this->ReloadSpeed = j["ReloadSpeed"].template get<Upgradable<float>>();
+		this->TimeToHolster = j["TimeToHolster"].template get<Upgradable<float>>();
+		this->TimeToDispatch = j["TimeToDispatch"].template get<Upgradable<float>>();
+		this->holstered = j["holstered"].template get<bool>();
+		this->ManaCostOfBullet = j["ManaCostOfBullet"].template get<Upgradable<float>>();
+		this->Multishot = j["Multishot"].template get<Upgradable<int>>();
+		this->FireRate = j["FireRate"].template get<Upgradable<float>>();
+		this->BulletVelocity = j["BulletVelocity"].template get<Upgradable<float>>();
+		this->Scatter = j["Scatter"].template get<Upgradable<float>>();
 
-    virtual bool CanShoot() {
-        if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return false; }
-        if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return false;
-        if (holstered || DispatchTimer->getElapsedTime() <= TimeToDispatch) return false;
-        return true;
-    }
+		this->lock = true;
+		defaultWeapon.close();
+	}
+	virtual ~Weapon() {
+		if (TimeFromLastShot) { delete TimeFromLastShot; }
+		if (ReloadTimer) { delete ReloadTimer; }
+		if (HolsterTimer) { delete HolsterTimer; }
+		if (DispatchTimer) { delete DispatchTimer; }
+	}
 
-    virtual void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-        if (!CanShoot()) return;
+	virtual void Update(sf::Event& event) {
+		ManaStorage.top = MaxManaStorage;
+		if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
+			lock = false;
+		if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
+			lock = true;
+	}
 
-        sf::Vector2f d = direction - shooter.getCenter();
-        float len = hypotf(d.x, d.y);
-        if (len == 0) return;
-        d = RotateOn(M_PI_RAD * (rand() % (int)(Scatter) - Scatter / 2.f), d) * BulletVelocity / len;
-        sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
-        Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
-        ManaStorage -= ManaCostOfBullet;
-        TimeFromLastShot->restart();
-    }
+	virtual bool CanShoot() {
+		if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return false; }
+		if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return false;
+		if (holstered || DispatchTimer->getElapsedTime() <= TimeToDispatch) return false;
+		return true;
+	}
 
-    virtual void Reload(Scale<float>& Mana) { // Reloads ReloadSpeed/sec
-        if (ManaStorage.fromTop() == 0) return;
-        if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
-            float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed,
-                                        ManaStorage.fromTop()), Mana.toBottom());
-            Mana -= x;
-            ManaStorage += x;
-            return;
-        }
-    }
+	virtual void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
+		if (!CanShoot()) return;
 
-    virtual void HolsterAction() {            // Moves weapon to holster or takes it out of it
-        if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
-            holstered = false;
-            DispatchTimer->restart();
-        } else if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch) {
-            if (ManaStorage.fromTop() == 0) return;
-            holstered = true;
-            HolsterTimer->restart();
-        }
-    }
+		sf::Vector2f d = direction - shooter.getCenter();
+		float len = hypotf(d.x, d.y);
+		if (len == 0) return;
+		d = RotateOn(M_PI_RAD * (rand() % (int)(Scatter)-Scatter / 2.f), d) * BulletVelocity / len;
+		sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+		Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+		ManaStorage -= ManaCostOfBullet;
+		TimeFromLastShot->restart();
+	}
 
-    json writeJSON() {
-        json j;
-        j["Name"]               = this->Name;
-        j["ManaStorage"]        = this->ManaStorage.writeJSON();
-        j["MaxManaStorage"]     = this->MaxManaStorage.writeJSON();
-        j["ReloadSpeed"]        = this->ReloadSpeed.writeJSON();
-        j["TimeToHolster"]      = this->TimeToHolster.writeJSON();
-        j["TimeToDispatch"]     = this->TimeToDispatch.writeJSON();
-        j["holstered"]          = this->holstered;
-        j["ManaCostOfBullet"]   = this->ManaCostOfBullet.writeJSON();
-        j["Multishot"]          = this->Multishot.writeJSON();
-        j["FireRate"]           = this->FireRate.writeJSON();
-        j["BulletVelocity"]     = this->BulletVelocity.writeJSON();
-        j["Scatter"]            = this->Scatter.writeJSON();
+	virtual void Reload(Scale<float>& Mana) { // Reloads ReloadSpeed/sec
+		if (ManaStorage.fromTop() == 0) return;
+		if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
+			float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed,
+				ManaStorage.fromTop()), Mana.toBottom());
+			Mana -= x;
+			ManaStorage += x;
+			return;
+		}
+	}
 
-        return j;
-    }
-
-    void readJSON(json& j) {
-        this->Name = j["Name"];
-        this->MaxManaStorage   .readJSON(j["MaxManaStorage"]);
-        this->ReloadSpeed      .readJSON(j["ReloadSpeed"]);
-
-        this->ManaCostOfBullet .readJSON(j["ManaCostOfBullet"]);
-        this->Multishot        .readJSON(j["Multishot"]);
-        this->FireRate         .readJSON(j["FireRate"]);
-
-        this->TimeToHolster    .readJSON(j["TimeToHolster"]);
-        this->TimeToDispatch   .readJSON(j["TimeToDispatch"]);
-
-        this->BulletVelocity   .readJSON(j["BulletVelocity"]);
-        this->Scatter          .readJSON(j["Scatter"]);
-
-        this->holstered = false;
-        this->ManaStorage = {0, this->MaxManaStorage, this->MaxManaStorage};
-        this->lock = true;
-    }
+	virtual void HolsterAction() {            // Moves weapon to holster or takes it out of it
+		if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
+			holstered = false;
+			DispatchTimer->restart();
+		}
+		else if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch) {
+			if (ManaStorage.fromTop() == 0) return;
+			holstered = true;
+			HolsterTimer->restart();
+		}
+	}
 };
 #pragma pack(pop)
 ////////////////////////////////////////////////////////////
+
+void to_json(json& j, const Weapon& w) {
+	j["Name"] = w.Name;
+	j["ManaStorage"] = w.ManaStorage;
+	j["MaxManaStorage"] = w.MaxManaStorage;
+	j["ReloadSpeed"] = w.ReloadSpeed;
+	j["TimeToHolster"] = w.TimeToHolster;
+	j["TimeToDispatch"] = w.TimeToDispatch;
+	j["holstered"] = w.holstered;
+	j["ManaCostOfBullet"] = w.ManaCostOfBullet;
+	j["Multishot"] = w.Multishot;
+	j["FireRate"] = w.FireRate;
+	j["BulletVelocity"] = w.BulletVelocity;
+	j["Scatter"] = w.Scatter;
+}
+
+void from_json(const json& j, Weapon& w) {
+	w.Name = j["Name"].template get<std::string>();
+	w.ManaStorage = j["ManaStorage"].template get<Scale<float>>();
+	w.MaxManaStorage = j["MaxManaStorage"].template get<Upgradable<float>>();
+	w.ReloadSpeed = j["ReloadSpeed"].template get<Upgradable<float>>();
+	w.TimeToHolster = j["TimeToHolster"].template get<Upgradable<float>>();
+	w.TimeToDispatch = j["TimeToDispatch"].template get<Upgradable<float>>();
+	w.holstered = j["holstered"].template get<bool>();
+	w.ManaCostOfBullet = j["ManaCostOfBullet"].template get<Upgradable<float>>();
+	w.Multishot = j["Multishot"].template get<Upgradable<int>>();
+	w.FireRate = j["FireRate"].template get<Upgradable<float>>();
+	w.BulletVelocity = j["BulletVelocity"].template get<Upgradable<float>>();
+	w.Scatter = j["Scatter"].template get<Upgradable<float>>();
+
+	w.lock = true;
+}
+
 
 std::ostream& operator<<(std::ostream& stream, Weapon& weapon) {
     stream << weapon.Name << ' ';
@@ -187,7 +203,7 @@ std::istream& operator>>(std::istream& stream, Weapon& weapon) {
     weapon.TimeFromLastShot = new sf::Clock();
     weapon.DispatchTimer = new sf::Clock();
     weapon.holstered = false;
-    weapon.ManaStorage = {0, weapon.MaxManaStorage, weapon.MaxManaStorage};
+	weapon.ManaStorage = { {0, weapon.MaxManaStorage, weapon.MaxManaStorage} };
     weapon.lock = true;
     return stream;
 }
