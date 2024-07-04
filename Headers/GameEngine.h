@@ -39,6 +39,20 @@ std::vector<Item*> PickupStuff;
 Player player;
 std::vector<Player> ConnectedPlayers;
 
+//////////////////////////////////////////////////////////// Weapons
+Pistol pistol;
+Shotgun shotgun;
+// Revolver revolver;
+Rifle rifle;
+// Bubblegun bubblegun;
+// Armageddon armageddon;
+// Chaotic chaotic;
+std::vector<Weapon*> arsenal = {
+    &pistol,
+    &shotgun,
+    &rifle,
+};
+Scale<int> CurWeapon;
 
 //////////////////////////////////////////////////////////// DrawableStuff
 sf::Sprite WallRect, FLoorTileSprite;
@@ -123,10 +137,6 @@ PlacedText arsWeaponNameText,
            arsWeaponInfoText,
            arsWeaponStatsText;
     
-sf::ConvexShape arsCompGeneratorOutline,
-                arsCompFormFactorOutline,
-                arsCompConverterOutline,
-                arsCompTargetingOutline;
 PolygonButton arsCompGeneratorBtn,
               arsCompFormFactorBtn,
               arsCompConverterBtn,
@@ -144,7 +154,6 @@ std::vector<RectButton> arscompUpgBtns;
 
 std::vector<bool> doInventoryUpdate(inventoryPage::PageCount, false);
 
-
 // UPGRADE SHOP ELEMENTS
 namespace upgradeInterface {
     std::vector<sf::Drawable*> UIElements;
@@ -155,10 +164,10 @@ namespace upgradeInterface {
     RectButton backButton("Back", [](){
         isDrawUpgradeInterface = false;
     });
+    PolygonButton switchGunLBtn;
+    PolygonButton switchGunRBtn;
 
-    PlacedText weaponNameText,
-               weaponInfoText,
-               weaponStatsText;
+    PlacedText weaponDescText;
         
     PolygonButton generatorBtn,
                   formFactorBtn,
@@ -251,20 +260,6 @@ sf::Vector2i MouseBuffer;
 Bullet* tempBullet;
 
 
-//////////////////////////////////////////////////////////// Weapons
-Pistol pistol;
-Shotgun shotgun;
-// Revolver revolver;
-Rifle rifle;
-// Bubblegun bubblegun;
-// Armageddon armageddon;
-// Chaotic chaotic;
-std::vector<Weapon*> arsenal = {
-    &pistol,
-    &shotgun,
-    &rifle,
-};
-Scale<int> CurWeapon;
 
 
 //////////////////////////////////////////////////////////// Enemies
@@ -302,7 +297,6 @@ void updateShopUI();                // Temporary solution. Any interface demands
 void createShopSlotsRects();        // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
 
 void updateUpgradeInterfaceUI();    // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
-void createUpgInterfaceSlotsRects();// Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
 //----------------------------
 
 
@@ -327,6 +321,7 @@ void setFire(Interactable*&);
 //---------------------------- GAME STATE FUNCTIONS
 void updateBullets();
 void updateEnemies();
+void updateUpgradeShopStats();
 void openUpgradeShop();
 
 bool useItem(Item*&);
@@ -501,7 +496,7 @@ void init() {
     effectIcons[2]->setTexture(Textures::Eff_HPRegen);
     effectIcons[3]->setTexture(Textures::Eff_Burn);
 
-    CurWeapon = {0, 2, 0};
+	CurWeapon = { {0, 2, 0} };
 
     initInventory();
     initShops();
@@ -654,31 +649,9 @@ void initInventory() {
     compImgPanel.setSize(scw / 6, sch / 6);
     compImgPanel.setPosition(scw / 8 + 100, sch / 4 + 100);
 
-
-    std::vector<sf::Vector2f> starShape{
-        sf::Vector2f(0, 100),  sf::Vector2f(50, 50),   sf::Vector2f(100, 50),
-        sf::Vector2f(75, 0),   sf::Vector2f(100, -50), sf::Vector2f(50, -50),
-        sf::Vector2f(0, -100), sf::Vector2f(-50, -50), sf::Vector2f(-100, -50),
-        sf::Vector2f(-75, 0),  sf::Vector2f(-100, 50), sf::Vector2f(-50, 50)
-    };
-    std::vector<sf::Vector2f> rectShape{
-        sf::Vector2f(-100, -50), sf::Vector2f(-100, 50), sf::Vector2f(100, 50), sf::Vector2f(100, -50)
-    };
-    std::vector<sf::Vector2f> triangleShape{
-        sf::Vector2f(-75, -75), sf::Vector2f(-75, 75), sf::Vector2f(75, -75)
-    };
-    std::vector<sf::Vector2f> frustumShape{
-        sf::Vector2f(-75, -75), sf::Vector2f(-30, 75), sf::Vector2f(30, 75), sf::Vector2f(75, -75)
-    };
-    std::vector<sf::Vector2f> rotatedTri;
-    for (int i = 0; i < triangleShape.size(); i++)
-        rotatedTri.push_back(RotateOn(-DegToRad(30), triangleShape[i]));
-    std::vector<sf::Vector2f> rotatedFrustum;
-    for (int i = 0; i < frustumShape.size(); i++)
-        rotatedFrustum.push_back(RotateOn(DegToRad(60), frustumShape[i]));
     
     arsCompGeneratorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-    arsCompGeneratorBtn.hitbox.setPoints(starShape);
+    arsCompGeneratorBtn.setHitboxPoints(CommonShapes::starShape, true);
     arsCompGeneratorBtn.setPosition(scw / 8, sch / 2 + 20);
     arsCompGeneratorBtn.setFunction([](){
         isChoosingComponent = true;
@@ -687,16 +660,13 @@ void initInventory() {
         compImgPanel.setTexture(Textures::PH_CochGen);
     });
 
-    arsCompGeneratorOutline.setPointCount(12);
-    for (int i = 0; i < arsCompGeneratorBtn.hitbox.getPointCount(); i++)
-        arsCompGeneratorOutline.setPoint(i, arsCompGeneratorBtn.hitbox.getPoint(i));
-    arsCompGeneratorOutline.setFillColor(sf::Color::Transparent);
-    arsCompGeneratorOutline.setOutlineThickness(3);
-    arsCompGeneratorOutline.setOutlineColor(sf::Color(192, 192, 255, 255));
+    arsCompGeneratorBtn.setFillColor(sf::Color::Transparent);
+    arsCompGeneratorBtn.setOutlineThickness(3);
+    arsCompGeneratorBtn.setOutlineColor(sf::Color(192, 192, 255, 255));
 
 
     arsCompFormFactorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-    arsCompFormFactorBtn.hitbox.setPoints(rectShape);
+    arsCompFormFactorBtn.setHitboxPoints(CommonShapes::rectShape, true);
     arsCompFormFactorBtn.setPosition(scw / 3, 0.7 * sch);
     arsCompFormFactorBtn.setFunction([](){
         isChoosingComponent = true;
@@ -705,16 +675,13 @@ void initInventory() {
         compImgPanel.setTexture(Textures::PH_FormFactor);
     });
 
-    arsCompFormFactorOutline.setPointCount(4);
-    for (int i = 0; i < arsCompFormFactorBtn.hitbox.getPointCount(); i++)
-        arsCompFormFactorOutline.setPoint(i, arsCompFormFactorBtn.hitbox.getPoint(i));
-    arsCompFormFactorOutline.setFillColor(sf::Color::Transparent);
-    arsCompFormFactorOutline.setOutlineThickness(3);
-    arsCompFormFactorOutline.setOutlineColor(sf::Color(255, 255, 192, 255));
+    arsCompFormFactorBtn.setFillColor(sf::Color::Transparent);
+    arsCompFormFactorBtn.setOutlineThickness(3);
+    arsCompFormFactorBtn.setOutlineColor(sf::Color(255, 255, 192, 255));
 
 
     arsCompConverterBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-    arsCompConverterBtn.hitbox.setPoints(rotatedTri);
+    arsCompConverterBtn.setHitboxPoints(RotateOn(-30, CommonShapes::triangleShape), true);
     arsCompConverterBtn.setPosition(0.65 * scw, 0.65 * sch);
     arsCompConverterBtn.setFunction([](){
         isChoosingComponent = true;
@@ -723,16 +690,13 @@ void initInventory() {
         compImgPanel.setTexture(Textures::PH_Converter);
     });
 
-    arsCompConverterOutline.setPointCount(3);
-    for (int i = 0; i < arsCompConverterBtn.hitbox.getPointCount(); i++)
-        arsCompConverterOutline.setPoint(i, arsCompConverterBtn.hitbox.getPoint(i));
-    arsCompConverterOutline.setFillColor(sf::Color::Transparent);
-    arsCompConverterOutline.setOutlineThickness(3);
-    arsCompConverterOutline.setOutlineColor(sf::Color(192, 255, 192, 255));
+    arsCompConverterBtn.setFillColor(sf::Color::Transparent);
+    arsCompConverterBtn.setOutlineThickness(3);
+    arsCompConverterBtn.setOutlineColor(sf::Color(192, 255, 192, 255));
 
 
     arsCompTargetingBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-    arsCompTargetingBtn.hitbox.setPoints(rotatedFrustum);
+    arsCompTargetingBtn.setHitboxPoints(RotateOn(60, CommonShapes::frustumShape), true);
     arsCompTargetingBtn.setPosition(0.8 * scw, sch / 2);
     arsCompTargetingBtn.setFunction([](){
         isChoosingComponent = true;
@@ -741,12 +705,9 @@ void initInventory() {
         compImgPanel.setTexture(Textures::PH_Targeting);
     });
 
-    arsCompTargetingOutline.setPointCount(4);
-    for (int i = 0; i < arsCompTargetingBtn.hitbox.getPointCount(); i++)
-        arsCompTargetingOutline.setPoint(i, arsCompTargetingBtn.hitbox.getPoint(i));
-    arsCompTargetingOutline.setFillColor(sf::Color::Transparent);
-    arsCompTargetingOutline.setOutlineThickness(3);
-    arsCompTargetingOutline.setOutlineColor(sf::Color(255, 192, 192, 255));
+    arsCompTargetingBtn.setFillColor(sf::Color::Transparent);
+	arsCompTargetingBtn.setOutlineThickness(3);
+	arsCompTargetingBtn.setOutlineColor(sf::Color(255, 192, 192, 255));
 
     invPageElements[inventoryPage::Items].push_back(&itemListBG);
     invPageElements[inventoryPage::Items].push_back(&playerCoinSprite);
@@ -759,10 +720,6 @@ void initInventory() {
     invPageElements[inventoryPage::Arsenal].push_back(&arsCompFormFactorBtn);
     invPageElements[inventoryPage::Arsenal].push_back(&arsCompConverterBtn);
     invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingBtn);
-    invPageElements[inventoryPage::Arsenal].push_back(&arsCompGeneratorOutline);
-    invPageElements[inventoryPage::Arsenal].push_back(&arsCompFormFactorOutline);
-    invPageElements[inventoryPage::Arsenal].push_back(&arsCompConverterOutline);
-    invPageElements[inventoryPage::Arsenal].push_back(&arsCompTargetingOutline);
     arsCompUpgradeElements.push_back(&compListFade);
     arsCompUpgradeElements.push_back(&compListBG);
     arsCompUpgradeElements.push_back(&compListTextPanel);
@@ -936,20 +893,35 @@ void initShops() {
         weaponImg.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
                                                 (sch - Textures::PH_gun.getSize().y) / 2);
 
-        weaponNameText.setCharacterSize(30);
-        weaponNameText.setString("Name");
-        weaponNameText.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
-                                    sch / 8);
+        switchGunLBtn.setHitboxPoints(std::vector<sf::Vector2f>{{0, 50}, {0, -50}, {-50, 0}}, true);
+        switchGunLBtn.setFillColor(CommonColors::text);
+        switchGunLBtn.setOutlineColor(sf::Color::Black);
+        switchGunLBtn.setOutlineThickness(3);
+		switchGunLBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+        switchGunLBtn.setCenter(weaponImg.getPosition() +
+								sf::Vector2f(-300, weaponImg.getGlobalBounds().height / 2));
+        switchGunLBtn.setFunction([](){
+            int ind = (std::find(arsenal.begin(), arsenal.end(), player.CurWeapon) - arsenal.begin() - 1);
+            player.CurWeapon = arsenal[ind + arsenal.size() * (ind < 0)];
+            openUpgradeShop();
+        });
 
-        weaponInfoText.setCharacterSize(30);
-        weaponInfoText.setString("Info");
-        weaponInfoText.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
-                                    sch / 8 + 60);
+        switchGunRBtn.setHitboxPoints(std::vector<sf::Vector2f>{{0, 50}, {0, -50}, {50, 0}}, true);
+        switchGunRBtn.setFillColor(CommonColors::text);
+        switchGunRBtn.setOutlineColor(sf::Color::Black);
+        switchGunRBtn.setOutlineThickness(3);
+		switchGunRBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
+        switchGunRBtn.setCenter(weaponImg.getPosition() +
+								sf::Vector2f(weaponImg.getGlobalBounds().width + 300, weaponImg.getGlobalBounds().height / 2));
+        switchGunRBtn.setFunction([](){
+            int ind = (std::find(arsenal.begin(), arsenal.end(), player.CurWeapon) - arsenal.begin() + 1);
+            player.CurWeapon = arsenal[ind % arsenal.size()];
+            openUpgradeShop();
+        });
 
-        weaponStatsText.setCharacterSize(30);
-        weaponStatsText.setString("Stats");
-        weaponStatsText.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
-                                    sch / 8 + 180);
+        weaponDescText.setCharacterSize(30);
+        weaponDescText.setString("Name\nInfo\nStats");
+        weaponDescText.setPosition(scw / 2 - Textures::PH_gun.getSize().x - 75, 100);
 
         sf::Texture* fadeTexture = new sf::Texture();
         sf::Image fadeTexturePixels = sf::Image();
@@ -981,31 +953,9 @@ void initShops() {
 
         playerCoinAmount.setString(FontString("You have:", 50, sf::Color(200, 20, 200)));
         playerCoinAmount.setPosition(listBG.getPosition() + listBG.getSize() - sf::Vector2f(450, 100));
-
-        std::vector<sf::Vector2f> starShape{
-            sf::Vector2f(0, 100),  sf::Vector2f(50, 50),   sf::Vector2f(100, 50),
-            sf::Vector2f(75, 0),   sf::Vector2f(100, -50), sf::Vector2f(50, -50),
-            sf::Vector2f(0, -100), sf::Vector2f(-50, -50), sf::Vector2f(-100, -50),
-            sf::Vector2f(-75, 0),  sf::Vector2f(-100, 50), sf::Vector2f(-50, 50)
-        };
-        std::vector<sf::Vector2f> rectShape{
-            sf::Vector2f(-100, -50), sf::Vector2f(-100, 50), sf::Vector2f(100, 50), sf::Vector2f(100, -50)
-        };
-        std::vector<sf::Vector2f> triangleShape{
-            sf::Vector2f(-75, -75), sf::Vector2f(-75, 75), sf::Vector2f(75, -75)
-        };
-        std::vector<sf::Vector2f> frustumShape{
-            sf::Vector2f(-75, -75), sf::Vector2f(-30, 75), sf::Vector2f(30, 75), sf::Vector2f(75, -75)
-        };
-        std::vector<sf::Vector2f> rotatedTri;
-        for (int i = 0; i < triangleShape.size(); i++)
-            rotatedTri.push_back(RotateOn(-DegToRad(30), triangleShape[i]));
-        std::vector<sf::Vector2f> rotatedFrustum;
-        for (int i = 0; i < frustumShape.size(); i++)
-            rotatedFrustum.push_back(RotateOn(DegToRad(60), frustumShape[i]));
         
         generatorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        generatorBtn.hitbox.setPoints(starShape);
+        generatorBtn.setHitboxPoints(CommonShapes::starShape, true);
         generatorBtn.setPosition(scw / 8, sch / 2 + 20);
         generatorBtn.setFunction([](){
             isChoosingComponent = true;
@@ -1014,16 +964,13 @@ void initShops() {
             imgPanel.setTexture(Textures::PH_CochGen);
         });
 
-        generatorBtn.outline.setPointCount(12);
-        for (int i = 0; i < generatorBtn.hitbox.getPointCount(); i++)
-            generatorBtn.outline.setPoint(i, generatorBtn.hitbox.getPoint(i));
-        generatorBtn.outline.setFillColor(sf::Color::Transparent);
-        generatorBtn.outline.setOutlineThickness(3);
-        generatorBtn.outline.setOutlineColor(sf::Color(192, 192, 255, 255));
+        generatorBtn.setFillColor(sf::Color::Transparent);
+        generatorBtn.setOutlineThickness(3);
+        generatorBtn.setOutlineColor(sf::Color(192, 192, 255, 255));
 
 
         formFactorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        formFactorBtn.hitbox.setPoints(rectShape);
+        formFactorBtn.setHitboxPoints(CommonShapes::rectShape, true);
         formFactorBtn.setPosition(scw / 3, 0.7 * sch);
         formFactorBtn.setFunction([](){
             isChoosingComponent = true;
@@ -1032,16 +979,13 @@ void initShops() {
             imgPanel.setTexture(Textures::PH_FormFactor);
         });
 
-        formFactorBtn.outline.setPointCount(4);
-        for (int i = 0; i < formFactorBtn.hitbox.getPointCount(); i++)
-            formFactorBtn.outline.setPoint(i, formFactorBtn.hitbox.getPoint(i));
-        formFactorBtn.outline.setFillColor(sf::Color::Transparent);
-        formFactorBtn.outline.setOutlineThickness(3);
-        formFactorBtn.outline.setOutlineColor(sf::Color(255, 255, 192, 255));
+        formFactorBtn.setFillColor(sf::Color::Transparent);
+        formFactorBtn.setOutlineThickness(3);
+        formFactorBtn.setOutlineColor(sf::Color(255, 255, 192, 255));
 
 
         converterBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        converterBtn.hitbox.setPoints(rotatedTri);
+        converterBtn.setHitboxPoints(RotateOn(-30, CommonShapes::triangleShape), true);
         converterBtn.setPosition(0.65 * scw, 0.65 * sch);
         converterBtn.setFunction([](){
             isChoosingComponent = true;
@@ -1050,16 +994,13 @@ void initShops() {
             imgPanel.setTexture(Textures::PH_Converter);
         });
 
-        converterBtn.outline.setPointCount(3);
-        for (int i = 0; i < converterBtn.hitbox.getPointCount(); i++)
-            converterBtn.outline.setPoint(i, converterBtn.hitbox.getPoint(i));
-        converterBtn.outline.setFillColor(sf::Color::Transparent);
-        converterBtn.outline.setOutlineThickness(3);
-        converterBtn.outline.setOutlineColor(sf::Color(192, 255, 192, 255));
+        converterBtn.setFillColor(sf::Color::Transparent);
+        converterBtn.setOutlineThickness(3);
+        converterBtn.setOutlineColor(sf::Color(192, 255, 192, 255));
 
 
         targetingBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        targetingBtn.hitbox.setPoints(rotatedFrustum);
+        targetingBtn.setHitboxPoints(RotateOn(60, CommonShapes::frustumShape), true);
         targetingBtn.setPosition(0.8 * scw, sch / 2);
         targetingBtn.setFunction([](){
             isChoosingComponent = true;
@@ -1068,12 +1009,9 @@ void initShops() {
             imgPanel.setTexture(Textures::PH_Targeting);
         });
 
-        targetingBtn.outline.setPointCount(4);
-        for (int i = 0; i < targetingBtn.hitbox.getPointCount(); i++)
-            targetingBtn.outline.setPoint(i, targetingBtn.hitbox.getPoint(i));
-        targetingBtn.outline.setFillColor(sf::Color::Transparent);
-        targetingBtn.outline.setOutlineThickness(3);
-        targetingBtn.outline.setOutlineColor(sf::Color(255, 192, 192, 255));
+        targetingBtn.setFillColor(sf::Color::Transparent);
+        targetingBtn.setOutlineThickness(3);
+        targetingBtn.setOutlineColor(sf::Color(255, 192, 192, 255));
         
 
         compUpgBtns.resize(4);
@@ -1084,18 +1022,14 @@ void initShops() {
 
         UIElements.push_back(&BG);
         UIElements.push_back(&backButton);
+        UIElements.push_back(&switchGunLBtn);
+        UIElements.push_back(&switchGunRBtn);
         UIElements.push_back(&weaponImg);
-        UIElements.push_back(&weaponNameText);
-        UIElements.push_back(&weaponInfoText);
-        UIElements.push_back(&weaponStatsText);
+        UIElements.push_back(&weaponDescText);
         UIElements.push_back(&generatorBtn);
         UIElements.push_back(&formFactorBtn);
         UIElements.push_back(&converterBtn);
         UIElements.push_back(&targetingBtn);
-        UIElements.push_back(&generatorBtn.outline);
-        UIElements.push_back(&formFactorBtn.outline);
-        UIElements.push_back(&converterBtn.outline);
-        UIElements.push_back(&targetingBtn.outline);
         choiceUIElements.push_back(&listFade);
         choiceUIElements.push_back(&listBG);
         choiceUIElements.push_back(&listTextPanel);
@@ -2044,6 +1978,14 @@ void upgradeInterfaceHandler(sf::Event& event) {
     }
 
     if (!isChoosingComponent) {
+        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Left) {
+            upgradeInterface::switchGunLBtn.buttonFunction();
+        }
+        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Right) {
+            upgradeInterface::switchGunRBtn.buttonFunction();
+        }
+		upgradeInterface::switchGunLBtn.isActivated(event);
+		upgradeInterface::switchGunRBtn.isActivated(event);
         upgradeInterface::backButton.isActivated(event);
         upgradeInterface::generatorBtn.isActivated(event);
         upgradeInterface::formFactorBtn.isActivated(event);
@@ -2056,8 +1998,10 @@ void upgradeInterfaceHandler(sf::Event& event) {
         isChoosingComponent = false;
     
     if (isChoosingComponent) {
-        for (RectButton*& btn : upgradeInterface::compUpgBtns[compType])
-            btn->isActivated(event);
+        for (RectButton*& btn : upgradeInterface::compUpgBtns[compType]) {
+            if (btn->isActivated(event))
+                updateUpgradeShopStats();
+        }
     }
 }
 //==============================================================================================
@@ -2428,9 +2372,47 @@ void updateEnemies() {
     }
 }
 
+void updateUpgradeShopStats() {
+    {
+        using namespace upgradeInterface;
+
+        Weapon* weap = player.CurWeapon;
+        weaponDescText.setString(player.CurWeapon->Name + '\n');
+        weaponDescText.addString(weaponDesc[player.CurWeapon->Name] + '\n');
+        weaponDescText.addString("\nStats:");
+        weaponDescText.addString("\nMax Mana: " +
+            floatToString(weap->MaxManaStorage));
+        weaponDescText.addString("\t\tReload Speed: " +
+            floatToString(weap->ReloadSpeed.getStat()) + " mana/sec");
+        weaponDescText.addString("\nTime To Holster: " +
+            floatToString(weap->TimeToHolster.getStat().asSeconds()) + " sec");
+        weaponDescText.addString("\t\tTime To Dispatch: " +
+            floatToString(weap->TimeToDispatch.getStat().asSeconds()) + " sec");
+        weaponDescText.addString("\nMana Cost of shot: " +
+            floatToString(weap->ManaCostOfBullet));
+        weaponDescText.addString("\t\tMultishot: " +
+            std::to_string(weap->Multishot));
+        weaponDescText.addString("\t\tRate of fire: " +
+            floatToString(1 / weap->FireRate.getStat().asSeconds()) + " shots/sec");
+        weaponDescText.addString("\nBulletVelocity: " +
+            floatToString(weap->BulletVelocity));
+        weaponDescText.addString("\t\tScatter: " +
+            floatToString(weap->Scatter) + " deg");
+
+        if (player.CurWeapon == &pistol)
+            weaponImg.setTexture(Textures::PH_Pistol, true);
+        if (player.CurWeapon == &shotgun)
+            weaponImg.setTexture(Textures::PH_Shotgun, true);
+        if (player.CurWeapon == &rifle)
+            weaponImg.setTexture(Textures::PH_Rifle, true);
+    }
+}
+
 void openUpgradeShop() {
     {
         using namespace upgradeInterface;
+
+        updateUpgradeShopStats();
 
         for (int i = 0; i < 4; i++) {
             clearVectorOfPointer(compUpgBtns[i]);
@@ -2720,28 +2702,28 @@ void upgradeStat(int cost, Upgradable<T>* stat, PlacedText* costText) {
 }
 
 void saveGame() {
-    std::ofstream fileToSave("sources/saves/save.json");
+    std::ofstream fileToSave("Saves/save.json");
     json j;
-    j["Player"]   = player.writeJSON();
-    j["Pistol"]   = pistol.writeJSON();
-    j["Shotgun"]  = shotgun.writeJSON();
-    j["Rifle"]    = rifle.writeJSON();
+    j["Player"]   = player;
+    j["Pistol"]   = pistol;
+    j["Shotgun"]  = shotgun;
+    j["Rifle"]    = rifle;
     fileToSave << j.dump(4);
 
     fileToSave.close();
 }
 
 void loadSave() {
-    std::ifstream saveFile("sources/saves/save.json");
+    std::ifstream saveFile("Saves/save.json");
     if (!saveFile.is_open()) {
         std::rand();
         player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
     } else {
         nlohmann::json j = nlohmann::json::parse(saveFile);
-        player  .readJSON(j["Player"]);
-        pistol  .readJSON(j["Pistol"]);
-        shotgun .readJSON(j["Shotgun"]);
-        rifle   .readJSON(j["Rifle"]);
+        j.at("Player").get_to<Player>(player);
+        j.at("Pistol").get_to<Pistol>(pistol);
+        j.at("Shotgun").get_to<Shotgun>(shotgun);
+        j.at("Rifle").get_to<Rifle>(rifle);
     }
     saveFile.close();
 }
