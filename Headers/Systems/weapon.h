@@ -5,12 +5,12 @@
 #define M_PI_RAD M_PI / 180.f
 
 std::map<std::string, std::string> weaponDesc {
-    { "Pistol", "A basic device, that fires\na single accurate bullet per shot."
+    { "Pistol", "A basic device, that fires a single accurate bullet per shot."
         "\nBetter used as a backup to save mana on other weapons." },
-    { "Shotgun", "Powerful device. Sends out multiple bullets\nin a fan shape per single shot."
-                 "Deals high damage if all bullets hit,\nbut requires a lot of mana." },
+    { "Shotgun", "Powerful device. Sends out multiple bullets in a fan shape per single shot.\n"
+                 "Deals high damage if all bullets hit, but requires a lot of mana." },
     { "Rifle", "This device rapidly shoots bullets in exchange for low accuracy.\n"
-        "Good attacking device, but takes a while to\nholster or deploy, so be considerate when to use it." }
+        "Good attacking device, but takes a while to holster or deploy." }
 };
 
 ////////////////////////////////////////////////////////////

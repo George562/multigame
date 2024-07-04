@@ -160,6 +160,7 @@ namespace upgradeInterface {
 
     sf::Sprite BG;
     sf::Sprite weaponImg;
+    sf::Sprite weaponDescFrame;
 
     RectButton backButton("Back", [](){
         isDrawUpgradeInterface = false;
@@ -891,7 +892,7 @@ void initShops() {
 
         weaponImg.setTexture(Textures::PH_gun);
         weaponImg.setPosition((scw - Textures::PH_gun.getSize().x) / 2,
-                                                (sch - Textures::PH_gun.getSize().y) / 2);
+                              (sch - Textures::PH_gun.getSize().y) / 2 + 75.f);
 
         switchGunLBtn.setHitboxPoints(std::vector<sf::Vector2f>{{0, 50}, {0, -50}, {-50, 0}}, true);
         switchGunLBtn.setFillColor(CommonColors::text);
@@ -922,6 +923,12 @@ void initShops() {
         weaponDescText.setCharacterSize(30);
         weaponDescText.setString("Name\nInfo\nStats");
         weaponDescText.setPosition(scw / 2 - Textures::PH_gun.getSize().x - 75, 100);
+        
+        weaponDescFrame.setTexture(Textures::GradientFrameAlpha);
+        weaponDescFrame.setColor(sf::Color(0x00, 0x00, 0x00));
+        weaponDescFrame.setScale((0.5f * scw - 50.f) / Textures::GradientFrameAlpha.getSize().x,
+                                 475.0 / Textures::GradientFrameAlpha.getSize().y);
+        weaponDescFrame.setPosition(scw / 2 - Textures::PH_gun.getSize().x - 100, 75);
 
         sf::Texture* fadeTexture = new sf::Texture();
         sf::Image fadeTexturePixels = sf::Image();
@@ -956,7 +963,7 @@ void initShops() {
         
         generatorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
         generatorBtn.setHitboxPoints(CommonShapes::starShape, true);
-        generatorBtn.setPosition(scw / 8, sch / 2 + 20);
+        generatorBtn.setPosition(scw / 8, sch / 2 + 20 + 5.f);
         generatorBtn.setFunction([](){
             isChoosingComponent = true;
             compType = 0;
@@ -971,7 +978,7 @@ void initShops() {
 
         formFactorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
         formFactorBtn.setHitboxPoints(CommonShapes::rectShape, true);
-        formFactorBtn.setPosition(scw / 3, 0.7 * sch);
+        formFactorBtn.setPosition(scw / 3, 0.7 * sch + 5.f);
         formFactorBtn.setFunction([](){
             isChoosingComponent = true;
             compType = 1;
@@ -986,7 +993,7 @@ void initShops() {
 
         converterBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
         converterBtn.setHitboxPoints(RotateOn(-30, CommonShapes::triangleShape), true);
-        converterBtn.setPosition(0.65 * scw, 0.65 * sch);
+        converterBtn.setPosition(0.65 * scw, 0.65 * sch + 5.f);
         converterBtn.setFunction([](){
             isChoosingComponent = true;
             compType = 2;
@@ -1001,7 +1008,7 @@ void initShops() {
 
         targetingBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
         targetingBtn.setHitboxPoints(RotateOn(60, CommonShapes::frustumShape), true);
-        targetingBtn.setPosition(0.8 * scw, sch / 2);
+        targetingBtn.setPosition(0.8 * scw, sch / 2 + 5.f);
         targetingBtn.setFunction([](){
             isChoosingComponent = true;
             compType = 3;
@@ -1025,6 +1032,7 @@ void initShops() {
         UIElements.push_back(&switchGunLBtn);
         UIElements.push_back(&switchGunRBtn);
         UIElements.push_back(&weaponImg);
+        UIElements.push_back(&weaponDescFrame);
         UIElements.push_back(&weaponDescText);
         UIElements.push_back(&generatorBtn);
         UIElements.push_back(&formFactorBtn);
@@ -2370,28 +2378,21 @@ void updateUpgradeShopStats() {
     {
         using namespace upgradeInterface;
 
-        Weapon* weap = player.CurWeapon;
         weaponDescText.setString(player.CurWeapon->Name + '\n');
         weaponDescText.addString(weaponDesc[player.CurWeapon->Name] + '\n');
         weaponDescText.addString("\nStats:");
-        weaponDescText.addString("\nMax Mana: " +
-            floatToString(weap->MaxManaStorage));
-        weaponDescText.addString("\t\tReload Speed: " +
-            floatToString(weap->ReloadSpeed.getStat()) + " mana/sec");
-        weaponDescText.addString("\nTime To Holster: " +
-            floatToString(weap->TimeToHolster.getStat().asSeconds()) + " sec");
-        weaponDescText.addString("\t\tTime To Dispatch: " +
-            floatToString(weap->TimeToDispatch.getStat().asSeconds()) + " sec");
-        weaponDescText.addString("\nMana Cost of shot: " +
-            floatToString(weap->ManaCostOfBullet));
-        weaponDescText.addString("\t\tMultishot: " +
-            std::to_string(weap->Multishot));
-        weaponDescText.addString("\t\tRate of fire: " +
-            floatToString(1 / weap->FireRate.getStat().asSeconds()) + " shots/sec");
-        weaponDescText.addString("\nBulletVelocity: " +
-            floatToString(weap->BulletVelocity));
-        weaponDescText.addString("\t\tScatter: " +
-            floatToString(weap->Scatter) + " deg");
+
+        weaponDescText.addString("\nMana storage: "       + floatToString(player.CurWeapon->MaxManaStorage));
+        weaponDescText.addString("\t\t\tReload Speed: "     + floatToString(player.CurWeapon->ReloadSpeed.getStat()) + " mana/sec");
+        weaponDescText.addString("\n\nTime To Holster: "    + floatToString(player.CurWeapon->TimeToHolster.getStat().asSeconds()) + " sec");
+        weaponDescText.addString("\t\t\tTime To Dispatch: " + floatToString(player.CurWeapon->TimeToDispatch.getStat().asSeconds()) + " sec");
+        weaponDescText.addString("\n\nDamage: "             + floatToString(player.CurWeapon->ManaCostOfBullet));
+        if (player.CurWeapon->Multishot != 1) {
+            weaponDescText.addString("\t\t\tBullet per shot: "  + std::to_string(player.CurWeapon->Multishot));
+        }
+        weaponDescText.addString("\t\t\tRate of fire: "     + floatToString(1 / player.CurWeapon->FireRate.getStat().asSeconds()) + " shots/sec");
+        weaponDescText.addString("\n\nVelocity of Bullet: " + floatToString(player.CurWeapon->BulletVelocity));
+        weaponDescText.addString("\t\t\tScatter: "          + floatToString(player.CurWeapon->Scatter) + " deg");
 
         if (player.CurWeapon == &pistol)
             weaponImg.setTexture(Textures::PH_Pistol, true);
@@ -2416,7 +2417,7 @@ void openUpgradeShop() {
         }
 
         compUpgBtns[0].push_back(new RectButton(
-                FontString("Upgrade: Max Mana", 32),
+                FontString("Upgrade: Mana storage", 32),
                 [](){
                     upgradeStat(50, &player.CurWeapon->MaxManaStorage, compUpgCosts[0][0]);
                     if (!pistol.MaxManaStorage.maxed()) pistol.ManaStorage.top = pistol.MaxManaStorage;
