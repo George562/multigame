@@ -25,6 +25,12 @@ public:
     std::vector<sf::Vector2f> getHitboxPoints() { return hitbox.getPoints(); }
     std::vector<sf::Vector2f> getDrawShapePoints();
 
+    sf::Vector2f getPosition() const { return hitbox.getPosition(); }
+    sf::Vector2f getCenter() const { return hitbox.getCenter(); }
+    sf::Vector2f getSize() const { return hitbox.getSize(); }
+    sf::Vector2f getRightTop() const { return hitbox.getPosition() + sf::Vector2f(0, hitbox.getSize().y); }
+    sf::Vector2f getRightBottom() const { return hitbox.getPosition() + hitbox.getSize(); }
+
     void setPosition(float, float);
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
     void setCenter(float x, float y) { setPosition(x - hitbox.getSize().x / 2, y - hitbox.getSize().y / 2); }

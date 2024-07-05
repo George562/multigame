@@ -28,6 +28,7 @@ public:
     void addWord(sf::String word)       { lines.push_back(word); text.setString(text.getString() + "\n" + word); text.setCenter(getCenter()); }
     void removeWord(int index);
     void setString(sf::String word)     { lines.clear(); lines.push_back(word); text.setString(word); text.setCenter(getCenter()); }
+    void setString(FontString word)     { lines.clear(); lines.push_back(word.text); text.setString(word); text.setCenter(getCenter()); }
     void clearText()                    { lines.clear(); }
     void setCharacterSize(int charSize) { text.setCharacterSize(charSize); }
     void setTextColor(sf::Color color)  { text.setFillColor(color); }
