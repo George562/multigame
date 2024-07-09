@@ -118,8 +118,7 @@ public:
 		if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
 			holstered = false;
 			DispatchTimer->restart();
-		}
-		else if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch) {
+		} else if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch) {
 			if (ManaStorage.fromTop() == 0) return;
 			holstered = true;
 			HolsterTimer->restart();

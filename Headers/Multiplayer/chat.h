@@ -91,8 +91,11 @@ bool Chat::InputText(sf::Event& event) {
 
     std::string buffer;
     if (inputted && event.type == sf::Event::TextEntered && 32 <= event.text.unicode) {
-        if (event.text.unicode <= 127)  buffer.push_back(event.text.unicode);
-        else  buffer.push_back(event.text.unicode - 1072 - 32);
+        if (event.text.unicode <= 127) {
+            buffer.push_back(event.text.unicode);
+        } else {
+            buffer.push_back(event.text.unicode - 1072 - 32);
+        }
         lines[start].insert(cursorPos, buffer);
         cursorPos++;
     }
@@ -127,10 +130,11 @@ bool Chat::InputText(sf::Event& event) {
 
 bool Chat::Entered() {
     if (inputted && lines[start].TextSize() > 0) {
-        if (commands.count(lines[start].getString()) != 0)
+        if (commands.count(lines[start].getString()) != 0) {
             commands[lines[start].getString()]();
-        else
+        } else {
             pushLine();
+        }
         lines[start].setString("");
     }
     inputted = !inputted;

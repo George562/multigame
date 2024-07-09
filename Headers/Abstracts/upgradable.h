@@ -53,8 +53,7 @@ void to_json(json& j, const Upgradable<T>& u) {
 		std::vector<float> floatStats = timeToFloat(u.stats, timeType::seconds);
 		for (int i = 0; i < u.maxLevel; i++)
 			statArr.push_back(floatStats[i]);
-	}
-	else {
+	} else {
 		for (int i = 0; i < u.maxLevel; i++)
 			statArr.push_back(u.stats[i]);
 	}
@@ -68,8 +67,7 @@ void from_json(const json& j, Upgradable<T>& u) {
 	j.at("maxLevel").get_to(u.maxLevel);
 	if constexpr (std::is_same_v<T, sf::Time>) {
 		u.stats = floatToTime(j["stats"].template get<std::vector<float>>(), timeType::seconds);
-	}
-	else {
+	} else {
 		j.at("stats").get_to<std::vector<T>>(u.stats);
 	}
 	j.at("curLevel").get_to(u.curLevel);

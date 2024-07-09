@@ -55,8 +55,9 @@ void Panel::setTexture(sf::Texture& texture) {
         sf::Vector2f curSize(getScale() * ((sf::Vector2f) sprite.getTexture()->getSize()));
         sprite.setTexture(texture, true);
         setSize(curSize);
+    } else {
+        sprite.setTexture(texture);
     }
-    else sprite.setTexture(texture);
 }
 
 void Panel::removeWord(int index) {
