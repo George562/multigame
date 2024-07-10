@@ -66,6 +66,13 @@ constexpr float oneOverSixty = 1.f / 60.f;
 int completedLevels = 0;
 int curLevel = 1;
 
+
+sf::Clock* coutClock;
+sf::Time coutEvery = sf::milliseconds(1000);
+int drawCount = 0;
+
+
+
 sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View HUDView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});

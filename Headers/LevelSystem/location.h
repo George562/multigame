@@ -46,8 +46,8 @@ public:
     std::vector<sf::Vector2i> getPassages(int _n, int _m);
     void FindEnableTilesFrom(sf::Vector2f&);
     void FillWallsRect();
-    bool LoadFromFile(sf::String FileName);
-    bool WriteToFile(sf::String FileName);
+    bool LoadFromFile(std::string FileName);
+    bool WriteToFile(std::string FileName);
     void ClearSeenWalls() {
         SeenWalls.assign(walls.size(), vb(0));
         for (int i = 0; i < walls.size(); i++)
@@ -191,7 +191,7 @@ void Location::FillWallsRect() {
     }
 }
 
-bool Location::LoadFromFile(sf::String FileName) {
+bool Location::LoadFromFile(std::string FileName) {
     std::ifstream file(FileName);
     if (!file.is_open()) return false;
     file >> n >> m;
@@ -208,7 +208,7 @@ bool Location::LoadFromFile(sf::String FileName) {
     return true;
 }
 
-bool Location::WriteToFile(sf::String FileName) {
+bool Location::WriteToFile(std::string FileName) {
     std::ofstream file(FileName);
     file << n << ' ' << m << '\n';
     for (int i = 0; i < walls.size(); i++) {
