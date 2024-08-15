@@ -45,7 +45,7 @@ namespace inventoryPage {
     using Type = sf::Uint8;
     enum : Type {
         Items,
-        Arsenal,
+        Weapons,
         Equipables,
         Perks,
         Stats,
@@ -53,8 +53,8 @@ namespace inventoryPage {
     };
 }
 
-constexpr int scw = 1920; // screen width
-constexpr int sch = 1080; // screen height
+float scw = sf::VideoMode::getDesktopMode().width; // screen width
+float sch = sf::VideoMode::getDesktopMode().height; // screen height
 
 constexpr int size = 480, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
 constexpr float ScaleParam = float(miniSize) / float(size);

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+#include "../Abstracts/UIElement.h"
 
 std::string floatToString(float num) {
     int wholePart = std::floor(num);
@@ -123,6 +124,84 @@ std::vector<sf::Time> floatToTime(std::vector<float> arr, timeType type) {
         }
     }
     return timeArr;
+}
+
+std::string stringFromArray(std::vector<std::string> strings) {
+    std::string s = "";
+    for (std::string str : strings)
+        s += str;
+    return s;
+}
+
+void setConvexShape(sf::ConvexShape& shape, std::vector<sf::Vector2f> points) {
+    shape.setPointCount(points.size());
+    for (int i = 0; i < points.size(); i++)
+        shape.setPoint(i, points[i]);
+}
+void removeUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recursively = false) {
+    auto ind = std::find(elements.begin(), elements.end(), elem);
+    if (ind != elements.end())
+        DeleteFromVector(elements, (sf::Drawable*)elem);
+    if (recursively) {
+        std::vector<UIElement*> children = elem->getChildren();
+        if (!children.empty()) {
+            int lastInd = 0;
+            int newInd = children.size();
+            int newChildren = -1;
+            while (newChildren != 0) {
+                newChildren = 0;
+                for (int i = lastInd; i < newInd; i++) {
+                    for (UIElement*& newElem : children[i]->getChildren()) {
+                        children.push_back(newElem);
+                        newChildren++;
+                    }
+                }
+                if (newChildren != 0) {
+                    lastInd = newInd;
+                    newInd += newChildren;
+                }
+            }
+        }
+        for (UIElement*& child : children) {
+            ind = std::find(elements.begin(), elements.end(), child);
+            if (ind != elements.end())
+                DeleteFromVector(elements, (sf::Drawable*)child);
+        }
+    }
+}
+
+void addUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recursively = false) {
+    if (find(elements.begin(), elements.end(), elem) == elements.end())
+        elements.push_back(elem);
+    if (recursively) {
+        std::vector<UIElement*> children = elem->getChildren();
+        if (!children.empty()) {
+            int lastInd = 0;
+            int newInd = children.size();
+            int newChildren = -1;
+            while (newChildren != 0) {
+                newChildren = 0;
+                for (int i = lastInd; i < newInd; i++) {
+                    for (UIElement*& newElem : children[i]->getChildren()) {
+                        children.push_back(newElem);
+                        newChildren++;
+                    }
+                }
+                if (newChildren != 0) {
+                    lastInd = newInd;
+                    newInd += newChildren;
+                }
+            }
+        }
+        for (UIElement*& child : children) {
+            if (find(elements.begin(), elements.end(), child) == elements.end())
+                elements.push_back(child);
+        }
+    }
+}
+
+bool keyPressed(sf::Event event, sf::Keyboard::Key key) {
+    return event.type == sf::Event::KeyPressed && event.key.code == key;
 }
 
 sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {

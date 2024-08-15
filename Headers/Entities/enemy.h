@@ -7,7 +7,7 @@ std::vector<std::vector<sf::Vector2f>> TheWayToPlayer;
 // Enemy
 class Enemy : public Creature {
 public:
-    Enemy(sf::String name) : Creature(name, faction::Enemy) {}
+    Enemy(std::string name) : Creature(name, faction::Enemy) {}
     ~Enemy() { if (CurWeapon) { delete CurWeapon; } }
 };
 ////////////////////////////////////////////////////////////

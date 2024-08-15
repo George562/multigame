@@ -4,7 +4,7 @@
 #include <vector>
 
 struct UIRect : public sf::Transformable {
-    float Width = 0, Height = 0;
+    unsigned int Width = 0, Height = 0;
 
     float getTop() const { return getPosition().y; }
     float getRight() const { return getPosition().x + Width; }
@@ -13,6 +13,7 @@ struct UIRect : public sf::Transformable {
     sf::Vector2f getRightTop() const { return sf::Vector2f(getRight(), getTop()); }
     sf::Vector2f getRightBottom() const { return sf::Vector2f(getRight(), getBottom()); }
     sf::Vector2f getLeftBottom() const { return sf::Vector2f(getLeft(), getBottom()); }
+    sf::Vector2f getLeftTop() const { return getPosition(); }
 
     // Get and set position
     sf::Vector2f getPosition() const { return sf::Transformable::getPosition(); }
@@ -29,13 +30,21 @@ struct UIRect : public sf::Transformable {
     void move(sf::Vector2f v) { setPosition(getLeft() + v.x, getTop() + v.y); }
 
     // Get and set size
-    sf::Vector2f getSize() const { return {Width, Height}; }
+    sf::Vector2u getSize() const { return {Width, Height}; }
     virtual void setSize(float w, float h) { Width = w; Height = h; }
-    void setSize(sf::Vector2f v) { setSize(v.x, v.y); }
+    void setSize(sf::Vector2u v) { setSize(v.x, v.y); }
 
-    // Set position and size
-    virtual void setRect(float x, float y, float w, float h) { setPosition(x, y); setSize(w, h); }
+    // Get and set position and size
+    sf::FloatRect getRect() { return { getLeft(), getTop(), 1.0f * Width, 1.0f * Height }; }
+    virtual void setRect(float x, float y, unsigned int w, unsigned int h) { setPosition(x, y); setSize(w, h); }
+    void setRect(sf::Vector2f pos, sf::Vector2u size) { setRect(pos.x, pos.y, size.x, pos.y); }
     void setRect(UIRect rect) { setRect(rect.getLeft(), rect.getTop(), rect.Width, rect.Height); }
+
+    sf::FloatRect getGlobalBounds() {
+        return sf::FloatRect(getPosition(),
+                             sf::Vector2f(getSize().x * getScale().x,
+                                          getSize().y * getScale().y));
+    }
 
     // Check the intersection between two rectangles
     virtual bool intersect(float x, float y, float w, float h) const {

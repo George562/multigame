@@ -51,8 +51,8 @@ public:
 
     virtual sf::Vector2f getSize() const { return size; }
 
-    virtual void move(float x, float y) { setPosition(position.x + x, position.y + y); }
-    virtual void move(sf::Vector2f v)   { setPosition(position + v); }
+    virtual void move(float x, float y)  { setPosition(position.x + x, position.y + y); }
+    virtual void move(sf::Vector2f v)    { setPosition(position + v); }
 
     sf::Vector2f getPoint(size_t index) const { return points[index]; }
     std::vector<sf::Vector2f> getPoints() const { return points; }

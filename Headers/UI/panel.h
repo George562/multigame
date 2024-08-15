@@ -1,40 +1,45 @@
 #pragma once
 #include "text.h"
+#include "../Abstracts/UIElement.h"
 
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Panel : public sf::Transformable, public sf::Drawable {
+class Panel : public UIElement {
 public:
-    bool visible = true;
-    char anchor = 'C';      // How to horizontally align text. C = center, L = left, R = right
-
-    sf::Sprite sprite;
     PlacedText text;
-    std::vector<sf::String> lines;
+    sf::Sprite sprite;
+    std::vector<std::string> lines;
 
-    Panel(sf::String = "");
-    sf::Vector2f getSize() const        { return sprite.getGlobalBounds().getSize() * getScale(); }
-    sf::Vector2f getCenter() const      { return getPosition() + getSize() / 2.f; }
-    void setCenter(float x, float y);
-    void setCenter(sf::Vector2f v)      { setCenter(v.x, v.y); }
-    void setSize(float w, float h)      { setScale(w / sprite.getTexture()->getSize().x, h / sprite.getTexture()->getSize().y); }
-    void setSize(sf::Vector2f s)        { setSize(s.x, s.y); }
+    Panel(std::string, std::string = "");
+    Panel(std::string, UI::Anchor, UI::Anchor, sf::Vector2f = { 0, 0 }, std::string = "");
+    Panel(std::string, sf::FloatRect, std::string = "");
+    sf::Vector2f getCenter() const      { return getPosition() + sf::Vector2f(getSize() / 2u); }
 
-    void setTexture(sf::Texture&);
+    void setPosition(float x, float y);
 
-    void addWord(sf::String word)       { lines.push_back(word); text.setString(text.getString() + "\n" + word); text.setCenter(getCenter()); }
+    void addWord(std::string word) {
+        lines.push_back(word);
+        text.addString("\n" + word);
+        text.setCenter(getCenter());
+    }
     void removeWord(int index);
-    void setString(sf::String word)     { lines.clear(); lines.push_back(word); text.setString(word); text.setCenter(getCenter()); }
-    void setString(FontString word)     { lines.clear(); lines.push_back(word.text); text.setString(word); text.setCenter(getCenter()); }
+
+    void setString(std::string word)     { lines.clear(); lines.push_back(word); text.setString(word); text.setCenter(getCenter()); }
+    void setFontString(FontString word) { lines.clear(); lines.push_back(word); text.setFontString(word); text.setCenter(getCenter()); }
     void clearText()                    { lines.clear(); }
     void setCharacterSize(int charSize) { text.setCharacterSize(charSize); }
     void setTextColor(sf::Color color)  { text.setFillColor(color); }
+
     size_t getLineCount()               { return lines.size(); }
 
-    sf::String& operator[](int index)   { return lines[index]; }
+    void setTexture(sf::Texture&, UI::TextureResize, sf::Vector2u);
+    void setSpriteSize(sf::Vector2u);
+    void setSpriteColor(sf::Color color) { sprite.setColor(color); }
+
+    std::string& operator[](int index)   { return lines[index]; }
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const;
 };
 #pragma pack(pop)
@@ -43,37 +48,59 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Panel::Panel(sf::String word) {
-    text.setCharacterSize(30);
-    text.setFillColor(sf::Color::White);
-    setString(word);
+Panel::Panel(std::string name, std::string word) {
+    setName(name);
+    if (word != "") {
+        text.setCharacterSize(30);
+        text.setFillColor(sf::Color::White);
+        setString(word);
+        text.setCenter(getCenter());
+    }
+}
+
+Panel::Panel(std::string name, UI::Anchor anchor, UI::Anchor anchoringPoint,
+             sf::Vector2f size, std::string word) : Panel(name, word) {
+    setAnchors(anchor, anchoringPoint);
+    setRect(0, 0, size.x, size.y);
+}
+
+Panel::Panel(std::string name, sf::FloatRect rect, std::string word)
+    : Panel(name, UI::none, UI::none, { rect.width, rect.height }, word) {
+    setPosition(rect.left, rect.top);
+}
+
+void Panel::setPosition(float x, float y) {
+    UIElement::setPosition(x, y);
+    sprite.setPosition(x, y);
     text.setCenter(getCenter());
 }
 
-void Panel::setTexture(sf::Texture& texture) {
-    if (sprite.getTexture() != nullptr) {
-        sf::Vector2f curSize(getScale() * ((sf::Vector2f) sprite.getTexture()->getSize()));
-        sprite.setTexture(texture, true);
-        setSize(curSize);
-    }
-    else sprite.setTexture(texture);
+void Panel::setTexture(sf::Texture& texture, UI::TextureResize mode = UI::element, sf::Vector2u size = { 0, 0 }) {
+    sprite.setTexture(texture, true);
+    if (mode == UI::element)
+        setSpriteSize(getSize());
+    else if (mode == UI::texture)
+        setSpriteSize(texture.getSize());
+    else if (mode == UI::size && size != sf::Vector2u{0, 0})
+        setSpriteSize(size);
+}
+
+void Panel::setSpriteSize(sf::Vector2u size) {
+    sprite.setScale(sprite.getScale() * sf::Vector2f{
+        float(size.x) / sprite.getTexture()->getSize().x,
+        float(size.y) / sprite.getTexture()->getSize().y
+    });
 }
 
 void Panel::removeWord(int index) {
     sf::String res = text.getString();
-    res.replace(sf::String(lines[index]), sf::String(""));
+    res.replace(std::string(lines[index]), std::string(""));
     text.setString(res);
     lines.erase(lines.begin() + index);
 }
 
-void Panel::setCenter(float x, float y) {
-    setPosition(x - sprite.getGlobalBounds().width / 2, y - sprite.getGlobalBounds().height / 2);
-}
-
 void Panel::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    if (visible) {
-        states.transform *= getTransform();
-        target.draw(sprite, states);
-        target.draw(text);
-    }
+    // states.transform *= states;
+    target.draw(sprite, states);
+    target.draw(text);
 }
