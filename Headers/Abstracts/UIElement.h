@@ -111,15 +111,13 @@ sf::Vector2f getShiftByPoint(sf::Vector2f size, UI::Anchor anchoringPoint) {
     return shift;
 }
 
-class UIElement : public sf::Drawable, public UIRect {          ////////////////////////////////// WIP
+class UIElement : public sf::Drawable, public UIRect {
 private:
-    void moveToAnchor(UIElement* elem, sf::Vector2f offset = {0, 0}) { // why this function is inside of class?
+    void moveToAnchor(UIElement* elem, sf::Vector2f offset = {0, 0}) {
         if (elem->anchor == UI::none)
             return;
         sf::Vector2f posVec = UIRect::getPosition();
-        if (elem->anchor == UI::Anchor::center) {
-            posVec = getCenter();
-        }
+        if (elem->anchor == UI::Anchor::center) posVec = getCenter();
         else posVec -= getShiftByPoint(sf::Vector2f(getGlobalBounds().getSize()), elem->anchor);
         posVec += getShiftByPoint(sf::Vector2f(elem->getGlobalBounds().getSize()), elem->anchoringPoint);
         elem->setPosition(posVec + offset);

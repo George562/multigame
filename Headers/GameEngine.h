@@ -108,11 +108,11 @@ namespace inventoryInterface {
             elem = &statsFrame;
             break;
         }
-        removeUI(elem, pageElements[page], true);
+        removeUI(elem, pageElements[page]);
     }
 
     void hideInventory() {
-        removeUI(&inventoryFrame, commonElements, true);
+        removeUI(&inventoryFrame, commonElements);
         hidePage(inventoryPage::Items);
         hidePage(inventoryPage::Weapons);
         hidePage(inventoryPage::Stats);
@@ -130,7 +130,6 @@ namespace inventoryInterface {
     ItemSlot coinSlot;        // Special slot, so that it can be conveniently used other than in the inventory
 
     std::vector<ItemSlot> itemSlotsElements; // Elements that comprise an inventory slot - the background texture and the amount text
-    std::vector<sf::FloatRect*> itemSlotsRects; // The slot itself. This is what activates when a player clicks on an item.
 
     Frame statsPlayerImage("statsPlImg", UI::center, UI::L, { 0, 0 });
     Bar<float> statsHPBar("statsHPBar", UI::R, UI::L, { 400, 60 });
@@ -184,11 +183,11 @@ namespace upgradeInterface {
 
     void openComponentUpgrade(int type) {
         isChoosingComponent = true;
-        removeUI(&playerCoinAmount, choiceUIElements, true);
-        removeUI(compUpgPages[compType], choiceUIElements, true);
+        removeUI(&playerCoinAmount, choiceUIElements);
+        removeUI(compUpgPages[compType], choiceUIElements);
         compType = type;
-        addUI(&choiceBG, choiceUIElements, true);
-        addUI(compUpgPages[compType], choiceUIElements, true);
+        addUI(&choiceBG, choiceUIElements);
+        addUI(compUpgPages[compType], choiceUIElements);
         std::string compName;
         sf::Texture* compTexture = nullptr;
         switch (type)
@@ -213,12 +212,12 @@ namespace upgradeInterface {
         if (isDrawInventory) {
             choiceMessage.setFontString(FontString("You can only upgrade at a special upgrade shop.",
                                                    50, CommonColors::warning));
-            removeUI(&playerCoinAmount, choiceUIElements, true);
+            removeUI(&playerCoinAmount, choiceUIElements);
         }
         else {
             choiceMessage.setFontString(FontString("Choose a " + compName + " upgrade   (press RMB to close)",
                                                     50, CommonColors::text));
-            addUI(&playerCoinAmount, choiceUIElements, true);
+            addUI(&playerCoinAmount, choiceUIElements);
         }
         choiceCompImg.setTexture(*compTexture);
     }
@@ -239,7 +238,6 @@ namespace MenuShop {
     std::vector<sf::Drawable*> UIElements;
     std::vector<ShopSlot> slotsElements; // Analogous to the inventory itemSlotsElements + price
     std::vector<ShopSlot> playerSlotsElements; // Analogous to the inventory itemSlotsElements + price
-    std::vector<sf::FloatRect*> slotsRects; // Analogous to the inventory itemSlotsRects
 
     Frame BG("shop_BG", { 0, 0, scw, sch });
     Frame NPCTextFrame("shop_NPCTextFrame", UI::BL, UI::TL, { scw - 100, 200 });
@@ -255,7 +253,9 @@ namespace MenuShop {
     Animation playerCoinsSprite("shop_PlCoinsSprite", UI::R, UI::L);
 
     float itemsViewSizeX, itemsViewSizeY;
+    sf::Transform stockTransform;
     float playerInvViewSizeX, playerInvViewSizeY;
+    sf::Transform playerInvTransform;
 
     PlacedText NPCName("shop_NPCName", UI::R, UI::L);
     PlacedText NPCText("shop_NPCText", UI::center, UI::center);
@@ -316,7 +316,8 @@ std::vector<Enemy*> Enemies;
 void init();
 void initInventory();
 void initUpgradeUI();
-void initShops();
+void initShop();
+void initUpgradeShop();
 void initInterface();
 //----------------------------
 
@@ -328,20 +329,17 @@ void drawWalls();
 void drawMiniMap();
 void drawHUD();
 void drawEffects();
-void drawInventory();               // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
-void drawShop();                    // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
-void drawUpgradeInterface();        // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
+void drawInventory();
+void drawShop();
+void drawUpgradeInterface();
 //----------------------------
 
 
 //---------------------------- UI UPDATERS/CREATORS
 void updateInventoryUI();
-void createSlotRects();
 
-void updateShopUI();                // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
-void createShopSlotsRects();        // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
-
-void updateUpgradeInterfaceUI();    // Temporary solution. Any interface demands it's own function. Not very pretty (code duplication). Better to make a class
+void updateShopUI();
+void updateUpgradeInterfaceUI();
 //----------------------------
 
 
@@ -556,7 +554,8 @@ void init() {
     CurWeapon = { {0, 2, 0} };
 
     initInventory();
-    initShops();
+    initShop();
+    initUpgradeShop();
 
     LoadMainMenu();
 }
@@ -567,7 +566,6 @@ void initInventory() {
 
         pageElements.resize(inventoryPage::PageCount);
         itemSlotsElements.resize(ItemID::ItemCount, ItemSlot());
-        itemSlotsRects.resize(ItemID::ItemCount);
 
         inventoryFrame.setTexture(Textures::GridBG);
 
@@ -580,7 +578,7 @@ void initInventory() {
         itemsButton.setWord(FontString("Items", 32));
         itemsButton.setFunction([]() {
             hidePage(activePage); activePage = inventoryPage::Items;
-            addUI(&itemsFrame, pageElements[activePage], true);
+            addUI(&itemsFrame, pageElements[activePage]);
         });
         itemsButton.parentTo(&inventoryFrame, true);
 
@@ -588,10 +586,10 @@ void initInventory() {
         weaponsButton.setWord(FontString("Weapons", 32));
         weaponsButton.setFunction([](){
             hidePage(activePage); activePage = inventoryPage::Weapons;
-            addUI(&weaponsFrame, pageElements[activePage], true);
-            addUI(&upgradeInterface::BG, pageElements[activePage], true);
-            removeUI(&upgradeInterface::BG, pageElements[activePage]);
-            removeUI(&upgradeInterface::backButton, pageElements[activePage]);
+            addUI(&weaponsFrame, pageElements[activePage]);
+            addUI(&upgradeInterface::BG, pageElements[activePage]);
+            removeUI(&upgradeInterface::BG, pageElements[activePage], false);
+            removeUI(&upgradeInterface::backButton, pageElements[activePage], false);
             updateUpgradeShopStats();
         });
         weaponsButton.parentTo(&itemsButton, true);
@@ -600,7 +598,7 @@ void initInventory() {
         statsButton.setWord(FontString("Stats", 32));
         statsButton.setFunction([]() {
             hidePage(activePage); activePage = inventoryPage::Stats;
-            addUI(&statsFrame, pageElements[activePage], true);
+            addUI(&statsFrame, pageElements[activePage]);
         });
         statsButton.parentTo(&weaponsButton, true);
 
@@ -655,13 +653,12 @@ void initInventory() {
     }
 }
 
-void initShops() {
+void initShop() {
     {
         using namespace MenuShop;
-        slotsElements.resize(ItemID::ItemCount);
         playerSlotsElements.resize(ItemID::ItemCount);
-        slotsRects.resize(ItemID::ItemCount);
-        mainMenuShop.setShop(new std::vector<Item*>{ new Item(ItemID::regenDrug, 100) },
+        slotsElements.resize(ItemID::ItemCount);
+        mainMenuShop.setShop(new std::vector<Item*>{ new Item(ItemID::regenDrug, 10) },
             std::vector<int>{20});
         mainMenuShop.setFunction([]() {
             if (shopSelectedItem != nullptr) {
@@ -671,15 +668,17 @@ void initShops() {
                     player.addItem(boughtItem);
                     player.inventory.money -= mainMenuShop.itemPrices[shopSelectedItem->id];
                     shopSelectedItem->amount--;
+
                     playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
                     playerCoinsSprite.parentTo(&MenuShop::playerCoinsText, true, { 25, -10 });
                     mainMenuShop.soldItems.removeItem(shopSelectedItem, false);
                     NPCText.setString("Thank you for buying a " + stringLower(itemName[shopSelectedItem->id]) + "!");
+
                     if (!mainMenuShop.soldItems.find(shopSelectedItem)) {
+                        slotsElements[shopSelectedItem->id].erase();
                         itemSprite.setTexture(Textures::INVISIBLE);
                         shopSelectedItem = nullptr;
-                        removeUI(&itemSlot, UIElements, true);
-                        createShopSlotsRects();
+                        removeUI(&itemSlot, UIElements);
                     }
                 }
                 else {
@@ -696,7 +695,7 @@ void initShops() {
         shopBackButton.setFunction([]() {
             isDrawShop = false;
             shopSelectedItem = nullptr;
-            removeUI(&MenuShop::BG, MenuShop::UIElements, true);
+            removeUI(&MenuShop::BG, MenuShop::UIElements);
         });
         shopBackButton.parentTo(&BG, true);
 
@@ -722,6 +721,7 @@ void initShops() {
         ShopStockView.setViewport(sf::FloatRect((itemsFrame.getPosition().x + 50) / scw,
             (itemsFrame.getPosition().y + 50 / 3) / sch,
             itemsViewSizeX, itemsViewSizeY));
+        stockTransform.scale(1, 1 / itemsViewSizeY);
 
         playerInvFrame.setTexture(Textures::GradientFrameAlpha);
         playerInvFrame.setSpriteColor(sf::Color(0xBB, 0x40, 0x40));
@@ -732,6 +732,7 @@ void initShops() {
         ShopPlayerInvView.setViewport(sf::FloatRect((playerInvFrame.getPosition().x + 50) / scw,
             (playerInvFrame.getPosition().y + 50) / sch,
             playerInvViewSizeX, playerInvViewSizeY));
+        playerInvTransform.scale(1, 1 / playerInvViewSizeY);
 
         itemStatsFrame.setTexture(Textures::GradientFrameAlpha);
         itemStatsFrame.setSpriteColor(sf::Color(0xCC, 0xAA, 0x11));
@@ -774,8 +775,9 @@ void initShops() {
         playerCoinsSprite.parentTo(&playerCoinsText, true);
         playerCoinsSprite.play();
     }
+}
 
-
+void initUpgradeShop() {
     {
         using namespace upgradeInterface;
         BG.setTexture(Textures::GridBG);
@@ -1039,12 +1041,6 @@ void draw() {
         }
     }
     window.display();
-
-    // DEBUG
-    //if (coutClock->getElapsedTime() >= coutEvery) {
-    //    std::cout << "\n[END OF DRAW CALL #" << ++drawCount << "]\n------------------------------------------\n";
-    //    coutClock->restart();
-    //}
 }
 
 void drawFloor() {
@@ -1258,7 +1254,6 @@ void drawInventory() {
     window.setView(InventoryView);
 
     updateInventoryUI();
-
     {
         using namespace inventoryInterface;
 
@@ -1315,27 +1310,23 @@ void drawShop() {
             window.draw(*elem);
 
         window.setView(ShopStockView);
-        sf::Transform viewTransform = sf::Transform::Identity;
-        viewTransform = viewTransform.scale(1, 1 / itemsViewSizeY);
         for (Item*& item : curShop->soldItems.items) {
             if (slotsElements[item->id].isInitialized) {
-                window.draw(*slotsElements[item->id].background, viewTransform);
-                if (item->amount >= 1) window.draw(*slotsElements[item->id].amountText, viewTransform);
-                window.draw(*slotsElements[item->id].priceText, viewTransform);
+                window.draw(*slotsElements[item->id].background, stockTransform);
+                if (item->amount >= 1) window.draw(*slotsElements[item->id].amountText, stockTransform);
+                window.draw(*slotsElements[item->id].priceText, stockTransform);
             }
-            window.draw(*item, viewTransform);
+            window.draw(*item, stockTransform);
         }
 
         window.setView(ShopPlayerInvView);
-        viewTransform = sf::Transform::Identity;
-        viewTransform = viewTransform.scale(1, 1 / playerInvViewSizeY);
         for (Item*& item : player.inventory.items) {
             if (playerSlotsElements[item->id].isInitialized) {
-                window.draw(*playerSlotsElements[item->id].background, viewTransform);
-                if (item->amount >= 1) window.draw(*playerSlotsElements[item->id].amountText, viewTransform);
-                window.draw(*playerSlotsElements[item->id].priceText, viewTransform);
+                window.draw(*playerSlotsElements[item->id].background, playerInvTransform);
+                if (item->amount >= 1) window.draw(*playerSlotsElements[item->id].amountText, playerInvTransform);
+                window.draw(*playerSlotsElements[item->id].priceText, playerInvTransform);
             }
-            window.draw(*item, viewTransform);
+            window.draw(*item, playerInvTransform);
         }
 
         window.setView(HUDView);
@@ -1503,47 +1494,6 @@ void updateUpgradeInterfaceUI() {
         coinSprite.parentTo(&playerCoinAmount, true);
     }
 }
-
-void createSlotRects() {
-    {
-        using namespace inventoryInterface;
-        for (int i = 0; i < itemSlotsRects.size(); i++)
-            DeletePointerFromVector(itemSlotsRects, i--);
-        itemSlotsRects.resize(ItemID::ItemCount);
-
-        int slotNumber = 0;
-        for (Item*& item : player.inventory.items) {
-            float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
-            float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
-
-            sf::FloatRect* itemActivationRect = new sf::FloatRect(itemX, itemY,
-                Textures::ItemPanel.getSize().x / 2,
-                Textures::ItemPanel.getSize().y / 2);
-            itemSlotsRects[item->id] = itemActivationRect;
-
-            slotNumber++;
-        }
-    }
-}
-
-void createShopSlotsRects() {
-    for (int i = 0; i < MenuShop::slotsRects.size(); i++)
-        DeletePointerFromVector(MenuShop::slotsRects, i--);
-    MenuShop::slotsRects.resize(ItemID::ItemCount);
-
-    int slotNumber = 0;
-    for (Item*& item : curShop->soldItems.items) {
-        float itemX = ((slotNumber % 5) * 200 + 30);
-        float itemY = ((slotNumber / 5) * 200 + 20) / MenuShop::itemsViewSizeY;
-
-        sf::FloatRect* itemActivationRect = new sf::FloatRect(itemX, itemY,
-            Textures::ItemPanel.getSize().x * 0.4,
-            Textures::ItemPanel.getSize().y * 0.4 / MenuShop::itemsViewSizeY);
-        MenuShop::slotsRects[item->id] = itemActivationRect;
-
-        slotNumber++;
-    }
-}
 //==============================================================================================
 
 
@@ -1608,9 +1558,9 @@ void EventHandler() {
                     {
                         using namespace inventoryInterface;
                         isDrawInventory = true;
-                        addUI(&inventoryFrame, commonElements, true);
+                        addUI(&inventoryFrame, commonElements);
                         activePage = inventoryPage::Items;
-                        addUI(&itemsFrame, pageElements[activePage], true);
+                        addUI(&itemsFrame, pageElements[activePage]);
                         doInventoryUpdate[activePage] = true;
                     }
                 }
@@ -1768,8 +1718,8 @@ void inventoryHandler(sf::Event& event) {
         int itemTypeCount = 0;
         if (activePage == inventoryPage::Items) {
             for (Item*& item : player.inventory.items) {
-                if (!itemSlotsRects.empty() && itemSlotsRects[item->id] != nullptr &&
-                    itemSlotsRects[item->id]->contains(sf::Vector2f(sf::Mouse::getPosition()))) {
+                if (itemSlotsElements[item->id].isInitialized &&
+                    itemSlotsElements[item->id].contains(sf::Vector2f(sf::Mouse::getPosition()))) {
                     if (item->id != prevItemDescID) {
                         prevItemDescID = ItemID::ItemCount;
                         isItemDescDrawn = false;
@@ -1791,7 +1741,6 @@ void inventoryHandler(sf::Event& event) {
                 }
                 itemTypeCount++;
             }
-            if (itemTypeCount != prevItemTypeCount) createSlotRects();
             prevItemTypeCount = itemTypeCount;
             if (!isAnythingHovered) isItemDescDrawn = false;
         }
@@ -1816,24 +1765,25 @@ void shopHandler(sf::Event& event) {
     if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left) {
 
         window.setView(ShopStockView);
-        sf::Vector2f viewPos = window.mapPixelToCoords(sf::Mouse::getPosition());
+        sf::Vector2f viewPos = MenuShop::stockTransform.getInverse().
+                               transformPoint(window.mapPixelToCoords(sf::Mouse::getPosition()));
         {
             using namespace MenuShop;
-            for (Item*& item : curShop->soldItems.items)
-                if (!slotsRects.empty() && slotsRects[item->id] != nullptr &&
-                    slotsRects[item->id]->contains(viewPos)) {
+            for (Item*& item : curShop->soldItems.items) {
+                if (slotsElements[item->id].isInitialized && slotsElements[item->id].contains(viewPos)) {
 
                     shopSelectedItem = item;
                     itemSlot.priceText->setString(std::string(std::to_string(curShop->itemPrices[item->id]) + " C"));
                     itemSlot.priceText->setCenter(itemSlot.getCenter().x, itemSlot.priceText->getCenter().y);
-                    itemCoinsSprite.parentTo(itemSlot.priceText, true, { 20, -15});
+                    itemCoinsSprite.parentTo(itemSlot.priceText, true, { 20, -15 });
                     itemCoinsSprite.parentTo(&itemSlot);
                     itemStatsText.setString(textWrap(itemDesc[item->id], 65));
                     itemSprite.setTexture(*itemTexture[item->id], UI::texture);
                     itemSprite.parentTo(&itemSlot, true);
-                    
-                    addUI(&itemSlot, UIElements, true);
+
+                    addUI(&itemSlot, UIElements);
                 }
+            }
         }
     }
     window.setView(InterfaceView);
@@ -2051,7 +2001,7 @@ void LoadMainMenu() {
         DrawableStuff.clear();
         InterfaceStuff.clear();
         InteractibeStuff.clear();
-        removeUI(&HUDFrame, InterfaceStuff, true);
+        removeUI(&HUDFrame, InterfaceStuff);
 
         player.hitbox.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
 
@@ -2081,7 +2031,7 @@ void LoadMainMenu() {
         for (Enemy*& enemy : Enemies) {
             DrawableStuff.push_back(enemy);
         }
-        addUI(&HUDFrame, InterfaceStuff, true);
+        addUI(&HUDFrame, InterfaceStuff);
         for (int i = 0; i < WeaponNameTexts.size(); i++)
             InterfaceStuff.push_back(WeaponNameTexts[i]);
         InterfaceStuff.push_back(&chat);
@@ -2104,9 +2054,9 @@ void LoadMainMenu() {
                 " entire plane of existence in a literal motherfucking sense, that we have no fucking clue on"
                 " how it fucking works why did we decide it was a good idea to station a shop exactly here\?!\?\?!\?!\?\" shop!", 94));
             NPCText.parentTo(&NPCTextFrame, true);
-            addUI(&BG, UIElements, true);
-            if (!shopSelectedItem) removeUI(&itemSlot, UIElements, true);
-            createShopSlotsRects();
+            addUI(&BG, UIElements);
+            if (!shopSelectedItem)
+                removeUI(&itemSlot, UIElements);
         }
     });
 
@@ -2131,7 +2081,7 @@ void LoadMainMenu() {
 
     InterfaceStuff.clear();
     InterfaceStuff.push_back(&chat);
-    addUI(&HUDFrame, InterfaceStuff, true);
+    addUI(&HUDFrame, InterfaceStuff);
 
     InteractibeStuff.clear();
     InteractibeStuff.push_back(&portal);
@@ -2532,7 +2482,7 @@ void openUpgradeShop() {
         using namespace upgradeInterface;
         setUpgradeFunctions();
         updateUpgradeShopStats();
-        addUI(&BG, UIElements, true);
+        addUI(&BG, UIElements);
         for (int i = 0; i < compUpgBtns.size(); i++)
             for (int j = 0; j < compUpgBtns[i].size(); j++)
                 compUpgBtns[i][j]->setSpriteColor(sf::Color::White);

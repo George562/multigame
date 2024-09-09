@@ -138,65 +138,21 @@ void setConvexShape(sf::ConvexShape& shape, std::vector<sf::Vector2f> points) {
     for (int i = 0; i < points.size(); i++)
         shape.setPoint(i, points[i]);
 }
-void removeUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recursively = false) {
-    auto ind = std::find(elements.begin(), elements.end(), elem);
-    if (ind != elements.end())
+void removeUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recursively = true) {
+    if (find(elements.begin(), elements.end(), elem) != elements.end()) {
         DeleteFromVector(elements, (sf::Drawable*)elem);
-    if (recursively) {
-        std::vector<UIElement*> children = elem->getChildren();
-        if (!children.empty()) { // why not recursivly???
-            int lastInd = 0;
-            int newInd = children.size();
-            int newChildren = -1;
-            while (newChildren != 0) {
-                newChildren = 0;
-                for (int i = lastInd; i < newInd; i++) {
-                    for (UIElement*& newElem : children[i]->getChildren()) {
-                        children.push_back(newElem);
-                        newChildren++;
-                    }
-                }
-                if (newChildren != 0) {
-                    lastInd = newInd;
-                    newInd += newChildren;
-                }
-            }
-        }
-        for (UIElement*& child : children) {
-            ind = std::find(elements.begin(), elements.end(), child);
-            if (ind != elements.end())
-                DeleteFromVector(elements, (sf::Drawable*)child);
-        }
+        if (recursively)
+            for (UIElement*& child : elem->getChildren())
+                removeUI(child, elements, recursively);
     }
 }
 
-void addUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recursively = false) {
-    if (find(elements.begin(), elements.end(), elem) == elements.end())
+void addUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recursively = true) {
+    if (find(elements.begin(), elements.end(), elem) == elements.end()) {
         elements.push_back(elem);
-    if (recursively) {
-        std::vector<UIElement*> children = elem->getChildren();
-        if (!children.empty()) {
-            int lastInd = 0;
-            int newInd = children.size();
-            int newChildren = -1;
-            while (newChildren != 0) {
-                newChildren = 0;
-                for (int i = lastInd; i < newInd; i++) {
-                    for (UIElement*& newElem : children[i]->getChildren()) {
-                        children.push_back(newElem);
-                        newChildren++;
-                    }
-                }
-                if (newChildren != 0) {
-                    lastInd = newInd;
-                    newInd += newChildren;
-                }
-            }
-        }
-        for (UIElement*& child : children) {
-            if (find(elements.begin(), elements.end(), child) == elements.end())
-                elements.push_back(child);
-        }
+        if (recursively)
+            for (UIElement*& child : elem->getChildren())
+                addUI(child, elements, recursively);
     }
 }
 

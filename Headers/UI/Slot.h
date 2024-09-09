@@ -29,6 +29,12 @@ public:
         setPosition(rect.getPosition().x, rect.getPosition().y);
     };
 
+    virtual void erase() {
+        isInitialized = false;
+        delete background;
+        delete amountText;
+    }
+
     virtual void setPosition(float x, float y) {
         UIRect::setPosition(x, y);
         background->setPosition(x, y);
@@ -69,6 +75,11 @@ public:
         init(name, UI::none, UI::none, rect.getSize());
         setPosition(rect.getPosition().x, rect.getPosition().y);
     };
+
+    virtual void erase() {
+        ItemSlot::erase();
+        delete priceText;
+    }
 
     virtual void setPosition(float x, float y) {
         ItemSlot::setPosition(x, y);
