@@ -144,7 +144,7 @@ void removeUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recurs
         DeleteFromVector(elements, (sf::Drawable*)elem);
     if (recursively) {
         std::vector<UIElement*> children = elem->getChildren();
-        if (!children.empty()) {
+        if (!children.empty()) { // why not recursivly???
             int lastInd = 0;
             int newInd = children.size();
             int newChildren = -1;

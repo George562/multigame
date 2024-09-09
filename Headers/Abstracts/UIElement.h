@@ -113,7 +113,7 @@ sf::Vector2f getShiftByPoint(sf::Vector2f size, UI::Anchor anchoringPoint) {
 
 class UIElement : public sf::Drawable, public UIRect {          ////////////////////////////////// WIP
 private:
-    void moveToAnchor(UIElement* elem, sf::Vector2f offset = {0, 0}) {
+    void moveToAnchor(UIElement* elem, sf::Vector2f offset = {0, 0}) { // why this function is inside of class?
         if (elem->anchor == UI::none)
             return;
         sf::Vector2f posVec = UIRect::getPosition();
