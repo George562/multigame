@@ -26,7 +26,7 @@ public:
     void setFunction(void (*func)(Interactable*)) { function = func; }
 
     virtual bool isActivated(CollisionCircle&, sf::Event& event) {
-        if (event.type == sf::Event::KeyPressed && event.key.code == ActivationButton) {
+        if (keyPressed(event, ActivationButton)) {
             function(this);
             return true;
         }
@@ -45,7 +45,8 @@ public:
         if (animation != nullptr) {
             delete animation;
         }
-        animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
+        animation = new Animation("");
+        animation->setAnimation(texture, FrameAmount, maxLevel, duration, shader);
         hitbox.setSize(animation->getGlobalSize());
         animation->play();
     };
@@ -54,7 +55,8 @@ public:
         if (animation != nullptr) {
             delete animation;
         }
-        animation = new Animation(texture, shader);
+        animation = new Animation("");
+        animation->setTexture(texture, shader);
         hitbox.setSize(animation->getGlobalSize());
         animation->play();
     };

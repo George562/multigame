@@ -4,7 +4,7 @@
 #include "../Abstracts/scale.h"
 #define M_PI_RAD M_PI / 180.f
 
-std::map<std::string, std::string> weaponDesc {
+std::map<std::string, std::string> weaponDescString {
     { "Pistol", "A basic device, that fires a single accurate bullet per shot."
         "\nBetter used as a backup to save mana on other weapons." },
     { "Shotgun", "Powerful device. Sends out multiple bullets in a fan shape per single shot.\n"

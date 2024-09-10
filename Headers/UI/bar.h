@@ -1,6 +1,7 @@
 #pragma once
 #include "text.h"
 #include "../Abstracts/scale.h"
+#include "../Abstracts/UIElement.h"
 
 #define STANDART_BAR_WALL_WIDTH 5
 
@@ -9,7 +10,7 @@
 ////////////////////////////////////////////////////////////
 
 template <typename T>
-class Bar : public sf::Drawable, public sf::Transformable {
+class Bar : public UIElement {
 public:
     mutable sf::RectangleShape background, foreground, wall;
     mutable PlacedText ValueText;
@@ -18,17 +19,41 @@ public:
     float wallWidth = STANDART_BAR_WALL_WIDTH;
 
     Bar() { foreground.setPosition(wallWidth, wallWidth); background.setPosition(wallWidth, wallWidth); }
-    void setValue(Scale<T>& v) { value = &v; }
-    sf::Vector2f getSize() const { return wall.getSize(); }
+    Bar(std::string name);
+    Bar(std::string name, UI::Anchor anchor, UI::Anchor anchoringPoint, sf::Vector2f = { 0, 0 });
+    Bar(std::string name, sf::FloatRect rect);
+
+    void setValue(Scale<T>& v) { value = &v; ValueText.setCenter(getCenter()); }
     void setWallWidth(float w);
     void setSize(float w, float h);
+    void setPosition(float x, float y);
+    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
     void setColors(sf::Color wallColor, sf::Color foregroundColor, sf::Color backgroundColor);
+    void setString(sf::String s)     { ValueText.setString(s); }
+    void setFontString(FontString s) { ValueText.setFontString(s); }
     void draw(sf::RenderTarget&, sf::RenderStates = sf::RenderStates::Default) const;
 };
 
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
+
+template <class T>
+Bar<T>::Bar(std::string name) : Bar() {
+    setName(name);
+}
+
+template <class T>
+Bar<T>::Bar(std::string name, UI::Anchor anchor, UI::Anchor anchoringPoint, sf::Vector2f size) : Bar(name) {
+    setAnchors(anchor, anchoringPoint);
+    setRect(0, 0, size.x, size.y);
+    setSize(size.x, size.y);
+}
+
+template <class T>
+Bar<T>::Bar(std::string name, sf::FloatRect rect) : Bar(name, UI::none, UI::none, { rect.width, rect.height }) {
+    setPosition(rect.left, rect.top);
+}
 
 template <typename T>
 void Bar<T>::setWallWidth(float w) {
@@ -40,9 +65,20 @@ void Bar<T>::setWallWidth(float w) {
 
 template <typename T>
 void Bar<T>::setSize(float w, float h) {
+    UIElement::setSize(w, h);
     wall.setSize({w, h});
     background.setSize({w - wallWidth * 2.f, h - wallWidth * 2.f});
     foreground.setSize({w - wallWidth * 2.f, h - wallWidth * 2.f});
+}
+
+template <typename T>
+void Bar<T>::setPosition(float x, float y) {
+    sf::Vector2f prevPos = getPosition();
+    UIElement::setPosition(x, y);
+    wall.setPosition(getPosition());
+    background.setPosition(wall.getPosition() + sf::Vector2f(wallWidth, wallWidth));
+    foreground.setPosition(wall.getPosition() + sf::Vector2f(wallWidth, wallWidth));
+    ValueText.setCenter(getCenter());
 }
 
 template <typename T>
@@ -57,9 +93,8 @@ void Bar<T>::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (value) {
         foreground.setScale(value->filling(), 1);
         ValueText.setString(std::to_string((int)value->cur) + " / " + std::to_string((int)value->top));
-        ValueText.setCenter(getSize() / 2.f);
+        ValueText.setCenter(getCenter());
     }
-    states.transform *= getTransform();
     if (ShowWall) target.draw(wall, states);
     if (ShowBackground) target.draw(background, states);
     if (ShowForeground) target.draw(foreground, states);

@@ -16,7 +16,7 @@ public:
 ////////////////////////////////////////////////////////////
 
 void to_json(json& j, const Player& p) {
-	j["Name"] = p.Name.getString();
+	j["Name"] = p.Name.getString().text.toAnsiString();
 	j["Health"] = p.Health;
 	j["HealthRecovery"] = p.HealthRecovery;
 	j["Mana"] = p.Mana;

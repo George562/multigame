@@ -1,12 +1,13 @@
 #pragma once
 #include "../../SFML-2.5.1/include/SFML/Graphics.hpp"
+#include "../Abstracts/UIElement.h"
 
 ////////////////////////////////////////////////////////////
 // Class
 ////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-class Animation : public sf::Drawable, public sf::Transformable {
+class Animation : public UIElement {
 private:
     mutable sf::Sprite sprite;
     int maxLevel, curLevel;
@@ -19,8 +20,9 @@ private:
 
 public:
     Animation();
-    Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
-    Animation(sf::Texture& texture, sf::Shader* shader = nullptr);
+    Animation(std::string);
+    Animation(std::string, UI::Anchor, UI::Anchor);
+    Animation(std::string, sf::Vector2f);
     ~Animation();
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const;
 
@@ -28,11 +30,13 @@ public:
     void pause();
     void stop();
 
-    void setTexture(sf::Texture& name);
+    void setTexture(sf::Texture& name, sf::Shader* shader = nullptr);
     void setShader(sf::Shader* shader);
     void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
     void setAnimationLevel(int);
     void setSize(sf::Vector2f size);
+    void setPosition(float x, float y);
+    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
     sf::Vector2f getGlobalSize() const;
     sf::Vector2f getLocalSize() const;
 };
@@ -49,12 +53,16 @@ Animation::Animation() {
     curLevel = 0;
 }
 
-Animation::Animation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader) : Animation() {
-    setAnimation(texture, FrameAmount, maxLevel, duration, shader);                 // Actual black magic
+Animation::Animation(std::string name) : Animation() {
+    setName(name);
 }
 
-Animation::Animation(sf::Texture& texture, sf::Shader* shader) : Animation() {
-    setAnimation(texture, 1, 1, sf::Time::Zero, shader);                            // Actual black magic
+Animation::Animation(std::string name, UI::Anchor anchor, UI::Anchor anchoringPoint) : Animation(name) {
+    setAnchors(anchor, anchoringPoint);
+}
+
+Animation::Animation(std::string name, sf::Vector2f pos) : Animation(name, UI::none, UI::none) {
+    setPosition(pos.x, pos.y);
 }
 
 Animation::~Animation() {
@@ -96,8 +104,14 @@ void Animation::stop() {
     curTime = sf::Time::Zero;
 }
 
-void Animation::setTexture(sf::Texture& texture) {
+void Animation::setTexture(sf::Texture& texture, sf::Shader* shader) {
     sprite.setTexture(texture);
+    this->frameAmount = 1;
+    this->maxLevel = 1;
+    this->duration = sf::Time::Zero;
+    this->isPlaying = true;
+    this->shader = shader;
+    UIRect::setSize(texture.getSize().x, texture.getSize().y);
 }
 
 void Animation::setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader) {
@@ -106,6 +120,7 @@ void Animation::setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel
     this->maxLevel = maxLevel;
     this->duration = duration;
     this->shader = shader;
+    UIRect::setSize(texture.getSize().x / frameAmount, texture.getSize().y / maxLevel);
 }
 
 void Animation::setShader(sf::Shader* shader) {
@@ -113,7 +128,12 @@ void Animation::setShader(sf::Shader* shader) {
 }
 
 void Animation::setSize(sf::Vector2f size) {
-    setScale(size.x / getLocalSize().x, size.y / getLocalSize().y);
+    UIRect::setSize(size.x / frameAmount, size.y / maxLevel);
+    setScale(sf::Vector2f{size.x / getLocalSize().x, size.y / getLocalSize().y});
+}
+
+void Animation::setPosition(float x, float y) {
+    UIRect::setPosition(x, y);
 }
 
 sf::Vector2f Animation::getGlobalSize() const {

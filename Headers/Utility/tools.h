@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+#include "../Abstracts/UIElement.h"
 
 std::string floatToString(float num) {
     int wholePart = std::floor(num);
@@ -123,6 +124,40 @@ std::vector<sf::Time> floatToTime(std::vector<float> arr, timeType type) {
         }
     }
     return timeArr;
+}
+
+std::string stringFromArray(std::vector<std::string> strings) {
+    std::string s = "";
+    for (std::string str : strings)
+        s += str;
+    return s;
+}
+
+void setConvexShape(sf::ConvexShape& shape, std::vector<sf::Vector2f> points) {
+    shape.setPointCount(points.size());
+    for (int i = 0; i < points.size(); i++)
+        shape.setPoint(i, points[i]);
+}
+void removeUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recursively = true) {
+    if (find(elements.begin(), elements.end(), elem) != elements.end()) {
+        DeleteFromVector(elements, (sf::Drawable*)elem);
+        if (recursively)
+            for (UIElement*& child : elem->getChildren())
+                removeUI(child, elements, recursively);
+    }
+}
+
+void addUI(UIElement* elem, std::vector<sf::Drawable*>& elements, bool recursively = true) {
+    if (find(elements.begin(), elements.end(), elem) == elements.end()) {
+        elements.push_back(elem);
+        if (recursively)
+            for (UIElement*& child : elem->getChildren())
+                addUI(child, elements, recursively);
+    }
+}
+
+bool keyPressed(sf::Event event, sf::Keyboard::Key key) {
+    return event.type == sf::Event::KeyPressed && event.key.code == key;
 }
 
 sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {

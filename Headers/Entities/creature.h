@@ -27,7 +27,7 @@ public:
     float Acceleration;
     sf::Vector2f target; // target point to move towards
 
-    Weapon *CurWeapon = nullptr; // ref on exist weapon from arsenal
+    Weapon *CurWeapon = nullptr; // ref on exist weapon from Weapons
 
     sf::Time LastStateCheck;
     sf::Time LastMoveCheck;
@@ -116,7 +116,8 @@ public:
         if (animation != nullptr) {
             delete animation;
         }
-        animation = new Animation(texture, FrameAmount, maxLevel, duration, shader);
+        animation = new Animation("");
+        animation->setAnimation(texture, FrameAmount, maxLevel, duration, shader);
         animation->setSize(hitbox.getSize());
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
@@ -126,7 +127,8 @@ public:
         if (animation != nullptr) {
             delete animation;
         }
-        animation = new Animation(texture, shader);
+        animation = new Animation("");
+        animation->setTexture(texture, shader);
         animation->setSize(hitbox.getSize());
         animation->setOrigin(animation->getLocalSize() / 2.f);
         animation->play();
