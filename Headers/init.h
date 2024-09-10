@@ -26,7 +26,7 @@ namespace faction {
     }
 };
 
-namespace pacetStates {
+namespace packetStates {
     sf::Uint8 curState;
     enum : sf::Uint8 {
         disconnect,         // client send to host

@@ -35,7 +35,7 @@ std::string stringLower(std::string text) {
     for (int i = 0; i < text.size(); i++)
         if ('A' <= text[i] && text[i] <= 'Z')
             uppercaseCount++;
-    if (uppercaseCount > 1) // If it's an acronym - do not lower
+    if (uppercaseCount > 1)
         return text;
     for (int i = 0; i < text.size(); i++)
         loweredText.push_back(std::tolower(text[i]));

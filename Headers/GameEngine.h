@@ -96,17 +96,16 @@ namespace inventoryInterface {
 
     void hidePage(inventoryPage::Type page) {
         UIElement* elem = nullptr;
-        switch (page)
-        {
-        case inventoryPage::Items:
-            elem = &itemsFrame;
-            break;
-        case inventoryPage::Weapons:
-            elem = &weaponsFrame;
-            break;
-        case inventoryPage::Stats:
-            elem = &statsFrame;
-            break;
+        switch (page) {
+            case inventoryPage::Items:
+                elem = &itemsFrame;
+                break;
+            case inventoryPage::Weapons:
+                elem = &weaponsFrame;
+                break;
+            case inventoryPage::Stats:
+                elem = &statsFrame;
+                break;
         }
         removeUI(elem, pageElements[page]);
     }
@@ -136,12 +135,12 @@ namespace inventoryInterface {
     Bar<float> statsMPBar("statsMPBar", UI::R, UI::L, { 400, 60 });
 
     PlacedText statsHPText("statsHPText", UI::TL, UI::TL),
-               statsMPText("statsMPText", UI::TL, UI::TL),
-               statsArmorText("statsArmorText", UI::TL, UI::TL),
-               statsHPRegenText("statsHPRegenText", UI::TL, UI::TL),
-               statsMPRegenText("statsMPRegenText", UI::TL, UI::TL),
-               statsCompletedLevelsText("statsComplLvlText", UI::TL, UI::TL),
-               statsCurLevelsText("statsCurLvlText", UI::TL, UI::TL);
+        statsMPText("statsMPText", UI::TL, UI::TL),
+        statsArmorText("statsArmorText", UI::TL, UI::TL),
+        statsHPRegenText("statsHPRegenText", UI::TL, UI::TL),
+        statsMPRegenText("statsMPRegenText", UI::TL, UI::TL),
+        statsCompletedLevelsText("statsComplLvlText", UI::TL, UI::TL),
+        statsCurLevelsText("statsCurLvlText", UI::TL, UI::TL);
 
     PlacedText itemDescText;
     ItemID::Type prevItemDescID;
@@ -160,10 +159,10 @@ namespace upgradeInterface {
     PolygonButton switchGunLBtn("upg_lGunBtn", UI::L, UI::R, { 0, 0 });
     PolygonButton switchGunRBtn("upg_rGunBtn", UI::R, UI::L, { 0, 0 });
 
-    PolygonButton generatorBtn  ("upg_genBtn", { 0.100f * scw, 0.50f * sch + 100.f, 0, 0 }),
-                  formFactorBtn ("upg_ffaBtn", { 0.333f * scw, 0.70f * sch + 50.0f, 0, 0 }),
-                  converterBtn  ("upg_conBtn", { 0.600f * scw, 0.65f * sch + 50.0f, 0, 0 }),
-                  targetingBtn  ("upg_tarBtn", { 0.825f * scw, 0.50f * sch + 100.f, 0, 0 });
+    PolygonButton generatorBtn("upg_genBtn", { 0.100f * scw, 0.50f * sch + 100.f, 0, 0 }),
+        formFactorBtn("upg_ffaBtn", { 0.333f * scw, 0.70f * sch + 50.0f, 0, 0 }),
+        converterBtn("upg_conBtn", { 0.600f * scw, 0.65f * sch + 50.0f, 0, 0 }),
+        targetingBtn("upg_tarBtn", { 0.825f * scw, 0.50f * sch + 100.f, 0, 0 });
 
     // UPGRADE SHOP COMPONENT CHOICE ELEMENTS
     std::vector<sf::Drawable*> choiceUIElements;
@@ -190,8 +189,7 @@ namespace upgradeInterface {
         addUI(compUpgPages[compType], choiceUIElements);
         std::string compName;
         sf::Texture* compTexture = nullptr;
-        switch (type)
-        {
+        switch (type) {
             case 0:
                 compName = "Coch Generator";
                 compTexture = &Textures::PH_CochGen;
@@ -213,10 +211,9 @@ namespace upgradeInterface {
             choiceMessage.setFontString(FontString("You can only upgrade at a special upgrade shop.",
                                                    50, CommonColors::warning));
             removeUI(&playerCoinAmount, choiceUIElements);
-        }
-        else {
+        } else {
             choiceMessage.setFontString(FontString("Choose a " + compName + " upgrade   (press RMB to close)",
-                                                    50, CommonColors::text));
+                                                   50, CommonColors::text));
             addUI(&playerCoinAmount, choiceUIElements);
         }
         choiceCompImg.setTexture(*compTexture);
@@ -232,7 +229,7 @@ Item* shopSelectedItem = nullptr;
 RectButton shopBackButton("shop_backBtn", UI::TL, UI::TL, { 250, 50 });
 RectButton shopBuyButton("shop_buyBtn", UI::B, UI::T, { 400, 150 }, "Buy", []() {
     curShop->buyFunction();
-    });
+                         });
 
 namespace MenuShop {
     std::vector<sf::Drawable*> UIElements;
@@ -268,7 +265,7 @@ sf::TcpListener listener;
 sf::Packet ReceivePacket, SendPacket;
 std::vector<Client*> clients;
 sf::SocketSelector selector;
-std::string ClientState, IPOfHost, MyIP, PacetData;
+std::string ClientState, IPOfHost, MyIP, PacketData;
 Client MySocket; // this computer socket
 sf::Int32 ComputerID;
 sf::Mutex mutex;
@@ -428,12 +425,12 @@ RectButton HostButton("hostBtn", "Host", []() {
     ConnectedPlayers.push_back(*(new Player()));
     HostFuncRun = true;
     HostTread.launch();
-    });
+                      });
 
 RectButton EscapeButton("exitBtn", UI::none, UI::none, { 0, 0 }, "Exit", []() {
     if (HostFuncRun) {
         mutex.lock();
-        SendPacket << pacetStates::disconnect;
+        SendPacket << packetStates::disconnect;
         SendToClients(SendPacket);
         SendPacket.clear();
         mutex.unlock();
@@ -442,8 +439,7 @@ RectButton EscapeButton("exitBtn", UI::none, UI::none, { 0, 0 }, "Exit", []() {
         listener.close();
         HostFuncRun = false;
         ConnectedPlayers.clear();
-    }
-    else if (ClientFuncRun) {
+    } else if (ClientFuncRun) {
         SelfDisconnect();
     }
     EscapeMenuActivated = false;
@@ -462,12 +458,12 @@ RectButton EscapeButton("exitBtn", UI::none, UI::none, { 0, 0 }, "Exit", []() {
     normalize(CurWeapon);
     LoadMainMenu();
     saveGame();
-    });
+                        });
 
 
-//////////////////////////////////////////////////////////// functions realizations
+                    //////////////////////////////////////////////////////////// functions realizations
 
-//============================================================================================== INITS
+                    //============================================================================================== INITS
 void init() {
     setlocale(LC_ALL, "rus");
 
@@ -532,7 +528,7 @@ void init() {
 
     EscapeButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed, UI::texture);
     EscapeButton.setHitboxPoints({ EscapeButton.getLeftTop(), EscapeButton.getRightTop(),
-                                   EscapeButton.getRightBottom(), EscapeButton.getLeftBottom()});
+                                   EscapeButton.getRightBottom(), EscapeButton.getLeftBottom() });
     HostButton.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
 
     CurWeapon.looped = true;
@@ -579,19 +575,19 @@ void initInventory() {
         itemsButton.setFunction([]() {
             hidePage(activePage); activePage = inventoryPage::Items;
             addUI(&itemsFrame, pageElements[activePage]);
-        });
+                                });
         itemsButton.parentTo(&inventoryFrame, true);
 
         weaponsButton.setTexture(Textures::RedButton, Textures::RedButtonPushed);
         weaponsButton.setWord(FontString("Weapons", 32));
-        weaponsButton.setFunction([](){
+        weaponsButton.setFunction([]() {
             hidePage(activePage); activePage = inventoryPage::Weapons;
             addUI(&weaponsFrame, pageElements[activePage]);
             addUI(&upgradeInterface::BG, pageElements[activePage]);
             removeUI(&upgradeInterface::BG, pageElements[activePage], false);
             removeUI(&upgradeInterface::backButton, pageElements[activePage], false);
             updateUpgradeShopStats();
-        });
+                                  });
         weaponsButton.parentTo(&itemsButton, true);
 
         statsButton.setTexture(Textures::GreyButton, Textures::GreyButtonPushed);
@@ -599,7 +595,7 @@ void initInventory() {
         statsButton.setFunction([]() {
             hidePage(activePage); activePage = inventoryPage::Stats;
             addUI(&statsFrame, pageElements[activePage]);
-        });
+                                });
         statsButton.parentTo(&weaponsButton, true);
 
         itemListBG.setTexture(Textures::GradientFrameAlpha);
@@ -641,7 +637,7 @@ void initInventory() {
         coinSprite.parentTo(&itemsFrame);
         coinSprite.setPosition(backButton.getRightTop() + sf::Vector2f(200, 25));
         coinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
-            1, itemTextureDuration[ItemID::coin]);
+                                1, itemTextureDuration[ItemID::coin]);
         coinSprite.play();
 
         coinSlot.init("coinSlot");
@@ -659,7 +655,7 @@ void initShop() {
         playerSlotsElements.resize(ItemID::ItemCount);
         slotsElements.resize(ItemID::ItemCount);
         mainMenuShop.setShop(new std::vector<Item*>{ new Item(ItemID::regenDrug, 10) },
-            std::vector<int>{20});
+                             std::vector<int>{20});
         mainMenuShop.setFunction([]() {
             if (shopSelectedItem != nullptr) {
                 if (player.inventory.money >= mainMenuShop.itemPrices[shopSelectedItem->id]) {
@@ -680,13 +676,12 @@ void initShop() {
                         shopSelectedItem = nullptr;
                         removeUI(&itemSlot, UIElements);
                     }
-                }
-                else {
+                } else {
                     NPCText.setString("Sorry, but you cannot afford a " + stringLower(itemName[shopSelectedItem->id]) + ".");
                 }
                 NPCText.parentTo(&NPCTextFrame, true);
             }
-            });
+                                 });
 
         BG.setTexture(Textures::GridBG);
 
@@ -696,7 +691,7 @@ void initShop() {
             isDrawShop = false;
             shopSelectedItem = nullptr;
             removeUI(&MenuShop::BG, MenuShop::UIElements);
-        });
+                                   });
         shopBackButton.parentTo(&BG, true);
 
         NPCTextFrame.setTexture(Textures::GradientFrameAlpha, UI::element);
@@ -719,8 +714,8 @@ void initShop() {
         itemsViewSizeX = (0.6 * scw - 100) / scw;
         itemsViewSizeY = (0.35 * sch - 50) / sch;
         ShopStockView.setViewport(sf::FloatRect((itemsFrame.getPosition().x + 50) / scw,
-            (itemsFrame.getPosition().y + 50 / 3) / sch,
-            itemsViewSizeX, itemsViewSizeY));
+                                                (itemsFrame.getPosition().y + 50 / 3) / sch,
+                                                itemsViewSizeX, itemsViewSizeY));
         stockTransform.scale(1, 1 / itemsViewSizeY);
 
         playerInvFrame.setTexture(Textures::GradientFrameAlpha);
@@ -730,8 +725,8 @@ void initShop() {
         playerInvViewSizeX = (0.6 * scw - 100) / scw;
         playerInvViewSizeY = (0.35 * sch - 50) / sch;
         ShopPlayerInvView.setViewport(sf::FloatRect((playerInvFrame.getPosition().x + 50) / scw,
-            (playerInvFrame.getPosition().y + 50) / sch,
-            playerInvViewSizeX, playerInvViewSizeY));
+                                                    (playerInvFrame.getPosition().y + 50) / sch,
+                                                    playerInvViewSizeX, playerInvViewSizeY));
         playerInvTransform.scale(1, 1 / playerInvViewSizeY);
 
         itemStatsFrame.setTexture(Textures::GradientFrameAlpha);
@@ -748,7 +743,7 @@ void initShop() {
         itemSlot.priceText->setCenter(itemSlot.getPosition().x, itemSlot.priceText->getCenter().y);
 
         itemCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
-            1, itemTextureDuration[ItemID::coin]);
+                                     1, itemTextureDuration[ItemID::coin]);
         itemCoinsSprite.setSize({ 50, 50 });
         itemCoinsSprite.parentTo(itemSlot.priceText, true, { 20, -15 });
         itemCoinsSprite.parentTo(&itemSlot);
@@ -764,13 +759,13 @@ void initShop() {
         shopBuyButton.setCharacterSize(70);
         shopBuyButton.parentTo(&playerInvFrame, true);
         shopBuyButton.setPosition(shopBuyButton.getLeft(),
-            itemStatsFrame.getBottom() - shopBuyButton.getSize().y);
+                                  itemStatsFrame.getBottom() - shopBuyButton.getSize().y);
 
         playerCoinsText.setCharacterSize(40);
         playerCoinsText.parentTo(&shopBuyButton, true, { 0, -100 });
 
         playerCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
-            1, itemTextureDuration[ItemID::coin]);
+                                       1, itemTextureDuration[ItemID::coin]);
         playerCoinsSprite.setSize({ 75, 75 });
         playerCoinsSprite.parentTo(&playerCoinsText, true);
         playerCoinsSprite.play();
@@ -804,7 +799,7 @@ void initUpgradeShop() {
             player.CurWeapon = Weapons[ind + Weapons.size() * (ind < 0)];
             setUpgradeFunctions();
             updateUpgradeShopStats();
-        });
+                                  });
         switchGunLBtn.parentTo(&weaponImg, true, { -50, 0 });
 
         switchGunRBtn.setHitboxPoints(std::vector<sf::Vector2f>{{0, 100}, { 0, 0 }, { 50, 50 }});
@@ -816,7 +811,7 @@ void initUpgradeShop() {
             player.CurWeapon = Weapons[ind % Weapons.size()];
             setUpgradeFunctions();
             updateUpgradeShopStats();
-        });
+                                  });
         switchGunRBtn.parentTo(&weaponImg, true, { 50, 0 });
 
         choiceComp.setTexture(Textures::GradientFrameAlpha);
@@ -877,7 +872,7 @@ void initUpgradeShop() {
         coinSprite.setScale({ 0.5, 0.5 });
         coinSprite.setPosition({ playerCoinAmount.getRight() + 20, playerCoinAmount.getTop() - 50 });
         coinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
-            1, itemTextureDuration[ItemID::coin]);
+                                1, itemTextureDuration[ItemID::coin]);
         coinSprite.play();
         coinSprite.parentTo(&playerCoinAmount, true);
 
@@ -914,7 +909,7 @@ void initInterface() {
 
     for (int i = 0; i < Weapons.size(); i++) {
         AmmoBars.push_back(new Bar<float>("AmmoBar_" + Weapons[i]->Name,
-            { 20, sch - 20 - (Weapons.size() - i) * 60, 160, 50 }));
+                                          { 20, sch - 20 - (Weapons.size() - i) * 60, 160, 50 }));
         AmmoBars[i]->setColors(CommonColors::barWall, sf::Color(128, 128, 128, 160), CommonColors::barBG);
         AmmoBars[i]->parentTo(&HUDFrame);
 
@@ -964,14 +959,11 @@ void draw() {
     updateShaders();
     if (isDrawInventory) {
         drawInventory();
-    }
-    else if (isDrawShop) {
+    } else if (isDrawShop) {
         drawShop();
-    }
-    else if (isDrawUpgradeInterface) {
+    } else if (isDrawUpgradeInterface) {
         drawUpgradeInterface();
-    }
-    else {
+    } else {
         preRenderTexture.clear(sf::Color::Transparent);
         preRenderTexture.setView(HUDView);
         preRenderTexture.draw(undergroundBG, &Shaders::Distortion1);
@@ -988,8 +980,7 @@ void draw() {
                 outlineRenderTexture.clear(sf::Color::Transparent);
                 outlineRenderTexture.draw(*d); outlineRenderTexture.display();
                 preRenderTexture.draw(outlineRenderSprite, &Shaders::Outline);
-            }
-            else {
+            } else {
                 preRenderTexture.draw(*d);
             }
         }
@@ -1017,8 +1008,7 @@ void draw() {
         for (size_t i = 0; i < TempTextsOnGround.size(); i++) {
             if (TempTextsOnGround[i]->localClock->getElapsedTime() < TempTextsOnGround[i]->howLongToExist) {
                 window.draw(*TempTextsOnGround[i]);
-            }
-            else {
+            } else {
                 DeletePointerFromVector(TempTextsOnGround, i--);
             }
         }
@@ -1027,8 +1017,7 @@ void draw() {
             if (DamageText[i]->localClock->getElapsedTime() < DamageText[i]->howLongToExist) {
                 Shaders::FloatingUp.setUniform("uTime", DamageText[i]->localClock->getElapsedTime().asSeconds());
                 window.draw(*DamageText[i], &Shaders::FloatingUp);
-            }
-            else {
+            } else {
                 DeletePointerFromVector(DamageText, i--);
             }
         }
@@ -1060,9 +1049,9 @@ void drawWalls() {
     CameraPos = GameView.getCenter() - GameView.getSize() / 2.f;
     CameraRect.setPosition(CameraPos);
     for (int i = std::max(0, 2 * int((CameraPos.y - WallMinSize / 2) / size));
-        i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize / 2) / size) + 1); i++) {
+         i <= std::min(int(CurLocation->walls.size() - 1), 2 * int((CameraPos.y + sch + WallMinSize / 2) / size) + 1); i++) {
         for (int j = std::max(0, int(CameraPos.x / size));
-            j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size)); j++) {
+             j <= std::min(int(CurLocation->walls[i].size() - 1), int((CameraPos.x + scw + WallMinSize) / size)); j++) {
             if (CurLocation->walls[i][j]) {
                 CurLocation->SeenWalls[i][j] = CurLocation->SeenWalls[i][j] || CameraRect.intersect(CurLocation->wallsRect[i][j]);
                 WallRect.setPosition(CurLocation->wallsRect[i][j].getPosition());
@@ -1089,8 +1078,7 @@ void drawMiniMap() {
                 if (i % 2 == 1) { // |
                     line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i - 1) / 2), sf::Color::White);
                     line[1] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * (i + 1) / 2), sf::Color::White);
-                }
-                else { // -
+                } else { // -
                     line[0] = sf::Vertex(sf::Vector2f(miniSize * j, miniSize * i / 2));
                     line[1] = sf::Vertex(sf::Vector2f(miniSize * (j + 1), miniSize * i / 2));
                 }
@@ -1126,8 +1114,7 @@ void drawMiniMap() {
             MMPlayerCircle.setPosition(p.hitbox.getPosition() * ScaleParam);
             window.draw(MMPlayerCircle);
         }
-    }
-    else {
+    } else {
         MMPlayerCircle.setPosition(player.hitbox.getCenter() * ScaleParam);
         window.draw(MMPlayerCircle);
     }
@@ -1150,8 +1137,7 @@ void drawHUD() {
         if (Weapons[i] == player.CurWeapon) {
             WeaponNameTexts[i]->setFillColor(sf::Color::White);
             WeaponNameTexts[i]->setOutlineThickness(3);
-        }
-        else {
+        } else {
             WeaponNameTexts[i]->setFillColor(sf::Color(25, 192, 25, 160));
             WeaponNameTexts[i]->setOutlineThickness(1);
         }
@@ -1159,15 +1145,14 @@ void drawHUD() {
 
         if (Weapons[i]->holstered) {
             float holsterPercent = std::min(Weapons[i]->HolsterTimer->getElapsedTime() /
-                Weapons[i]->TimeToHolster, 1.0f);
+                                            Weapons[i]->TimeToHolster, 1.0f);
             sf::Color wallColor(255 - 155 * holsterPercent, 255 - 155 * holsterPercent, 255, 160);
             sf::Color foreColor(128 - 96 * holsterPercent, 128 - 96 * holsterPercent, 128, 160);
             sf::Color backColor(32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 160);
             AmmoBars[i]->setColors(wallColor, foreColor, backColor);
-        }
-        else {
+        } else {
             float dispatchPercent = std::min(Weapons[i]->DispatchTimer->getElapsedTime() /
-                Weapons[i]->TimeToDispatch, 1.0f);
+                                             Weapons[i]->TimeToDispatch, 1.0f);
             sf::Color wallColor(100 + 155 * dispatchPercent, 100 + 155 * dispatchPercent, 255, 160);
             sf::Color foreColor(32 + 96 * dispatchPercent, 32 + 96 * dispatchPercent, 128, 160);
             sf::Color backColor(32 * dispatchPercent, 32 * dispatchPercent, 32 * dispatchPercent, 160);
@@ -1193,8 +1178,7 @@ void drawHUD() {
     for (size_t i = 0; i < TempTextsOnScreen.size(); i++) {
         if (TempTextsOnScreen[i]->localClock->getElapsedTime() < TempTextsOnScreen[i]->howLongToExist) {
             window.draw(*TempTextsOnScreen[i]);
-        }
-        else {
+        } else {
             DeletePointerFromVector(TempTextsOnScreen, i--);
         }
     }
@@ -1203,8 +1187,7 @@ void drawHUD() {
         if (MessageText[i]->localClock->getElapsedTime() < MessageText[i]->howLongToExist) {
             Shaders::FloatingUp.setUniform("uTime", MessageText[i]->localClock->getElapsedTime().asSeconds());
             window.draw(*MessageText[i], &Shaders::FloatingUp);
-        }
-        else {
+        } else {
             DeletePointerFromVector(MessageText, i--);
         }
     }
@@ -1223,7 +1206,7 @@ void drawEffects() {
         if (eff->type != Effects::Heal && eff->type != Effects::Damage && eff->active) {
             if (seenEffects[eff->type] == 0) {
                 effectIcons[eff->type]->setPosition(MPBar.getPosition().x - 300 + xOffset * (count % 3),
-                    MPBar.getPosition().y + MPBar.getSize().y + 20 + yOffset * (count / 3));
+                                                    MPBar.getPosition().y + MPBar.getSize().y + 20 + yOffset * (count / 3));
 
                 effectIconsTimers[eff->type]->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
                 effectIconsTimers[eff->type]->setCharacterSize(28);
@@ -1244,7 +1227,7 @@ void drawEffects() {
                 txt->localClock->restart();
             }
             txt->setString("x" + std::to_string(seenEffects[i]) + "\t\t\t\t" +
-                floatToString(timeDif.asSeconds()));
+                           floatToString(timeDif.asSeconds()));
             window.draw(*txt);
         }
     }
@@ -1280,12 +1263,12 @@ void drawInventory() {
                 break;
 
             case inventoryPage::Weapons:
-            {
-                for (sf::Drawable*& elem : pageElements[activePage])
-                    window.draw(*elem);
-                drawUpgradeInterface();
-                break;
-            }
+                {
+                    for (sf::Drawable*& elem : pageElements[activePage])
+                        window.draw(*elem);
+                    drawUpgradeInterface();
+                    break;
+                }
 
             case inventoryPage::Stats:
                 for (sf::Drawable*& elem : pageElements[inventoryPage::Stats])
@@ -1489,7 +1472,7 @@ void updateUpgradeInterfaceUI() {
         updateUpgradeTexts();
         updateUpgradeShopStats();
         playerCoinAmount.setFontString(FontString("You have: " + std::to_string(player.inventory.money),
-            50, sf::Color(200, 200, 200)));
+                                                  50, sf::Color(200, 200, 200)));
         playerCoinAmount.parentTo(&choiceComp, true, { -100, -50 });
         coinSprite.parentTo(&playerCoinAmount, true);
     }
@@ -1505,33 +1488,27 @@ void EventHandler() {
         if (chat.InputText(event)) {
             if (keyPressed(event, sf::Keyboard::Enter)) {
                 mutex.lock();
-                SendPacket << pacetStates::ChatEvent << chat.Last();
+                SendPacket << packetStates::ChatEvent << chat.Last();
                 if (HostFuncRun) {
                     SendToClients(SendPacket);
-                }
-                else if (ClientFuncRun) {
+                } else if (ClientFuncRun) {
                     MySocket.send(SendPacket);
                 }
                 SendPacket.clear();
                 mutex.unlock();
             }
-        }
-        else if (EscapeMenuActivated) {
+        } else if (EscapeMenuActivated) {
             EscapeButton.isActivated(event);
             if (keyPressed(event, sf::Keyboard::Escape)) {
                 EscapeMenuActivated ^= true;
             }
-        }
-        else if (isDrawInventory) {
+        } else if (isDrawInventory) {
             inventoryHandler(event);
-        }
-        else if (isDrawShop) {
+        } else if (isDrawShop) {
             shopHandler(event);
-        }
-        else if (isDrawUpgradeInterface) {
+        } else if (isDrawUpgradeInterface) {
             upgradeInterfaceHandler(event);
-        }
-        else {
+        } else {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) {
                     if (MiniMapActivated) {
@@ -1544,8 +1521,7 @@ void EventHandler() {
                     MiniMapActivated = !MiniMapActivated;
                     if (MiniMapActivated) {
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
-                    }
-                    else {
+                    } else {
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                     }
                 }
@@ -1580,8 +1556,7 @@ void EventHandler() {
                     if (event.mouseWheel.delta < 0) {
                         MiniMapView.zoom(1.1f);
                         MiniMapZoom *= 1.1f;
-                    }
-                    else {
+                    } else {
                         MiniMapView.zoom(1.f / 1.1f);
                         MiniMapZoom /= 1.1f;
                     }
@@ -1629,13 +1604,11 @@ void EventHandler() {
                         return;
                     }
                 }
-            }
-            else if (CurLocation == &LabyrinthLocation) {
+            } else if (CurLocation == &LabyrinthLocation) {
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
                         EscapeMenuActivated = true;
-                    }
-                    else if (event.key.code == sf::Keyboard::H) {
+                    } else if (event.key.code == sf::Keyboard::H) {
                         player.hitbox.setCenter(size, size);
                         CurLocation = &WaitingRoomLoaction;
                     }
@@ -1660,19 +1633,19 @@ void EventHandler() {
             //                 if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) &&
             //                     MySocket.receive(ReceivePacket) == sf::Socket::Done) {
             //                     while (!ReceivePacket.endOfPacket()) {
-            //                         ReceivePacket >> pacetStates::curState;
-            //                         switch (pacetStates::curState) {
-            //                             case pacetStates::PlayersAmount:
+            //                         ReceivePacket >> packetStates::curState;
+            //                         switch (packetStates::curState) {
+            //                             case packetStates::PlayersAmount:
             //                                 ReceivePacket >> ComputerID;
             //                                 std::cout << "My ID = " << ComputerID << '\n';
             //                                 break;
-            //                             case pacetStates::PlayerConnect:
-            //                                 ReceivePacket >> PacetData;
-            //                                 ListOfPlayers.addWord(PacetData);
+            //                             case packetStates::PlayerConnect:
+            //                                 ReceivePacket >> PacketData;
+            //                                 ListOfPlayers.addWord(PacketData);
             //                                 ConnectedPlayers.push_back(*(new Player()));
-            //                                 std::cout << PacetData << " connected\n";
+            //                                 std::cout << PacketData << " connected\n";
             //                                 break;
-            //                             case pacetStates::SetPos:
+            //                             case packetStates::SetPos:
             //                                 for (Player& x: ConnectedPlayers) {
             //                                     ReceivePacket >> x;
             //                                 }
@@ -1766,7 +1739,7 @@ void shopHandler(sf::Event& event) {
 
         window.setView(ShopStockView);
         sf::Vector2f viewPos = MenuShop::stockTransform.getInverse().
-                               transformPoint(window.mapPixelToCoords(sf::Mouse::getPosition()));
+            transformPoint(window.mapPixelToCoords(sf::Mouse::getPosition()));
         {
             using namespace MenuShop;
             for (Item*& item : curShop->soldItems.items) {
@@ -1857,8 +1830,7 @@ void setBox(Interactable*& box) {
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
             DeleteFromVector(InteractibeStuff, i);
             delete i;
-        }
-        else {
+        } else {
             TempText* tempText = new TempText(sf::seconds(2.5f));
             tempText->setCharacterSize(50);
             tempText->setOutlineColor(sf::Color::White);
@@ -1868,7 +1840,7 @@ void setBox(Interactable*& box) {
             tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
             MessageText.push_back(tempText);
         }
-        });
+                     });
 }
 
 std::vector<std::string> artifactText = {
@@ -1909,7 +1881,7 @@ void setArtifact(Interactable*& artifact) {
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
         DeleteFromVector(InteractibeStuff, i);
         delete i;
-        });
+                          });
 }
 
 void setFire(Interactable*& fire) {
@@ -1933,7 +1905,7 @@ void LevelGenerate(int n, int m) {
         setBox(listOfBox[i]);
         do {
             listOfBox[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
-                sf::Vector2f(std::rand() % int(size - listOfBox[i]->hitbox.getSize().x), std::rand() % int(size - listOfBox[i]->hitbox.getSize().y)));
+                                      sf::Vector2f(std::rand() % int(size - listOfBox[i]->hitbox.getSize().x), std::rand() % int(size - listOfBox[i]->hitbox.getSize().y)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->hitbox.getPosition().y / size][(int)listOfBox[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfBox[i]);
@@ -1946,7 +1918,7 @@ void LevelGenerate(int n, int m) {
         setArtifact(listOfArtifact[i]);
         do {
             listOfArtifact[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
-                sf::Vector2f(std::rand() % (size - Textures::Architect.getSize().x / 4), std::rand() % (size - Textures::Architect.getSize().y / 4)));
+                                           sf::Vector2f(std::rand() % (size - Textures::Architect.getSize().x / 4), std::rand() % (size - Textures::Architect.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->hitbox.getPosition().y / size][(int)listOfArtifact[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfArtifact[i]);
@@ -1959,7 +1931,7 @@ void LevelGenerate(int n, int m) {
         setFire(listOfFire[i]);
         do {
             listOfFire[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
-                sf::Vector2f(std::rand() % (size - Textures::Fire.getSize().x / 4), std::rand() % (size - Textures::Fire.getSize().y / 4)));
+                                       sf::Vector2f(std::rand() % (size - Textures::Fire.getSize().x / 4), std::rand() % (size - Textures::Fire.getSize().y / 4)));
         } while (!LabyrinthLocation.EnableTiles[(int)listOfFire[i]->hitbox.getPosition().y / size][(int)listOfFire[i]->hitbox.getPosition().x / size]);
 
         InteractibeStuff.push_back(listOfFire[i]);
@@ -1977,7 +1949,7 @@ void LevelGenerate(int n, int m) {
         do {
             Enemies[i]->hitbox.setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
         } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->hitbox.getPosition().y / size][(int)Enemies[i]->hitbox.getPosition().x / size] ||
-            distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
+                 distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
     }
 }
 
@@ -2017,8 +1989,7 @@ void LoadMainMenu() {
         }
         if (CurLocation != &LabyrinthLocation) {
             CurLocation = &LabyrinthLocation;
-        }
-        else {
+        } else {
             completedLevels = std::max(curLevel, completedLevels);
             curLevel++;
         }
@@ -2038,11 +2009,11 @@ void LoadMainMenu() {
 
         InteractibeStuff.push_back(&puddle);
         saveGame();
-        });
+                       });
 
     puddle.setFunction([](Interactable* i) {
         player.getDamage(5.f);
-        });
+                       });
 
     shopSector.setFunction([](Interactable* i) {
         {
@@ -2051,21 +2022,21 @@ void LoadMainMenu() {
             playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
             playerCoinsSprite.parentTo(&playerCoinsText, true, { 25, -10 });
             NPCText.setString(textWrap("Hello! Welcome to the \"We are literally standing near a phenomenon beyond our"
-                " entire plane of existence in a literal motherfucking sense, that we have no fucking clue on"
-                " how it fucking works why did we decide it was a good idea to station a shop exactly here\?!\?\?!\?!\?\" shop!", 94));
+                                       " entire plane of existence in a literal motherfucking sense, that we have no fucking clue on"
+                                       " how it fucking works why did we decide it was a good idea to station a shop exactly here\?!\?\?!\?!\?\" shop!", 94));
             NPCText.parentTo(&NPCTextFrame, true);
             addUI(&BG, UIElements);
             if (!shopSelectedItem)
                 removeUI(&itemSlot, UIElements);
         }
-    });
+                           });
 
     upgradeSector.setFunction([](Interactable* i) {
         isDrawUpgradeInterface = true;
         openUpgradeShop();
-    });
+                              });
 
-    // Set cameras
+                          // Set cameras
     GameView.setCenter(player.hitbox.getCenter());
     MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
     HUDView.setCenter({ scw / 2.f, sch / 2.f });
@@ -2120,14 +2091,12 @@ void updateBullets() {
     for (int i = 0; i < Bullets.size(); i++) {
         if (Bullets[i]->penetration < 0 || Bullets[i]->todel) {
             DeletePointerFromVector(Bullets, i--);
-        }
-        else {
+        } else {
             Bullets[i]->move(CurLocation);
             if (!faction::friends(Bullets[i]->fromWho, player.faction) && player.hitbox.intersect(Bullets[i]->hitbox)) {
                 player.getDamage(Bullets[i]->damage);
                 Bullets[i]->penetration--;
-            }
-            else {
+            } else {
                 for (Enemy*& enemy : Enemies) {
                     if (!faction::friends(Bullets[i]->fromWho, enemy->faction) && enemy->hitbox.intersect(Bullets[i]->hitbox)) {
                         enemy->getDamage(Bullets[i]->damage);
@@ -2177,8 +2146,7 @@ void updateEnemies() {
                     }
                 }
             }
-        }
-        else {
+        } else {
             sf::Vector2f bullet_path;
             for (int j = 0; j < Bullets.size(); j++) {
                 if (!faction::friends(Bullets[j]->fromWho, Enemies[i]->faction)) {
@@ -2250,8 +2218,8 @@ void initUpgradeUI() {
         compUpgPages.push_back(new Frame("upgPage_Targ", choiceComp.getRect()));
 
         compUpgBtns[0].push_back(new RectButton("upg_MMSBtn",
-            UI::TL, UI::TL, { 250, 100 },
-            FontString("Mana storage", btnTextSize))
+                                                UI::TL, UI::TL, { 250, 100 },
+                                                FontString("Mana storage", btnTextSize))
         );
         compUpgBtns[0][0]->setTexture(Textures::BlueButton, Textures::BlueButtonPushed);
         compUpgBtns[0][0]->parentTo(compUpgPages[0], true, { 50, 50 });
@@ -2262,11 +2230,11 @@ void initUpgradeUI() {
         compUpgCosts[0][0]->setPosition(compUpgBtns[0][0]->getCenter() + costOffset);
         compUpgStats[0][0]->setPosition(compUpgBtns[0][0]->getRightTop() + statOffset);
         compUpgCount[0][0]->setPosition(compUpgBtns[0][0]->getRightBottom() + countOffset);
-        
+
 
         compUpgBtns[0].push_back(new RectButton("upg_RSBtn",
-            UI::BL, UI::TL, { 250, 100 },
-            FontString("Reload Speed", btnTextSize))
+                                                UI::BL, UI::TL, { 250, 100 },
+                                                FontString("Reload Speed", btnTextSize))
         );
         compUpgBtns[0][1]->setTexture(Textures::GreenButton, Textures::GreenButtonPushed);
         compUpgBtns[0][1]->parentTo(compUpgBtns[0][0], true, { 0, 50 });
@@ -2277,11 +2245,11 @@ void initUpgradeUI() {
         compUpgCosts[0][1]->setPosition(compUpgBtns[0][1]->getCenter() + costOffset);
         compUpgStats[0][1]->setPosition(compUpgBtns[0][1]->getRightTop() + statOffset);
         compUpgCount[0][1]->setPosition(compUpgBtns[0][1]->getRightBottom() + countOffset);
-        
+
 
         compUpgBtns[1].push_back(new RectButton("upg_TTHBtn",
-            UI::TL, UI::TL, { 250, 100 },
-            FontString("Time To\nHolster", btnTextSize))
+                                                UI::TL, UI::TL, { 250, 100 },
+                                                FontString("Time To\nHolster", btnTextSize))
         );
         compUpgBtns[1][0]->setTexture(Textures::BlueButton, Textures::BlueButtonPushed);
         compUpgBtns[1][0]->parentTo(compUpgPages[1], true, { 50, 50 });
@@ -2292,11 +2260,11 @@ void initUpgradeUI() {
         compUpgCosts[1][0]->setPosition(compUpgBtns[1][0]->getCenter() + costOffset);
         compUpgStats[1][0]->setPosition(compUpgBtns[1][0]->getRightTop() + statOffset);
         compUpgCount[1][0]->setPosition(compUpgBtns[1][0]->getRightBottom() + countOffset);
-        
+
 
         compUpgBtns[1].push_back(new RectButton("upg_TTDBtn",
-            UI::BL, UI::TL, { 250, 100 },
-            FontString("Time To\nDispatch", btnTextSize))
+                                                UI::BL, UI::TL, { 250, 100 },
+                                                FontString("Time To\nDispatch", btnTextSize))
         );
         compUpgBtns[1][1]->setTexture(Textures::GreenButton, Textures::GreenButtonPushed);
         compUpgBtns[1][1]->parentTo(compUpgBtns[1][0], true, { 0, 50 });
@@ -2307,11 +2275,11 @@ void initUpgradeUI() {
         compUpgCosts[1][1]->setPosition(compUpgBtns[1][1]->getCenter() + costOffset);
         compUpgStats[1][1]->setPosition(compUpgBtns[1][1]->getRightTop() + statOffset);
         compUpgCount[1][1]->setPosition(compUpgBtns[1][1]->getRightBottom() + countOffset);
-        
+
 
         compUpgBtns[2].push_back(new RectButton("upg_FRBtn",
-            UI::TL, UI::TL, { 250, 100 },
-            FontString("Fire Rate", btnTextSize))
+                                                UI::TL, UI::TL, { 250, 100 },
+                                                FontString("Fire Rate", btnTextSize))
         );
         compUpgBtns[2][0]->setTexture(Textures::BlueButton, Textures::BlueButtonPushed);
         compUpgBtns[2][0]->parentTo(compUpgPages[2], true, { 50, 50 });
@@ -2322,11 +2290,11 @@ void initUpgradeUI() {
         compUpgCosts[2][0]->setPosition(compUpgBtns[2][0]->getCenter() + costOffset);
         compUpgStats[2][0]->setPosition(compUpgBtns[2][0]->getRightTop() + statOffset);
         compUpgCount[2][0]->setPosition(compUpgBtns[2][0]->getRightBottom() + countOffset);
-        
+
 
         compUpgBtns[2].push_back(new RectButton("upg_MCBtn",
-            UI::BL, UI::TL, { 250, 100 },
-            FontString("Mana Cost", btnTextSize))
+                                                UI::BL, UI::TL, { 250, 100 },
+                                                FontString("Mana Cost", btnTextSize))
         );
         compUpgBtns[2][1]->setTexture(Textures::GreenButton, Textures::GreenButtonPushed);
         compUpgBtns[2][1]->parentTo(compUpgBtns[2][0], true, { 0, 50 });
@@ -2337,11 +2305,11 @@ void initUpgradeUI() {
         compUpgCosts[2][1]->setPosition(compUpgBtns[2][1]->getCenter() + costOffset);
         compUpgStats[2][1]->setPosition(compUpgBtns[2][1]->getRightTop() + statOffset);
         compUpgCount[2][1]->setPosition(compUpgBtns[2][1]->getRightBottom() + countOffset);
-        
+
 
         compUpgBtns[2].push_back(new RectButton("upg_MSBtn",
-            UI::BL, UI::TL, { 250, 100 },
-            FontString("Multishot", btnTextSize))
+                                                UI::BL, UI::TL, { 250, 100 },
+                                                FontString("Multishot", btnTextSize))
         );
         compUpgBtns[2][2]->setTexture(Textures::RedButton, Textures::RedButtonPushed);
         compUpgBtns[2][2]->parentTo(compUpgBtns[2][1], true, { 0, 50 });
@@ -2354,8 +2322,8 @@ void initUpgradeUI() {
         compUpgCount[2][2]->setPosition(compUpgBtns[2][2]->getRightBottom() + countOffset);
 
         compUpgBtns[3].push_back(new RectButton("upg_BVBtn",
-            UI::TL, UI::TL, { 250, 100 },
-            FontString("Bullet Velocity", btnTextSize))
+                                                UI::TL, UI::TL, { 250, 100 },
+                                                FontString("Bullet Velocity", btnTextSize))
         );
         compUpgBtns[3][0]->setTexture(Textures::BlueButton, Textures::BlueButtonPushed);
         compUpgBtns[3][0]->parentTo(compUpgPages[3], true, { 50, 50 });
@@ -2368,8 +2336,8 @@ void initUpgradeUI() {
         compUpgCount[3][0]->setPosition(compUpgBtns[3][0]->getRightBottom() + countOffset);
 
         compUpgBtns[3].push_back(new RectButton("upg_SCBtn",
-            UI::BL, UI::TL, { 250, 100 },
-            FontString("Scatter", btnTextSize))
+                                                UI::BL, UI::TL, { 250, 100 },
+                                                FontString("Scatter", btnTextSize))
         );
         compUpgBtns[3][1]->setTexture(Textures::GreenButton, Textures::GreenButtonPushed);
         compUpgBtns[3][1]->parentTo(compUpgBtns[3][0], true, { 0, 50 });
@@ -2390,49 +2358,49 @@ void setUpgradeFunctions() {
         compUpgBtns[0][0]->setFunction([]() {
             upgradeStat(50, &player.CurWeapon->MaxManaStorage,
             compUpgCosts[0][0], compUpgStats[0][0], compUpgCount[0][0]);
-            if (!pistol.MaxManaStorage.maxed())
-                pistol.ManaStorage.top = pistol.MaxManaStorage;
-        });
+        if (!pistol.MaxManaStorage.maxed())
+            pistol.ManaStorage.top = pistol.MaxManaStorage;
+                                       });
 
         compUpgBtns[0][1]->setFunction([]() {
             upgradeStat(70, &player.CurWeapon->ReloadSpeed,
             compUpgCosts[0][1], compUpgStats[0][1], compUpgCount[0][1]);
-        });
+                                       });
 
         compUpgBtns[1][0]->setFunction([]() {
             upgradeStat(25, &player.CurWeapon->TimeToHolster,
             compUpgCosts[1][0], compUpgStats[1][0], compUpgCount[1][0]);
-        });
+                                       });
 
         compUpgBtns[1][1]->setFunction([]() {
             upgradeStat(25, &player.CurWeapon->TimeToDispatch,
             compUpgCosts[1][1], compUpgStats[1][1], compUpgCount[1][1]);
-        });
+                                       });
 
         compUpgBtns[2][0]->setFunction([]() {
             upgradeStat(35, &player.CurWeapon->FireRate,
             compUpgCosts[2][0], compUpgStats[2][0], compUpgCount[2][0]);
-        });
+                                       });
 
         compUpgBtns[2][1]->setFunction([]() {
             upgradeStat(80, &player.CurWeapon->ManaCostOfBullet,
             compUpgCosts[2][1], compUpgStats[2][1], compUpgCount[2][1]);
-        });
+                                       });
 
         compUpgBtns[2][2]->setFunction([]() {
             upgradeStat(80, &player.CurWeapon->Multishot,
             compUpgCosts[2][2], compUpgStats[2][2], compUpgCount[2][2]);
-        });
+                                       });
 
         compUpgBtns[3][0]->setFunction([]() {
             upgradeStat(65, &player.CurWeapon->BulletVelocity,
             compUpgCosts[3][0], compUpgStats[3][0], compUpgCount[3][0]);
-        });
-        
+                                       });
+
         compUpgBtns[3][1]->setFunction([]() {
             upgradeStat(65, &player.CurWeapon->Scatter,
             compUpgCosts[3][1], compUpgStats[3][1], compUpgCount[3][1]);
-        });
+                                       });
     }
 }
 
@@ -2501,8 +2469,7 @@ void updateEffects(Creature* creature) {
         if (effectVec[i]->howLongToExist <= sf::Time::Zero) {
             clearEffect(*creature, effectVec[i]);
             DeletePointerFromVector(effectVec, i--);
-        }
-        else {
+        } else {
             float t = std::min(effectVec[i]->localClock->restart().asSeconds(), effectVec[i]->howLongToExist.asSeconds());
             effectVec[i]->howLongToExist -= sf::seconds(t);
             switch (effectVec[i]->type) {
@@ -2655,13 +2622,11 @@ void updateStatsText(PlacedText* statText, Upgradable<T>* stat) {
         if (stat->maxed()) statText->setString(FontString(floatToString(stat->getStat().asSeconds()), 24, sf::Color::Green));
         else statText->setString(FontString(floatToString(stat->getStat().asSeconds()) + " -> " +
                                             floatToString(stat->stats[stat->curLevel + 1].asSeconds()), 24));
-    }
-    else if constexpr (std::is_same_v<T, float>) {
+    } else if constexpr (std::is_same_v<T, float>) {
         if (stat->maxed()) statText->setString(FontString(floatToString(stat->getStat()), 24, sf::Color::Green));
         else statText->setString(FontString(floatToString(stat->getStat()) + " -> " +
                                             floatToString(stat->stats[stat->curLevel + 1]), 24));
-    }
-    else {
+    } else {
         if (stat->maxed()) statText->setString(FontString(std::to_string(stat->getStat()), 24, sf::Color::Green));
         else statText->setString(FontString(std::to_string(stat->getStat()) + " -> " +
                                             std::to_string(stat->stats[stat->curLevel + 1]), 24));
@@ -2696,8 +2661,7 @@ void loadSave() {
     if (!saveFile.is_open()) {
         std::rand();
         player.Name.setString("Employee " + std::to_string(1 + (size_t(std::rand()) * 8645) % 999));
-    }
-    else {
+    } else {
         nlohmann::json j = nlohmann::json::parse(saveFile);
         j.at("Player").get_to<Player>(player);
         j.at("Pistol").get_to<Pistol>(pistol);
@@ -2740,7 +2704,7 @@ void MainLoop() {
 
             if (HostFuncRun) {
                 mutex.lock();
-                SendPacket << pacetStates::PlayerPos;
+                SendPacket << packetStates::PlayerPos;
                 for (Player& x : ConnectedPlayers) {
                     SendPacket << x;
                 }
@@ -2748,8 +2712,7 @@ void MainLoop() {
                 SendPacket.clear();
                 mutex.unlock();
             }
-        }
-        else {
+        } else {
             if (!chat.inputted && !isDrawInventory && !isDrawShop) {
                 player.move(CurLocation);
                 GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
@@ -2768,14 +2731,13 @@ void MainLoop() {
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
                 mutex.lock();
-                SendPacket << pacetStates::Shooting << (int)Bullets.size() - wasBulletsSize;
+                SendPacket << packetStates::Shooting << (int)Bullets.size() - wasBulletsSize;
                 for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
                     SendPacket << *Bullets[wasBulletsSize];
                 }
                 if (HostFuncRun) {
                     SendToClients(SendPacket);
-                }
-                else if (ClientFuncRun) {
+                } else if (ClientFuncRun) {
                     MySocket.send(SendPacket);
                 }
                 SendPacket.clear();
@@ -2787,14 +2749,13 @@ void MainLoop() {
             if (HostFuncRun || ClientFuncRun) {
                 ConnectedPlayers[ComputerID].hitbox.setPosition(player.hitbox.getCenter());
                 mutex.lock();
-                SendPacket << pacetStates::PlayerPos;
+                SendPacket << packetStates::PlayerPos;
                 if (HostFuncRun) {
                     for (Player& x : ConnectedPlayers) {
                         SendPacket << x;
                     }
                     SendToClients(SendPacket);
-                }
-                else if (ClientFuncRun) {
+                } else if (ClientFuncRun) {
                     SendPacket << player;
                     MySocket.send(SendPacket);
                 }
@@ -2825,8 +2786,7 @@ void MainLoop() {
             if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite))) {
                 InterfaceStuff.push_back(&XButtonSprite);
             }
-        }
-        else {
+        } else {
             DeleteFromVector(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite));
         }
 
@@ -2843,7 +2803,7 @@ void ClientConnect() {
         mutex.lock();
 
         std::string ConnectedClientIP = (*client).getRemoteAddress().toString();
-        SendPacket << pacetStates::PlayerConnect << ConnectedClientIP;
+        SendPacket << packetStates::PlayerConnect << ConnectedClientIP;
         SendToClients(SendPacket);
         SendPacket.clear();
 
@@ -2856,30 +2816,29 @@ void ClientConnect() {
 
         ConnectedPlayers.push_back(*(new Player()));
         ConnectedPlayers[ConnectedPlayers.size() - 1].hitbox.setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
-        SendPacket << pacetStates::PlayersAmount << (sf::Int32)ConnectedPlayers.size() - 1;
+        SendPacket << packetStates::PlayersAmount << (sf::Int32)ConnectedPlayers.size() - 1;
 
         DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
 
         for (int i = 0; i < ListOfPlayers.getLineCount(); i++) {
-            SendPacket << pacetStates::PlayerConnect << ListOfPlayers[i];
+            SendPacket << packetStates::PlayerConnect << ListOfPlayers[i];
         }
 
-        SendPacket << pacetStates::Shooting << (sf::Int32)Bullets.size();
+        SendPacket << packetStates::Shooting << (sf::Int32)Bullets.size();
         std::cout << "bullets: " << Bullets.size() << "\n";
         for (int i = 0; i < Bullets.size(); i++) {
             SendPacket << *Bullets[i];
         }
 
         std::cout << "amount players = " << ConnectedPlayers.size() - 1 << '\n';
-        SendPacket << pacetStates::SetPos;
+        SendPacket << packetStates::SetPos;
         for (Player& x : ConnectedPlayers) {
             SendPacket << x;
         }
 
         if (client->send(SendPacket) == sf::Socket::Done) {
             std::cout << "SendPacket was sended\n";
-        }
-        else {
+        } else {
             std::cout << "SendPacket didn't sended\n";
         }
 
@@ -2887,15 +2846,13 @@ void ClientConnect() {
         SendPacket << LabyrinthLocation;
         if (client->send(SendPacket) == sf::Socket::Done) {
             std::cout << "Labyrinth walls sended\n";
-        }
-        else {
+        } else {
             std::cout << "Labyrinth walls didn't sended\n";
         }
         SendPacket.clear();
 
         mutex.unlock();
-    }
-    else delete client;
+    } else delete client;
 }
 
 void ClientDisconnect(int i) {
@@ -2907,7 +2864,7 @@ void ClientDisconnect(int i) {
 
     std::cout << "amount of clients = " << clients.size() << "\n";
     mutex.lock();
-    SendPacket << pacetStates::PlayerDisconnect << i;
+    SendPacket << packetStates::PlayerDisconnect << i;
     SendToClients(SendPacket);
     SendPacket.clear();
     mutex.unlock();
@@ -2918,7 +2875,7 @@ void SelfDisconnect() {
     ClientFuncRun = false;
     LoadMainMenu();
     mutex.lock();
-    SendPacket << pacetStates::disconnect;
+    SendPacket << packetStates::disconnect;
     MySocket.send(SendPacket);
     SendPacket.clear();
     mutex.unlock();
@@ -2939,44 +2896,44 @@ void funcOfHost() {
         if (selector.wait(sf::seconds(1))) {
             if (selector.isReady(listener)) {
                 ClientConnect();
-            }
-            else {
+            } else {
                 for (int i = 0; i < clients.size(); i++) {
                     if (selector.isReady(*clients[i]) && clients[i]->receive(ReceivePacket) == sf::Socket::Done) {
                         while (!ReceivePacket.endOfPacket()) {
-                            ReceivePacket >> pacetStates::curState;
-                            switch (pacetStates::curState) {
-                                case pacetStates::disconnect:
+                            ReceivePacket >> packetStates::curState;
+                            switch (packetStates::curState) {
+                                case packetStates::disconnect:
                                     std::cout << "client self disconect\n";
                                     ClientDisconnect(i--);
                                     break;
-                                case pacetStates::PlayerPos:
+                                case packetStates::PlayerPos:
                                     ReceivePacket >> ConnectedPlayers[i + 1];
                                     break;
-                                case pacetStates::ChatEvent:
-                                    ReceivePacket >> PacetData;
-                                    chat.addLine(PacetData);
+                                case packetStates::ChatEvent:
+                                    ReceivePacket >> PacketData;
+                                    chat.addLine(PacketData);
                                     mutex.lock();
-                                    SendPacket << pacetStates::ChatEvent << PacetData;
+                                    SendPacket << packetStates::ChatEvent << PacketData;
                                     SendToClients(SendPacket, i);
                                     SendPacket.clear();
                                     mutex.unlock();
                                     break;
-                                case pacetStates::Shooting: {
-                                    mutex.lock();
-                                    int i; ReceivePacket >> i;
-                                    SendPacket << pacetStates::Shooting << i;
-                                    for (; i > 0; i--) {
-                                        tempBullet = new Bullet();
-                                        ReceivePacket >> *tempBullet;
-                                        Bullets.push_back(tempBullet);
-                                        SendPacket << tempBullet;
+                                case packetStates::Shooting:
+                                    {
+                                        mutex.lock();
+                                        int i; ReceivePacket >> i;
+                                        SendPacket << packetStates::Shooting << i;
+                                        for (; i > 0; i--) {
+                                            tempBullet = new Bullet();
+                                            ReceivePacket >> *tempBullet;
+                                            Bullets.push_back(tempBullet);
+                                            SendPacket << tempBullet;
+                                        }
+                                        SendToClients(SendPacket, i);
+                                        SendPacket.clear();
+                                        mutex.unlock();
+                                        break;
                                     }
-                                    SendToClients(SendPacket, i);
-                                    SendPacket.clear();
-                                    mutex.unlock();
-                                    break;
-                                }
                             }
                         }
                     }
@@ -2992,18 +2949,18 @@ void funcOfClient() {
         if (selector.wait(sf::seconds(1))) {
             if (selector.isReady(MySocket) && MySocket.receive(ReceivePacket) == sf::Socket::Done) {
                 while (!ReceivePacket.endOfPacket()) {
-                    ReceivePacket >> pacetStates::curState;
-                    switch (pacetStates::curState) {
-                        case pacetStates::disconnect:
+                    ReceivePacket >> packetStates::curState;
+                    switch (packetStates::curState) {
+                        case packetStates::disconnect:
                             SelfDisconnect();
                             break;
-                        case pacetStates::PlayerConnect:
-                            ReceivePacket >> PacetData;
-                            ListOfPlayers.addWord(PacetData);
+                        case packetStates::PlayerConnect:
+                            ReceivePacket >> PacketData;
+                            ListOfPlayers.addWord(PacketData);
                             ConnectedPlayers.push_back(*(new Player()));
-                            std::cout << PacetData + " connected\n";
+                            std::cout << PacketData + " connected\n";
                             break;
-                        case pacetStates::PlayerDisconnect:
+                        case packetStates::PlayerDisconnect:
                             int index;
                             ReceivePacket >> index;
                             std::cout << std::string(ListOfPlayers[index]) << " disconnected\n";
@@ -3011,12 +2968,12 @@ void funcOfClient() {
                             ListOfPlayers.removeWord(index);
                             ConnectedPlayers.erase(ConnectedPlayers.begin() + index);
                             break;
-                        case pacetStates::Labyrinth:
+                        case packetStates::Labyrinth:
                             std::cout << "Labyrinth receiving\n";
                             ReceivePacket >> LabyrinthLocation;
                             std::cout << "Labyrinth receive\n";
                             break;
-                        case pacetStates::PlayerPos:
+                        case packetStates::PlayerPos:
                             for (int i = 0; i < ConnectedPlayers.size(); i++) {
                                 if (i != ComputerID)
                                     ReceivePacket >> ConnectedPlayers[i];
@@ -3026,26 +2983,27 @@ void funcOfClient() {
                                 }
                             }
                             break;
-                        case pacetStates::SetPos:
+                        case packetStates::SetPos:
                             for (Player& x : ConnectedPlayers) {
                                 ReceivePacket >> x;
                             }
                             player.hitbox.setCenter(ConnectedPlayers[ComputerID].hitbox.getPosition());
                             GameView.setCenter(player.hitbox.getCenter());
                             break;
-                        case pacetStates::ChatEvent:
-                            ReceivePacket >> PacetData;
-                            chat.addLine(PacetData);
+                        case packetStates::ChatEvent:
+                            ReceivePacket >> PacketData;
+                            chat.addLine(PacketData);
                             break;
-                        case pacetStates::Shooting: {
-                            int i; ReceivePacket >> i;
-                            for (; i > 0; i--) {
-                                tempBullet = new Bullet();
-                                ReceivePacket >> *tempBullet;
-                                Bullets.push_back(tempBullet);
+                        case packetStates::Shooting:
+                            {
+                                int i; ReceivePacket >> i;
+                                for (; i > 0; i--) {
+                                    tempBullet = new Bullet();
+                                    ReceivePacket >> *tempBullet;
+                                    Bullets.push_back(tempBullet);
+                                }
+                                break;
                             }
-                            break;
-                        }
                     }
                 }
             }

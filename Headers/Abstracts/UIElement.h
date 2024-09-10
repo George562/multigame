@@ -29,9 +29,8 @@ namespace UI {
         size
     };
 
-    /*
-    The class below tries to emulate HTML by using paddings and margins to shift elements, but it also
-    takes some inspiration from anchors and packs from tkInter. It also combines all
+        /*
+    The class below takes some inspiration from anchors and packs from tkInter. It also combines all
     related UIElements into a tree hierarchy for easy manipulations on groups of UI elements.
 
     Anchor locations:
@@ -66,7 +65,7 @@ namespace UI {
                     |                       |
                     |                       |
                     BL----------B-----------BR
-    
+
     Anchor = B, anchoringPoint = UL:
                     UL----------U----------UR
                     |                       |
@@ -79,11 +78,11 @@ namespace UI {
                                 |       |
                                 |       |
                                 \-------/
-    
+
     Making an anchor none means it will not be aligned with the parent container.
     Useful for placing the element on specific coordinates.
 
-    Spacing it out is handLed by the element's margin.
+    Spacing it out is handLed by the offset in moveAnchor.
 
     The centering enum is used for centering whenever the user calls the CenterOnAnchor function.
     It centers the chosen coordinate. It will not do anything if the element is already centered.

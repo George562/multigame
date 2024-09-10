@@ -239,7 +239,7 @@ sf::Packet& operator>>(sf::Packet& packet, Location& loc) {
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Location& loc) {
-    packet << sf::Int32(pacetStates::Labyrinth) << loc.n << loc.m;
+    packet << sf::Int32(packetStates::Labyrinth) << loc.n << loc.m;
     for (int i = 0; i < loc.walls.size(); i++)
         for (int j = 0; j < loc.walls[i].size(); j++)
             packet << loc.walls[i][j];
