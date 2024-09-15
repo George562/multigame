@@ -273,7 +273,7 @@ bool ClientFuncRun, HostFuncRun;
 
 
 //////////////////////////////////////////////////////////// Interactables
-Interactable portal,
+Interactable portal, inf_portal,
 puddle,
 shopSector,
 upgradeSector;
@@ -350,6 +350,7 @@ void upgradeInterfaceHandler(sf::Event&);
 
 //---------------------------- LEVEL GENERATION FUNCTIONS
 void LevelGenerate(int, int);
+void InfLevelLoad(int, int);
 void LoadMainMenu();
 
 void setBox(Interactable*&);
@@ -501,6 +502,8 @@ void init() {
 
     portal.setAnimation(Textures::Portal, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
+    inf_portal.setAnimation(Textures::InfPortal, 9, 1, sf::seconds(1), &Shaders::Portal);
+    inf_portal.setSize(170.f, 320.f);
     player.setAnimation(Textures::Player, &Shaders::Player);
     puddle.setAnimation(Textures::Puddle);
     puddle.setSize(90.f, 90.f);
@@ -1953,6 +1956,72 @@ void LevelGenerate(int n, int m) {
     }
 }
 
+void InfLevelLoad(int n, int m) {
+    MiniMapView.zoom(1 / MiniMapZoom);
+    MiniMapZoom = std::pow(1.1, -10);
+    MiniMapView.zoom(MiniMapZoom);
+
+    LabyrinthLocation.GenerateInfLocation(n, m, player.hitbox.getCenter() / float(size));
+    LabyrinthLocation.GenerateLocks();
+
+    inf_portal.setCenter(player.hitbox.getCenter());
+    puddle.setCenter(player.hitbox.getCenter() + sf::Vector2f(size, size));
+
+    clearVectorOfPointer(listOfBox);
+    for (int i = 0; i < 10; i++) {
+        listOfBox.push_back(new Interactable());
+        setBox(listOfBox[i]);
+        do {
+            listOfBox[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
+                                      sf::Vector2f(std::rand() % int(size - listOfBox[i]->hitbox.getSize().x), std::rand() % int(size - listOfBox[i]->hitbox.getSize().y)));
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->hitbox.getPosition().y / size][(int)listOfBox[i]->hitbox.getPosition().x / size]);
+
+        InteractibeStuff.push_back(listOfBox[i]);
+        DrawableStuff.push_back(listOfBox[i]);
+    }
+
+    clearVectorOfPointer(listOfArtifact);
+    for (int i = 0; i < 10; i++) {
+        listOfArtifact.push_back(new Interactable());
+        setArtifact(listOfArtifact[i]);
+        do {
+            listOfArtifact[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
+                                           sf::Vector2f(std::rand() % (size - Textures::Architect.getSize().x / 4), std::rand() % (size - Textures::Architect.getSize().y / 4)));
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->hitbox.getPosition().y / size][(int)listOfArtifact[i]->hitbox.getPosition().x / size]);
+
+        InteractibeStuff.push_back(listOfArtifact[i]);
+        DrawableStuff.push_back(listOfArtifact[i]);
+    }
+
+    clearVectorOfPointer(listOfFire);
+    for (int i = 0; i < 2; i++) {
+        listOfFire.push_back(new Interactable());
+        setFire(listOfFire[i]);
+        do {
+            listOfFire[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
+                                       sf::Vector2f(std::rand() % (size - Textures::Fire.getSize().x / 4), std::rand() % (size - Textures::Fire.getSize().y / 4)));
+        } while (!LabyrinthLocation.EnableTiles[(int)listOfFire[i]->hitbox.getPosition().y / size][(int)listOfFire[i]->hitbox.getPosition().x / size]);
+
+        InteractibeStuff.push_back(listOfFire[i]);
+        DrawableStuff.push_back(listOfFire[i]);
+    }
+
+    clearVectorOfPointer(Enemies);
+    int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
+    amountOfEveryEnemiesOnLevel = 0;
+    for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
+        Enemies.push_back(new DistortedScientist());
+        Enemies.push_back(new Distorted());
+    }
+
+    for (int i = 0; i < Enemies.size(); i++) {
+        do {
+            Enemies[i]->hitbox.setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
+        } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->hitbox.getPosition().y / size][(int)Enemies[i]->hitbox.getPosition().x / size] ||
+                 distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
+    }
+}
+
 void LoadMainMenu() {
     CurLocation = &MainMenuLocation;
 
@@ -1961,6 +2030,7 @@ void LoadMainMenu() {
     player.ChangeWeapon(Weapons[CurWeapon.cur]);
 
     portal.setPosition(1612.5, 1545);
+    inf_portal.setPosition(portal.hitbox.getCenter() + sf::Vector2f(200, 0));
     puddle.setPosition(1012.5, 1545);
 
     sf::Vector2f PlayerPos = player.hitbox.getCenter() / (float)size;
@@ -2011,6 +2081,51 @@ void LoadMainMenu() {
         saveGame();
                        });
 
+    inf_portal.setFunction([](Interactable* i) {
+        clearVectorOfPointer(PickupStuff);
+        clearVectorOfPointer(Bullets);
+
+        DrawableStuff.clear();
+        InterfaceStuff.clear();
+        InteractibeStuff.clear();
+        removeUI(&HUDFrame, InterfaceStuff);
+
+        player.hitbox.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
+
+        MiniMapActivated = false;
+        EscapeMenuActivated = false;
+
+        MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+        MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
+
+        Musics::MainMenu.pause();
+        if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
+            Musics::Fight1.play();
+        }
+        if (CurLocation != &LabyrinthLocation) {
+            CurLocation = &LabyrinthLocation;
+        } else {
+            //completedLevels = std::max(curLevel, completedLevels);
+            //curLevel++;
+        }
+        InfLevelLoad(START_N, START_M);
+        //FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+
+        DrawableStuff.push_back(&player);
+        DrawableStuff.push_back(&inf_portal);
+        DrawableStuff.push_back(&puddle);
+        for (Enemy*& enemy : Enemies) {
+            DrawableStuff.push_back(enemy);
+        }
+        addUI(&HUDFrame, InterfaceStuff);
+        for (int i = 0; i < WeaponNameTexts.size(); i++)
+            InterfaceStuff.push_back(WeaponNameTexts[i]);
+        InterfaceStuff.push_back(&chat);
+
+        InteractibeStuff.push_back(&puddle);
+        //saveGame();
+    });
+
     puddle.setFunction([](Interactable* i) {
         player.getDamage(5.f);
                        });
@@ -2048,6 +2163,7 @@ void LoadMainMenu() {
     DrawableStuff.clear();
     DrawableStuff.push_back(&player);
     DrawableStuff.push_back(&portal);
+    DrawableStuff.push_back(&inf_portal);
     DrawableStuff.push_back(&puddle);
 
     InterfaceStuff.clear();
@@ -2056,6 +2172,7 @@ void LoadMainMenu() {
 
     InteractibeStuff.clear();
     InteractibeStuff.push_back(&portal);
+    InteractibeStuff.push_back(&inf_portal);
     InteractibeStuff.push_back(&puddle);
     InteractibeStuff.push_back(&shopSector);
     InteractibeStuff.push_back(&upgradeSector);
@@ -2715,8 +2832,85 @@ void MainLoop() {
         } else {
             if (!chat.inputted && !isDrawInventory && !isDrawShop) {
                 player.move(CurLocation);
+                if (player.hitbox.getCenter().y < 0) {
+                    clearVectorOfPointer(PickupStuff);
+                    clearVectorOfPointer(Bullets);
+
+                    DrawableStuff.clear();
+                    InterfaceStuff.clear();
+                    InteractibeStuff.clear();
+                    removeUI(&HUDFrame, InterfaceStuff);
+
+                    CurLocation = CurLocation->up;
+                    player.hitbox.setCenter(sf::Vector2f((CurLocation->downway.x + 0.5f) * size, (CurLocation->n - 1 + 0.5f) * size));
+
+                    MiniMapActivated = false;
+                    EscapeMenuActivated = false;
+
+                    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                    MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
+
+                    CurLocation->GenerateLocks();
+                    //FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+
+                    DrawableStuff.push_back(&player);
+                    DrawableStuff.push_back(&inf_portal);
+                    DrawableStuff.push_back(&puddle);
+                    for (Enemy*& enemy : Enemies) {
+                        DrawableStuff.push_back(enemy);
+                    }
+                    addUI(&HUDFrame, InterfaceStuff);
+                    for (int i = 0; i < WeaponNameTexts.size(); i++)
+                        InterfaceStuff.push_back(WeaponNameTexts[i]);
+                    InterfaceStuff.push_back(&chat);
+
+                    InteractibeStuff.push_back(&puddle);
+                    //saveGame();
+                }
+                    else
+                if (player.hitbox.getCenter().x < 0)
+                    std::cout << "left" << std::endl;
+                    else
+                if (player.hitbox.getCenter().x/size > CurLocation->m)
+                    std::cout << "right" << std::endl;
+                    else
+                if (player.hitbox.getCenter().y/size > CurLocation->n) {
+                    clearVectorOfPointer(PickupStuff);
+                    clearVectorOfPointer(Bullets);
+
+                    DrawableStuff.clear();
+                    InterfaceStuff.clear();
+                    InteractibeStuff.clear();
+                    removeUI(&HUDFrame, InterfaceStuff);
+
+                    CurLocation = CurLocation->down;
+                    player.hitbox.setCenter(sf::Vector2f((CurLocation->upway.x + 0.5f) * size, 0.5 * size));
+
+                    MiniMapActivated = false;
+                    EscapeMenuActivated = false;
+
+                    MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                    MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
+
+                    CurLocation->GenerateLocks();
+                    //FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+
+                    DrawableStuff.push_back(&player);
+                    DrawableStuff.push_back(&inf_portal);
+                    DrawableStuff.push_back(&puddle);
+                    for (Enemy*& enemy : Enemies) {
+                        DrawableStuff.push_back(enemy);
+                    }
+                    addUI(&HUDFrame, InterfaceStuff);
+                    for (int i = 0; i < WeaponNameTexts.size(); i++)
+                        InterfaceStuff.push_back(WeaponNameTexts[i]);
+                    InterfaceStuff.push_back(&chat);
+
+                    InteractibeStuff.push_back(&puddle);
+                    //saveGame();
+                }
                 GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
-                FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+                //FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
                     player.CurWeapon->HolsterAction();
                 }

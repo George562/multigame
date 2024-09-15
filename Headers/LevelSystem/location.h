@@ -36,13 +36,23 @@ public:
     sf::Vector2i room;
     sf::Vector2i doorPos;
 
-    Location() { AmountOfEnableTiles = 0; room = sf::Vector2i(-1, -1); }
-    Location(int w, int h) { SetSize(w, h); room = sf::Vector2i(-1, -1); }
+    sf::Vector2i upway, rightway, downway, leftway;
+
+    Location* up = nullptr;
+    Location* right = nullptr;
+    Location* down = nullptr;
+    Location* left = nullptr;
+
+    Location() { AmountOfEnableTiles = 0; room = sf::Vector2i(-1, -1); upway = sf::Vector2i(-1, -1); downway = upway; }
+    Location(int w, int h) { SetSize(w, h); room = sf::Vector2i(-1, -1); upway = sf::Vector2i(-1, -1); downway = upway; }
     void SetSize(int w, int h);
     void GenerateLocation(int n, int m, sf::Vector2f RootPoint);
+    void GenerateInfLocation(int n, int m, sf::Vector2f RootPoint);
+    void GenerateLocks();
     void BuildWayFrom(sf::Vector2f);
     void WallGenerator(float probability);
     void RoomGenerator();
+    void DoPassages();
     std::vector<sf::Vector2i> getPassages(int _n, int _m);
     void FindEnableTilesFrom(sf::Vector2f&);
     void FillWallsRect();
@@ -84,7 +94,52 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
               << CounterOfGenerations << "; Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
 }
 
+void Location::GenerateInfLocation(int n, int m, sf::Vector2f RootPoint) {
+    SetSize(n, m);
+    int CounterOfGenerations = 0;
+    sf::Clock timer;
+    do {
+        WallGenerator(0.48);
+        std::cout << "wallg" << std::endl;
+        BuildWayFrom(RootPoint);
+        std::cout << "way" << std::endl;
+        DoPassages();
+        CounterOfGenerations++;
+    } while (AmountOfEnableTiles < float(n * m) * 0.3f || AmountOfEnableTiles > float(n * m) * 0.7f);
+    FillWallsRect();
+    std::cout << "Location was generated in " << timer.getElapsedTime().asSeconds() << " seconds with total number of generations = "
+              << CounterOfGenerations << "; Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
+}
+
+void Location::GenerateLocks() {
+    if (!up) {
+        std::cout << '0' << std::endl;
+        up = new Location();
+        up->down = this;
+        up->downway = upway;
+        up->GenerateInfLocation(n, m, sf::Vector2f(m / 2 + 0.5f, n / 2 + 0.5f));
+        std::cout << '1' << std::endl;
+    }
+    // if (!right) {
+    //     right = new Location();
+    //     right->GenerateInfLocation(n, m, sf::Vector2f(0, rightway.y));
+    // }
+    if (!down) {
+        std::cout << '0' << std::endl;
+        down = new Location();
+        down->up = this;
+        down->upway = downway;
+        down->GenerateInfLocation(n, m, sf::Vector2f(m / 2 + 0.5f, n / 2 + 0.5f));
+        std::cout << '2' << std::endl;
+    }
+    // if (!left) {
+    //     left = new Location();
+    //     left->GenerateInfLocation(n, m, sf::Vector2f(m, leftway.y));
+    // }
+}   
+
 void Location::BuildWayFrom(sf::Vector2f p) {
+    std::cout << p.y << std::endl;
     FindEnableTilesFrom(p);
     sf::IntRect UsedAreaRect(0, 0, m, n);
     sf::Vector2i check;
@@ -134,6 +189,30 @@ void Location::RoomGenerator() {
         std::cout << "Room hasn't been created\n";
         room = sf::Vector2i(-1, -1);
     }
+}
+
+void Location::DoPassages() {
+    // не всегда верхняя граница уровня имеет позицию ноль
+    if (upway.x == -1 && upway.y == -1)
+        for (int j = 0; j < walls[0].size(); j++) {
+            if (walls[0][j]) {
+                walls[0][j] = false;
+                upway.x = j;
+                upway.y = 0;
+                break;
+            }
+        }
+    else walls[0][upway.x] = false;
+    if (downway.x == -1 && downway.y == -1)
+        for (int j = 0; j < walls[2*n].size(); j++) {
+            if (walls[2*n][j]) {
+                walls[2*n][j] = false;
+                downway.x = j;
+                downway.y = n - 1;
+                break;
+            }
+        }
+    else walls[2*n][downway.x] = false;
 }
 
 std::vector<sf::Vector2i> Location::getPassages(int _n, int _m) {

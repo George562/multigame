@@ -90,6 +90,7 @@ namespace Textures {
                 DistortedScientist,
                 Player,
                 Portal,
+                InfPortal,
                 WallG,
                 WallV,
                 XButton,
@@ -153,6 +154,7 @@ void loadTextures() {
     Textures::DistortedScientist      .loadFromFile("sources/textures/DistortedScientist.png");
     Textures::Player                  .loadFromFile("sources/textures/Player.png");
     Textures::Portal                  .loadFromFile("sources/textures/Portal.png");
+    Textures::InfPortal               .loadFromFile("sources/textures/Inf_portal.png");
     Textures::WallG                   .loadFromFile("sources/textures/wallG.png");
     Textures::WallV                   .loadFromFile("sources/textures/wallV.png");
     Textures::XButton                 .loadFromFile("sources/textures/XButton.png");

@@ -94,10 +94,10 @@ public:
         Velocity += Direction * ElapsedTimeAsSecond;
         // visualization https://www.desmos.com/calculator/oumleenz1s
 
-        sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, hitbox, Velocity * ElapsedTimeAsSecond);
+        //sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, hitbox, Velocity * ElapsedTimeAsSecond);
 
-        if (tempv.x == -1) Velocity.x = 0;
-        if (tempv.y == -1) Velocity.y = 0;
+        //if (tempv.x == -1) Velocity.x = 0;
+        //if (tempv.y == -1) Velocity.y = 0;
 
         hitbox.move(Velocity * ElapsedTimeAsSecond);
         LastMoveCheck = localClock->getElapsedTime();
