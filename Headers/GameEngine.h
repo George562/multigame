@@ -586,7 +586,7 @@ void initInventory() {
             addUI(&upgradeInterface::BG, pageElements[activePage]);
             removeUI(&upgradeInterface::BG, pageElements[activePage], false);
             removeUI(&upgradeInterface::backButton, pageElements[activePage], false);
-            updateUpgradeShopStats();
+            openUpgradeShop();
                                   });
         weaponsButton.parentTo(&itemsButton, true);
 
@@ -788,7 +788,7 @@ void initUpgradeShop() {
         weaponDescPanel.parentTo(&BG, true, { 0, 75 });
 
         weaponImg.setTexture(Textures::PH_Pistol, UI::texture);
-        weaponImg.parentTo(&BG, true);
+        weaponImg.parentTo(&BG, true, { 0, 150 });
 
         switchGunLBtn.setHitboxPoints(std::vector<sf::Vector2f>{{50, 100}, { 50, 0 }, { 0, 50 }});
         switchGunLBtn.setShape(sf::Color::Black, sf::Color::White, 2);
@@ -1319,8 +1319,7 @@ void drawShop() {
 void drawUpgradeInterface() {
     window.setView(isDrawInventory ? InventoryView : InterfaceView);
 
-    if (!isDrawInventory)
-        updateUpgradeInterfaceUI();
+    updateUpgradeInterfaceUI();
     {
         using namespace upgradeInterface;
 
@@ -2137,7 +2136,7 @@ void updateEnemies() {
                 TempText* enemiesKilledText = new TempText(sf::seconds(10));
                 enemiesKilledText->setCharacterSize(40);
                 enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
-                enemiesKilledText->setCenter(scw / 2.0f, sch / 4.0f);
+                enemiesKilledText->setCenter(scw / 2.0f, sch / 3.0f);
                 TempTextsOnScreen.push_back(enemiesKilledText);
 
                 if (CurLocation == &LabyrinthLocation) {
@@ -2448,6 +2447,7 @@ void updateUpgradeTexts() {
 void openUpgradeShop() {
     {
         using namespace upgradeInterface;
+        initUpgradeUI();
         setUpgradeFunctions();
         updateUpgradeShopStats();
         addUI(&BG, UIElements);

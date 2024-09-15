@@ -34,6 +34,7 @@ public:
                           text.getCharacterSize(),
                           text.getFillColor());
     }
+    std::string getText() const { return text.getString().toAnsiString(); }
     sf::FloatRect getGlobalBounds() { return text.getGlobalBounds(); }
 
     void setString(std::string s);

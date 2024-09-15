@@ -100,8 +100,8 @@ void PolygonButton::setTexture(sf::Texture& texture, sf::Texture& pushedTexture,
 void PolygonButton::setSpriteSize(sf::Vector2u size) {
     if (sprite.getScale().x == 0 || sprite.getScale().y == 0)
         sprite.setScale(sf::Vector2f(1.0, 1.0));
-    sprite.setScale(sprite.getScale() * sf::Vector2f{
-        float(size.x) / sprite.getTexture()->getSize().x,
+    sprite.setScale(sf::Vector2f{
+            float(size.x) / sprite.getTexture()->getSize().x,
             float(size.y) / sprite.getTexture()->getSize().y
     });
     setSize(size);

@@ -86,7 +86,7 @@ void Panel::setTexture(sf::Texture& texture, UI::TextureResize mode = UI::elemen
 }
 
 void Panel::setSpriteSize(sf::Vector2u size) {
-    sprite.setScale(sprite.getScale() * sf::Vector2f{
+    sprite.setScale(sf::Vector2f{
         float(size.x) / sprite.getTexture()->getSize().x,
         float(size.y) / sprite.getTexture()->getSize().y
     });
