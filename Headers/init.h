@@ -198,11 +198,10 @@ void loadTextures() {
 
     Textures::INVISIBLE               .create(size, size);
 
-    Textures::PH_gun                  .loadFromFile("sources/textures/Placeholders/kitchengun.png");
-    Textures::PH_CochGen              .loadFromFile("sources/textures/Placeholders/CockGen.png");
-    Textures::PH_FormFactor           .loadFromFile("sources/textures/Placeholders/formFactor.jpg");
-    Textures::PH_Converter            .loadFromFile("sources/textures/Placeholders/converter.jpg");
-    Textures::PH_Targeting            .loadFromFile("sources/textures/Placeholders/targeting.jpg");
+    Textures::PH_CochGen              .loadFromFile("sources/textures/Placeholders/CochGen.png");
+    Textures::PH_FormFactor           .loadFromFile("sources/textures/Placeholders/FormFactor.png");
+    Textures::PH_Converter            .loadFromFile("sources/textures/Placeholders/Converter.png");
+    Textures::PH_Targeting            .loadFromFile("sources/textures/Placeholders/Targeting.png");
     Textures::PH_Pistol               .loadFromFile("sources/textures/Placeholders/Pistol.png");
 }
 

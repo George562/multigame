@@ -216,7 +216,7 @@ namespace upgradeInterface {
                                                    50, CommonColors::text));
             addUI(&playerCoinAmount, choiceUIElements);
         }
-        choiceCompImg.setTexture(*compTexture);
+        choiceCompImg.setTexture(*compTexture, UI::size, { 500, 500 });
     }
 }
 
