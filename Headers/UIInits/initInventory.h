@@ -15,8 +15,6 @@
 namespace inventoryInterface {
     bool isDrawInventory = false;
 
-    Player* player = nullptr;
-
     std::vector<bool> doInventoryUpdate(inventoryPage::PageCount);
     inventoryPage::Type activePage = inventoryPage::Items;
     std::vector<sf::Drawable*> commonElements; // These elements appear on every page
@@ -92,9 +90,6 @@ namespace upgradeInterface {
     bool isDrawUpgradeInterface = false;
     std::vector<sf::Drawable*> UIElements;
 
-    Player* player = nullptr;
-    std::vector<Weapon*>* playerWeapons;
-
     Animation coinSprite("upg_coinAnim", UI::R, UI::L);
     Frame BG("upg_BG", { 0, 0, scw, sch });
     Frame weaponImg("upg_weapImg", UI::center, UI::center, { 0, 0 });
@@ -124,19 +119,6 @@ namespace upgradeInterface {
 
     bool isChoosingComponent = false;
     int compType = 0;
-
-    void switchGun(bool left) {
-        int ind;
-        if (left) {
-            ind = (std::find(playerWeapons->begin(), playerWeapons->end(), player->CurWeapon) - playerWeapons->begin() - 1);
-            player->CurWeapon = (*playerWeapons)[ind + playerWeapons->size() * (ind < 0)];
-        } else {
-            ind = (std::find(playerWeapons->begin(), playerWeapons->end(), player->CurWeapon) - playerWeapons->begin() + 1);
-            player->CurWeapon = (*playerWeapons)[ind % playerWeapons->size()];
-        }
-        setUpgradeFunctions();
-        updateUpgradeShopStats();
-    }
 
     void openComponentUpgrade(int type) {
         isChoosingComponent = true;
@@ -180,7 +162,7 @@ namespace upgradeInterface {
 
 void openUpgradeShop();
 
-void initInventory() {
+void initInventory(Player* player) {
     {
         using namespace inventoryInterface;
 
@@ -232,24 +214,24 @@ void initInventory() {
         float yOffset = sch / 10;
         statsHPText.setFontString(FontString("Health", fontSize));
         statsHPText.parentTo(&statsFrame, true, { 200, 200 });
-        statsHPBar.setValue(inventoryInterface::player->Health);
+        statsHPBar.setValue(player->Health);
         statsHPBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 255), CommonColors::barBG);
         statsHPBar.parentTo(&statsHPText, true, { 300, 0 });
 
         statsMPText.setFontString(FontString("Mana", fontSize));
         statsMPText.parentTo(&statsHPText, true, { 0, yOffset });
-        statsMPBar.setValue(inventoryInterface::player->Mana);
+        statsMPBar.setValue(player->Mana);
         statsMPBar.setColors(CommonColors::barWall, sf::Color(0, 0, 192, 255), CommonColors::barBG);
         statsMPBar.parentTo(&statsMPText);
         statsMPBar.setPosition(statsHPBar.getPosition() + sf::Vector2f{ 0, yOffset });
 
-        statsHPRegenText.setFontString(FontString("Health regen: " + floatToString(inventoryInterface::player->HealthRecovery), fontSize));
+        statsHPRegenText.setFontString(FontString("Health regen: " + floatToString(player->HealthRecovery), fontSize));
         statsHPRegenText.parentTo(&statsMPText, true, { 0, yOffset });
 
-        statsMPRegenText.setFontString(FontString("Mana regen: " + floatToString(inventoryInterface::player->ManaRecovery), fontSize));
+        statsMPRegenText.setFontString(FontString("Mana regen: " + floatToString(player->ManaRecovery), fontSize));
         statsMPRegenText.parentTo(&statsHPRegenText, true, { 0, yOffset });
 
-        statsArmorText.setFontString(FontString("Armor: " + floatToString(inventoryInterface::player->Armor.cur), fontSize));
+        statsArmorText.setFontString(FontString("Armor: " + floatToString(player->Armor.cur), fontSize));
         statsArmorText.parentTo(&statsMPRegenText, true, { 0, yOffset });
 
         statsCompletedLevelsText.setFontString(FontString("Completed Levels: " + std::to_string(completedLevels), fontSize));
@@ -297,14 +279,12 @@ void initUpgradeShop() {
         switchGunLBtn.setShape(sf::Color::Black, sf::Color::White, 2);
         switchGunLBtn.enableShape(true);
         switchGunLBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        switchGunLBtn.setFunction([]() { switchGun(true); });
         switchGunLBtn.parentTo(&weaponImg, true, { -50, 0 });
 
         switchGunRBtn.setHitboxPoints(std::vector<sf::Vector2f>{{0, 100}, { 0, 0 }, { 50, 50 }});
         switchGunRBtn.setShape(sf::Color::Black, sf::Color::White, 2);
         switchGunRBtn.enableShape(true);
         switchGunRBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        switchGunRBtn.setFunction([]() { switchGun(false); });
         switchGunRBtn.parentTo(&weaponImg, true, { 50, 0 });
 
         choiceComp.setTexture(Textures::GradientFrameAlpha);

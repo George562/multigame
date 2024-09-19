@@ -5,7 +5,7 @@ void updateUpgradeInterfaceUI();
 void updateInventoryUI();
 void drawUpgradeInterface(sf::RenderWindow& window);
 
-void drawInventory(sf::RenderWindow& window) {
+void drawInventory(sf::RenderWindow& window, Player* player) {
     window.setView(InventoryView);
 
     updateInventoryUI();
@@ -19,7 +19,7 @@ void drawInventory(sf::RenderWindow& window) {
                 for (sf::Drawable*& elem : pageElements[activePage])
                     window.draw(*elem);
 
-                for (Item*& item : inventoryInterface::player->inventory.items) {
+                for (Item*& item : player->inventory.items) {
                     if (itemSlotsElements[item->id].isInitialized) {
                         window.draw(*itemSlotsElements[item->id].background);
 

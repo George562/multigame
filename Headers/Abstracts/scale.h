@@ -17,7 +17,7 @@ public:
     T toBottom() { return cur - bottom; }
     float filling() { return float(cur - bottom) / float(top - bottom); };
     Scale<T>& operator=(T x) {
-        this->cur = x; normalize(*this);
+        this->cur = x; normalizeVal(*this);
         return *this;
     }
     Scale<T>& operator=(std::vector<T> vals) {
@@ -63,7 +63,7 @@ void from_json(const json& j, Scale<T>& s) {
 }
 
 template <class T>
-void normalize(Scale<T>& scale) {
+void normalizeVal(Scale<T>& scale) {
     if (!scale.looped) {
         scale.cur = std::clamp(scale.cur, scale.bottom, scale.top);
     } else {
@@ -83,7 +83,7 @@ void normalize(Scale<sf::Vector2f>& scale) {
 template <class T, class Q>
 Scale<T>& operator+=(Scale<T>& scale, Q x) {
     scale.cur += x;
-    normalize(scale);
+    normalizeVal(scale);
     return scale;
 }
 

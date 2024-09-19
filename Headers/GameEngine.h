@@ -133,6 +133,7 @@ std::vector<Enemy*> Enemies;
 
 //---------------------------- INITS
 void init();
+void initScripts();
 void initInterface();
 //----------------------------
 
@@ -243,37 +244,37 @@ RectButton HostButton("hostBtn", "Host", []() {
                       });
 
 RectButton EscapeButton("exitBtn", UI::none, UI::none, { 0, 0 }, "Exit", []() {
-    if (HostFuncRun) {
-        mutex.lock();
-        SendPacket << packetStates::disconnect;
-        SendToClients(SendPacket);
-        SendPacket.clear();
-        mutex.unlock();
-        clients.clear();
-        selector.clear();
-        listener.close();
-        HostFuncRun = false;
-        ConnectedPlayers.clear();
-    } else if (ClientFuncRun) {
-        SelfDisconnect();
-    }
-    EscapeMenuActivated = false;
-    ListOfPlayers.clearText();
-    clearVectorOfPointer(Bullets);
-    clearVectorOfPointer(Enemies);
-    clearVectorOfPointer(TempTextsOnGround);
-    clearVectorOfPointer(TempTextsOnScreen);
-    clearVectorOfPointer(DamageText);
-    clearVectorOfPointer(MessageText);
-    clearVectorOfPointer(listOfBox);
-    clearVectorOfPointer(listOfArtifact);
-    clearVectorOfPointer(listOfFire);
-    clearVectorOfPointer(PickupStuff);
-    player.CurWeapon->lock = true;
-    normalize(CurWeapon);
-    LoadMainMenu();
-    saveGame();
-                        });
+        if (HostFuncRun) {
+            mutex.lock();
+            SendPacket << packetStates::disconnect;
+            SendToClients(SendPacket);
+            SendPacket.clear();
+            mutex.unlock();
+            clients.clear();
+            selector.clear();
+            listener.close();
+            HostFuncRun = false;
+            ConnectedPlayers.clear();
+        } else if (ClientFuncRun) {
+            SelfDisconnect();
+        }
+        EscapeMenuActivated = false;
+        ListOfPlayers.clearText();
+        clearVectorOfPointer(Bullets);
+        clearVectorOfPointer(Enemies);
+        clearVectorOfPointer(TempTextsOnGround);
+        clearVectorOfPointer(TempTextsOnScreen);
+        clearVectorOfPointer(DamageText);
+        clearVectorOfPointer(MessageText);
+        clearVectorOfPointer(listOfBox);
+        clearVectorOfPointer(listOfArtifact);
+        clearVectorOfPointer(listOfFire);
+        clearVectorOfPointer(PickupStuff);
+        player.CurWeapon->lock = true;
+        normalizeVal(CurWeapon);
+        LoadMainMenu();
+        saveGame();
+    });
 
 
                     //////////////////////////////////////////////////////////// functions realizations
@@ -362,16 +363,64 @@ void init() {
 
     CurWeapon = { {0, 2, 0} };
 
-    inventoryInterface::player = &player;
-    upgradeInterface::player = &player;
-    upgradeInterface::playerWeapons = &Weapons;
-    initInventory();
+    initInventory(&player);
     initUpgradeShop();
-
-    MenuShop::player = &player;
-    initShop();
+    initShop(&player);
+    initScripts();
 
     LoadMainMenu();
+}
+
+void initScripts() {
+    auto switchGun = [](bool left){
+        int playerWeaponIndex = CurWeapon.cur;
+        if (left) player.CurWeapon = Weapons[playerWeaponIndex + Weapons.size() * (playerWeaponIndex < 0)];
+        else player.CurWeapon = Weapons[playerWeaponIndex % Weapons.size()];
+    };
+
+    {
+        using namespace upgradeInterface;
+        switchGunLBtn.setFunction([](){
+            CurWeapon.cur -= 1;
+            if (CurWeapon.cur < 0)
+                CurWeapon = Weapons.size() - 1;
+            player.CurWeapon = Weapons[CurWeapon.cur];
+        });
+        switchGunRBtn.setFunction([](){
+            CurWeapon.cur = (CurWeapon.cur + 1) % Weapons.size();
+            player.CurWeapon = Weapons[CurWeapon.cur];
+        });
+    }
+
+    {
+        using namespace MenuShop;
+        shop.setFunction([]() {
+            if (selectedItem != nullptr) {
+                if (player.inventory.money >= shop.itemPrices[selectedItem->id]) {
+                    Item* boughtItem = new Item(*selectedItem);
+                    boughtItem->amount = 1;
+                    player.addItem(boughtItem);
+                    player.inventory.money -= shop.itemPrices[selectedItem->id];
+                    selectedItem->amount--;
+
+                    playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
+                    playerCoinsSprite.parentTo(&MenuShop::playerCoinsText, true, { 25, -10 });
+                    shop.soldItems.removeItem(selectedItem, false);
+                    NPCText.setString("Thank you for buying a " + stringLower(itemName[selectedItem->id]) + "!");
+
+                    if (!shop.soldItems.find(selectedItem)) {
+                        slotsElements[selectedItem->id].erase();
+                        itemSprite.setTexture(Textures::INVISIBLE);
+                        selectedItem = nullptr;
+                        removeUI(&itemSlot, UIElements);
+                    }
+                } else {
+                    NPCText.setString("Sorry, but you cannot afford a " + stringLower(itemName[selectedItem->id]) + ".");
+                }
+                NPCText.parentTo(&NPCTextFrame, true);
+            }
+        });
+    }
 }
 
 void initInterface() {
@@ -452,9 +501,9 @@ void draw() {
     window.clear(sf::Color::Transparent);
     updateShaders();
     if (inventoryInterface::isDrawInventory) {
-        drawInventory(window);
+        drawInventory(window, &player);
     } else if (MenuShop::isDrawShop) {
-        drawShop(window);
+        drawShop(window, &player);
     } else if (upgradeInterface::isDrawUpgradeInterface) {
         drawUpgradeInterface(window);
     } else {
@@ -737,7 +786,7 @@ void updateInventoryUI() {
 
         if (doInventoryUpdate[inventoryPage::Items]) {
             int slotNumber = 0;
-            for (Item*& item : inventoryInterface::player->inventory.items) {
+            for (Item*& item : player.inventory.items) {
                 Item* drawnItem = item;
                 drawnItem->animation->setScale({ 0.75, 0.75 });
 
@@ -761,13 +810,13 @@ void updateInventoryUI() {
             }
 
             coinSlot.background->setTexture(Textures::INVISIBLE);
-            coinSlot.amountText->setString(std::to_string(inventoryInterface::player->inventory.money));
+            coinSlot.amountText->setString(std::to_string(player.inventory.money));
 
             doInventoryUpdate[inventoryPage::Items] = false;
         }
-        statsHPRegenText.setString("Health regen: " + floatToString(inventoryInterface::player->HealthRecovery));
-        statsMPRegenText.setString("Mana regen: " + floatToString(inventoryInterface::player->ManaRecovery));
-        statsArmorText.setString("Armor: " + floatToString(inventoryInterface::player->Armor.cur));
+        statsHPRegenText.setString("Health regen: " + floatToString(player.HealthRecovery));
+        statsMPRegenText.setString("Mana regen: " + floatToString(player.ManaRecovery));
+        statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
         statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
         statsCurLevelsText.setString("Current Level: " + std::to_string(curLevel));
     }
@@ -805,7 +854,7 @@ void updateShopUI() {
         }
 
         slotNumber = 0;
-        for (Item*& drawnItem : MenuShop::player->inventory.items) {
+        for (Item*& drawnItem : player.inventory.items) {
             drawnItem->animation->setScale({ 0.5, 0.5 });
 
             float itemX = (slotNumber % 3) * 200 + 30;
@@ -839,7 +888,7 @@ void updateUpgradeInterfaceUI() {
         using namespace upgradeInterface;
         updateUpgradeTexts();
         updateUpgradeShopStats();
-        playerCoinAmount.setFontString(FontString("You have: " + std::to_string(upgradeInterface::player->inventory.money),
+        playerCoinAmount.setFontString(FontString("You have: " + std::to_string(player.inventory.money),
                                                   50, sf::Color(200, 200, 200)));
         playerCoinAmount.parentTo(&choiceComp, true, { -100, -50 });
         coinSprite.parentTo(&playerCoinAmount, true);
@@ -1009,7 +1058,7 @@ void inventoryHandler(sf::Event& event) {
         bool isAnythingHovered = false;
         int itemTypeCount = 0;
         if (activePage == inventoryPage::Items) {
-            for (Item*& item : inventoryInterface::player->inventory.items) {
+            for (Item*& item : player.inventory.items) {
                 if (itemSlotsElements[item->id].isInitialized &&
                     itemSlotsElements[item->id].contains(sf::Vector2f(sf::Mouse::getPosition()))) {
                     if (item->id != prevItemDescID) {
@@ -1026,7 +1075,7 @@ void inventoryHandler(sf::Event& event) {
                         if (item->amount <= 0) {
                             itemTypeCount--;
                             isItemDescDrawn = false;
-                            inventoryInterface::player->inventory.removeItem(item, false);
+                            player.inventory.removeItem(item, false);
                         }
                         doInventoryUpdate[inventoryPage::Items] = true;
                     }
@@ -1093,14 +1142,20 @@ void upgradeInterfaceHandler(sf::Event& event) {
         }
 
         if (!isChoosingComponent) {
-            if (keyPressed(event, sf::Keyboard::Left)) {
+            if ((event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left
+                && switchGunLBtn.isActivated(event))
+                || keyPressed(event, sf::Keyboard::Left)) {
                 switchGunLBtn.buttonFunction();
+                setUpgradeFunctions();
+                updateUpgradeShopStats();
             }
-            if (keyPressed(event, sf::Keyboard::Right)) {
+            if ((event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left
+                && switchGunRBtn.isActivated(event))
+                || keyPressed(event, sf::Keyboard::Right)) {
                 switchGunRBtn.buttonFunction();
+                setUpgradeFunctions();
+                updateUpgradeShopStats();
             }
-            switchGunLBtn.isActivated(event);
-            switchGunRBtn.isActivated(event);
             backButton.isActivated(event);
             generatorBtn.isActivated(event);
             formFactorBtn.isActivated(event);
@@ -1338,7 +1393,7 @@ void LoadMainMenu() {
         {
             using namespace MenuShop;
             isDrawShop = true;
-            playerCoinsText.setString("You have: " + std::to_string(MenuShop::player->inventory.money));
+            playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
             playerCoinsSprite.parentTo(&playerCoinsText, true, { 25, -10 });
             NPCText.setString(textWrap("Hello! Welcome to the \"We are literally standing near a phenomenon beyond our"
                                        " entire plane of existence in a literal motherfucking sense, that we have no fucking clue on"
@@ -1488,29 +1543,29 @@ void updateUpgradeShopStats() {
     {
         using namespace upgradeInterface;
         PlacedText& weaponDescText = weaponDescPanel.text;
-        weaponDescText.setString(upgradeInterface::player->CurWeapon->Name + '\n');
-        weaponDescText.addString(weaponDescString[upgradeInterface::player->CurWeapon->Name] + '\n');
+        weaponDescText.setString(player.CurWeapon->Name + '\n');
+        weaponDescText.addString(weaponDescString[player.CurWeapon->Name] + '\n');
         weaponDescText.addString("\nStats:");
 
-        weaponDescText.addString("\nMana storage: " + floatToString(upgradeInterface::player->CurWeapon->MaxManaStorage));
-        weaponDescText.addString("\t\t\tReload Speed: " + floatToString(upgradeInterface::player->CurWeapon->ReloadSpeed.getStat()) + " mana/sec");
-        weaponDescText.addString("\n\nTime To Holster: " + floatToString(upgradeInterface::player->CurWeapon->TimeToHolster.getStat().asSeconds()) + " sec");
-        weaponDescText.addString("\t\t\tTime To Dispatch: " + floatToString(upgradeInterface::player->CurWeapon->TimeToDispatch.getStat().asSeconds()) + " sec");
-        weaponDescText.addString("\n\nDamage: " + floatToString(upgradeInterface::player->CurWeapon->ManaCostOfBullet));
-        if (upgradeInterface::player->CurWeapon->Multishot != 1) {
-            weaponDescText.addString("\t\t\tBullet per shot: " + std::to_string(upgradeInterface::player->CurWeapon->Multishot));
+        weaponDescText.addString("\nMana storage: " + floatToString(player.CurWeapon->MaxManaStorage));
+        weaponDescText.addString("\t\t\tReload Speed: " + floatToString(player.CurWeapon->ReloadSpeed.getStat()) + " mana/sec");
+        weaponDescText.addString("\n\nTime To Holster: " + floatToString(player.CurWeapon->TimeToHolster.getStat().asSeconds()) + " sec");
+        weaponDescText.addString("\t\t\tTime To Dispatch: " + floatToString(player.CurWeapon->TimeToDispatch.getStat().asSeconds()) + " sec");
+        weaponDescText.addString("\n\nDamage: " + floatToString(player.CurWeapon->ManaCostOfBullet));
+        if (player.CurWeapon->Multishot != 1) {
+            weaponDescText.addString("\t\t\tBullet per shot: " + std::to_string(player.CurWeapon->Multishot));
         }
-        weaponDescText.addString("\t\t\tRate of fire: " + floatToString(1 / upgradeInterface::player->CurWeapon->FireRate.getStat().asSeconds()) + " shots/sec");
-        weaponDescText.addString("\n\nVelocity of Bullet: " + floatToString(upgradeInterface::player->CurWeapon->BulletVelocity));
-        weaponDescText.addString("\t\t\tScatter: " + floatToString(upgradeInterface::player->CurWeapon->Scatter) + " deg");
+        weaponDescText.addString("\t\t\tRate of fire: " + floatToString(1 / player.CurWeapon->FireRate.getStat().asSeconds()) + " shots/sec");
+        weaponDescText.addString("\n\nVelocity of Bullet: " + floatToString(player.CurWeapon->BulletVelocity));
+        weaponDescText.addString("\t\t\tScatter: " + floatToString(player.CurWeapon->Scatter) + " deg");
 
         weaponDescText.setCenter(weaponDescPanel.getCenter());
 
-        if (upgradeInterface::player->CurWeapon == &pistol)
+        if (player.CurWeapon == &pistol)
             weaponImg.setTexture(Textures::PH_Pistol, UI::texture);
-        if (upgradeInterface::player->CurWeapon == &shotgun)
+        if (player.CurWeapon == &shotgun)
             weaponImg.setTexture(Textures::PH_Shotgun, UI::texture);
-        if (upgradeInterface::player->CurWeapon == &rifle)
+        if (player.CurWeapon == &rifle)
             weaponImg.setTexture(Textures::PH_Rifle, UI::texture);
     }
 }
@@ -1520,49 +1575,49 @@ void setUpgradeFunctions() {
         using namespace upgradeInterface;
 
         compUpgBtns[0][0]->setFunction([]() {
-            upgradeStat(50, &upgradeInterface::player->CurWeapon->MaxManaStorage,
+            upgradeStat(50, &player.CurWeapon->MaxManaStorage,
             compUpgCosts[0][0], compUpgStats[0][0], compUpgCount[0][0]);
         if (!pistol.MaxManaStorage.maxed())
             pistol.ManaStorage.top = pistol.MaxManaStorage;
                                        });
 
         compUpgBtns[0][1]->setFunction([]() {
-            upgradeStat(70, &upgradeInterface::player->CurWeapon->ReloadSpeed,
+            upgradeStat(70, &player.CurWeapon->ReloadSpeed,
             compUpgCosts[0][1], compUpgStats[0][1], compUpgCount[0][1]);
                                        });
 
         compUpgBtns[1][0]->setFunction([]() {
-            upgradeStat(25, &upgradeInterface::player->CurWeapon->TimeToHolster,
+            upgradeStat(25, &player.CurWeapon->TimeToHolster,
             compUpgCosts[1][0], compUpgStats[1][0], compUpgCount[1][0]);
                                        });
 
         compUpgBtns[1][1]->setFunction([]() {
-            upgradeStat(25, &upgradeInterface::player->CurWeapon->TimeToDispatch,
+            upgradeStat(25, &player.CurWeapon->TimeToDispatch,
             compUpgCosts[1][1], compUpgStats[1][1], compUpgCount[1][1]);
                                        });
 
         compUpgBtns[2][0]->setFunction([]() {
-            upgradeStat(35, &upgradeInterface::player->CurWeapon->FireRate,
+            upgradeStat(35, &player.CurWeapon->FireRate,
             compUpgCosts[2][0], compUpgStats[2][0], compUpgCount[2][0]);
                                        });
 
         compUpgBtns[2][1]->setFunction([]() {
-            upgradeStat(80, &upgradeInterface::player->CurWeapon->ManaCostOfBullet,
+            upgradeStat(80, &player.CurWeapon->ManaCostOfBullet,
             compUpgCosts[2][1], compUpgStats[2][1], compUpgCount[2][1]);
                                        });
 
         compUpgBtns[2][2]->setFunction([]() {
-            upgradeStat(80, &upgradeInterface::player->CurWeapon->Multishot,
+            upgradeStat(80, &player.CurWeapon->Multishot,
             compUpgCosts[2][2], compUpgStats[2][2], compUpgCount[2][2]);
                                        });
 
         compUpgBtns[3][0]->setFunction([]() {
-            upgradeStat(65, &upgradeInterface::player->CurWeapon->BulletVelocity,
+            upgradeStat(65, &player.CurWeapon->BulletVelocity,
             compUpgCosts[3][0], compUpgStats[3][0], compUpgCount[3][0]);
                                        });
 
         compUpgBtns[3][1]->setFunction([]() {
-            upgradeStat(65, &upgradeInterface::player->CurWeapon->Scatter,
+            upgradeStat(65, &player.CurWeapon->Scatter,
             compUpgCosts[3][1], compUpgStats[3][1], compUpgCount[3][1]);
                                        });
     }
@@ -1571,41 +1626,41 @@ void setUpgradeFunctions() {
 void updateUpgradeTexts() {
     {
         using namespace upgradeInterface;
-        updateCostsText(compUpgCosts[0][0], &upgradeInterface::player->CurWeapon->MaxManaStorage, 50);
-        updateStatsText(compUpgStats[0][0], &upgradeInterface::player->CurWeapon->MaxManaStorage);
-        updateCountText(compUpgCount[0][0], &upgradeInterface::player->CurWeapon->MaxManaStorage);
+        updateCostsText(compUpgCosts[0][0], &player.CurWeapon->MaxManaStorage, 50);
+        updateStatsText(compUpgStats[0][0], &player.CurWeapon->MaxManaStorage);
+        updateCountText(compUpgCount[0][0], &player.CurWeapon->MaxManaStorage);
 
-        updateCostsText(compUpgCosts[0][1], &upgradeInterface::player->CurWeapon->ReloadSpeed, 70);
-        updateStatsText(compUpgStats[0][1], &upgradeInterface::player->CurWeapon->ReloadSpeed);
-        updateCountText(compUpgCount[0][1], &upgradeInterface::player->CurWeapon->ReloadSpeed);
+        updateCostsText(compUpgCosts[0][1], &player.CurWeapon->ReloadSpeed, 70);
+        updateStatsText(compUpgStats[0][1], &player.CurWeapon->ReloadSpeed);
+        updateCountText(compUpgCount[0][1], &player.CurWeapon->ReloadSpeed);
 
-        updateCostsText(compUpgCosts[1][0], &upgradeInterface::player->CurWeapon->TimeToHolster, 25);
-        updateStatsText(compUpgStats[1][0], &upgradeInterface::player->CurWeapon->TimeToHolster);
-        updateCountText(compUpgCount[1][0], &upgradeInterface::player->CurWeapon->TimeToHolster);
+        updateCostsText(compUpgCosts[1][0], &player.CurWeapon->TimeToHolster, 25);
+        updateStatsText(compUpgStats[1][0], &player.CurWeapon->TimeToHolster);
+        updateCountText(compUpgCount[1][0], &player.CurWeapon->TimeToHolster);
 
-        updateCostsText(compUpgCosts[1][1], &upgradeInterface::player->CurWeapon->TimeToDispatch, 25);
-        updateStatsText(compUpgStats[1][1], &upgradeInterface::player->CurWeapon->TimeToDispatch);
-        updateCountText(compUpgCount[1][1], &upgradeInterface::player->CurWeapon->TimeToDispatch);
+        updateCostsText(compUpgCosts[1][1], &player.CurWeapon->TimeToDispatch, 25);
+        updateStatsText(compUpgStats[1][1], &player.CurWeapon->TimeToDispatch);
+        updateCountText(compUpgCount[1][1], &player.CurWeapon->TimeToDispatch);
 
-        updateCostsText(compUpgCosts[2][0], &upgradeInterface::player->CurWeapon->FireRate, 35);
-        updateStatsText(compUpgStats[2][0], &upgradeInterface::player->CurWeapon->FireRate);
-        updateCountText(compUpgCount[2][0], &upgradeInterface::player->CurWeapon->FireRate);
+        updateCostsText(compUpgCosts[2][0], &player.CurWeapon->FireRate, 35);
+        updateStatsText(compUpgStats[2][0], &player.CurWeapon->FireRate);
+        updateCountText(compUpgCount[2][0], &player.CurWeapon->FireRate);
 
-        updateCostsText(compUpgCosts[2][1], &upgradeInterface::player->CurWeapon->ManaCostOfBullet, 80);
-        updateStatsText(compUpgStats[2][1], &upgradeInterface::player->CurWeapon->ManaCostOfBullet);
-        updateCountText(compUpgCount[2][1], &upgradeInterface::player->CurWeapon->ManaCostOfBullet);
+        updateCostsText(compUpgCosts[2][1], &player.CurWeapon->ManaCostOfBullet, 80);
+        updateStatsText(compUpgStats[2][1], &player.CurWeapon->ManaCostOfBullet);
+        updateCountText(compUpgCount[2][1], &player.CurWeapon->ManaCostOfBullet);
 
-        updateCostsText(compUpgCosts[2][2], &upgradeInterface::player->CurWeapon->Multishot, 80);
-        updateStatsText(compUpgStats[2][2], &upgradeInterface::player->CurWeapon->Multishot);
-        updateCountText(compUpgCount[2][2], &upgradeInterface::player->CurWeapon->Multishot);
+        updateCostsText(compUpgCosts[2][2], &player.CurWeapon->Multishot, 80);
+        updateStatsText(compUpgStats[2][2], &player.CurWeapon->Multishot);
+        updateCountText(compUpgCount[2][2], &player.CurWeapon->Multishot);
 
-        updateCostsText(compUpgCosts[3][0], &upgradeInterface::player->CurWeapon->BulletVelocity, 65);
-        updateStatsText(compUpgStats[3][0], &upgradeInterface::player->CurWeapon->BulletVelocity);
-        updateCountText(compUpgCount[3][0], &upgradeInterface::player->CurWeapon->BulletVelocity);
+        updateCostsText(compUpgCosts[3][0], &player.CurWeapon->BulletVelocity, 65);
+        updateStatsText(compUpgStats[3][0], &player.CurWeapon->BulletVelocity);
+        updateCountText(compUpgCount[3][0], &player.CurWeapon->BulletVelocity);
 
-        updateCostsText(compUpgCosts[3][1], &upgradeInterface::player->CurWeapon->Scatter, 65);
-        updateStatsText(compUpgStats[3][1], &upgradeInterface::player->CurWeapon->Scatter);
-        updateCountText(compUpgCount[3][1], &upgradeInterface::player->CurWeapon->Scatter);
+        updateCostsText(compUpgCosts[3][1], &player.CurWeapon->Scatter, 65);
+        updateStatsText(compUpgStats[3][1], &player.CurWeapon->Scatter);
+        updateCountText(compUpgCount[3][1], &player.CurWeapon->Scatter);
     }
 }
 
@@ -1816,8 +1871,7 @@ void saveGame() {
     j["Pistol"] = pistol;
     j["Shotgun"] = shotgun;
     j["Rifle"] = rifle;
-
-    std::cout << pistol << "\n\n" << shotgun << "\n\n" << rifle << "\n\n"; 
+    
     fileToSave << j.dump(4);
 
     fileToSave.close();

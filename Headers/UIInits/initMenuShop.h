@@ -12,8 +12,6 @@ namespace MenuShop {
     bool isDrawShop = false;
     Shop shop;
 
-    Player* player = nullptr;
-
     std::vector<sf::Drawable*> UIElements;
     std::vector<ShopSlot> slotsElements; // Analogous to the inventory itemSlotsElements + price
     std::vector<ShopSlot> playerSlotsElements; // Analogous to the inventory itemSlotsElements + price
@@ -46,39 +44,13 @@ namespace MenuShop {
     PlacedText playerCoinsText("shop_PlCoinsText", UI::TL, UI::B);
 }
 
-void initShop() {
+void initShop(Player* player) {
     {
         using namespace MenuShop;
         playerSlotsElements.resize(ItemID::ItemCount);
         slotsElements.resize(ItemID::ItemCount);
         shop.setShop(new std::vector<Item*>{ new Item(ItemID::regenDrug, 10) },
                              std::vector<int>{20});
-        shop.setFunction([]() {
-            if (selectedItem != nullptr) {
-                if (MenuShop::player->inventory.money >= shop.itemPrices[selectedItem->id]) {
-                    Item* boughtItem = new Item(*selectedItem);
-                    boughtItem->amount = 1;
-                    MenuShop::player->addItem(boughtItem);
-                    MenuShop::player->inventory.money -= shop.itemPrices[selectedItem->id];
-                    selectedItem->amount--;
-
-                    playerCoinsText.setString("You have: " + std::to_string(MenuShop::player->inventory.money));
-                    playerCoinsSprite.parentTo(&MenuShop::playerCoinsText, true, { 25, -10 });
-                    shop.soldItems.removeItem(selectedItem, false);
-                    NPCText.setString("Thank you for buying a " + stringLower(itemName[selectedItem->id]) + "!");
-
-                    if (!shop.soldItems.find(selectedItem)) {
-                        slotsElements[selectedItem->id].erase();
-                        itemSprite.setTexture(Textures::INVISIBLE);
-                        selectedItem = nullptr;
-                        removeUI(&itemSlot, UIElements);
-                    }
-                } else {
-                    NPCText.setString("Sorry, but you cannot afford a " + stringLower(itemName[selectedItem->id]) + ".");
-                }
-                NPCText.parentTo(&NPCTextFrame, true);
-            }
-                                 });
 
         BG.setTexture(Textures::GridBG);
 
@@ -88,7 +60,7 @@ void initShop() {
             isDrawShop = false;
             selectedItem = nullptr;
             removeUI(&MenuShop::BG, MenuShop::UIElements);
-                                   });
+        });
         backButton.parentTo(&BG, true);
 
         NPCTextFrame.setTexture(Textures::GradientFrameAlpha, UI::element);

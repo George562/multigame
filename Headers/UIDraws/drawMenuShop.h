@@ -3,7 +3,7 @@
 
 void updateShopUI();
 
-void drawShop(sf::RenderWindow& window) {
+void drawShop(sf::RenderWindow& window, Player* player) {
     window.setView(InterfaceView);
     {
         using namespace MenuShop;
@@ -23,7 +23,7 @@ void drawShop(sf::RenderWindow& window) {
         }
 
         window.setView(ShopPlayerInvView);
-        for (Item*& item : MenuShop::player->inventory.items) {
+        for (Item*& item : player->inventory.items) {
             if (playerSlotsElements[item->id].isInitialized) {
                 window.draw(*playerSlotsElements[item->id].background, playerInvTransform);
                 if (item->amount >= 1) window.draw(*playerSlotsElements[item->id].amountText, playerInvTransform);
