@@ -13,13 +13,14 @@
 #include "Systems/shop.h"
 #include "UIInits/initInventory.h"
 #include "UIInits/initMenuShop.h"
+#include "UIInits/initHUD.h"
 #include "UIDraws/drawInventory.h"
 #include "UIDraws/drawMenuShop.h"
+#include "UIDraws/drawHUD.h"
 
 
 //////////////////////////////////////////////////////////// Settings of the game
 bool IsDrawMinimap = true;
-bool IsdrawHUD = true;
 bool MiniMapHoldOnPlayer = true;
 
 
@@ -31,8 +32,8 @@ sf::RenderWindow window(sf::VideoMode(scw, sch), "multigame", sf::Style::Fullscr
 sf::RenderTexture preRenderTexture, outlineRenderTexture;
 sf::Sprite preRenderSprite, outlineRenderSprite;
 float MiniMapZoom = 1.f;
-bool MiniMapActivated, EscapeMenuActivated;
-std::vector<sf::Drawable*> DrawableStuff, InterfaceStuff; // references to objects that exist somewhere
+bool MiniMapActivated;
+std::vector<sf::Drawable*> DrawableStuff; // references to objects that exist somewhere
 std::vector<Interactable*> InteractibeStuff; // references to objects that exist somewhere
 Interactable* CurInteractable;
 
@@ -59,27 +60,11 @@ std::vector<Weapon*> Weapons = {
 Scale<int> CurWeapon;
 
 //////////////////////////////////////////////////////////// DrawableStuff
-sf::Sprite WallRect, FLoorTileSprite;
-std::vector<TempText*> TempTextsOnScreen, TempTextsOnGround, DamageText, MessageText;
+sf::Sprite WallRect;
+std::vector<TempText*> TempTextsOnGround, DamageText;
 Bar<float> EnemyHealthBar;
+sf::Sprite FLoorTileSprite;
 sf::Sprite undergroundBG;
-
-
-//////////////////////////////////////////////////////////// MiniMapStuff
-sf::CircleShape MMPlayerCircle, MMEnemyCircle; // MM - MiniMap prefix
-sf::RectangleShape MMPortalRect, MMBoxRect, MMPuddleRect, MMArtifact;
-
-
-//////////////////////////////////////////////////////////// HUDStuff
-Frame HUDFrame("HUD", { 0, 0, scw, sch });
-Bar<float> HPBar("HPBar", UI::TR, UI::TR, { 360, 50 }), MPBar("MPBar", UI::BL, UI::TL, { 240, 50 });
-std::vector<Bar<float>*> AmmoBars;
-std::vector<PlacedText*> WeaponNameTexts;
-PlacedText ReloadWeaponText;
-sf::Sprite XButtonSprite;
-
-std::vector<Frame*> effectIcons(Effects::EffectCount);
-std::vector<TempText*> effectIconsTimers(Effects::EffectCount);
 
 
 //////////////////////////////////////////////////////////// Online tools
@@ -104,6 +89,11 @@ listOfArtifact,
 listOfFire;
 
 
+//////////////////////////////////////////////////////////// MiniMapStuff
+sf::CircleShape MMPlayerCircle, MMEnemyCircle; // MM - MiniMap prefix
+sf::RectangleShape MMPortalRect, MMBoxRect, MMPuddleRect, MMArtifact;
+
+
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
 Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
@@ -122,9 +112,6 @@ Chat chat(scw, sch);
 sf::Vector2i MouseBuffer;
 Bullet* tempBullet;
 
-
-
-
 //////////////////////////////////////////////////////////// Enemies
 std::vector<Enemy*> Enemies;
 
@@ -133,6 +120,7 @@ std::vector<Enemy*> Enemies;
 
 //---------------------------- INITS
 void init();
+void initMinimap();
 void initScripts();
 void initInterface();
 //----------------------------
@@ -143,8 +131,6 @@ void draw();
 void drawFloor();
 void drawWalls();
 void drawMiniMap();
-void drawHUD();
-void drawEffects();
 //----------------------------
 
 
@@ -227,59 +213,10 @@ void funcOfClient();
 sf::Thread HostTread(funcOfHost);
 sf::Thread ClientTread(funcOfClient);
 
-//////////////////////////////////////////////////////////// Panels
-Panel IPPanel("ipPanel", "IP:");
-Panel ListOfPlayers("listOfPlayers");
 
+//////////////////////////////////////////////////////////// functions realizations
 
-//////////////////////////////////////////////////////////// Buttons
-RectButton HostButton("hostBtn", "Host", []() {
-    listener.listen(53000);
-    selector.add(listener);
-    ListOfPlayers.setString(MyIP);
-    ComputerID = 0;
-    ConnectedPlayers.push_back(*(new Player()));
-    HostFuncRun = true;
-    HostTread.launch();
-                      });
-
-RectButton EscapeButton("exitBtn", UI::none, UI::none, { 0, 0 }, "Exit", []() {
-        if (HostFuncRun) {
-            mutex.lock();
-            SendPacket << packetStates::disconnect;
-            SendToClients(SendPacket);
-            SendPacket.clear();
-            mutex.unlock();
-            clients.clear();
-            selector.clear();
-            listener.close();
-            HostFuncRun = false;
-            ConnectedPlayers.clear();
-        } else if (ClientFuncRun) {
-            SelfDisconnect();
-        }
-        EscapeMenuActivated = false;
-        ListOfPlayers.clearText();
-        clearVectorOfPointer(Bullets);
-        clearVectorOfPointer(Enemies);
-        clearVectorOfPointer(TempTextsOnGround);
-        clearVectorOfPointer(TempTextsOnScreen);
-        clearVectorOfPointer(DamageText);
-        clearVectorOfPointer(MessageText);
-        clearVectorOfPointer(listOfBox);
-        clearVectorOfPointer(listOfArtifact);
-        clearVectorOfPointer(listOfFire);
-        clearVectorOfPointer(PickupStuff);
-        player.CurWeapon->lock = true;
-        normalizeVal(CurWeapon);
-        LoadMainMenu();
-        saveGame();
-    });
-
-
-                    //////////////////////////////////////////////////////////// functions realizations
-
-                    //============================================================================================== INITS
+//============================================================================================== INITS
 void init() {
     setlocale(LC_ALL, "rus");
 
@@ -337,13 +274,16 @@ void init() {
 
     Shaders::Fire.setUniform("noise_png", Textures::Noise);
 
-    IPPanel.setTexture(Textures::YellowPanel);
-    ListOfPlayers.setTexture(Textures::GradientFrameAlpha);
+    {
+        using namespace HUD;
+        IPPanel.setTexture(Textures::YellowPanel);
+        ListOfPlayers.setTexture(Textures::GradientFrameAlpha);
 
-    EscapeButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed, UI::texture);
-    EscapeButton.setHitboxPoints({ EscapeButton.getLeftTop(), EscapeButton.getRightTop(),
-                                   EscapeButton.getRightBottom(), EscapeButton.getLeftBottom() });
-    HostButton.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
+        EscapeButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed, UI::texture);
+        EscapeButton.setHitboxPoints({ EscapeButton.getLeftTop(), EscapeButton.getRightTop(),
+                                       EscapeButton.getRightBottom(), EscapeButton.getLeftBottom() });
+        HostButton.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
+    }
 
     CurWeapon.looped = true;
 
@@ -352,23 +292,50 @@ void init() {
     //std::cout << "LocalAddress: " << MyIP << "\n";
     //std::cout << "PublicAddress: " << MySocket.getRemoteAddress().getPublicAddress().toString() << '\n';
 
-    initInterface();
-
-    for (int i = 0; i < Effects::EffectCount; i++) {
-        effectIconsTimers[i] = new TempText(sf::Time::Zero);
-        effectIcons[i] = new Frame("effect_" + i, UI::none, UI::none, (sf::Vector2f)Textures::Eff_HPRegen.getSize() / 2.f);
-    }
-    effectIcons[2]->setTexture(Textures::Eff_HPRegen, UI::element);
-    effectIcons[3]->setTexture(Textures::Eff_Burn, UI::element);
-
     CurWeapon = { {0, 2, 0} };
 
+    EnemyHealthBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
+    EnemyHealthBar.setSize(125.f, 15.f);
+    EnemyHealthBar.setWallWidth(1);
+    EnemyHealthBar.ShowText = false;
+
+    FLoorTileSprite.setScale(5.f, 5.f);
+    FLoorTileSprite.setTexture(Textures::floor);
+
+    undergroundBG.setTexture(Textures::Noise);
+    undergroundBG.setPosition(0, 0);
+    undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
+
+    initHUD(&player, &Weapons);
     initInventory(&player);
     initUpgradeShop();
     initShop(&player);
+    initMinimap();
     initScripts();
 
     LoadMainMenu();
+}
+
+void initMinimap() {
+    MMPlayerCircle.setRadius(9);
+    MMPlayerCircle.setFillColor(sf::Color(0, 180, 0));
+    MMPlayerCircle.setOrigin(MMPlayerCircle.getRadius(), MMPlayerCircle.getRadius());
+
+    MMEnemyCircle.setRadius(9);
+    MMEnemyCircle.setFillColor(sf::Color(180, 0, 0));
+    MMEnemyCircle.setOrigin(MMEnemyCircle.getRadius(), MMEnemyCircle.getRadius());
+
+    MMPortalRect.setSize(portal.hitbox.getSize() * ScaleParam);
+    MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
+
+    MMBoxRect.setSize(sf::Vector2f(105.f, 117.f) * ScaleParam);
+    MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
+
+    MMPuddleRect.setSize(puddle.hitbox.getSize() * ScaleParam);
+    MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
+
+    MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
+    MMArtifact.setFillColor(sf::Color::White);
 }
 
 void initScripts() {
@@ -421,76 +388,50 @@ void initScripts() {
             }
         });
     }
-}
-
-void initInterface() {
-    EscapeButton.setCharacterSize(110);
-    IPPanel.text.setCharacterSize(80);
-    ListOfPlayers.text.setCharacterSize(60);
-
-    EscapeButton.setCenter(scw / 2, sch * 3 / 4);
-
-    ListOfPlayers.setCenter(scw / 2, sch / 4);
-
-    MMPlayerCircle.setRadius(9);
-    MMPlayerCircle.setFillColor(sf::Color(0, 180, 0));
-    MMPlayerCircle.setOrigin(MMPlayerCircle.getRadius(), MMPlayerCircle.getRadius());
-
-    MMEnemyCircle.setRadius(9);
-    MMEnemyCircle.setFillColor(sf::Color(180, 0, 0));
-    MMEnemyCircle.setOrigin(MMEnemyCircle.getRadius(), MMEnemyCircle.getRadius());
-
-    HPBar.setValue(player.Health);
-    HPBar.setFontString(FontString("", 36));
-    HPBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
-    HPBar.parentTo(&HUDFrame, true, { -30, 20 });
-
-    MPBar.setValue(player.Mana);
-    MPBar.setFontString(FontString("", 32));
-    MPBar.setColors(CommonColors::barWall, sf::Color(0, 0, 192, 160), CommonColors::barBG);
-    MPBar.parentTo(&HPBar, true);
-
-    for (int i = 0; i < Weapons.size(); i++) {
-        AmmoBars.push_back(new Bar<float>("AmmoBar_" + Weapons[i]->Name,
-                                          { 20, sch - 20 - (Weapons.size() - i) * 60, 160, 50 }));
-        AmmoBars[i]->setColors(CommonColors::barWall, sf::Color(128, 128, 128, 160), CommonColors::barBG);
-        AmmoBars[i]->parentTo(&HUDFrame);
-
-        WeaponNameTexts.push_back(new PlacedText("weapName" + i + 1, UI::R, UI::L, FontString(Weapons[i]->Name, 36)));
-        WeaponNameTexts[i]->setFillColor(sf::Color(25, 192, 25, 160));
-        WeaponNameTexts[i]->setOutlineColor(sf::Color::Black);
-        WeaponNameTexts[i]->parentTo(AmmoBars[i], true, { 35, 0 });
+    {
+        using namespace HUD;
+        EscapeButton.setFunction([]() {
+            if (HostFuncRun) {
+                mutex.lock();
+                SendPacket << packetStates::disconnect;
+                SendToClients(SendPacket);
+                SendPacket.clear();
+                mutex.unlock();
+                clients.clear();
+                selector.clear();
+                listener.close();
+                HostFuncRun = false;
+                ConnectedPlayers.clear();
+            } else if (ClientFuncRun) {
+                SelfDisconnect();
+            }
+            EscapeMenuActivated = false;
+            ListOfPlayers.clearText();
+            clearVectorOfPointer(Bullets);
+            clearVectorOfPointer(Enemies);
+            clearVectorOfPointer(TempTextsOnGround);
+            clearVectorOfPointer(TempTextsOnScreen);
+            clearVectorOfPointer(DamageText);
+            clearVectorOfPointer(MessageText);
+            clearVectorOfPointer(listOfBox);
+            clearVectorOfPointer(listOfArtifact);
+            clearVectorOfPointer(listOfFire);
+            clearVectorOfPointer(PickupStuff);
+            player.CurWeapon->lock = true;
+            normalizeVal(CurWeapon);
+            LoadMainMenu();
+            saveGame();
+        });
+        HostButton.setFunction([]() {
+            listener.listen(53000);
+            selector.add(listener);
+            ListOfPlayers.setString(MyIP);
+            ComputerID = 0;
+            ConnectedPlayers.push_back(*(new Player()));
+            HostFuncRun = true;
+            HostTread.launch();
+        });
     }
-
-    ReloadWeaponText.setFillColor(sf::Color(255, 20, 20));
-    ReloadWeaponText.setCharacterSize(100);
-
-    XButtonSprite.setTexture(Textures::XButton);
-    XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
-
-    MMPortalRect.setSize(portal.hitbox.getSize() * ScaleParam);
-    MMPortalRect.setFillColor(sf::Color(200, 0, 200, 200));
-
-    MMBoxRect.setSize(sf::Vector2f(105.f, 117.f) * ScaleParam);
-    MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
-
-    MMPuddleRect.setSize(puddle.hitbox.getSize() * ScaleParam);
-    MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
-
-    MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
-    MMArtifact.setFillColor(sf::Color::White);
-
-    EnemyHealthBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
-    EnemyHealthBar.setSize(125.f, 15.f);
-    EnemyHealthBar.setWallWidth(1);
-    EnemyHealthBar.ShowText = false;
-
-    FLoorTileSprite.setScale(5.f, 5.f);
-    FLoorTileSprite.setTexture(Textures::floor);
-
-    undergroundBG.setTexture(Textures::Noise);
-    undergroundBG.setPosition(0, 0);
-    undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
 }
 //==============================================================================================
 
@@ -565,11 +506,17 @@ void draw() {
             }
         }
 
+        if (player.CurWeapon != nullptr && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
+            window.setView(HUDView);
+            window.draw(HUD::ReloadWeaponText);
+            window.setView(GameView);
+        }
+
         if (IsDrawMinimap) {
             drawMiniMap();
         }
-        if (IsdrawHUD) {
-            drawHUD();
+        if (HUD::IsDrawHUD) {
+            drawHUD(window, &player, &Weapons);
         }
     }
     window.display();
@@ -662,118 +609,6 @@ void drawMiniMap() {
         window.draw(MMPlayerCircle);
     }
     window.setView(GameView);
-}
-
-sf::Clock ClockFPS; int FPSCounter;
-PlacedText TextFPS;
-void drawHUD() {
-    window.setView(HUDView);
-    for (sf::Drawable*& d : InterfaceStuff) {
-        window.draw(*d);
-    }
-
-    if (player.CurWeapon != nullptr && player.CurWeapon->ManaStorage.toBottom() < player.CurWeapon->ManaCostOfBullet) {
-        window.draw(ReloadWeaponText);
-    }
-
-    for (int i = 0; i < Weapons.size(); i++) {
-        if (Weapons[i] == player.CurWeapon) {
-            WeaponNameTexts[i]->setFillColor(sf::Color::White);
-            WeaponNameTexts[i]->setOutlineThickness(3);
-        } else {
-            WeaponNameTexts[i]->setFillColor(sf::Color(25, 192, 25, 160));
-            WeaponNameTexts[i]->setOutlineThickness(1);
-        }
-        AmmoBars[i]->setValue(Weapons[i]->ManaStorage);
-
-        if (Weapons[i]->holstered) {
-            float holsterPercent = std::min(Weapons[i]->HolsterTimer->getElapsedTime() /
-                                            Weapons[i]->TimeToHolster, 1.0f);
-            sf::Color wallColor(255 - 155 * holsterPercent, 255 - 155 * holsterPercent, 255, 160);
-            sf::Color foreColor(128 - 96 * holsterPercent, 128 - 96 * holsterPercent, 128, 160);
-            sf::Color backColor(32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 160);
-            AmmoBars[i]->setColors(wallColor, foreColor, backColor);
-        } else {
-            float dispatchPercent = std::min(Weapons[i]->DispatchTimer->getElapsedTime() /
-                                             Weapons[i]->TimeToDispatch, 1.0f);
-            sf::Color wallColor(100 + 155 * dispatchPercent, 100 + 155 * dispatchPercent, 255, 160);
-            sf::Color foreColor(32 + 96 * dispatchPercent, 32 + 96 * dispatchPercent, 128, 160);
-            sf::Color backColor(32 * dispatchPercent, 32 * dispatchPercent, 32 * dispatchPercent, 160);
-            AmmoBars[i]->setColors(wallColor, foreColor, backColor);
-        }
-
-        window.draw(*WeaponNameTexts[i]);
-    }
-
-    if (EscapeMenuActivated) {
-        window.draw(ListOfPlayers);
-        window.draw(EscapeButton);
-    }
-
-    FPSCounter++;
-    if (ClockFPS.getElapsedTime() >= sf::seconds(1)) {
-        TextFPS.setString(std::to_string(FPSCounter) + " FPS");
-        FPSCounter = 0;
-        ClockFPS.restart();
-    }
-    window.draw(TextFPS);
-
-    for (size_t i = 0; i < TempTextsOnScreen.size(); i++) {
-        if (TempTextsOnScreen[i]->localClock->getElapsedTime() < TempTextsOnScreen[i]->howLongToExist) {
-            window.draw(*TempTextsOnScreen[i]);
-        } else {
-            DeletePointerFromVector(TempTextsOnScreen, i--);
-        }
-    }
-
-    for (size_t i = 0; i < MessageText.size(); i++) {
-        if (MessageText[i]->localClock->getElapsedTime() < MessageText[i]->howLongToExist) {
-            Shaders::FloatingUp.setUniform("uTime", MessageText[i]->localClock->getElapsedTime().asSeconds());
-            window.draw(*MessageText[i], &Shaders::FloatingUp);
-        } else {
-            DeletePointerFromVector(MessageText, i--);
-        }
-    }
-
-    drawEffects();
-
-    window.setView(GameView);
-}
-
-void drawEffects() {
-    int count = 0;
-    int xOffset = 175, yOffset = 175;
-    std::vector<int> seenEffects(Effects::EffectCount, 0);
-    std::vector<sf::Time> effectTimersTimes(Effects::EffectCount, sf::Time::Zero);
-    for (Effect* eff : player.effects) {
-        if (eff->type != Effects::Heal && eff->type != Effects::Damage && eff->active) {
-            if (seenEffects[eff->type] == 0) {
-                effectIcons[eff->type]->setPosition(MPBar.getPosition().x - 300 + xOffset * (count % 3),
-                                                    MPBar.getPosition().y + MPBar.getSize().y + 20 + yOffset * (count / 3));
-
-                effectIconsTimers[eff->type]->setPosition(effectIcons[eff->type]->getPosition() + sf::Vector2f(0, yOffset * 2 / 3));
-                effectIconsTimers[eff->type]->setCharacterSize(28);
-                window.draw(*effectIcons[eff->type]);
-
-                count++;
-            }
-            seenEffects[eff->type] += 1;
-            effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->howLongToExist);
-        }
-    }
-    for (int i = 0; i < effectTimersTimes.size(); i++) {
-        if (seenEffects[i] > 0) {
-            TempText* txt = effectIconsTimers[i];
-            sf::Time timeDif = txt->howLongToExist - txt->localClock->getElapsedTime();
-            if (txt->localClock->getElapsedTime() > txt->howLongToExist || effectTimersTimes[i] > timeDif) {
-                txt->howLongToExist = effectTimersTimes[i];
-                txt->localClock->restart();
-            }
-            txt->setString("x" + std::to_string(seenEffects[i]) + "\t\t\t\t" +
-                           floatToString(timeDif.asSeconds()));
-            window.draw(*txt);
-        }
-    }
 }
 //==============================================================================================
 
@@ -914,10 +749,10 @@ void EventHandler() {
                 SendPacket.clear();
                 mutex.unlock();
             }
-        } else if (EscapeMenuActivated) {
-            EscapeButton.isActivated(event);
+        } else if (HUD::EscapeMenuActivated) {
+            HUD::EscapeButton.isActivated(event);
             if (keyPressed(event, sf::Keyboard::Escape)) {
-                EscapeMenuActivated ^= true;
+                HUD::EscapeMenuActivated ^= true;
             }
         } else if (inventoryInterface::isDrawInventory) {
             inventoryHandler(event);
@@ -963,8 +798,8 @@ void EventHandler() {
                         player.ChangeWeapon(Weapons[CurWeapon.cur]);
 
                         std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
-                        ReloadWeaponText.setString(reloadStr);
-                        ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
+                        HUD::ReloadWeaponText.setString(reloadStr);
+                        HUD::ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
                     }
                 }
             }
@@ -1004,8 +839,8 @@ void EventHandler() {
                     player.ChangeWeapon(Weapons[CurWeapon.cur]);
 
                     std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
-                    ReloadWeaponText.setString(reloadStr);
-                    ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
+                    HUD::ReloadWeaponText.setString(reloadStr);
+                    HUD::ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
                 }
             }
 
@@ -1024,7 +859,7 @@ void EventHandler() {
             } else if (CurLocation == &LabyrinthLocation) {
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
-                        EscapeMenuActivated = true;
+                        HUD::EscapeMenuActivated = true;
                     } else if (event.key.code == sf::Keyboard::H) {
                         player.hitbox.setCenter(size, size);
                         CurLocation = &WaitingRoomLoaction;
@@ -1197,7 +1032,7 @@ void setBox(Interactable*& box) {
             tempText->setFillColor(sf::Color(255, 170, 29));
             tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
 
-            MessageText.push_back(tempText);
+            HUD::MessageText.push_back(tempText);
             player.inventory.money += r;
             inventoryInterface::doInventoryUpdate[inventoryPage::Items] = true;
             DeleteFromVector(listOfBox, i);
@@ -1212,7 +1047,7 @@ void setBox(Interactable*& box) {
             tempText->setString("Not enough Mana: " + std::to_string((int)player.Mana.cur) + "/20");
             tempText->setFillColor(sf::Color(255, 0, 0));
             tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
-            MessageText.push_back(tempText);
+            HUD::MessageText.push_back(tempText);
         }
                      });
 }
@@ -1250,7 +1085,7 @@ void setArtifact(Interactable*& artifact) {
         }
         tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
 
-        MessageText.push_back(tempText);
+        HUD::MessageText.push_back(tempText);
         DeleteFromVector(listOfArtifact, i);
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
         DeleteFromVector(InteractibeStuff, i);
@@ -1345,14 +1180,14 @@ void LoadMainMenu() {
         clearVectorOfPointer(Bullets);
 
         DrawableStuff.clear();
-        InterfaceStuff.clear();
+        HUD::InterfaceStuff.clear();
         InteractibeStuff.clear();
-        removeUI(&HUDFrame, InterfaceStuff);
+        removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
         player.hitbox.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
 
         MiniMapActivated = false;
-        EscapeMenuActivated = false;
+        HUD::EscapeMenuActivated = false;
 
         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
         MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
@@ -1376,10 +1211,10 @@ void LoadMainMenu() {
         for (Enemy*& enemy : Enemies) {
             DrawableStuff.push_back(enemy);
         }
-        addUI(&HUDFrame, InterfaceStuff);
-        for (int i = 0; i < WeaponNameTexts.size(); i++)
-            InterfaceStuff.push_back(WeaponNameTexts[i]);
-        InterfaceStuff.push_back(&chat);
+        addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
+        for (int i = 0; i < HUD::WeaponNameTexts.size(); i++)
+            HUD::InterfaceStuff.push_back(HUD::WeaponNameTexts[i]);
+        HUD::InterfaceStuff.push_back(&chat);
 
         InteractibeStuff.push_back(&puddle);
         saveGame();
@@ -1424,9 +1259,9 @@ void LoadMainMenu() {
     DrawableStuff.push_back(&portal);
     DrawableStuff.push_back(&puddle);
 
-    InterfaceStuff.clear();
-    InterfaceStuff.push_back(&chat);
-    addUI(&HUDFrame, InterfaceStuff);
+    HUD::InterfaceStuff.clear();
+    HUD::InterfaceStuff.push_back(&chat);
+    addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
     InteractibeStuff.clear();
     InteractibeStuff.push_back(&portal);
@@ -1510,7 +1345,7 @@ void updateEnemies() {
                 enemiesKilledText->setCharacterSize(40);
                 enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
                 enemiesKilledText->setCenter(scw / 2.0f, sch / 3.0f);
-                TempTextsOnScreen.push_back(enemiesKilledText);
+                HUD::TempTextsOnScreen.push_back(enemiesKilledText);
 
                 if (CurLocation == &LabyrinthLocation) {
                     if (!in(InteractibeStuff, (Interactable*)&portal)) {
@@ -1900,7 +1735,7 @@ void MainLoop() {
     while (window.isOpen()) {
 
         if (player.Health.toBottom() == 0) {
-            EscapeButton.buttonFunction();
+            HUD::EscapeButton.buttonFunction();
         }
 
         updateEnemies();
@@ -2004,11 +1839,11 @@ void MainLoop() {
         processEffects();
 
         if (CanSomethingBeActivated()) {
-            if (!in(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite))) {
-                InterfaceStuff.push_back(&XButtonSprite);
+            if (!in(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::XButtonSprite))) {
+                HUD::InterfaceStuff.push_back(&HUD::XButtonSprite);
             }
         } else {
-            DeleteFromVector(InterfaceStuff, static_cast<sf::Drawable*>(&XButtonSprite));
+            DeleteFromVector(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::XButtonSprite));
         }
 
         EventHandler();
@@ -2029,8 +1864,8 @@ void ClientConnect() {
         SendPacket.clear();
 
         std::cout << ConnectedClientIP << " connected\n";
-        ListOfPlayers.addWord(ConnectedClientIP);
-        std::cout << "list of players:\n" << std::string(ListOfPlayers.text.getString()) << '\n';
+        HUD::ListOfPlayers.addWord(ConnectedClientIP);
+        std::cout << "list of players:\n" << std::string(HUD::ListOfPlayers.text.getString()) << '\n';
 
         clients.push_back(client);
         selector.add(*client);
@@ -2041,8 +1876,8 @@ void ClientConnect() {
 
         DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
 
-        for (int i = 0; i < ListOfPlayers.getLineCount(); i++) {
-            SendPacket << packetStates::PlayerConnect << ListOfPlayers[i];
+        for (int i = 0; i < HUD::ListOfPlayers.getLineCount(); i++) {
+            SendPacket << packetStates::PlayerConnect << HUD::ListOfPlayers[i];
         }
 
         SendPacket << packetStates::Shooting << (sf::Int32)Bullets.size();
@@ -2081,7 +1916,7 @@ void ClientDisconnect(int i) {
     std::cout << (*clients[i]).getRemoteAddress().toString() << " disconnected; number = " << i << "\n";
     DeletePointerFromVector(clients, i);
     ConnectedPlayers.erase(ConnectedPlayers.begin() + i + 1);
-    ListOfPlayers.removeWord(i);
+    HUD::ListOfPlayers.removeWord(i);
 
     std::cout << "amount of clients = " << clients.size() << "\n";
     mutex.lock();
@@ -2177,16 +2012,16 @@ void funcOfClient() {
                             break;
                         case packetStates::PlayerConnect:
                             ReceivePacket >> PacketData;
-                            ListOfPlayers.addWord(PacketData);
+                            HUD::ListOfPlayers.addWord(PacketData);
                             ConnectedPlayers.push_back(*(new Player()));
                             std::cout << PacketData + " connected\n";
                             break;
                         case packetStates::PlayerDisconnect:
                             int index;
                             ReceivePacket >> index;
-                            std::cout << std::string(ListOfPlayers[index]) << " disconnected\n";
+                            std::cout << std::string(HUD::ListOfPlayers[index]) << " disconnected\n";
                             if (index < ComputerID) ComputerID--;
-                            ListOfPlayers.removeWord(index);
+                            HUD::ListOfPlayers.removeWord(index);
                             ConnectedPlayers.erase(ConnectedPlayers.begin() + index);
                             break;
                         case packetStates::Labyrinth:
