@@ -49,25 +49,23 @@ Player::Player() : Creature("Player", faction::Player) {
 	Mana = { {0.f, 10.f, 10.f} }; ManaRecovery = Mana.top / 5;
     Armor = { {0.f, 0.f, 0.f} };
     hitbox.setRadius(60.f);
-    Velocity = {0.f, 0.f}; MaxVelocity = 900.f;
-    Acceleration = 10000.f;
+    Velocity = {0.f, 0.f}; MaxVelocity = 700.f;
+    Acceleration = 3500.f;
     Name.setOutlineColor(sf::Color::Green);
     Name.setFillColor(sf::Color::Black);
 }
 
 void Player::move(Location* location) {
-    std::vector<float> PressedKeys = {
-        sf::Keyboard::isKeyPressed(sf::Keyboard::W) ? 1.f : 0.f,
-        sf::Keyboard::isKeyPressed(sf::Keyboard::A) ? 1.f : 0.f,
-        sf::Keyboard::isKeyPressed(sf::Keyboard::S) ? 1.f : 0.f,
-        sf::Keyboard::isKeyPressed(sf::Keyboard::D) ? 1.f : 0.f
-    };
+    sf::Vector2f direction(
+        sf::Keyboard::isKeyPressed(sf::Keyboard::D) - sf::Keyboard::isKeyPressed(sf::Keyboard::A),
+        sf::Keyboard::isKeyPressed(sf::Keyboard::S) - sf::Keyboard::isKeyPressed(sf::Keyboard::W)
+    );
 
     VelocityBuff = 1;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
         VelocityBuff *= 2;
 
-    setTarget(hitbox.getCenter() + sf::Vector2f(PressedKeys[3] - PressedKeys[1], PressedKeys[2] - PressedKeys[0]) * MaxVelocity * VelocityBuff);
+    setTarget(hitbox.getCenter() + direction * MaxVelocity * VelocityBuff);
     Creature::move(location);
 }
 

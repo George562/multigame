@@ -732,7 +732,7 @@ void updateUpgradeInterfaceUI() {
 //==============================================================================================
 
 
-
+sf::Clock SHiftClickTime;
 //============================================================================================== EVENT HANDLERS
 void EventHandler() {
     sf::Event event;
@@ -785,12 +785,15 @@ void EventHandler() {
                 if (event.key.code == sf::Keyboard::Tab) {
                     {
                         using namespace inventoryInterface;
-                        inventoryInterface::isDrawInventory = true;
+                        isDrawInventory = true;
                         addUI(&inventoryFrame, commonElements);
                         activePage = inventoryPage::Items;
                         addUI(&itemsFrame, pageElements[activePage]);
                         doInventoryUpdate[activePage] = true;
                     }
+                }
+                if (event.key.code == sf::Keyboard::LShift) {
+                    player.makeADash = SHiftClickTime.restart().asSeconds() < 0.2f;
                 }
                 if (sf::Keyboard::Num1 <= event.key.code && event.key.code <= sf::Keyboard::Num3) {
                     if (!MiniMapActivated) {

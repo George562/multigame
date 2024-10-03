@@ -26,6 +26,7 @@ public:
     float VelocityBuff;
     float Acceleration;
     sf::Vector2f target; // target point to move towards
+    bool makeADash = false;
 
     Weapon *CurWeapon = nullptr; // ref on exist weapon from Weapons
 
@@ -83,15 +84,14 @@ public:
 
     virtual void move(Location* location) {
         float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), oneOverSixty);
-        sf::Vector2f dist = target - hitbox.getCenter();
-        float len = std::sqrt(dist.x * dist.x + dist.y * dist.y);
-        sf::Vector2f VelocityTarget(std::clamp(dist.x, -std::abs(dist.x) * MaxVelocity * VelocityBuff / len, std::abs(dist.x) * MaxVelocity * VelocityBuff / len),
-                                    std::clamp(dist.y, -std::abs(dist.y) * MaxVelocity * VelocityBuff / len, std::abs(dist.y) * MaxVelocity * VelocityBuff / len));
-        sf::Vector2f Vdist = VelocityTarget - Velocity;
-        len = std::sqrt(Vdist.x * Vdist.x + Vdist.y * Vdist.y);
-        sf::Vector2f Direction(std::clamp(Vdist.x, -std::abs(Vdist.x) * Acceleration / len, std::abs(Vdist.x) * Acceleration / len),
-                               std::clamp(Vdist.y, -std::abs(Vdist.y) * Acceleration / len, std::abs(Vdist.y) * Acceleration / len));
-        Velocity += Direction * ElapsedTimeAsSecond;
+        if (!makeADash) {
+            sf::Vector2f VelocityTarget = clamp(target - hitbox.getCenter(), 0.f, MaxVelocity * VelocityBuff);
+            sf::Vector2f Direction = clamp(VelocityTarget - Velocity, 0.f, Acceleration);
+            Velocity += Direction * ElapsedTimeAsSecond;
+        } else {
+            Velocity = normalize(target - hitbox.getCenter()) * MaxVelocity * VelocityBuff;
+            makeADash = false;
+        }
         // visualization https://www.desmos.com/calculator/oumleenz1s
 
         sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, hitbox, Velocity * ElapsedTimeAsSecond);
