@@ -56,10 +56,13 @@ Player::Player() : Creature("Player", faction::Player) {
 }
 
 void Player::move(Location* location) {
-    sf::Vector2f direction(
-        sf::Keyboard::isKeyPressed(sf::Keyboard::D) - sf::Keyboard::isKeyPressed(sf::Keyboard::A),
-        sf::Keyboard::isKeyPressed(sf::Keyboard::S) - sf::Keyboard::isKeyPressed(sf::Keyboard::W)
-    );
+    sf::Vector2f direction;
+	if (makeADash) {
+		direction = normalize(sf::Vector2f(sf::Mouse::getPosition()) - sf::Vector2f(scw / 2.f, sch / 2.f));
+	} else {
+		direction.x = sf::Keyboard::isKeyPressed(sf::Keyboard::D) - sf::Keyboard::isKeyPressed(sf::Keyboard::A);
+        direction.y = sf::Keyboard::isKeyPressed(sf::Keyboard::S) - sf::Keyboard::isKeyPressed(sf::Keyboard::W);
+	}
 
     VelocityBuff = 1;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))

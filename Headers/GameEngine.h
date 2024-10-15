@@ -64,6 +64,7 @@ sf::Sprite WallRect;
 std::vector<TempText*> TempTextsOnGround, DamageText;
 Bar<float> EnemyHealthBar;
 sf::Sprite FLoorTileSprite;
+sf::Sprite FloorForkSprite;
 sf::Sprite undergroundBG;
 
 
@@ -302,6 +303,8 @@ void init() {
     FLoorTileSprite.setScale(5.f, 5.f);
     FLoorTileSprite.setTexture(Textures::floor);
 
+    FloorForkSprite.setTexture(Textures::floorFork);
+
     undergroundBG.setTexture(Textures::Noise);
     undergroundBG.setPosition(0, 0);
     undergroundBG.setScale(scw / undergroundBG.getLocalBounds().width, sch / undergroundBG.getLocalBounds().height);
@@ -528,6 +531,10 @@ void drawFloor() {
             if (CurLocation->EnableTiles[i][j]) {
                 FLoorTileSprite.setPosition(size * j, size * i);
                 preRenderTexture.draw(FLoorTileSprite);
+                if (CurLocation->getPassages(i, j).size() > 2) {
+                    FloorForkSprite.setPosition(size * j + 120, size * i + 120);
+                    preRenderTexture.draw(FloorForkSprite);
+                }
             }
         }
     }

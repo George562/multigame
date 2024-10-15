@@ -95,6 +95,7 @@ namespace Textures {
                 XButton,
                 Box,
                 floor,
+                floorFork,
                 Puddle,
                 Fire,
                 Architect,
@@ -158,6 +159,7 @@ void loadTextures() {
     Textures::XButton                 .loadFromFile("sources/textures/XButton.png");
     Textures::Box                     .loadFromFile("sources/textures/Box.png");
     Textures::floor                   .loadFromFile("sources/textures/floor.png");
+    Textures::floorFork               .loadFromFile("sources/textures/fork_small.png");
     Textures::Puddle                  .loadFromFile("sources/textures/Puddle.png");
     Textures::Fire                    .create(140.f, 175.f);
     Textures::Architect               .loadFromFile("sources/textures/Architect.png");
