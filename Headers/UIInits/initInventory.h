@@ -29,28 +29,7 @@ namespace inventoryInterface {
     RectButton weaponsButton("inv_weaponsBtn", UI::R, UI::L, { 0.333f * scw, 0.1f * sch });
     RectButton statsButton("inv_statsBtn", UI::R, UI::L, { 0.333f * scw, 0.1f * sch });
 
-    void hidePage(inventoryPage::Type page) {
-        UIElement* elem = nullptr;
-        switch (page) {
-            case inventoryPage::Items:
-                elem = &itemsFrame;
-                break;
-            case inventoryPage::Weapons:
-                elem = &weaponsFrame;
-                break;
-            case inventoryPage::Stats:
-                elem = &statsFrame;
-                break;
-        }
-        removeUI(elem, pageElements[page]);
-    }
-
-    void hideInventory() {
-        removeUI(&inventoryFrame, commonElements);
-        hidePage(inventoryPage::Items);
-        hidePage(inventoryPage::Weapons);
-        hidePage(inventoryPage::Stats);
-    }
+    ButtonsHolder frameButtonsHolder({&itemsButton, &weaponsButton, &statsButton});
 
     RectButton backButton("inv_backBtn", UI::TL, UI::TL, { 300, 150 });
 
@@ -173,35 +152,35 @@ void initInventory(Player* player) {
 
         backButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);
         backButton.setWord(FontString("Back", 52));
-        backButton.setFunction([]() { isDrawInventory = false; hideInventory(); });
+        backButton.setFunction([]() { isDrawInventory = false; });
         backButton.parentTo(&inventoryFrame, true);
 
         itemsButton.setTexture(Textures::YellowButton, Textures::YellowButtonPushed);
         itemsButton.setWord(FontString("Items", 32));
         itemsButton.setFunction([]() {
-            hidePage(activePage); activePage = inventoryPage::Items;
+            activePage = inventoryPage::Items;
             addUI(&itemsFrame, pageElements[activePage]);
-                                });
+        });
         itemsButton.parentTo(&inventoryFrame, true);
 
         weaponsButton.setTexture(Textures::RedButton, Textures::RedButtonPushed);
         weaponsButton.setWord(FontString("Weapons", 32));
         weaponsButton.setFunction([]() {
-            hidePage(activePage); activePage = inventoryPage::Weapons;
+            activePage = inventoryPage::Weapons;
             addUI(&weaponsFrame, pageElements[activePage]);
             addUI(&upgradeInterface::BG, pageElements[activePage]);
             removeUI(&upgradeInterface::BG, pageElements[activePage], false);
             removeUI(&upgradeInterface::backButton, pageElements[activePage], false);
             openUpgradeShop();
-                                  });
+        });
         weaponsButton.parentTo(&itemsButton, true);
 
         statsButton.setTexture(Textures::GreyButton, Textures::GreyButtonPushed);
         statsButton.setWord(FontString("Stats", 32));
         statsButton.setFunction([]() {
-            hidePage(activePage); activePage = inventoryPage::Stats;
+            activePage = inventoryPage::Stats;
             addUI(&statsFrame, pageElements[activePage]);
-                                });
+        });
         statsButton.parentTo(&weaponsButton, true);
 
         itemListBG.setTexture(Textures::GradientFrameAlpha);
@@ -252,6 +231,8 @@ void initInventory(Player* player) {
         coinSlot.amountText->parentTo(&coinSprite, true, { 50, 0 });
         doInventoryUpdate[inventoryPage::Stats] = true;
         doInventoryUpdate[inventoryPage::Weapons] = true;
+
+        addUI(&inventoryFrame, commonElements);
     }
 }
 

@@ -342,18 +342,10 @@ void initMinimap() {
 }
 
 void initScripts() {
-    auto switchGun = [](bool left){
-        int playerWeaponIndex = CurWeapon.cur;
-        if (left) player.CurWeapon = Weapons[playerWeaponIndex + Weapons.size() * (playerWeaponIndex < 0)];
-        else player.CurWeapon = Weapons[playerWeaponIndex % Weapons.size()];
-    };
-
     {
         using namespace upgradeInterface;
         switchGunLBtn.setFunction([](){
-            CurWeapon.cur -= 1;
-            if (CurWeapon.cur < 0)
-                CurWeapon = Weapons.size() - 1;
+            CurWeapon.cur = (CurWeapon.cur - 1 + Weapons.size()) % Weapons.size();
             player.CurWeapon = Weapons[CurWeapon.cur];
         });
         switchGunRBtn.setFunction([](){
@@ -793,9 +785,7 @@ void EventHandler() {
                     {
                         using namespace inventoryInterface;
                         isDrawInventory = true;
-                        addUI(&inventoryFrame, commonElements);
-                        activePage = inventoryPage::Items;
-                        addUI(&itemsFrame, pageElements[activePage]);
+                        frameButtonsHolder.activateButton(activePage);
                         doInventoryUpdate[activePage] = true;
                     }
                 }
@@ -895,9 +885,7 @@ void inventoryHandler(sf::Event& event) {
 
         if (!upgradeInterface::isChoosingComponent) {
             backButton.isActivated(event);
-            itemsButton.isActivated(event);
-            weaponsButton.isActivated(event);
-            statsButton.isActivated(event);
+            frameButtonsHolder.isButtonsActive(event);
         }
 
         bool isAnythingHovered = false;

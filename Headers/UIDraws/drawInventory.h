@@ -35,12 +35,10 @@ void drawInventory(sf::RenderWindow& window, Player* player) {
                 break;
 
             case inventoryPage::Weapons:
-                {
-                    for (sf::Drawable*& elem : pageElements[activePage])
-                        window.draw(*elem);
-                    drawUpgradeInterface(window);
-                    break;
-                }
+                for (sf::Drawable*& elem : pageElements[activePage])
+                    window.draw(*elem);
+                drawUpgradeInterface(window);
+                break;
 
             case inventoryPage::Stats:
                 for (sf::Drawable*& elem : pageElements[inventoryPage::Stats])

@@ -46,8 +46,6 @@ namespace inventoryPage {
     enum : Type {
         Items,
         Weapons,
-        Equipables,
-        Perks,
         Stats,
         PageCount,
     };

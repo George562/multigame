@@ -165,3 +165,39 @@ public:
         setPosition(rect.left, rect.top);
     }
 };
+
+// class provide monitoring for holding buttons
+class ButtonsHolder {
+public:
+    std::vector<PolygonButton*> buttons;
+
+    ButtonsHolder() {}
+    ButtonsHolder(std::vector<PolygonButton*> buttons) : buttons(buttons) {}
+
+    void addButton(PolygonButton* button) { buttons.push_back(button); }
+    void activateButton(int index) {
+        buttons[index]->buttonFunction();
+        buttons[index]->sprite.setTexture(*(buttons[index]->pushedTexture));
+    }
+    bool isButtonActive(PolygonButton* button, sf::Event& event) {
+        if (button->isActivated(event)) {
+            button->sprite.setTexture(*(button->pushedTexture));
+            for (PolygonButton* b : buttons) {
+                if (b != button) {
+                    b->sprite.setTexture(*(b->texture));
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    bool isButtonsActive(sf::Event& event) {
+        for (PolygonButton* b : buttons) {
+            if (isButtonActive(b, event)) {
+                return true;
+            }
+        }
+        return false;
+    }
+};
