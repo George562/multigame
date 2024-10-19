@@ -10,11 +10,12 @@ public:
     std::vector<Item*> items;
     int money = 0;
 
+    // return index of item and -1 if inventory didn't contain it
     int find(int id) {
         for (int i = 0; i < items.size(); i++)
             if (items[i]->id == id)
                 return i;
-        return items.size();
+        return -1;
     }
 
     Item* find(Item*& item) {

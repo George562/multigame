@@ -52,6 +52,10 @@ void initShop(Player* player) {
         shop.setShop(new std::vector<Item*>{ new Item(ItemID::regenDrug, 10) },
                              std::vector<int>{20});
 
+        if (player->inventory.find(ItemID::dasher) == -1) {
+            shop.addItem(new Item(ItemID::dasher, 1), 10);
+        }
+
         BG.setTexture(Textures::GridBG);
 
         backButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed);

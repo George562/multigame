@@ -233,6 +233,9 @@ void initInventory(Player* player) {
         doInventoryUpdate[inventoryPage::Weapons] = true;
 
         addUI(&inventoryFrame, commonElements);
+
+        itemDescText.setOutlineThickness(2);
+        itemDescText.setOutlineColor(sf::Color::Black);
     }
 }
 

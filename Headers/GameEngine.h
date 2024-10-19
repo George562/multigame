@@ -123,7 +123,6 @@ std::vector<Enemy*> Enemies;
 void init();
 void initMinimap();
 void initScripts();
-void initInterface();
 //----------------------------
 
 
@@ -246,6 +245,8 @@ void init() {
     loadMusics();
     loadSave();
 
+    playerCanDashing = player.inventory.find(ItemID::dasher) != -1;
+
     Musics::MainMenu.setLoop(true);
     Musics::MainMenu.setVolume(5);
     Musics::Fight1.setVolume(5);
@@ -304,6 +305,7 @@ void init() {
     FLoorTileSprite.setTexture(Textures::floor);
 
     FloorForkSprite.setTexture(Textures::floorFork);
+    FloorForkSprite.setScale(15.f / 61.f, 15.f / 61.f); // det scale to make it 240x240 px
 
     undergroundBG.setTexture(Textures::Noise);
     undergroundBG.setPosition(0, 0);
@@ -768,6 +770,9 @@ void EventHandler() {
                         continue;
                     }
                 }
+                if (event.key.code == sf::Keyboard::R) {
+                    player.CurWeapon->HolsterAction();
+                }
                 if (event.key.code == sf::Keyboard::M) {
                     MiniMapActivated = !MiniMapActivated;
                     if (MiniMapActivated) {
@@ -790,7 +795,8 @@ void EventHandler() {
                     }
                 }
                 if (event.key.code == sf::Keyboard::LShift) {
-                    player.makeADash = SHiftClickTime.restart().asSeconds() < 0.2f;
+                    player.makeADash = SHiftClickTime.restart().asSeconds() < 0.2f && playerCanDashing;
+                    playerMakingADash = player.makeADash;
                 }
                 if (sf::Keyboard::Num1 <= event.key.code && event.key.code <= sf::Keyboard::Num3) {
                     if (!MiniMapActivated) {
@@ -801,6 +807,11 @@ void EventHandler() {
                         HUD::ReloadWeaponText.setString(reloadStr);
                         HUD::ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
                     }
+                }
+            }
+            if (event.type == sf::Event::KeyReleased) {
+                if (event.key.code == sf::Keyboard::LShift) {
+                    playerMakingADash = false;
                 }
             }
             if (event.type == sf::Event::MouseWheelMoved) {
@@ -936,7 +947,9 @@ void shopHandler(sf::Event& event) {
             return;
         }
         if (backButton.isActivated(event)) return;
-        buyButton.isActivated(event);
+        if (buyButton.isActivated(event)) {
+            playerCanDashing = player.inventory.find(ItemID::dasher) != -1;
+        }
 
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left) {
 
@@ -1771,8 +1784,8 @@ void MainLoop() {
                 player.move(CurLocation);
                 GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
                 FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
-                    player.CurWeapon->HolsterAction();
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
+                    player.makeADash = playerMakingADash && playerCanDashing;
                 }
             }
             int wasBulletsSize = Bullets.size();
