@@ -82,12 +82,12 @@ bool ClientFuncRun, HostFuncRun;
 
 //////////////////////////////////////////////////////////// Interactables
 Interactable portal,
-puddle,
-shopSector,
-upgradeSector;
+             puddle,
+             shopSector,
+             upgradeSector;
 std::vector<Interactable*> listOfBox,
-listOfArtifact,
-listOfFire;
+                           listOfArtifact,
+                           listOfFire;
 
 
 //////////////////////////////////////////////////////////// MiniMapStuff
@@ -622,25 +622,23 @@ void updateInventoryUI() {
 
         if (doInventoryUpdate[inventoryPage::Items]) {
             int slotNumber = 0;
-            for (Item*& item : player.inventory.items) {
-                Item* drawnItem = item;
+            for (Item*& drawnItem : player.inventory.items) {
                 drawnItem->animation->setScale({ 0.75, 0.75 });
 
                 float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
                 float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
 
                 ItemSlot* slot = &itemSlotsElements[drawnItem->id];
-                if (!slot->isInitialized)
+                if (!slot->isInitialized) {
                     slot->init("inv_ItemIDSlot" + drawnItem->id);
+                }
                 slot->setSize({ 150, 150 });
                 slot->setTexture(Textures::ItemPanel, UI::element);
+                slot->setPosition(itemX, itemY);
 
                 drawnItem->setPosition(itemX, itemY);
 
-                PlacedText& itemAmountText = *slot->amountText;
-                itemAmountText.setFontString(FontString(std::to_string(drawnItem->amount), 20));
-
-                slot->setPosition(itemX, itemY);
+                slot->amountText->setFontString(FontString(std::to_string(drawnItem->amount), 20));
 
                 slotNumber++;
             }
@@ -669,22 +667,21 @@ void updateShopUI() {
             float itemY = (slotNumber / 5) * 200 + 20;
 
             ShopSlot* slot = &slotsElements[drawnItem->id];
-            if (!slotsElements[drawnItem->id].isInitialized)
+            if (!slotsElements[drawnItem->id].isInitialized) {
                 slot->init("mShop_ItemIDSlot" + drawnItem->id);
+            }
             slot->setSize({ 100, 100 });
             slot->setTexture(Textures::ItemPanel, UI::element);
+            slot->setPosition(itemX, itemY);
 
             drawnItem->setPosition(itemX, itemY);
 
-            PlacedText& itemAmountText = *slot->amountText;
-            itemAmountText.setFontString(FontString(std::to_string(drawnItem->amount), 20));
+            slot->amountText->setFontString(FontString(std::to_string(drawnItem->amount), 20));
 
             PlacedText& itemPriceText = *slot->priceText;
             itemPriceText.setFontString(
                 FontString(std::to_string(shop.itemPrices[drawnItem->id]) + " C", 20)
             );
-
-            slot->setPosition(itemX, itemY);
 
             slotNumber++;
         }
@@ -697,22 +694,20 @@ void updateShopUI() {
             float itemY = (slotNumber / 3) * 200 + 20;
 
             ShopSlot* pslot = &playerSlotsElements[drawnItem->id];
-            if (!pslot->isInitialized)
+            if (!pslot->isInitialized) {
                 pslot->init("mShop_PlItemIDSlot" + drawnItem->id);
+            }
             pslot->setSize({ 100, 100 });
             pslot->setTexture(Textures::ItemPanel, UI::element);
+            pslot->setPosition(itemX, itemY);
 
             drawnItem->setPosition(itemX, itemY);
 
-            PlacedText& itemAmountText = *pslot->amountText;
-            itemAmountText.setFontString(FontString(std::to_string(drawnItem->amount), 20));
+            pslot->amountText->setFontString(FontString(std::to_string(drawnItem->amount), 20));
 
-            PlacedText& itemPriceText = *pslot->priceText;
-            itemPriceText.setFontString(
+            pslot->priceText->setFontString(
                 FontString(std::to_string(shop.itemPrices[drawnItem->id]) + " C", 20)
             );
-
-            pslot->setPosition(itemX, itemY);
 
             slotNumber++;
         }
@@ -1035,12 +1030,12 @@ void setBox(Interactable*& box) {
 
             TempText* tempText = new TempText(sf::seconds(2.5f));
             tempText->setCharacterSize(50);
-            tempText->setOutlineColor(sf::Color(120, 120, 120));
             tempText->setOutlineThickness(3);
+            tempText->setOutlineColor(sf::Color(120, 120, 120));
+            tempText->setFillColor(sf::Color(255, 170, 29));
 
             std::rand(); int r = 1 + std::rand() % 5;
             tempText->setString("Money + " + std::to_string(r));
-            tempText->setFillColor(sf::Color(255, 170, 29));
             tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
 
             HUD::MessageText.push_back(tempText);
@@ -1060,9 +1055,15 @@ void setBox(Interactable*& box) {
             tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
             HUD::MessageText.push_back(tempText);
         }
-                     });
+    });
 }
 
+std::vector<void (*)()> artifactEffects = {
+    []{ player.Health.top += 2;       },
+    []{ player.Mana.top += 1;         },
+    []{ player.HealthRecovery += 0.4; },
+    []{ player.ManaRecovery += 0.1;   }
+};
 std::vector<std::string> artifactText = {
     "Health limit +2",
     "Mana limit +1",
@@ -1084,16 +1085,10 @@ void setArtifact(Interactable*& artifact) {
         tempText->setOutlineColor(sf::Color::White);
         tempText->setOutlineThickness(3);
 
-        std::rand(); int r = std::rand() % 4;
+        std::rand(); int r = std::rand() % artifactEffects.size();
+        artifactEffects[r]();
         tempText->setString(artifactText[r]);
         tempText->setFillColor(artifactColors[r]);
-        switch (r) {
-            case 0: player.Health.top += 2; break;
-            case 1: player.Mana.top += 1; break;
-            case 2: player.HealthRecovery += 0.4; break;
-            case 3: player.ManaRecovery += 0.1; break;
-            default: break;
-        }
         tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
 
         HUD::MessageText.push_back(tempText);
@@ -1101,12 +1096,25 @@ void setArtifact(Interactable*& artifact) {
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
         DeleteFromVector(InteractibeStuff, i);
         delete i;
-                          });
+    });
 }
 
 void setFire(Interactable*& fire) {
     fire->setAnimation(Textures::Fire, &Shaders::Fire);
     fire->setSize(70.f, 70.f);
+}
+
+void placedOnMap(Interactable*& i, int& m, int& n) {
+    int x, y, posX = WallMinSize + std::rand() % int(size - i->hitbox.getSize().x - WallMinSize),
+              posY = WallMinSize + std::rand() % int(size - i->hitbox.getSize().y - WallMinSize);
+    do {
+        x = std::rand() % m;
+        y = std::rand() % n;
+    } while (!LabyrinthLocation.EnableTiles[y][x]);
+    i->setPosition(sf::Vector2f(x, y) * (float)size + sf::Vector2f(posX, posY));
+
+    InteractibeStuff.push_back(i);
+    DrawableStuff.push_back(i);
 }
 
 void LevelGenerate(int n, int m) {
@@ -1123,39 +1131,21 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < 10; i++) {
         listOfBox.push_back(new Interactable());
         setBox(listOfBox[i]);
-        do {
-            listOfBox[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
-                                      sf::Vector2f(std::rand() % int(size - listOfBox[i]->hitbox.getSize().x), std::rand() % int(size - listOfBox[i]->hitbox.getSize().y)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfBox[i]->hitbox.getPosition().y / size][(int)listOfBox[i]->hitbox.getPosition().x / size]);
-
-        InteractibeStuff.push_back(listOfBox[i]);
-        DrawableStuff.push_back(listOfBox[i]);
+        placedOnMap(listOfBox[i], m, n);
     }
 
     clearVectorOfPointer(listOfArtifact);
     for (int i = 0; i < 10; i++) {
         listOfArtifact.push_back(new Interactable());
         setArtifact(listOfArtifact[i]);
-        do {
-            listOfArtifact[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
-                                           sf::Vector2f(std::rand() % (size - Textures::Architect.getSize().x / 4), std::rand() % (size - Textures::Architect.getSize().y / 4)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfArtifact[i]->hitbox.getPosition().y / size][(int)listOfArtifact[i]->hitbox.getPosition().x / size]);
-
-        InteractibeStuff.push_back(listOfArtifact[i]);
-        DrawableStuff.push_back(listOfArtifact[i]);
+        placedOnMap(listOfArtifact[i], m, n);
     }
 
     clearVectorOfPointer(listOfFire);
     for (int i = 0; i < 2; i++) {
         listOfFire.push_back(new Interactable());
         setFire(listOfFire[i]);
-        do {
-            listOfFire[i]->setPosition(sf::Vector2f(std::rand() % m, std::rand() % n) * (float)size +
-                                       sf::Vector2f(std::rand() % (size - Textures::Fire.getSize().x / 4), std::rand() % (size - Textures::Fire.getSize().y / 4)));
-        } while (!LabyrinthLocation.EnableTiles[(int)listOfFire[i]->hitbox.getPosition().y / size][(int)listOfFire[i]->hitbox.getPosition().x / size]);
-
-        InteractibeStuff.push_back(listOfFire[i]);
-        DrawableStuff.push_back(listOfFire[i]);
+        placedOnMap(listOfFire[i], m, n);
     }
 
     clearVectorOfPointer(Enemies);
@@ -1213,7 +1203,7 @@ void LoadMainMenu() {
             completedLevels = std::max(curLevel, completedLevels);
             curLevel++;
         }
-        LevelGenerate(START_N + curLevel * 2, START_M + curLevel);
+        LevelGenerate(START_N + curLevel, START_M + curLevel * 2);
         FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
 
         DrawableStuff.push_back(&player);
@@ -1229,11 +1219,11 @@ void LoadMainMenu() {
 
         InteractibeStuff.push_back(&puddle);
         saveGame();
-                       });
+    });
 
     puddle.setFunction([](Interactable* i) {
         player.getDamage(5.f);
-                       });
+    });
 
     shopSector.setFunction([](Interactable* i) {
         {
@@ -1249,14 +1239,14 @@ void LoadMainMenu() {
             if (!selectedItem)
                 removeUI(&itemSlot, UIElements);
         }
-                           });
+    });
 
     upgradeSector.setFunction([](Interactable* i) {
         upgradeInterface::isDrawUpgradeInterface = true;
         openUpgradeShop();
-                              });
+    });
 
-                          // Set cameras
+    // Set cameras
     GameView.setCenter(player.hitbox.getCenter());
     MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
     HUDView.setCenter({ scw / 2.f, sch / 2.f });
@@ -1882,10 +1872,10 @@ void ClientConnect() {
         selector.add(*client);
 
         ConnectedPlayers.push_back(*(new Player()));
-        ConnectedPlayers[ConnectedPlayers.size() - 1].hitbox.setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
+        ConnectedPlayers.back().hitbox.setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
         SendPacket << packetStates::PlayersAmount << (sf::Int32)ConnectedPlayers.size() - 1;
 
-        DrawableStuff.push_back(&(ConnectedPlayers[ConnectedPlayers.size() - 1]));
+        DrawableStuff.push_back(&(ConnectedPlayers.back()));
 
         for (int i = 0; i < HUD::ListOfPlayers.getLineCount(); i++) {
             SendPacket << packetStates::PlayerConnect << HUD::ListOfPlayers[i];

@@ -116,7 +116,7 @@ void Location::WallGenerator(float probability) {
         }
     }
 
-    walls[walls.size() - 1].assign(m, true);
+    walls.back().assign(m, true);
     ClearSeenWalls();
 }
 
@@ -396,7 +396,7 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, CollisionShape& obj, sf::Vector2
     // if (walls.size() == 0) return;
 
     // walls[0].assign(m, true);
-    // walls[walls.size() - 1].assign(m, true);
+    // walls.back().assign(m, true);
 
     // sf::Thread* thr[7];
     // int from = 1, to = walls.size() / 8;

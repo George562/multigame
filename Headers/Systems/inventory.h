@@ -33,7 +33,7 @@ public:
             }
         }
         items.push_back(new Item(*item));
-        items[items.size() - 1]->picked();
+        items.back()->picked();
         std::sort(items.begin(), items.end(), [](Item*& left, Item*& right) { return left->id < right->id; });
     }
 

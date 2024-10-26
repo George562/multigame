@@ -39,16 +39,16 @@ public:
 
     void setString(std::string s);
     void setFontString(FontString s);
-    void addString(std::string s)        { setString(text.getString() + s); }
+    void addString(std::string s)           { setString(text.getString() + s); }
     void setCharacterSize(int x);
     void setOutlineThickness(int thickness) { text.setOutlineThickness(thickness); }
-    void setOutlineColor(sf::Color color) { text.setOutlineColor(color); }
-    void setFillColor(sf::Color color) { text.setFillColor(color); }
+    void setOutlineColor(sf::Color color)   { text.setOutlineColor(color); }
+    void setFillColor(sf::Color color)      { text.setFillColor(color); }
     void setPosition(float x, float y);
-    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
+    void setPosition(sf::Vector2f v)        { setPosition(v.x, v.y); }
     //void setScale(sf::Vector2f);
     //void setScale(float, float);
-    size_t TextSize()                   { return getString().charSize; }
+    size_t TextSize()                       { return getString().charSize; }
     void insert(int pos, std::string t) {
         setString(getString().text.substring(0, pos) + t +
                   getString().text.substring(pos, TextSize()));
