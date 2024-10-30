@@ -35,6 +35,11 @@ namespace HUD {
     std::vector<PlacedText*> WeaponNameTexts;
     PlacedText ReloadWeaponText;
     sf::Sprite XButtonSprite;
+    sf::Sprite InfoLogoSprite;
+
+    std::map<DescriptionID::Type, std::string> interactibleDiscriptions;
+    PlacedText DescriptionText;
+    bool showDiscriptions;
 }
 
 void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
@@ -76,11 +81,38 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         XButtonSprite.setTexture(Textures::XButton);
         XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
 
+        InfoLogoSprite.setTexture(Textures::InfoLogo);
+        InfoLogoSprite.setScale(2.f, 2.f);
+        InfoLogoSprite.setPosition(20, sch * 0.35f - InfoLogoSprite.getGlobalBounds().height);
+
+        DescriptionText.setPosition(scw / 2.f, sch / 2.f);
+
         for (int i = 0; i < Effects::EffectCount; i++) {
             effectIconsTimers[i] = new TempText(sf::Time::Zero);
             effectIcons[i] = new Frame("effect_" + i, UI::none, UI::none, (sf::Vector2f)Textures::Eff_HPRegen.getSize() / 2.f);
         }
         effectIcons[2]->setTexture(Textures::Eff_HPRegen, UI::element);
         effectIcons[3]->setTexture(Textures::Eff_Burn, UI::element);
+    }
+}
+
+void loadDescriptions() {
+    {
+        using namespace HUD;
+        std::ifstream descFile("sources/texts/descriptions.json");
+        if (!descFile.is_open()) {
+            for (DescriptionID::Type i = DescriptionID::portal; i < DescriptionID::DescriptionCount; i++) { 
+                interactibleDiscriptions[i] = "Error loading description";
+            }
+        } else {
+            nlohmann::json j = nlohmann::json::parse(descFile);
+            interactibleDiscriptions[DescriptionID::portal]        = j["portal"]        .template get<std::string>();
+            interactibleDiscriptions[DescriptionID::box]           = j["box"]           .template get<std::string>();
+            interactibleDiscriptions[DescriptionID::puddle]        = j["puddle"]         .template get<std::string>();
+            interactibleDiscriptions[DescriptionID::shopSector]    = j["shopSector"]    .template get<std::string>();
+            interactibleDiscriptions[DescriptionID::upgradeSector] = j["upgradeSector"] .template get<std::string>();
+            interactibleDiscriptions[DescriptionID::artifact]      = j["artifact"]      .template get<std::string>();
+        }
+        descFile.close();
     }
 }

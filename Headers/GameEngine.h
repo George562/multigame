@@ -47,11 +47,7 @@ std::vector<Player> ConnectedPlayers;
 //////////////////////////////////////////////////////////// Weapons
 Pistol pistol;
 Shotgun shotgun;
-// Revolver revolver;
 Rifle rifle;
-// Bubblegun bubblegun;
-// Armageddon armageddon;
-// Chaotic chaotic;
 std::vector<Weapon*> Weapons = {
     &pistol,
     &shotgun,
@@ -81,10 +77,10 @@ bool ClientFuncRun, HostFuncRun;
 
 
 //////////////////////////////////////////////////////////// Interactables
-Interactable portal,
-             puddle,
-             shopSector,
-             upgradeSector;
+Interactable portal(DescriptionID::portal),
+             puddle(DescriptionID::puddle),
+             shopSector(DescriptionID::shopSector),
+             upgradeSector(DescriptionID::upgradeSector);
 std::vector<Interactable*> listOfBox,
                            listOfArtifact,
                            listOfFire;
@@ -237,13 +233,13 @@ void init() {
     coutClock = new sf::Clock;
 
     loadLocations();
-
     loadTextures();
     loadItemTextures();
     loadFonts();
     loadShaders();
     loadMusics();
     loadSave();
+    loadDescriptions();
 
     playerCanDashing = player.inventory.find(ItemID::dasher) != -1;
 
@@ -294,7 +290,7 @@ void init() {
     //std::cout << "LocalAddress: " << MyIP << "\n";
     //std::cout << "PublicAddress: " << MySocket.getRemoteAddress().getPublicAddress().toString() << '\n';
 
-    CurWeapon = { {0, 2, 0} };
+    CurWeapon = { {0, (int)Weapons.size(), 0} };
 
     EnemyHealthBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
     EnemyHealthBar.setSize(125.f, 15.f);
@@ -764,6 +760,10 @@ void EventHandler() {
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                         continue;
                     }
+                    if (HUD::showDiscriptions) {
+                        HUD::showDiscriptions = false;
+                        continue;
+                    }
                 }
                 if (event.key.code == sf::Keyboard::R) {
                     player.CurWeapon->HolsterAction();
@@ -1024,6 +1024,7 @@ void upgradeInterfaceHandler(sf::Event& event) {
 void setBox(Interactable*& box) {
     box->setAnimation(Textures::Box);
     box->setSize(105.f, 117.f);
+    box->descriptionID = DescriptionID::box;
     box->setFunction([](Interactable* i) {
         if (player.Mana.cur >= 20) {
             player.Mana -= 20.f;
@@ -1079,6 +1080,7 @@ std::vector<sf::Color> artifactColors = {
 void setArtifact(Interactable*& artifact) {
     artifact->setAnimation(Textures::Architect, &Shaders::Architect);
     artifact->setSize(150.f, 150.f);
+    artifact->descriptionID = DescriptionID::artifact;
     artifact->setFunction([](Interactable* i) {
         TempText* tempText = new TempText(sf::seconds(2.5f));
         tempText->setCharacterSize(50);
@@ -1843,8 +1845,12 @@ void MainLoop() {
             if (!in(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::XButtonSprite))) {
                 HUD::InterfaceStuff.push_back(&HUD::XButtonSprite);
             }
+            if (!in(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::InfoLogoSprite))) {
+                HUD::InterfaceStuff.push_back(&HUD::InfoLogoSprite);
+            }
         } else {
             DeleteFromVector(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::XButtonSprite));
+            DeleteFromVector(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::InfoLogoSprite));
         }
 
         EventHandler();

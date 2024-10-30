@@ -4,6 +4,22 @@
 #include "../CollisionShapes/collisionCircle.h"
 
 #define ActivationButton sf::Keyboard::X
+#define InformationButton sf::Keyboard::I
+
+namespace DescriptionID {
+    using Type = sf::Uint8;
+    enum : Type {
+        portal,
+        box,
+        puddle,
+        shopSector,
+        upgradeSector,
+        artifact,
+        DescriptionCount
+    };
+}
+
+void displayDescription(DescriptionID::Type);
 
 ////////////////////////////////////////////////////////////
 // Class
@@ -14,8 +30,10 @@ public:
     Animation* animation = nullptr;
     void (*function)(Interactable*);
     CollisionRect hitbox;
+    DescriptionID::Type descriptionID;
 
     Interactable() {}
+    Interactable(DescriptionID::Type id) : descriptionID(id) {}
 
     ~Interactable() {
         if (animation) {
@@ -29,6 +47,9 @@ public:
         if (keyPressed(event, ActivationButton)) {
             function(this);
             return true;
+        }
+        if (keyPressed(event, InformationButton)) {
+            displayDescription(descriptionID);
         }
         return false;
     }

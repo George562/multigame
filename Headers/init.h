@@ -92,6 +92,7 @@ namespace Textures {
                 WallG,
                 WallV,
                 XButton,
+                InfoLogo,
                 Box,
                 floor,
                 floorFork,
@@ -156,6 +157,7 @@ void loadTextures() {
     Textures::WallG                   .loadFromFile("sources/textures/wallG.png");
     Textures::WallV                   .loadFromFile("sources/textures/wallV.png");
     Textures::XButton                 .loadFromFile("sources/textures/XButton.png");
+    Textures::InfoLogo                .loadFromFile("sources/textures/infoLogo.png");
     Textures::Box                     .loadFromFile("sources/textures/Box.png");
     Textures::floor                   .loadFromFile("sources/textures/floor.png");
     Textures::floorFork               .loadFromFile("sources/textures/fork.png");
