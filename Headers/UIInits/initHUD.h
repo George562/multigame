@@ -100,18 +100,18 @@ void loadDescriptions() {
     {
         using namespace HUD;
         std::ifstream descFile("sources/texts/descriptions.json");
-        if (!descFile.is_open()) {
-            for (DescriptionID::Type i = DescriptionID::portal; i < DescriptionID::DescriptionCount; i++) { 
-                interactibleDiscriptions[i] = "Error loading description";
-            }
-        } else {
+        try {
             nlohmann::json j = nlohmann::json::parse(descFile);
             interactibleDiscriptions[DescriptionID::portal]        = j["portal"]        .template get<std::string>();
             interactibleDiscriptions[DescriptionID::box]           = j["box"]           .template get<std::string>();
-            interactibleDiscriptions[DescriptionID::puddle]        = j["puddle"]         .template get<std::string>();
+            interactibleDiscriptions[DescriptionID::puddle]        = j["puddle"]        .template get<std::string>();
             interactibleDiscriptions[DescriptionID::shopSector]    = j["shopSector"]    .template get<std::string>();
             interactibleDiscriptions[DescriptionID::upgradeSector] = j["upgradeSector"] .template get<std::string>();
             interactibleDiscriptions[DescriptionID::artifact]      = j["artifact"]      .template get<std::string>();
+        } catch(const std::exception& e) {
+            for (DescriptionID::Type i = DescriptionID::portal; i < DescriptionID::DescriptionCount; i++) { 
+                interactibleDiscriptions[i] = "Error loading description";
+            }
         }
         descFile.close();
     }

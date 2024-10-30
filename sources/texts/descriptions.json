@@ -1,8 +1,8 @@
 {
-    "portal" : "A portal to another dimension",
-    "box" : "A box with items inside",
-    "puddle" : "A pudle of water",
-    "shopSector" : "A sector where you can buy items",
-    "upgradeSector" : "A sector where you can upgrade your weapon",
-    "artifact" : "artifact"
+    "portal" : "Portal is a device from the Era of multidimentional",
+    "box" : "Treasure box, created by Architector",
+    "puddle" : "Energy floating. Can be danger",
+    "shopSector" : "Company can get you things to get your work",
+    "upgradeSector" : "Our partners can improve your device's",
+    "artifact" : "didn't known object, called \"Artifact\". Provide some effect on you"
 }
