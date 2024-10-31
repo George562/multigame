@@ -2,7 +2,6 @@
 #include "Entities/enemy.h"
 #include "Entities/player.h"
 #include "Multiplayer/chat.h"
-#include "Multiplayer/client.h"
 #include "UI/PolygonButton.h"
 #include "UI/panel.h"
 #include "UI/bar.h"
@@ -67,10 +66,10 @@ sf::Sprite undergroundBG;
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
 sf::Packet ReceivePacket, SendPacket;
-std::vector<Client*> clients;
+std::vector<sf::TcpSocket*> clients;
 sf::SocketSelector selector;
 std::string ClientState, IPOfHost, MyIP, PacketData;
-Client MySocket; // this computer socket
+sf::TcpSocket MySocket; // this computer socket
 sf::Int32 ComputerID;
 sf::Mutex mutex;
 bool ClientFuncRun, HostFuncRun;
@@ -196,7 +195,7 @@ void loadSave();
 void MainLoop(); // SELF-EXPLANATORY
 
 
-//////////////////////////////////////////////////////////// Server-Client functions
+//////////////////////////////////////////////////////////// Server-sf::TcpSocket functions
 void ClientConnect();
 void ClientDisconnect(int);
 void SelfDisconnect();
@@ -286,9 +285,9 @@ void init() {
     CurWeapon.looped = true;
 
     listener.setBlocking(false);
-    MyIP = MySocket.getRemoteAddress().getLocalAddress().toString();
-    //std::cout << "LocalAddress: " << MyIP << "\n";
-    //std::cout << "PublicAddress: " << MySocket.getRemoteAddress().getPublicAddress().toString() << '\n';
+    MyIP = MySocket.getRemoteAddress().getPublicAddress().toString();
+    //std::cout << "LocalAddress: " << MySocket.getRemoteAddress().getLocalAddress().toString() << "\n";
+    //std::cout << "PublicAddress: " << MyIP << '\n';
 
     CurWeapon = { {0, (int)Weapons.size(), 0} };
 
@@ -425,6 +424,44 @@ void initScripts() {
             HostTread.launch();
         });
     }
+
+    chat.SetCommand("/?", []{
+        chat.addLine("/? - info");
+        chat.addLine("/server on - start server");
+        chat.addLine("/server off - close server");
+        chat.addLine("/connect [IP addres] - connect by ip");
+    });
+    chat.SetCommand("/server on", []{
+        if (!HostFuncRun) {
+            listener.listen(53000);
+            selector.add(listener);
+            HUD::ListOfPlayers.setString(MyIP);
+            ComputerID = 0;
+            ConnectedPlayers.push_back(*(new Player()));
+            HostFuncRun = true;
+            HostTread.launch();
+            chat.addLine("Server is running! Your IP: " + MyIP);
+        } else {
+            chat.addLine("Server is already running!");
+        }
+    });
+    chat.SetCommand("/server off", []{
+        if (HostFuncRun) {
+            mutex.lock();
+            SendPacket << packetStates::disconnect;
+            SendToClients(SendPacket);
+            SendPacket.clear();
+            mutex.unlock();
+            clients.clear();
+            selector.clear();
+            listener.close();
+            HostFuncRun = false;
+            ConnectedPlayers.clear();
+            chat.addLine("Server is closed!");
+        } else {
+            chat.addLine("Server is not running!");
+        }
+    });
 }
 //==============================================================================================
 
@@ -1859,9 +1896,9 @@ void MainLoop() {
 }
 
 
-//////////////////////////////////////////////////////////// Server-Client functions
+//////////////////////////////////////////////////////////// Server-sf::TcpSocket functions
 void ClientConnect() {
-    Client* client = new Client;
+    sf::TcpSocket* client = new sf::TcpSocket;
     if (listener.accept(*client) == sf::Socket::Done) {
         mutex.lock();
 
