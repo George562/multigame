@@ -22,7 +22,6 @@ public:
     sf::RectangleShape rect, cursor;
     sf::Clock* localClock = nullptr;
     bool inputted;
-    bool ChatEnable;
     std::map<std::string, void (*)(void)> commands;
 
     Chat(int, int);
@@ -64,7 +63,6 @@ Chat::Chat(int scw, int sch) : inputted(false), pos(0) {
     cursor.setFillColor(sf::Color::White);
     cursor.setSize({3, size.y});
 
-    ChatEnable = true;
     localClock = new sf::Clock();
 }
 
@@ -75,7 +73,6 @@ Chat::~Chat() {
 }
 
 void Chat::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    if (!ChatEnable) return;
     if (inputted) {
         target.draw(rect, states);
         if (localClock->getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2)) {
@@ -93,51 +90,59 @@ void Chat::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 }
 
 bool Chat::InputText(sf::Event& event) {
-    if (!ChatEnable) return false;
     setlocale(LC_ALL, "rus");
 
-    std::string buffer;
-    if (inputted && event.type == sf::Event::TextEntered && 32 <= event.text.unicode) {
-        if (event.text.unicode <= 127) {
-            buffer.push_back(event.text.unicode);
-        } else {
-            buffer.push_back(event.text.unicode - 1072 - 32);
-        }
-        lines[0].insert(cursorPos, buffer);
-        cursorPos++;
+    if (keyPressed(event, sf::Keyboard::Enter)) {
+        Entered();
     }
 
-    if (event.type == sf::Event::KeyPressed) {
-        if (inputted && event.key.code == sf::Keyboard::Escape) {
-            inputted = false;
-            return true;
-        }
-        if (event.key.code == sf::Keyboard::Enter) {
-            Entered();
-        }
-
-        if (event.key.code == sf::Keyboard::BackSpace && cursorPos > 0) {
-            lines[0].setString(lines[0].getString().substring(0, cursorPos - 1) +
-                               lines[0].getString().substring(cursorPos, lines[0].getText().size()));
-            cursorPos--;
-        }
-        if (event.key.code == sf::Keyboard::Delete && cursorPos < lines[0].getText().size())
-            lines[0].setString(lines[0].getString().substring(0, cursorPos) +
-                               lines[0].getString().substring(cursorPos + 1, lines[0].getText().size()));
-        if (event.key.code == sf::Keyboard::Left && cursorPos > 0) cursorPos--;
-        if (event.key.code == sf::Keyboard::Right && cursorPos < lines[0].getText().size()) cursorPos++;
-        if (event.key.code == sf::Keyboard::Home) cursorPos = 0;
-        if (event.key.code == sf::Keyboard::End) cursorPos = lines[0].getText().size();
-        if (event.key.code == sf::Keyboard::Down) {
-            pos = std::max(pos - 1, 0);
-            setLines();
-        }
-        if (event.key.code == sf::Keyboard::Up)   {
-            pos = std::min(pos + 1, std::max(0, (int)strings.size() - len + 1));
-            setLines();
-        }
-    }
     if (inputted) {
+        if (event.key.control && keyPressed(event, sf::Keyboard::V)) {
+            lines[0].setString(lines[0].getString().substring(0, cursorPos) +
+                            sf::Clipboard::getString() +
+                            lines[0].getString().substring(cursorPos, lines[0].getText().size()));
+            cursorPos += sf::Clipboard::getString().getSize();
+        }
+
+        std::string buffer;
+        if (event.type == sf::Event::TextEntered && 32 <= event.text.unicode) {
+            if (event.text.unicode <= 127) {
+                buffer.push_back(event.text.unicode);
+            } else {
+                buffer.push_back(event.text.unicode - 1072 - 32);
+            }
+            lines[0].insert(cursorPos, buffer);
+            cursorPos++;
+        }
+
+        if (event.type == sf::Event::KeyPressed) {
+            if (event.key.code == sf::Keyboard::Escape) {
+                inputted = false;
+                return true;
+            }
+
+            if (event.key.code == sf::Keyboard::BackSpace && cursorPos > 0) {
+                lines[0].setString(lines[0].getString().substring(0, cursorPos - 1) +
+                                lines[0].getString().substring(cursorPos, lines[0].getText().size()));
+                cursorPos--;
+            }
+            if (event.key.code == sf::Keyboard::Delete && cursorPos < lines[0].getText().size())
+                lines[0].setString(lines[0].getString().substring(0, cursorPos) +
+                                lines[0].getString().substring(cursorPos + 1, lines[0].getText().size()));
+            if (event.key.code == sf::Keyboard::Left && cursorPos > 0) cursorPos--;
+            if (event.key.code == sf::Keyboard::Right && cursorPos < lines[0].getText().size()) cursorPos++;
+            if (event.key.code == sf::Keyboard::Home) cursorPos = 0;
+            if (event.key.code == sf::Keyboard::End) cursorPos = lines[0].getText().size();
+            if (event.key.code == sf::Keyboard::Down) {
+                pos = std::max(pos - 1, 0);
+                setLines();
+            }
+            if (event.key.code == sf::Keyboard::Up)   {
+                pos = std::min(pos + 1, std::max(0, (int)strings.size() - len + 1));
+                setLines();
+            }
+        }
+
         PlacedText tempText; tempText.setString(lines[0].getString().substring(0, cursorPos));
         tempText.setCharacterSize(CHARACTER_SIZE);
         cursor.setPosition(PosX + 5 + tempText.Width, PosY + SPACE_BETWEEN_LINES_IN_PIXELS * len);
@@ -150,6 +155,7 @@ bool Chat::Entered() {
     if (inputted && lines[0].TextSize() > 0) {
         if (commands.count(lines[0].getString()) != 0) {
             commands[lines[0].getString()]();
+            cursorPos = 0;
         } else {
             if (lines[0].getText() != "") {
                 pushLine();
@@ -157,7 +163,6 @@ bool Chat::Entered() {
         }
     }
     inputted = !inputted;
-    cursorPos = 0;
     return !inputted;
 }
 
@@ -169,13 +174,11 @@ void Chat::addLine(std::string word) {
 void Chat::pushLine() {
     strings.push_back(lines[0].getString());
     lines[0].setString("");
-    pos = 0;
+    pos = cursorPos = 0;
     setLines();
-    for (int i = clocks.size() - 1; i >= 0; i--) {
-        if (clocks[i]->getElapsedTime() >= sf::seconds(5)) {
-            delete clocks[i];
-            clocks.pop_back();
-        } else { break; }
+    for (int i = clocks.size() - 1; i >= 0 && clocks[i]->getElapsedTime() >= sf::seconds(5); i--) {
+        delete clocks[i];
+        clocks.pop_back();
     }
     clocks.insert(clocks.begin(), new sf::Clock());
 }

@@ -77,7 +77,7 @@ public:
 
 	virtual void Update(sf::Event& event) {
 		ManaStorage.top = MaxManaStorage;
-		if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
+		if (mouseButtonPressed(event, sf::Mouse::Left))
 			lock = false;
 		if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
 			lock = true;
@@ -263,7 +263,7 @@ public:
 //         Scatter = Upgradable(std::vector<int>(5, 40));
 //     }
 //     void Update(sf::Event& event) {
-//         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
+//         if (mouseButtonPressed(event, sf::Mouse::Left))
 //             lock = false;
 //     }
 //     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
@@ -291,7 +291,7 @@ public:
 //         BulletVelocity = Upgradable(std::vector<int>(5, 180));
 //     }
 //     void Update(sf::Event& event) {
-//         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+//         if (mouseButtonPressed(event, sf::Mouse::Left)) {
 //             Multishot = 0;
 //             lock = false;
 //         } if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)

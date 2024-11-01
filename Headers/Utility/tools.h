@@ -160,6 +160,10 @@ bool keyPressed(sf::Event event, sf::Keyboard::Key key) {
     return event.type == sf::Event::KeyPressed && event.key.code == key;
 }
 
+bool mouseButtonPressed(sf::Event event, sf::Mouse::Button button) {
+    return event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == button;
+}
+
 sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
     return sf::Vector2f(a.x * b.x, a.y * b.y);
 }

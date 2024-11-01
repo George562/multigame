@@ -20,12 +20,10 @@ namespace HUD {
     PlacedText TextFPS;
 
 //////////////////////////////////////////////////////////// Panels
-    Panel IPPanel("ipPanel", "IP:");
     Panel ListOfPlayers("listOfPlayers");
 
 
 //////////////////////////////////////////////////////////// Buttons
-    RectButton HostButton("hostBtn", "Host");
     RectButton EscapeButton("exitBtn", UI::none, UI::none, { 0, 0 }, "Exit");
 
 //////////////////////////////////////////////////////////// HUDStuff
@@ -46,7 +44,6 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
     {
         using namespace HUD;
         EscapeButton.setCharacterSize(110);
-        IPPanel.text.setCharacterSize(80);
         ListOfPlayers.text.setCharacterSize(60);
 
         EscapeButton.setCenter(scw / 2, sch * 3 / 4);

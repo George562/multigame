@@ -29,15 +29,16 @@ namespace faction {
 namespace packetStates {
     sf::Uint8 curState;
     enum : sf::Uint8 {
-        disconnect,         // client send to host
-        PlayersAmount,      // to connecting client
-        PlayerConnect,      // host sent to clients when someone connected
-        PlayerDisconnect,   // host sent to clients when someone disconnected
-        Labyrinth,          // for LabirintData
-        PlayerPos,          // send from client to host than host sending others clients
-        SetPos,             // for set pos of player, because PlayerPos just say positions of others players
-        ChatEvent,
-        Shooting,
+        Disconnect,       // client send to host
+        PlayersAmount,    // to connecting client
+        PlayerConnect,    // host sent to clients when someone connected
+        PlayerDisconnect, // host sent to clients when someone disconnected
+        Labyrinth,        // for LabirintData
+        PlayerPos,        // send from client to host than host sending others clients
+        SetPos,           // for set pos of player, because PlayerPos just say positions of others players
+        ChatEvent,        // Any new message from chat
+        Shooting,         // Someone shoot
+        FirstConnect      // first connect of new players
     };
 };
 

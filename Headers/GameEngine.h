@@ -16,6 +16,7 @@
 #include "UIDraws/drawInventory.h"
 #include "UIDraws/drawMenuShop.h"
 #include "UIDraws/drawHUD.h"
+#include <regex>
 
 
 //////////////////////////////////////////////////////////// Settings of the game
@@ -68,11 +69,13 @@ sf::TcpListener listener;
 sf::Packet ReceivePacket, SendPacket;
 std::vector<sf::TcpSocket*> clients;
 sf::SocketSelector selector;
-std::string ClientState, IPOfHost, MyIP, PacketData;
+std::string ClientState, IPOfHost, MyIP, sPacketData;
 sf::TcpSocket MySocket; // this computer socket
-sf::Int32 ComputerID;
+sf::Int32 ComputerID, i32PacketData;
 sf::Mutex mutex;
 bool ClientFuncRun, HostFuncRun;
+bool Connecting = false;
+std::regex regexOfIP("\\d+.\\d+.\\d+.\\d+");
 
 
 //////////////////////////////////////////////////////////// Interactables
@@ -106,7 +109,7 @@ Chat chat(scw, sch);
 
 //////////////////////////////////////////////////////////// Other stuff
 sf::Vector2i MouseBuffer;
-Bullet* tempBullet;
+
 
 //////////////////////////////////////////////////////////// Enemies
 std::vector<Enemy*> Enemies;
@@ -195,7 +198,7 @@ void loadSave();
 void MainLoop(); // SELF-EXPLANATORY
 
 
-//////////////////////////////////////////////////////////// Server-sf::TcpSocket functions
+//////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect();
 void ClientDisconnect(int);
 void SelfDisconnect();
@@ -273,21 +276,19 @@ void init() {
 
     {
         using namespace HUD;
-        IPPanel.setTexture(Textures::YellowPanel);
         ListOfPlayers.setTexture(Textures::GradientFrameAlpha);
 
         EscapeButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed, UI::texture);
         EscapeButton.setHitboxPoints({ EscapeButton.getLeftTop(), EscapeButton.getRightTop(),
                                        EscapeButton.getRightBottom(), EscapeButton.getLeftBottom() });
-        HostButton.setTexture(Textures::GreenPanel, Textures::GreenPanelPushed);
     }
 
     CurWeapon.looped = true;
 
     listener.setBlocking(false);
     MyIP = MySocket.getRemoteAddress().getPublicAddress().toString();
-    //std::cout << "LocalAddress: " << MySocket.getRemoteAddress().getLocalAddress().toString() << "\n";
-    //std::cout << "PublicAddress: " << MyIP << '\n';
+    std::cout << "LocalAddress: " << MySocket.getRemoteAddress().getLocalAddress().toString() << "\n";
+    std::cout << "PublicAddress: " << MyIP << '\n';
 
     CurWeapon = { {0, (int)Weapons.size(), 0} };
 
@@ -312,6 +313,8 @@ void init() {
     initShop(&player);
     initMinimap();
     initScripts();
+
+    chat.addLine("/? - info");
 
     LoadMainMenu();
 }
@@ -385,7 +388,7 @@ void initScripts() {
         EscapeButton.setFunction([]() {
             if (HostFuncRun) {
                 mutex.lock();
-                SendPacket << packetStates::disconnect;
+                SendPacket << packetStates::Disconnect;
                 SendToClients(SendPacket);
                 SendPacket.clear();
                 mutex.unlock();
@@ -414,22 +417,13 @@ void initScripts() {
             LoadMainMenu();
             saveGame();
         });
-        HostButton.setFunction([]() {
-            listener.listen(53000);
-            selector.add(listener);
-            ListOfPlayers.setString(MyIP);
-            ComputerID = 0;
-            ConnectedPlayers.push_back(*(new Player()));
-            HostFuncRun = true;
-            HostTread.launch();
-        });
     }
 
     chat.SetCommand("/?", []{
         chat.addLine("/? - info");
         chat.addLine("/server on - start server");
         chat.addLine("/server off - close server");
-        chat.addLine("/connect [IP addres] - connect by ip");
+        chat.addLine("/connect - connect to other");
     });
     chat.SetCommand("/server on", []{
         if (!HostFuncRun) {
@@ -438,17 +432,18 @@ void initScripts() {
             HUD::ListOfPlayers.setString(MyIP);
             ComputerID = 0;
             ConnectedPlayers.push_back(*(new Player()));
+            ConnectedPlayers.back().Name.setString(player.Name.getString());
             HostFuncRun = true;
             HostTread.launch();
             chat.addLine("Server is running! Your IP: " + MyIP);
         } else {
-            chat.addLine("Server is already running!");
+            chat.addLine("Server is already running! Your IP: " + MyIP);
         }
     });
     chat.SetCommand("/server off", []{
         if (HostFuncRun) {
             mutex.lock();
-            SendPacket << packetStates::disconnect;
+            SendPacket << packetStates::Disconnect;
             SendToClients(SendPacket);
             SendPacket.clear();
             mutex.unlock();
@@ -460,6 +455,12 @@ void initScripts() {
             chat.addLine("Server is closed!");
         } else {
             chat.addLine("Server is not running!");
+        }
+    });
+    chat.SetCommand("/connect", []{
+        if (!ClientFuncRun) {
+            Connecting = true;
+            chat.addLine("input IP of host");
         }
     });
 }
@@ -760,14 +761,38 @@ void updateUpgradeInterfaceUI() {
 }
 //==============================================================================================
 
-
 sf::Clock SHiftClickTime;
 //============================================================================================== EVENT HANDLERS
 void EventHandler() {
     sf::Event event;
     while (window.pollEvent(event)) {
+        if (Connecting) {
+            if (keyPressed(event, sf::Keyboard::Escape)) {
+                Connecting = false;
+            }
+        }
         if (chat.InputText(event)) {
             if (keyPressed(event, sf::Keyboard::Enter)) {
+                if (Connecting) {
+                    IPOfHost = chat.Last();
+                    if (!std::regex_match(IPOfHost, regexOfIP)) continue;
+                    chat.addLine("connecting...");
+                    if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
+                        selector.add(MySocket);
+
+                        SendPacket << packetStates::FirstConnect << player.Name.getText();
+                        MySocket.send(SendPacket);
+                        SendPacket.clear();
+
+                        ClientFuncRun = true;
+                        ClientTread.launch();
+                        Connecting = false;
+
+                        chat.addLine("done");
+                    } else {
+                        chat.addLine("Failed to connect to server");
+                    }
+                }
                 mutex.lock();
                 SendPacket << packetStates::ChatEvent << chat.Last();
                 if (HostFuncRun) {
@@ -896,6 +921,12 @@ void EventHandler() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         Musics::MainMenu.pause();
                         window.close();
+                        HUD::EscapeButton.buttonFunction();
+                        if (ClientFuncRun) {
+                            SelfDisconnect();
+                        } else if (HostFuncRun) {
+                            chat.commands["/server off"];
+                        }
                         return;
                     }
                 }
@@ -942,12 +973,12 @@ void inventoryHandler(sf::Event& event) {
                         isItemDescDrawn = false;
                     }
                     isAnythingHovered = true;
-                    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Right) {
+                    if (mouseButtonPressed(event, sf::Mouse::Right)) {
                         isItemDescDrawn = true;
                         itemDescText.setString(itemDesc[item->id]);
                         prevItemDescID = item->id;
                     }
-                    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left && useItem(item)) {
+                    if (mouseButtonPressed(event, sf::Mouse::Left) && useItem(item)) {
                         if (item->amount <= 0) {
                             itemTypeCount--;
                             isItemDescDrawn = false;
@@ -983,7 +1014,7 @@ void shopHandler(sf::Event& event) {
             playerCanDashing = player.inventory.find(ItemID::dasher) != -1;
         }
 
-        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left) {
+        if (mouseButtonPressed(event, sf::Mouse::Left)) {
 
             window.setView(ShopStockView);
             sf::Vector2f viewPos = stockTransform.getInverse().
@@ -1020,16 +1051,12 @@ void upgradeInterfaceHandler(sf::Event& event) {
         }
 
         if (!isChoosingComponent) {
-            if ((event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left
-                && switchGunLBtn.isActivated(event))
-                || keyPressed(event, sf::Keyboard::Left)) {
+            if ((mouseButtonPressed(event, sf::Mouse::Left) && switchGunLBtn.isActivated(event)) || keyPressed(event, sf::Keyboard::Left)) {
                 switchGunLBtn.buttonFunction();
                 setUpgradeFunctions();
                 updateUpgradeShopStats();
             }
-            if ((event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left
-                && switchGunRBtn.isActivated(event))
-                || keyPressed(event, sf::Keyboard::Right)) {
+            if ((mouseButtonPressed(event, sf::Mouse::Left) && switchGunRBtn.isActivated(event)) || keyPressed(event, sf::Keyboard::Right)) {
                 switchGunRBtn.buttonFunction();
                 setUpgradeFunctions();
                 updateUpgradeShopStats();
@@ -1041,8 +1068,7 @@ void upgradeInterfaceHandler(sf::Event& event) {
             targetingBtn.isActivated(event);
         }
 
-        if (event.type == sf::Event::MouseButtonPressed &&
-            event.mouseButton.button == sf::Mouse::Right && isChoosingComponent)
+        if (mouseButtonPressed(event, sf::Mouse::Right) && isChoosingComponent)
             isChoosingComponent = false;
 
         if (!inventoryInterface::isDrawInventory && isChoosingComponent) {
@@ -1452,49 +1478,49 @@ void setUpgradeFunctions() {
         compUpgBtns[0][0]->setFunction([]() {
             upgradeStat(50, &player.CurWeapon->MaxManaStorage,
             compUpgCosts[0][0], compUpgStats[0][0], compUpgCount[0][0]);
-        if (!pistol.MaxManaStorage.maxed())
-            pistol.ManaStorage.top = pistol.MaxManaStorage;
-                                       });
+            if (!pistol.MaxManaStorage.maxed())
+                pistol.ManaStorage.top = pistol.MaxManaStorage;
+        });
 
         compUpgBtns[0][1]->setFunction([]() {
             upgradeStat(70, &player.CurWeapon->ReloadSpeed,
             compUpgCosts[0][1], compUpgStats[0][1], compUpgCount[0][1]);
-                                       });
+        });
 
         compUpgBtns[1][0]->setFunction([]() {
             upgradeStat(25, &player.CurWeapon->TimeToHolster,
             compUpgCosts[1][0], compUpgStats[1][0], compUpgCount[1][0]);
-                                       });
+        });
 
         compUpgBtns[1][1]->setFunction([]() {
             upgradeStat(25, &player.CurWeapon->TimeToDispatch,
             compUpgCosts[1][1], compUpgStats[1][1], compUpgCount[1][1]);
-                                       });
+        });
 
         compUpgBtns[2][0]->setFunction([]() {
             upgradeStat(35, &player.CurWeapon->FireRate,
             compUpgCosts[2][0], compUpgStats[2][0], compUpgCount[2][0]);
-                                       });
+        });
 
         compUpgBtns[2][1]->setFunction([]() {
             upgradeStat(80, &player.CurWeapon->ManaCostOfBullet,
             compUpgCosts[2][1], compUpgStats[2][1], compUpgCount[2][1]);
-                                       });
+        });
 
         compUpgBtns[2][2]->setFunction([]() {
             upgradeStat(80, &player.CurWeapon->Multishot,
             compUpgCosts[2][2], compUpgStats[2][2], compUpgCount[2][2]);
-                                       });
+        });
 
         compUpgBtns[3][0]->setFunction([]() {
             upgradeStat(65, &player.CurWeapon->BulletVelocity,
             compUpgCosts[3][0], compUpgStats[3][0], compUpgCount[3][0]);
-                                       });
+        });
 
         compUpgBtns[3][1]->setFunction([]() {
             upgradeStat(65, &player.CurWeapon->Scatter,
             compUpgCosts[3][1], compUpgStats[3][1], compUpgCount[3][1]);
-                                       });
+        });
     }
 }
 
@@ -1896,7 +1922,7 @@ void MainLoop() {
 }
 
 
-//////////////////////////////////////////////////////////// Server-sf::TcpSocket functions
+//////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect() {
     sf::TcpSocket* client = new sf::TcpSocket;
     if (listener.accept(*client) == sf::Socket::Done) {
@@ -1909,31 +1935,21 @@ void ClientConnect() {
 
         std::cout << ConnectedClientIP << " connected\n";
         HUD::ListOfPlayers.addWord(ConnectedClientIP);
-        std::cout << "list of players:\n" << std::string(HUD::ListOfPlayers.text.getString()) << '\n';
+        std::cout << "list of players:\n" << HUD::ListOfPlayers.text.getText() << '\n';
 
         clients.push_back(client);
         selector.add(*client);
+        SendPacket << packetStates::FirstConnect;
 
-        ConnectedPlayers.push_back(*(new Player()));
-        ConnectedPlayers.back().hitbox.setPosition(float(CurLocation->m) * size / 2, float(CurLocation->n) * size / 2);
-        SendPacket << packetStates::PlayersAmount << (sf::Int32)ConnectedPlayers.size() - 1;
+        SendPacket << (sf::Int32)ConnectedPlayers.size();
 
-        DrawableStuff.push_back(&(ConnectedPlayers.back()));
-
-        for (int i = 0; i < HUD::ListOfPlayers.getLineCount(); i++) {
-            SendPacket << packetStates::PlayerConnect << HUD::ListOfPlayers[i];
+        for (int i = 0; i < ConnectedPlayers.size(); i++) {
+            SendPacket << HUD::ListOfPlayers[i];
         }
 
-        SendPacket << packetStates::Shooting << (sf::Int32)Bullets.size();
-        std::cout << "bullets: " << Bullets.size() << "\n";
-        for (int i = 0; i < Bullets.size(); i++) {
-            SendPacket << *Bullets[i];
-        }
-
-        std::cout << "amount players = " << ConnectedPlayers.size() - 1 << '\n';
-        SendPacket << packetStates::SetPos;
-        for (Player& x : ConnectedPlayers) {
-            SendPacket << x;
+        std::cout << "amount players = " << ConnectedPlayers.size() << '\n';
+        for (int i = 0; i < ConnectedPlayers.size(); i ++) {
+            SendPacket << ConnectedPlayers[i] << ConnectedPlayers[i].Name.getText();
         }
 
         if (client->send(SendPacket) == sf::Socket::Done) {
@@ -1943,16 +1959,25 @@ void ClientConnect() {
         }
 
         SendPacket.clear();
-        SendPacket << LabyrinthLocation;
-        if (client->send(SendPacket) == sf::Socket::Done) {
-            std::cout << "Labyrinth walls sended\n";
-        } else {
-            std::cout << "Labyrinth walls didn't sended\n";
+
+        SendPacket << packetStates::Shooting << (sf::Int32)Bullets.size();
+        std::cout << "bullets: " << Bullets.size() << "\n";
+        for (int i = 0; i < Bullets.size(); i++) {
+            SendPacket << *Bullets[i];
         }
+        client->send(SendPacket);
+
         SendPacket.clear();
 
+        ConnectedPlayers.push_back(*(new Player()));
+        ConnectedPlayers.back().hitbox.setPosition(player.hitbox.getPosition());
+        DrawableStuff.push_back(&(ConnectedPlayers.back()));
+
         mutex.unlock();
-    } else delete client;
+    } else {
+        delete client;
+        std::cout << "Error: Unable to accept connection\n";
+    }
 }
 
 void ClientDisconnect(int i) {
@@ -1975,7 +2000,7 @@ void SelfDisconnect() {
     ClientFuncRun = false;
     LoadMainMenu();
     mutex.lock();
-    SendPacket << packetStates::disconnect;
+    SendPacket << packetStates::Disconnect;
     MySocket.send(SendPacket);
     SendPacket.clear();
     mutex.unlock();
@@ -2002,38 +2027,40 @@ void funcOfHost() {
                         while (!ReceivePacket.endOfPacket()) {
                             ReceivePacket >> packetStates::curState;
                             switch (packetStates::curState) {
-                                case packetStates::disconnect:
-                                    std::cout << "client self disconect\n";
+                                case packetStates::FirstConnect:
+                                    ReceivePacket >> sPacketData;
+                                    ConnectedPlayers[i + 1].Name.setString(sPacketData);
+                                    std::cout << "Connected " << sPacketData << " whith ID:" << i << '\n';
+                                    break;
+                                case packetStates::Disconnect:
+                                    std::cout << "client disconected\n";
                                     ClientDisconnect(i--);
                                     break;
                                 case packetStates::PlayerPos:
                                     ReceivePacket >> ConnectedPlayers[i + 1];
                                     break;
                                 case packetStates::ChatEvent:
-                                    ReceivePacket >> PacketData;
-                                    chat.addLine(PacketData);
+                                    ReceivePacket >> sPacketData;
+                                    chat.addLine(sPacketData);
                                     mutex.lock();
-                                    SendPacket << packetStates::ChatEvent << PacketData;
+                                    SendPacket << packetStates::ChatEvent << sPacketData;
                                     SendToClients(SendPacket, i);
                                     SendPacket.clear();
                                     mutex.unlock();
                                     break;
                                 case packetStates::Shooting:
-                                    {
-                                        mutex.lock();
-                                        int i; ReceivePacket >> i;
-                                        SendPacket << packetStates::Shooting << i;
-                                        for (; i > 0; i--) {
-                                            tempBullet = new Bullet();
-                                            ReceivePacket >> *tempBullet;
-                                            Bullets.push_back(tempBullet);
-                                            SendPacket << tempBullet;
-                                        }
-                                        SendToClients(SendPacket, i);
-                                        SendPacket.clear();
-                                        mutex.unlock();
-                                        break;
+                                    mutex.lock();
+                                    ReceivePacket >> i32PacketData;
+                                    SendPacket << packetStates::Shooting << i;
+                                    for (sf::Int32 i = 0; i < i32PacketData; i++) {
+                                        Bullets.push_back(new Bullet());
+                                        ReceivePacket >> *(Bullets.back());
+                                        SendPacket << Bullets.back();
                                     }
+                                    SendToClients(SendPacket, i);
+                                    SendPacket.clear();
+                                    mutex.unlock();
+                                    break;
                             }
                         }
                     }
@@ -2051,14 +2078,34 @@ void funcOfClient() {
                 while (!ReceivePacket.endOfPacket()) {
                     ReceivePacket >> packetStates::curState;
                     switch (packetStates::curState) {
-                        case packetStates::disconnect:
+                        case packetStates::FirstConnect:
+                            ReceivePacket >> ComputerID;
+                            std::cout << "My ID = " << ComputerID << '\n';
+
+                            for (int i = 0; i < ComputerID; i++) {
+                                ReceivePacket >> sPacketData;
+                                HUD::ListOfPlayers.addWord(sPacketData);
+                                ConnectedPlayers.push_back(*(new Player()));
+                                DrawableStuff.push_back(&(ConnectedPlayers.back()));
+                                std::cout << sPacketData << " connected\n";
+                            }
+                            ConnectedPlayers.push_back(*(new Player()));
+
+                            for (int i = 0; i < ComputerID; i++) {
+                                ReceivePacket >> ConnectedPlayers[i] >> sPacketData;
+                                ConnectedPlayers[i].Name.setString(sPacketData);
+                                std::cout << sPacketData << '\n';
+                            }
+                            player.hitbox.setCenter(ConnectedPlayers[ComputerID].hitbox.getPosition());
+                            break;
+                        case packetStates::Disconnect:
                             SelfDisconnect();
                             break;
                         case packetStates::PlayerConnect:
-                            ReceivePacket >> PacketData;
-                            HUD::ListOfPlayers.addWord(PacketData);
+                            ReceivePacket >> sPacketData;
+                            HUD::ListOfPlayers.addWord(sPacketData);
                             ConnectedPlayers.push_back(*(new Player()));
-                            std::cout << PacketData + " connected\n";
+                            std::cout << sPacketData + " connected\n";
                             break;
                         case packetStates::PlayerDisconnect:
                             int index;
@@ -2091,19 +2138,17 @@ void funcOfClient() {
                             GameView.setCenter(player.hitbox.getCenter());
                             break;
                         case packetStates::ChatEvent:
-                            ReceivePacket >> PacketData;
-                            chat.addLine(PacketData);
+                            ReceivePacket >> sPacketData;
+                            chat.addLine(sPacketData);
                             break;
                         case packetStates::Shooting:
-                            {
-                                int i; ReceivePacket >> i;
-                                for (; i > 0; i--) {
-                                    tempBullet = new Bullet();
-                                    ReceivePacket >> *tempBullet;
-                                    Bullets.push_back(tempBullet);
-                                }
-                                break;
+                            ReceivePacket >> i32PacketData;
+                            for (int i = 0; i < i32PacketData; i++) {
+                                Bullets.push_back(new Bullet());
+                                ReceivePacket >> *(Bullets.back());
                             }
+                            std::cout << "bullet recieved\n";
+                            break;
                     }
                 }
             }
