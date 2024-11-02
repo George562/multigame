@@ -361,8 +361,7 @@ sf::Vector2i WillCollisionWithWalls(vvr& Walls, CollisionShape& obj, sf::Vector2
             (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(obj)))
             res.y = 1;
     }
-    obj.move(0, -Velocity.y);
-    obj.move(Velocity.x, 0);
+    obj.move(Velocity.x, -Velocity.y);
     if (Velocity.x < 0) {
         if ((x - 1 < 0 || !Walls[y * 2][x - 1].intersect(obj)) &&
             (!Walls[y * 2 + 1][x].intersect(obj)) &&
