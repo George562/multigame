@@ -779,6 +779,28 @@ void EventHandler() {
                     chat.addLine("connecting...");
                     if (MySocket.connect(IPOfHost, 53000, sf::milliseconds(300)) == sf::Socket::Done) {
                         selector.add(MySocket);
+                        if (selector.wait(sf::seconds(1)) && selector.isReady(MySocket) && MySocket.receive(ReceivePacket) == sf::Socket::Done) {
+                            while (!ReceivePacket.endOfPacket()) {
+                                ReceivePacket >> ComputerID;
+                                std::cout << "My ID = " << ComputerID << '\n';
+
+                                for (int i = 0; i < ComputerID; i++) {
+                                    ReceivePacket >> sPacketData;
+                                    HUD::ListOfPlayers.addWord(sPacketData);
+                                    ConnectedPlayers.push_back(*(new Player()));
+                                    DrawableStuff.push_back(&(ConnectedPlayers.back()));
+                                    std::cout << sPacketData << " connected\n";
+                                }
+                                ConnectedPlayers.push_back(*(new Player()));
+
+                                for (int i = 0; i < ComputerID; i++) {
+                                    ReceivePacket >> ConnectedPlayers[i] >> sPacketData;
+                                    ConnectedPlayers[i].Name.setString(sPacketData);
+                                    std::cout << sPacketData << '\n';
+                                }
+                                player.hitbox.setCenter(ConnectedPlayers[ComputerID].hitbox.getPosition());
+                            }
+                        }
 
                         SendPacket << packetStates::FirstConnect << player.Name.getText();
                         MySocket.send(SendPacket);
@@ -1939,10 +1961,8 @@ void ClientConnect() {
 
         clients.push_back(client);
         selector.add(*client);
-        SendPacket << packetStates::FirstConnect;
 
         SendPacket << (sf::Int32)ConnectedPlayers.size();
-
         for (int i = 0; i < ConnectedPlayers.size(); i++) {
             SendPacket << HUD::ListOfPlayers[i];
         }
@@ -2078,26 +2098,6 @@ void funcOfClient() {
                 while (!ReceivePacket.endOfPacket()) {
                     ReceivePacket >> packetStates::curState;
                     switch (packetStates::curState) {
-                        case packetStates::FirstConnect:
-                            ReceivePacket >> ComputerID;
-                            std::cout << "My ID = " << ComputerID << '\n';
-
-                            for (int i = 0; i < ComputerID; i++) {
-                                ReceivePacket >> sPacketData;
-                                HUD::ListOfPlayers.addWord(sPacketData);
-                                ConnectedPlayers.push_back(*(new Player()));
-                                DrawableStuff.push_back(&(ConnectedPlayers.back()));
-                                std::cout << sPacketData << " connected\n";
-                            }
-                            ConnectedPlayers.push_back(*(new Player()));
-
-                            for (int i = 0; i < ComputerID; i++) {
-                                ReceivePacket >> ConnectedPlayers[i] >> sPacketData;
-                                ConnectedPlayers[i].Name.setString(sPacketData);
-                                std::cout << sPacketData << '\n';
-                            }
-                            player.hitbox.setCenter(ConnectedPlayers[ComputerID].hitbox.getPosition());
-                            break;
                         case packetStates::Disconnect:
                             SelfDisconnect();
                             break;
