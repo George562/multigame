@@ -73,7 +73,7 @@ std::string ClientState, IPOfHost, MyIP, sPacketData;
 sf::TcpSocket MySocket; // this computer socket
 sf::Int32 ComputerID, i32PacketData;
 sf::Vector2f V2fPacketData;
-sf::Mutex mutex;
+sf::Mutex mutex, mutexOnDraw;
 bool ClientFuncRun, HostFuncRun;
 bool Connecting = false;
 std::regex regexOfIP("\\d+.\\d+.\\d+.\\d+");
@@ -190,6 +190,7 @@ template <class T> void upgradeStat(int, Upgradable<T>*,
                                     PlacedText* = nullptr);
 void setUpgradeFunctions();
 void updateUpgradeTexts();
+void addMessageText(std::string s, sf::Color fillColor, sf::Color outlineColor = sf::Color::White);
 
 void saveGame();
 void loadSave();
@@ -475,6 +476,7 @@ void initScripts() {
 
 //============================================================================================== DRAW FUNCTIONS
 void draw() {
+    mutexOnDraw.lock();
     window.clear(sf::Color::Transparent);
     updateShaders();
     if (inventoryInterface::isDrawInventory) {
@@ -556,6 +558,7 @@ void draw() {
         }
     }
     window.display();
+    mutexOnDraw.unlock();
 }
 
 void drawFloor() {
@@ -1115,17 +1118,9 @@ void setBox(Interactable*& box) {
         if (player.Mana.cur >= 20) {
             player.Mana -= 20.f;
 
-            TempText* tempText = new TempText(sf::seconds(2.5f));
-            tempText->setCharacterSize(50);
-            tempText->setOutlineThickness(3);
-            tempText->setOutlineColor(sf::Color(120, 120, 120));
-            tempText->setFillColor(sf::Color(255, 170, 29));
-
             std::rand(); int r = 1 + std::rand() % 5;
-            tempText->setString("Money + " + std::to_string(r));
-            tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
+            addMessageText("Money + " + std::to_string(r), sf::Color(255, 170, 29), sf::Color(120, 120, 120));
 
-            HUD::MessageText.push_back(tempText);
             player.inventory.money += r;
             inventoryInterface::doInventoryUpdate[inventoryPage::Items] = true;
             DeleteFromVector(listOfBox, i);
@@ -1133,14 +1128,7 @@ void setBox(Interactable*& box) {
             DeleteFromVector(InteractibeStuff, i);
             delete i;
         } else {
-            TempText* tempText = new TempText(sf::seconds(2.5f));
-            tempText->setCharacterSize(50);
-            tempText->setOutlineColor(sf::Color::White);
-            tempText->setOutlineThickness(3);
-            tempText->setString("Not enough Mana: " + std::to_string((int)player.Mana.cur) + "/20");
-            tempText->setFillColor(sf::Color(255, 0, 0));
-            tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
-            HUD::MessageText.push_back(tempText);
+            addMessageText("Not enough Mana: " + std::to_string((int)player.Mana.cur) + "/20", sf::Color(255, 0, 0));
         }
     });
 }
@@ -1168,18 +1156,10 @@ void setArtifact(Interactable*& artifact) {
     artifact->setSize(150.f, 150.f);
     artifact->descriptionID = DescriptionID::artifact;
     artifact->setFunction([](Interactable* i) {
-        TempText* tempText = new TempText(sf::seconds(2.5f));
-        tempText->setCharacterSize(50);
-        tempText->setOutlineColor(sf::Color::White);
-        tempText->setOutlineThickness(3);
-
         std::rand(); int r = std::rand() % artifactEffects.size();
         artifactEffects[r]();
-        tempText->setString(artifactText[r]);
-        tempText->setFillColor(artifactColors[r]);
-        tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
-
-        HUD::MessageText.push_back(tempText);
+        
+        addMessageText(artifactText[r], artifactColors[r]);
         DeleteFromVector(listOfArtifact, i);
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
         DeleteFromVector(InteractibeStuff, i);
@@ -1201,6 +1181,20 @@ void placedOnMap(Interactable*& i, int& m, int& n) {
     } while (!LabyrinthLocation.EnableTiles[y][x]);
     i->setPosition(sf::Vector2f(x, y) * (float)size + sf::Vector2f(posX, posY));
 
+    InteractibeStuff.push_back(i);
+    DrawableStuff.push_back(i);
+}
+void placedOnMap(Interactable*& i, float x, float y) {
+    i->setPosition(x, y);
+    InteractibeStuff.push_back(i);
+    DrawableStuff.push_back(i);
+}
+void placedOnMap(Interactable*& i, sf::Vector2f v) {
+    i->setPosition(v);
+    InteractibeStuff.push_back(i);
+    DrawableStuff.push_back(i);
+}
+void placedOnMap(Interactable*& i) {
     InteractibeStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
@@ -1265,48 +1259,70 @@ void LoadMainMenu() {
     CurLocation->FindEnableTilesFrom(PlayerPos);
 
     portal.setFunction([](Interactable* i) {
-        clearVectorOfPointer(PickupStuff);
-        clearVectorOfPointer(Bullets);
-
-        DrawableStuff.clear();
-        HUD::InterfaceStuff.clear();
-        InteractibeStuff.clear();
-        removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
-
-        player.hitbox.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
-
-        MiniMapActivated = false;
-        HUD::EscapeMenuActivated = false;
-
-        MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-        MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
-
-        Musics::MainMenu.pause();
-        if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
-            Musics::Fight1.play();
-        }
-        if (CurLocation != &LabyrinthLocation) {
-            CurLocation = &LabyrinthLocation;
+        if (ClientFuncRun) {
+            addMessageText("Host must start next level", sf::Color::Black);
         } else {
-            completedLevels = std::max(curLevel, completedLevels);
-            curLevel++;
-        }
-        LevelGenerate(START_N + curLevel, START_M + curLevel * 2);
-        FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+            clearVectorOfPointer(PickupStuff);
+            clearVectorOfPointer(Bullets);
 
-        DrawableStuff.push_back(&player);
-        DrawableStuff.push_back(&portal);
-        DrawableStuff.push_back(&puddle);
-        for (Enemy*& enemy : Enemies) {
-            DrawableStuff.push_back(enemy);
-        }
-        addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
-        for (int i = 0; i < HUD::WeaponNameTexts.size(); i++)
-            HUD::InterfaceStuff.push_back(HUD::WeaponNameTexts[i]);
-        HUD::InterfaceStuff.push_back(&chat);
+            DrawableStuff.clear();
+            HUD::InterfaceStuff.clear();
+            InteractibeStuff.clear();
+            removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
-        InteractibeStuff.push_back(&puddle);
-        saveGame();
+            player.hitbox.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
+
+            MiniMapActivated = false;
+            HUD::EscapeMenuActivated = false;
+
+            MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+            MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
+
+            Musics::MainMenu.pause();
+            if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
+                Musics::Fight1.play();
+            }
+            if (CurLocation != &LabyrinthLocation) {
+                CurLocation = &LabyrinthLocation;
+            } else {
+                completedLevels = std::max(curLevel, completedLevels);
+                curLevel++;
+            }
+            LevelGenerate(START_N + curLevel, START_M + curLevel * 2);
+            FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+
+            DrawableStuff.push_back(&player);
+            DrawableStuff.push_back(&portal);
+            DrawableStuff.push_back(&puddle);
+            for (Enemy*& enemy : Enemies) {
+                DrawableStuff.push_back(enemy);
+            }
+
+            addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
+            for (int i = 0; i < HUD::WeaponNameTexts.size(); i++) {
+                HUD::InterfaceStuff.push_back(HUD::WeaponNameTexts[i]);
+            }
+            HUD::InterfaceStuff.push_back(&chat);
+
+            InteractibeStuff.push_back(&puddle);
+            saveGame();
+
+            if (HostFuncRun) {
+                mutex.lock();
+                SendPacket << packetStates::Labyrinth << *CurLocation;
+                SendPacket << (sf::Int32)Enemies.size() << Enemies;
+                SendPacket << (sf::Int32)listOfBox.size() << listOfBox;
+                SendPacket << (sf::Int32)listOfArtifact.size() << listOfArtifact;
+                SendPacket << (sf::Int32)listOfFire.size() << listOfFire;
+                SendPacket << portal << puddle;
+                SendToClients(SendPacket);
+                SendPacket.clear();
+                mutex.unlock();
+                for (Player& player : ConnectedPlayers) {
+                    DrawableStuff.push_back(&player);
+                }
+            }
+        }
     });
 
     puddle.setFunction([](Interactable* i) {
@@ -1588,6 +1604,17 @@ void updateUpgradeTexts() {
     }
 }
 
+void addMessageText(std::string s, sf::Color fillColor, sf::Color outlineColor) {
+    TempText* tempText = new TempText(sf::seconds(2.5f));
+    tempText->setCharacterSize(50);
+    tempText->setOutlineColor(outlineColor);
+    tempText->setOutlineThickness(3);
+    tempText->setString(s);
+    tempText->setFillColor(fillColor);
+    tempText->setCenter(scw / 2.f, sch / 2.f - 165.f);
+    HUD::MessageText.push_back(tempText);
+}
+
 void openUpgradeShop() {
     {
         using namespace upgradeInterface;
@@ -1849,10 +1876,7 @@ void MainLoop() {
 
             if (HostFuncRun) {
                 mutex.lock();
-                SendPacket << packetStates::PlayerPos << player;
-                for (Player& x : ConnectedPlayers) {
-                    SendPacket << x;
-                }
+                SendPacket << packetStates::PlayerPos << player << ConnectedPlayers;
                 SendToClients(SendPacket);
                 SendPacket.clear();
                 mutex.unlock();
@@ -1895,9 +1919,7 @@ void MainLoop() {
                 mutex.lock();
                 SendPacket << packetStates::PlayerPos << player;
                 if (HostFuncRun) {
-                    for (Player& x : ConnectedPlayers) {
-                        SendPacket << x;
-                    }
+                    SendPacket << ConnectedPlayers;
                     SendToClients(SendPacket);
                 } else if (ClientFuncRun) {
                     MySocket.send(SendPacket);
@@ -2125,9 +2147,67 @@ void funcOfClient() {
                             ConnectedPlayers.erase(ConnectedPlayers.begin() + index);
                             break;
                         case packetStates::Labyrinth:
-                            std::cout << "Labyrinth receiving\n";
+                            mutexOnDraw.lock();
+                            clearVectorOfPointer(PickupStuff);
+                            clearVectorOfPointer(Bullets);
+
+                            DrawableStuff.clear();
+                            HUD::InterfaceStuff.clear();
+                            InteractibeStuff.clear();
+                            removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
+
+                            MiniMapActivated = false;
+                            HUD::EscapeMenuActivated = false;
+
+                            MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+                            MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
+
+                            Musics::MainMenu.pause();
+                            if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
+                                Musics::Fight1.play();
+                            }
+
+                            if (CurLocation != &LabyrinthLocation) {
+                                CurLocation = &LabyrinthLocation;
+                            } else {
+                                completedLevels = std::max(curLevel, completedLevels);
+                                curLevel++;
+                            }
+                            MiniMapView.zoom(1 / MiniMapZoom);
+                            MiniMapZoom = std::pow(1.1, -10);
+                            MiniMapView.zoom(MiniMapZoom);
                             ReceivePacket >> LabyrinthLocation;
-                            std::cout << "Labyrinth receive\n";
+                            FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+                            ReceivePacket >> i32PacketData; Enemies.clear();
+                            for (int i = 0; i < i32PacketData; i++) {
+                                ReceivePacket >> sPacketData;
+                                if (sPacketData == "Distorted Scientist") {
+                                    Enemies.push_back(new DistortedScientist());
+                                } else if (sPacketData == "Distorted") {
+                                    Enemies.push_back(new Distorted());
+                                }
+                                ReceivePacket >> *Enemies[i];
+                            }
+                            ReceivePacket >> i32PacketData; listOfBox.clear();
+                            for (int i = 0; i < i32PacketData; i++) {
+                                listOfBox.push_back(new Interactable()); setBox(listOfBox[i]);
+                                ReceivePacket >> *listOfBox[i];
+                                placedOnMap(listOfBox[i]);
+                            }
+                            ReceivePacket >> i32PacketData; listOfArtifact.clear();
+                            for (int i = 0; i < i32PacketData; i++) {
+                                listOfArtifact.push_back(new Interactable()); setArtifact(listOfArtifact[i]);
+                                ReceivePacket >> *listOfArtifact[i];
+                                placedOnMap(listOfArtifact[i]);
+                            }
+                            ReceivePacket >> i32PacketData; listOfFire.clear();
+                            for (int i = 0; i < i32PacketData; i++) {
+                                listOfFire.push_back(new Interactable()); setFire(listOfFire[i]);
+                                ReceivePacket >> *listOfFire[i];
+                                placedOnMap(listOfFire[i]);
+                            }
+                            ReceivePacket >> portal >> puddle;
+                            mutexOnDraw.unlock();
                             break;
                         case packetStates::PlayerPos:
                             for (int i = 0, k = 0; i < ConnectedPlayers.size() + 1; i++) {

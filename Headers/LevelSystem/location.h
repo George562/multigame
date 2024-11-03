@@ -178,9 +178,9 @@ void Location::FillWallsRect() {
         for (int j = 0; j < walls[i].size(); j++)
             if (walls[i][j]) {
                 if (i % 2 == 1) { // |
-                    wallsRect[i].push_back(CollisionRect(size * j - WallMinSize / 2, float(size * i / 2) - WallMaxSize / 2, WallMinSize, WallMaxSize));
+                    wallsRect[i].push_back(CollisionRect(size * j - WallMinSize / 2, size * i / 2 - WallMaxSize / 2, WallMinSize, WallMaxSize));
                 } else { // -
-                    wallsRect[i].push_back(CollisionRect(float(size * j), size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize));
+                    wallsRect[i].push_back(CollisionRect(size * j, size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize));
                 }
             } else wallsRect[i].push_back(CollisionRect(0, 0, 0, 0));
 
@@ -198,12 +198,12 @@ bool Location::LoadFromFile(std::string FileName) {
     if (!file.is_open()) return false;
     file >> n >> m;
     SetSize(n, m);
-    for (int i = 0; i < walls.size(); i++)
+    for (int i = 0; i < walls.size(); i++) {
         for (int j = 0, t; j < walls[i].size(); j++) {
             file >> t;
             walls[i][j] = t;
         }
-
+    }
     file.close();
     FillWallsRect();
     ClearSeenWalls();
@@ -230,16 +230,20 @@ sf::Packet& operator>>(sf::Packet& packet, Location& loc) {
     packet >> loc.n >> loc.m;
     std::cout << "n = " << loc.n << " m = " << loc.m << '\n';
     loc.SetSize(loc.n, loc.m);
-    for (int i = 0; i < loc.walls.size(); i++)
-        for (int j = 0, t; j < loc.walls[i].size(); j++) {
+    bool t;
+    for (int i = 0; i < loc.walls.size(); i++) {
+        for (int j = 0; j < loc.walls[i].size(); j++) {
             packet >> t;
             loc.walls[i][j] = t;
         }
+    }
+    loc.FillWallsRect();
+    loc.ClearSeenWalls();
     return packet;
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Location& loc) {
-    packet << sf::Int32(packetStates::Labyrinth) << loc.n << loc.m;
+    packet << loc.n << loc.m;
     for (int i = 0; i < loc.walls.size(); i++)
         for (int j = 0; j < loc.walls[i].size(); j++)
             packet << loc.walls[i][j];

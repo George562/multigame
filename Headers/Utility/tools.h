@@ -169,26 +169,38 @@ sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& stream, sf::Vector2<T>& a) {
+std::ostream& operator<<(std::ostream& stream, sf::Vector2<T> a) {
     return stream << a.x << ", " << a.y;
 }
 template <typename T>
-std::istream& operator>>(std::istream& stream, sf::Vector2<T>& a) {
+std::istream& operator>>(std::istream& stream, sf::Vector2<T> a) {
     return stream >> a.x >> a.y;
 }
 
 template <typename T>
-sf::Packet& operator<<(sf::Packet& packet, sf::Vector2<T>& a) {
+sf::Packet& operator<<(sf::Packet& packet, sf::Vector2<T> a) {
     return packet << a.x << a.y;
 }
 template <typename T>
-sf::Packet& operator>>(sf::Packet& packet, sf::Vector2<T>& a) {
+sf::Packet& operator>>(sf::Packet& packet, sf::Vector2<T> a) {
     return packet >> a.x >> a.y;
 }
 
-sf::Packet& operator<<(sf::Packet& packet, sf::Color& a) {
+sf::Packet& operator<<(sf::Packet& packet, sf::Color a) {
     return packet << a.r << a.g << a.b << a.a;
 }
-sf::Packet& operator>>(sf::Packet& packet, sf::Color& a) {
+sf::Packet& operator>>(sf::Packet& packet, sf::Color a) {
     return packet >> a.r >> a.g >> a.b >> a.a;
+}
+
+template <typename T>
+sf::Packet& operator<<(sf::Packet& packet, std::vector<T>& v) {
+    for (int i = 0; i < v.size(); i++) packet << v[i];
+    return packet;
+}
+
+template <typename T>
+sf::Packet& operator<<(sf::Packet& packet, std::vector<T*>& v) {
+    for (int i = 0; i < v.size(); i++) packet << *v[i];
+    return packet;
 }

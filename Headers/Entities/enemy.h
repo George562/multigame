@@ -77,3 +77,12 @@ public:
     void shift(sf::Vector2f shift) override { Velocity += normalize(shift) * 4.f; }
     void shift(float x, float y) override { Velocity += normalize(sf::Vector2f(x, y)) * 4.f; }
 };
+
+sf::Packet& operator<<(sf::Packet& packet, Enemy e) {
+    return packet << e.Name << e.hitbox.getCenter();
+}
+sf::Packet& operator>>(sf::Packet& packet, Enemy e) {
+    sf::Vector2f v; packet >> v;
+    e.hitbox.setCenter(v);
+    return packet;
+}
