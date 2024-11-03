@@ -25,6 +25,7 @@ public:
 
     Bullet() {
         localClock = new sf::Clock();
+        hitbox.setRadius(COMMON_BULLET_RADIUS);
     }
 
     Bullet(faction::Type faction, sf::Vector2f pos, sf::Vector2f velocity, float dmg,
@@ -36,7 +37,6 @@ public:
 
         fromWho = faction;
         timer = time;
-        hitbox.setRadius(COMMON_BULLET_RADIUS);
         switch (faction) {
             case faction::Player: color = sf::Color(30, 195, 255); break;
             case faction::Enemy:  color = sf::Color(72,  61, 139); break;
