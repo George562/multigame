@@ -1293,7 +1293,6 @@ void LoadMainMenu() {
 
             DrawableStuff.push_back(&player);
             DrawableStuff.push_back(&portal);
-            DrawableStuff.push_back(&puddle);
             for (Enemy*& enemy : Enemies) {
                 DrawableStuff.push_back(enemy);
             }
@@ -1304,7 +1303,7 @@ void LoadMainMenu() {
             }
             HUD::InterfaceStuff.push_back(&chat);
 
-            InteractibeStuff.push_back(&puddle);
+            placedOnMap(&puddle);
             saveGame();
 
             if (HostFuncRun) {
@@ -1314,7 +1313,7 @@ void LoadMainMenu() {
                 SendPacket << (sf::Int32)listOfBox.size() << listOfBox;
                 SendPacket << (sf::Int32)listOfArtifact.size() << listOfArtifact;
                 SendPacket << (sf::Int32)listOfFire.size() << listOfFire;
-                SendPacket << &portal << &puddle;
+                SendPacket << &portal << &puddle << player;
                 SendToClients(SendPacket);
                 SendPacket.clear();
                 mutex.unlock();
@@ -2199,9 +2198,16 @@ void funcOfClient() {
                                 ReceivePacket >> listOfFire[i];
                                 placedOnMap(listOfFire[i]);
                             }
-                            ReceivePacket >> &portal >> &puddle;
+                            ReceivePacket >> &portal >> &puddle >> player;
+                            
                             placedOnMap(&portal);
                             placedOnMap(&puddle);
+
+                            addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
+                            for (int i = 0; i < HUD::WeaponNameTexts.size(); i++) {
+                                HUD::InterfaceStuff.push_back(HUD::WeaponNameTexts[i]);
+                            }
+                            HUD::InterfaceStuff.push_back(&chat);
                             for (Player& player : ConnectedPlayers) {
                                 DrawableStuff.push_back(&player);
                             }
@@ -2223,7 +2229,7 @@ void funcOfClient() {
                                 if (i != ComputerID) {
                                     ReceivePacket >> ConnectedPlayers[i - k];
                                 } else {
-                                    ReceivePacket >> V2fPacketData;
+                                    ReceivePacket >> player;
                                     k++;
                                 }
                             }

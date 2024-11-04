@@ -72,7 +72,6 @@ public:
 std::vector<Bullet*> Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
-    std::cout << b.hitbox.getCenter().x << " " << b.hitbox.getCenter().y << '\n';
     return packet << b.fromWho << b.hitbox.getCenter().x << b.hitbox.getCenter().y << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage << b.timer.asSeconds();
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
@@ -80,7 +79,6 @@ sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
     sf::Vector2f pos;
     packet >> b.fromWho >> pos.x >> pos.y >> b.Velocity.x >> b.Velocity.y >> b.penetration >> b.color >> b.damage >> timer;
     b.hitbox.setCenter(pos);
-    std::cout << pos.x << " " << pos.y << '\n';
     b.timer = sf::seconds(timer);
     return packet;
 }

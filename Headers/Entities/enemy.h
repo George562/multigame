@@ -84,5 +84,6 @@ sf::Packet& operator<<(sf::Packet& packet, Enemy* e) {
 sf::Packet& operator>>(sf::Packet& packet, Enemy* e) {
     sf::Vector2f v; packet >> v;
     e->hitbox.setCenter(v);
+    std::cout << e->Name.getText() << "\t" << v.x << ", " << v.y << '\n';
     return packet;
 }
