@@ -79,7 +79,7 @@ public:
 };
 
 sf::Packet& operator<<(sf::Packet& packet, Enemy e) {
-    return packet << e.Name << e.hitbox.getCenter();
+    return packet << e.Name.getText() << e.hitbox.getCenter();
 }
 sf::Packet& operator>>(sf::Packet& packet, Enemy e) {
     sf::Vector2f v; packet >> v;

@@ -1194,7 +1194,7 @@ void placedOnMap(Interactable*& i, sf::Vector2f v) {
     InteractibeStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
-void placedOnMap(Interactable*& i) {
+void placedOnMap(Interactable* i) {
     InteractibeStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
@@ -1270,7 +1270,7 @@ void LoadMainMenu() {
             InteractibeStuff.clear();
             removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
-            player.hitbox.setCenter(sf::Vector2f((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size));
+            player.hitbox.setCenter((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size);
 
             MiniMapActivated = false;
             HUD::EscapeMenuActivated = false;
@@ -1361,18 +1361,17 @@ void LoadMainMenu() {
 
     DrawableStuff.clear();
     DrawableStuff.push_back(&player);
-    DrawableStuff.push_back(&portal);
-    DrawableStuff.push_back(&puddle);
 
     HUD::InterfaceStuff.clear();
     HUD::InterfaceStuff.push_back(&chat);
     addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
     InteractibeStuff.clear();
-    InteractibeStuff.push_back(&portal);
-    InteractibeStuff.push_back(&puddle);
     InteractibeStuff.push_back(&shopSector);
     InteractibeStuff.push_back(&upgradeSector);
+
+    placedOnMap(&portal);
+    placedOnMap(&puddle);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
     newItem->setAnimation(*itemTexture[ItemID::regenDrug]);
@@ -1380,19 +1379,13 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.hitbox.getCenter() + sf::Vector2f(100, 100));
 
-    listOfBox.push_back(new Interactable());
-    setBox(listOfBox[0]);
+    listOfBox.push_back(new Interactable()); setBox(listOfBox[0]);
     listOfBox[0]->setPosition(1912.5, 1545);
+    placedOnMap(listOfBox[0]);
 
-    InteractibeStuff.push_back(listOfBox[0]);
-    DrawableStuff.push_back(listOfBox[0]);
-
-    listOfArtifact.push_back(new Interactable());
-    setArtifact(listOfArtifact[0]);
+    listOfArtifact.push_back(new Interactable()); setArtifact(listOfArtifact[0]);
     listOfArtifact[0]->setPosition(1312.5, 1545);
-
-    InteractibeStuff.push_back(listOfArtifact[0]);
-    DrawableStuff.push_back(listOfArtifact[0]);
+    placedOnMap(listOfArtifact[0]);
 }
 //==============================================================================================
 
