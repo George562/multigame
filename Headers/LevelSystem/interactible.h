@@ -92,11 +92,11 @@ public:
     void setCenter(sf::Vector2f v) { setCenter(v.x, v.y); }
 };
 
-sf::Packet& operator<<(sf::Packet& packet, Interactable i) {
-    return packet << i.hitbox.getCenter();
+sf::Packet& operator<<(sf::Packet& packet, Interactable* i) {
+    return packet << i->hitbox.getCenter();
 }
-sf::Packet& operator>>(sf::Packet& packet, Interactable i) {
+sf::Packet& operator>>(sf::Packet& packet, Interactable* i) {
     sf::Vector2f v; packet >> v;
-    i.hitbox.setCenter(v);
+    i->setCenter(v);
     return packet;
 }

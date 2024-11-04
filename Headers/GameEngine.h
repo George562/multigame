@@ -1314,7 +1314,7 @@ void LoadMainMenu() {
                 SendPacket << (sf::Int32)listOfBox.size() << listOfBox;
                 SendPacket << (sf::Int32)listOfArtifact.size() << listOfArtifact;
                 SendPacket << (sf::Int32)listOfFire.size() << listOfFire;
-                SendPacket << portal << puddle;
+                SendPacket << &portal << &puddle;
                 SendToClients(SendPacket);
                 SendPacket.clear();
                 mutex.unlock();
@@ -2171,7 +2171,7 @@ void funcOfClient() {
                             MiniMapView.zoom(MiniMapZoom);
                             ReceivePacket >> LabyrinthLocation;
                             FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
-                            ReceivePacket >> i32PacketData; Enemies.clear();
+                            ReceivePacket >> i32PacketData; clearVectorOfPointer(Enemies);
                             for (int i = 0; i < i32PacketData; i++) {
                                 ReceivePacket >> sPacketData;
                                 if (sPacketData == "Distorted Scientist") {
@@ -2179,27 +2179,32 @@ void funcOfClient() {
                                 } else if (sPacketData == "Distorted") {
                                     Enemies.push_back(new Distorted());
                                 }
-                                ReceivePacket >> *Enemies[i];
+                                ReceivePacket >> Enemies[i];
                             }
-                            ReceivePacket >> i32PacketData; listOfBox.clear();
+                            ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfBox);
                             for (int i = 0; i < i32PacketData; i++) {
                                 listOfBox.push_back(new Interactable()); setBox(listOfBox[i]);
-                                ReceivePacket >> *listOfBox[i];
+                                ReceivePacket >> listOfBox[i];
                                 placedOnMap(listOfBox[i]);
                             }
-                            ReceivePacket >> i32PacketData; listOfArtifact.clear();
+                            ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfArtifact);
                             for (int i = 0; i < i32PacketData; i++) {
                                 listOfArtifact.push_back(new Interactable()); setArtifact(listOfArtifact[i]);
-                                ReceivePacket >> *listOfArtifact[i];
+                                ReceivePacket >> listOfArtifact[i];
                                 placedOnMap(listOfArtifact[i]);
                             }
-                            ReceivePacket >> i32PacketData; listOfFire.clear();
+                            ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfFire);
                             for (int i = 0; i < i32PacketData; i++) {
                                 listOfFire.push_back(new Interactable()); setFire(listOfFire[i]);
-                                ReceivePacket >> *listOfFire[i];
+                                ReceivePacket >> listOfFire[i];
                                 placedOnMap(listOfFire[i]);
                             }
-                            ReceivePacket >> portal >> puddle;
+                            ReceivePacket >> &portal >> &puddle;
+                            placedOnMap(&portal);
+                            placedOnMap(&puddle);
+                            for (Player& player : ConnectedPlayers) {
+                                DrawableStuff.push_back(&player);
+                            }
                             mutexOnDraw.unlock();
                             break;
                         case packetStates::PlayerPos:
