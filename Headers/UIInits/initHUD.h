@@ -75,12 +75,13 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         ReloadWeaponText.setFillColor(sf::Color(255, 20, 20));
         ReloadWeaponText.setCharacterSize(100);
 
-        XButtonSprite.setTexture(Textures::XButton);
-        XButtonSprite.setPosition(scw / 2.f - XButtonSprite.getGlobalBounds().width / 2.f, sch * 3.f / 4.f - XButtonSprite.getGlobalBounds().height / 2.f);
-
         InfoLogoSprite.setTexture(Textures::InfoLogo);
         InfoLogoSprite.setScale(2.f, 2.f);
         InfoLogoSprite.setPosition(20, sch * 0.35f - InfoLogoSprite.getGlobalBounds().height);
+
+        XButtonSprite.setTexture(Textures::XButton);
+        XButtonSprite.setScale(2.f, 2.f);
+        XButtonSprite.setPosition(InfoLogoSprite.getPosition() + sf::Vector2f(0, InfoLogoSprite.getGlobalBounds().height + 10));
 
         DescriptionText.setPosition(scw / 2.f, sch / 2.f);
 
