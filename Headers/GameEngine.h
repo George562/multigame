@@ -1255,8 +1255,7 @@ void LoadMainMenu() {
     portal.setPosition(1612.5, 1545);
     puddle.setPosition(1012.5, 1545);
 
-    sf::Vector2f PlayerPos = player.hitbox.getCenter() / (float)size;
-    CurLocation->FindEnableTilesFrom(PlayerPos);
+    CurLocation->FindEnableTilesFrom(player.hitbox.getCenter() / (float)size);
 
     portal.setFunction([](Interactable* i) {
         if (ClientFuncRun) {
@@ -1965,6 +1964,12 @@ void ClientConnect() {
 
         std::string ConnectedClientIP = (*client).getRemoteAddress().toString();
 
+        for (int i = 0; i < clients.size(); i++) {
+            if (ConnectedClientIP == clients[i]->getRemoteAddress().toString()) {
+                ClientDisconnect(i);
+            }
+        }
+
         std::cout << ConnectedClientIP << " connected\n";
         HUD::ListOfPlayers.addWord(ConnectedClientIP);
         std::cout << "list of players:\n" << HUD::ListOfPlayers.text.getText() << '\n';
@@ -2122,6 +2127,7 @@ void funcOfClient() {
                             SelfDisconnect();
                             break;
                         case packetStates::PlayerConnect:
+                            mutex.lock();
                             ReceivePacket >> sPacketData;
                             HUD::ListOfPlayers.addWord(sPacketData);
                             ConnectedPlayers.push_back(*(new Player()));
@@ -2129,6 +2135,7 @@ void funcOfClient() {
                             ConnectedPlayers.back().Name.setString(sPacketData);
                             DrawableStuff.push_back(&(ConnectedPlayers.back()));
                             std::cout << sPacketData + " connected\n";
+                            mutex.unlock();
                             break;
                         case packetStates::PlayerDisconnect:
                             int index;
@@ -2179,26 +2186,32 @@ void funcOfClient() {
                                     Enemies.push_back(new Distorted());
                                 }
                                 ReceivePacket >> Enemies[i];
+                                std::cout << "Enemies " << Enemies[i]->hitbox.getCenter() << '\n';
                             }
                             ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfBox);
                             for (int i = 0; i < i32PacketData; i++) {
                                 listOfBox.push_back(new Interactable()); setBox(listOfBox[i]);
                                 ReceivePacket >> listOfBox[i];
                                 placedOnMap(listOfBox[i]);
+                                std::cout << "listOfBox " << listOfBox[i]->hitbox.getCenter() << '\n';
                             }
                             ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfArtifact);
                             for (int i = 0; i < i32PacketData; i++) {
                                 listOfArtifact.push_back(new Interactable()); setArtifact(listOfArtifact[i]);
                                 ReceivePacket >> listOfArtifact[i];
                                 placedOnMap(listOfArtifact[i]);
+                                std::cout << "listOfArtifact " << listOfArtifact[i]->hitbox.getCenter() << '\n';
                             }
                             ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfFire);
                             for (int i = 0; i < i32PacketData; i++) {
                                 listOfFire.push_back(new Interactable()); setFire(listOfFire[i]);
                                 ReceivePacket >> listOfFire[i];
                                 placedOnMap(listOfFire[i]);
+                                std::cout << "listOfFire " << listOfFire[i]->hitbox.getCenter() << '\n';
                             }
                             ReceivePacket >> &portal >> &puddle >> player;
+
+                            CurLocation->FindEnableTilesFrom(player.hitbox.getCenter() / (float)size);
                             
                             placedOnMap(&portal);
                             placedOnMap(&puddle);
@@ -2208,6 +2221,7 @@ void funcOfClient() {
                                 HUD::InterfaceStuff.push_back(HUD::WeaponNameTexts[i]);
                             }
                             HUD::InterfaceStuff.push_back(&chat);
+                            DrawableStuff.push_back(&player);
                             for (Player& player : ConnectedPlayers) {
                                 DrawableStuff.push_back(&player);
                             }

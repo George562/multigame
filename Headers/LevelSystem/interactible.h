@@ -93,12 +93,10 @@ public:
 };
 
 sf::Packet& operator<<(sf::Packet& packet, Interactable* i) {
-    std::cout << (int)i->descriptionID << "\t" << i->hitbox.getCenter().x << ", " << i->hitbox.getCenter().y << '\n';
     return packet << i->hitbox.getCenter();
 }
 sf::Packet& operator>>(sf::Packet& packet, Interactable* i) {
     sf::Vector2f v; packet >> v;
     i->setCenter(v);
-    std::cout << (int)i->descriptionID << "\t" << v.x << ", " << v.y << '\n';
     return packet;
 }

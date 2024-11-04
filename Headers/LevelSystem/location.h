@@ -44,7 +44,7 @@ public:
     void WallGenerator(float probability);
     void RoomGenerator();
     std::vector<sf::Vector2i> getPassages(int _n, int _m);
-    void FindEnableTilesFrom(sf::Vector2f&);
+    void FindEnableTilesFrom(sf::Vector2f);
     void FillWallsRect();
     bool LoadFromFile(std::string FileName);
     bool WriteToFile(std::string FileName);
@@ -145,7 +145,7 @@ std::vector<sf::Vector2i> Location::getPassages(int _n, int _m) {
     return passages;
 }
 
-void Location::FindEnableTilesFrom(sf::Vector2f& p) {
+void Location::FindEnableTilesFrom(sf::Vector2f p) {
     EnableTiles.assign(n, vb(m, false));
     AmountOfEnableTiles = 0;
     std::queue<sf::Vector2i> q; q.push(sf::Vector2i(p));
