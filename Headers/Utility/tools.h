@@ -198,9 +198,3 @@ sf::Packet& operator<<(sf::Packet& packet, std::vector<T>& v) {
     for (int i = 0; i < v.size(); i++) packet << v[i];
     return packet;
 }
-
-template <typename T>
-sf::Packet& operator<<(sf::Packet& packet, std::vector<T*>& v) {
-    for (int i = 0; i < v.size(); i++) packet << *v[i];
-    return packet;
-}
