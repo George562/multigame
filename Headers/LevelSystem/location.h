@@ -343,6 +343,62 @@ void FindAllWaysTo(Location* location, sf::Vector2f to, std::vector<std::vector<
         theWays[check.y][check.x] = to;
 }
 
+void FindAllWaysTo(Location* location, std::vector<sf::Vector2f> to, std::vector<std::vector<sf::Vector2f>>& theWays) {
+    if (theWays.size() != location->n || theWays[0].size() != location->m) {
+        theWays.assign(location->n, std::vector<sf::Vector2f>(location->m, to[0]));
+    }
+    std::queue<sf::Vector2i> q;
+    
+    for (int i = 0; i < to.size(); i++) {
+        q.push(sf::Vector2i(to[i].x / size, to[i].y / size));
+    }
+    sf::Vector2i cur, check;
+    sf::IntRect UsedAreaRect(0, 0, location->m, location->n);
+    vvb used(location->n, vb(location->m, false));
+    while (!q.empty()) {
+        cur = q.front(); q.pop();
+        if (used[cur.y][cur.x]) continue;
+        used[cur.y][cur.x] = true;
+        check = cur + dirs[0]; // {1, 0}
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x]) {
+            q.push(check);
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
+        }
+        check = cur + dirs[2]; // {-1, 0}
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !location->walls[check.y * 2 + 1][check.x + 1]) {
+            q.push(check);
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
+        }
+        check = cur + dirs[1]; // {0, 1}
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !location->walls[check.y * 2][check.x]) {
+            q.push(check);
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
+        }
+        check = cur + dirs[3]; // {0, -1}
+        if (UsedAreaRect.contains(check) && !used[check.y][check.x] && !location->walls[check.y * 2 + 2][check.x]) {
+            q.push(check);
+            theWays[check.y][check.x] = ((sf::Vector2f)cur + sf::Vector2f(0.5f, 0.5f)) * (float)size;
+        }
+    }
+    for (int i = 0; i < to.size(); i++) {
+        check = (sf::Vector2i)to[i] / size; theWays[check.y][check.x] = to[i];
+
+        check = (sf::Vector2i)to[i] / size + dirs[0]; // {1, 0}
+        if (check.x < location->m && !location->walls[check.y * 2 + 1][check.x])
+            theWays[check.y][check.x] = to[i];
+        check = (sf::Vector2i)to[i] / size + dirs[2]; // {-1, 0}
+        if (check.x >= 0 && !location->walls[check.y * 2 + 1][check.x + 1])
+            theWays[check.y][check.x] = to[i];
+        check = (sf::Vector2i)to[i] / size + dirs[1]; // {0, 1}
+        if (check.y  < location->n && !location->walls[check.y * 2][check.x])
+            theWays[check.y][check.x] = to[i];
+        check = (sf::Vector2i)to[i] / size + dirs[3]; // {0, -1}
+        if (check.y >= 0 && !location->walls[check.y * 2 + 2][check.x])
+            theWays[check.y][check.x] = to[i];
+
+    }
+}
+
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
 sf::Vector2i WillCollisionWithWalls(vvr& Walls, CollisionShape& obj, sf::Vector2f Velocity) {
     int y = int(obj.getCenter().y) / size, x = int(obj.getCenter().x) / size;

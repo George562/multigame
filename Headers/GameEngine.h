@@ -1905,7 +1905,11 @@ void MainLoop() {
             if (!chat.inputted && !inventoryInterface::isDrawInventory && !MenuShop::isDrawShop) {
                 player.move(CurLocation);
                 GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
-                FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+                std::vector<sf::Vector2f> centers; centers.push_back(player.hitbox.getCenter());
+                for (Player& p : ConnectedPlayers) {
+                    centers.push_back(p.hitbox.getCenter());
+                }
+                FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
                     player.makeADash = playerMakingADash && playerCanDashing;
                 }
