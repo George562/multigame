@@ -1139,9 +1139,10 @@ void setBox(Interactable*& box) {
 
             if (ClientFuncRun || HostFuncRun) {
                 mutex.lock();
-                SendPacket << ComputerID << packetStates::UseInteractable << DescriptionID::box << i;
+                SendPacket << packetStates::UseInteractable << ComputerID << DescriptionID::box << i;
                 if (ClientFuncRun) MySocket.send(SendPacket);
                 else               SendToClients(SendPacket);
+                SendPacket.clear();
                 mutex.unlock();
             }
             delete i;
@@ -1184,9 +1185,11 @@ void setArtifact(Interactable*& artifact) {
 
         if (ClientFuncRun || HostFuncRun) {
             mutex.lock();
-            SendPacket << ComputerID << packetStates::UseInteractable << DescriptionID::artifact << i;
+            SendPacket << packetStates::UseInteractable << ComputerID << DescriptionID::artifact << i;
+            SendPacket << player.Health << player.HealthRecovery;
             if (ClientFuncRun) MySocket.send(SendPacket);
             else               SendToClients(SendPacket);
+            SendPacket.clear();
             mutex.unlock();
         }
         delete i;
@@ -2139,21 +2142,25 @@ void funcOfHost() {
                                     DescriptionID::Type id;
                                     ReceivePacket >> i32PacketData >> id >> V2fPacketData;
                                     SendPacket << packetStates::UseInteractable << i32PacketData << id << V2fPacketData;
-                                    for (Interactable*& x: InteractableStuff) {
-                                        if (x->descriptionID == id && x->hitbox.getCenter() == V2fPacketData) {
+                                    Interactable* x1 = nullptr;
+                                    for (Interactable*& x2: InteractableStuff) {
+                                        if (x2->descriptionID == id && x2->hitbox.getCenter() == V2fPacketData) {
                                             if (id == DescriptionID::box) {
-                                                DeleteFromVector(listOfBox, x);
+                                                DeleteFromVector(listOfBox, x2);
                                             } else if (id == DescriptionID::artifact) {
-                                                DeleteFromVector(listOfArtifact, x);
+                                                DeleteFromVector(listOfArtifact, x2);
                                                 ReceivePacket >> ConnectedPlayers[i32PacketData - 1].Health >> ConnectedPlayers[i32PacketData - 1].HealthRecovery;
                                                 SendPacket << ConnectedPlayers[i32PacketData - 1].Health << ConnectedPlayers[i32PacketData - 1].HealthRecovery;
                                             }
-                                            DeleteFromVector(DrawableStuff, (sf::Drawable*)x);
-                                            DeleteFromVector(InteractableStuff, x);
+                                            DeleteFromVector(DrawableStuff, (sf::Drawable*)x2);
                                             SendToClients(SendPacket, i32PacketData - 1);
-                                            delete x;
+                                            x1 = x2;
                                             break;
                                         }
+                                    }
+                                    if (x1) {
+                                        DeleteFromVector(InteractableStuff, x1);
+                                        delete x1;
                                     }
                                     SendPacket.clear();
                                     mutex.unlock();
@@ -2318,19 +2325,23 @@ void funcOfClient() {
                             DescriptionID::Type id;
                             ReceivePacket >> i32PacketData >> id >> V2fPacketData;
                             i32PacketData -= i32PacketData > ComputerID;
-                            for (Interactable*& x: InteractableStuff) {
-                                if (x->descriptionID == id && x->hitbox.getCenter() == V2fPacketData) {
+                            Interactable* x1 = nullptr;
+                            for (Interactable*& x2: InteractableStuff) {
+                                if (x2->descriptionID == id && x2->hitbox.getCenter() == V2fPacketData) {
                                     if (id == DescriptionID::box) {
-                                        DeleteFromVector(listOfBox, x);
+                                        DeleteFromVector(listOfBox, x2);
                                     } else if (id == DescriptionID::artifact) {
-                                        DeleteFromVector(listOfArtifact, x);
+                                        DeleteFromVector(listOfArtifact, x2);
                                         ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
                                     }
-                                    DeleteFromVector(DrawableStuff, (sf::Drawable*)x);
-                                    DeleteFromVector(InteractableStuff, x);
-                                    delete x;
+                                    DeleteFromVector(DrawableStuff, (sf::Drawable*)x2);
+                                    x1 = x2;
                                     break;
                                 }
+                            }
+                            if (x1) {
+                                DeleteFromVector(InteractableStuff, x1);
+                                delete x1;
                             }
                             mutex.unlock();
                             break;
