@@ -388,50 +388,30 @@ void initScripts() {
             }
         });
     }
-    {
-        using namespace HUD;
-        EscapeButton.setFunction([]() {
-            if (HostFuncRun) {
-                mutex.lock();
-                SendPacket << packetStates::Disconnect;
-                SendToClients(SendPacket);
-                SendPacket.clear();
-                mutex.unlock();
-                clients.clear();
-                selector.clear();
-                listener.close();
-                HostFuncRun = false;
-                for (int i = 0; i < ConnectedPlayers.size(); i++) {
-                    DeleteFromVector(DrawableStuff, (sf::Drawable*)&ConnectedPlayers[i]);
-                }
-                ConnectedPlayers.clear();
-            } else if (ClientFuncRun) {
-                SelfDisconnect();
-            }
-            EscapeMenuActivated = false;
-            ListOfPlayers.clearText();
-            clearVectorOfPointer(Bullets);
-            clearVectorOfPointer(Enemies);
-            clearVectorOfPointer(TempTextsOnGround);
-            clearVectorOfPointer(TempTextsOnScreen);
-            clearVectorOfPointer(DamageText);
-            clearVectorOfPointer(MessageText);
-            clearVectorOfPointer(listOfBox);
-            clearVectorOfPointer(listOfArtifact);
-            clearVectorOfPointer(listOfFire);
-            clearVectorOfPointer(PickupStuff);
-            player.CurWeapon->lock = true;
-            normalizeVal(CurWeapon);
-            LoadMainMenu();
-            saveGame();
-        });
-    }
+    HUD::EscapeButton.setFunction([]() {
+        HUD::EscapeMenuActivated = false;
+        HUD::ListOfPlayers.clearText();
+        clearVectorOfPointer(Bullets);
+        clearVectorOfPointer(Enemies);
+        clearVectorOfPointer(TempTextsOnGround);
+        clearVectorOfPointer(HUD::TempTextsOnScreen);
+        clearVectorOfPointer(DamageText);
+        clearVectorOfPointer(HUD::MessageText);
+        clearVectorOfPointer(listOfBox);
+        clearVectorOfPointer(listOfArtifact);
+        clearVectorOfPointer(listOfFire);
+        clearVectorOfPointer(PickupStuff);
+        player.CurWeapon->lock = true;
+        LoadMainMenu();
+        saveGame();
+    });
 
     chat.SetCommand("/?", []{
         chat.addLine("/? - info");
         chat.addLine("/server on - start server");
         chat.addLine("/server off - close server");
         chat.addLine("/connect - connect to other");
+        chat.addLine("/disconnect - disconnect from server");
     });
     chat.SetCommand("/server on", []{
         if (!HostFuncRun) {
@@ -470,6 +450,11 @@ void initScripts() {
         if (!ClientFuncRun) {
             Connecting = true;
             chat.addLine("input IP of host");
+        }
+    });
+    chat.SetCommand("/disconnect", []{
+        if (ClientFuncRun) {
+            SelfDisconnect();
         }
     });
 }
@@ -1905,9 +1890,14 @@ void MainLoop() {
             if (!chat.inputted && !inventoryInterface::isDrawInventory && !MenuShop::isDrawShop) {
                 player.move(CurLocation);
                 GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
-                std::vector<sf::Vector2f> centers; centers.push_back(player.hitbox.getCenter());
-                for (Player& p : ConnectedPlayers) {
-                    centers.push_back(p.hitbox.getCenter());
+                std::vector<sf::Vector2f> centers;
+                for (int i = 0, k = 0; i < ConnectedPlayers.size() + 1; i++) {
+                    if (i != ComputerID) {
+                        centers.push_back(ConnectedPlayers[i - k].hitbox.getCenter());
+                    } else {
+                        centers.push_back(player.hitbox.getCenter());
+                        k++;
+                    }
                 }
                 FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
