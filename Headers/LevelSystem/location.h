@@ -33,17 +33,14 @@ public:
     vvr wallsRect;
     vvb SeenWalls;
 
-    sf::Vector2i room;
-    sf::Vector2i doorPos;
-
-    Location() { AmountOfEnableTiles = 0; room = sf::Vector2i(-1, -1); }
-    Location(int w, int h) { SetSize(w, h); room = sf::Vector2i(-1, -1); }
+    Location() { AmountOfEnableTiles = 0; }
+    Location(int w, int h) { SetSize(w, h); }
     void SetSize(int w, int h);
     void GenerateLocation(int n, int m, sf::Vector2f RootPoint);
     void BuildWayFrom(sf::Vector2f);
     void WallGenerator(float probability);
-    void RoomGenerator();
-    std::vector<sf::Vector2i> getPassages(int _n, int _m);
+    int getPassagesAmount(int x, int y);
+    std::vector<sf::Vector2i> getPassages(int x, int y);
     void FindEnableTilesFrom(sf::Vector2f);
     void FillWallsRect();
     bool LoadFromFile(std::string FileName);
@@ -78,7 +75,6 @@ void Location::GenerateLocation(int n, int m, sf::Vector2f RootPoint) {
         BuildWayFrom(RootPoint);
         CounterOfGenerations++;
     } while (AmountOfEnableTiles < float(n * m) * 0.3f || AmountOfEnableTiles > float(n * m) * 0.7f);
-    RoomGenerator();
     FillWallsRect();
     std::cout << "Location was generated in " << timer.getElapsedTime().asSeconds() << " seconds with total number of generations = "
               << CounterOfGenerations << "; Count Of Enable Tiles = " << AmountOfEnableTiles << '\n';
@@ -120,28 +116,15 @@ void Location::WallGenerator(float probability) {
     ClearSeenWalls();
 }
 
-void Location::RoomGenerator() {
-    std::vector<sf::Vector2i> probabblePositions;
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < m; j++)
-            if (EnableTiles[i][j] && getPassages(i, j).size() == 1)
-                probabblePositions.emplace_back(j, i);
-    if (probabblePositions.size() != 0) {
-        room = probabblePositions[rand() % probabblePositions.size()];
-        doorPos = getPassages(room.y, room.x)[0];
-        walls[doorPos.y][doorPos.x] = true;
-    } else {
-        std::cout << "Room hasn't been created\n";
-        room = sf::Vector2i(-1, -1);
-    }
+int Location::getPassagesAmount(int x, int y) {
+    return !walls[y * 2 + 1][x] + !walls[y * 2 + 1][x + 1] + !walls[y * 2][x] + !walls[y * 2 + 2][x];
 }
-
-std::vector<sf::Vector2i> Location::getPassages(int _n, int _m) {
+std::vector<sf::Vector2i> Location::getPassages(int x, int y) {
     std::vector<sf::Vector2i> passages;
-    if (!walls[_n * 2 + 1][_m    ]) passages.push_back(sf::Vector2i(_m    , _n * 2 + 1)); // стена слева
-    if (!walls[_n * 2 + 1][_m + 1]) passages.push_back(sf::Vector2i(_m + 1, _n * 2 + 1)); // стена справа
-    if (!walls[_n * 2    ][_m    ]) passages.push_back(sf::Vector2i(_m    , _n * 2    )); // стена сверху
-    if (!walls[_n * 2 + 2][_m    ]) passages.push_back(sf::Vector2i(_m    , _n * 2 + 2)); // стена снизу
+    if (!walls[y * 2 + 1][x    ]) passages.push_back(sf::Vector2i(x    , y * 2 + 1)); // стена слева
+    if (!walls[y * 2 + 1][x + 1]) passages.push_back(sf::Vector2i(x + 1, y * 2 + 1)); // стена справа
+    if (!walls[y * 2    ][x    ]) passages.push_back(sf::Vector2i(x    , y * 2    )); // стена сверху
+    if (!walls[y * 2 + 2][x    ]) passages.push_back(sf::Vector2i(x    , y * 2 + 2)); // стена снизу
     return passages;
 }
 
@@ -183,14 +166,6 @@ void Location::FillWallsRect() {
                     wallsRect[i].push_back(CollisionRect(size * j, size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize));
                 }
             } else wallsRect[i].push_back(CollisionRect(0, 0, 0, 0));
-
-    if (room.x != -1 && room.y != -1) {
-        if (doorPos.y % 2 == 1) {
-            wallsRect[doorPos.y][doorPos.x].setSize(WallMinSize / 2, WallMaxSize / 2);
-        } else {
-            wallsRect[doorPos.y][doorPos.x].setSize(WallMaxSize / 2, WallMinSize / 2);
-        }
-    }
 }
 
 bool Location::LoadFromFile(std::string FileName) {

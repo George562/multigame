@@ -561,7 +561,7 @@ void drawFloor() {
             if (CurLocation->EnableTiles[i][j]) {
                 FLoorTileSprite.setPosition(size * j, size * i);
                 preRenderTexture.draw(FLoorTileSprite);
-                if (CurLocation->getPassages(i, j).size() > 2) {
+                if (CurLocation->getPassagesAmount(j, i) > 2) {
                     FloorForkSprite.setPosition(size * j + 120, size * i + 120);
                     preRenderTexture.draw(FloorForkSprite);
                 }
@@ -2240,21 +2240,19 @@ void funcOfClient() {
                                     Enemies.push_back(new Distorted());
                                 }
                                 ReceivePacket >> Enemies[i];
-                                std::cout << "Enemies " << Enemies[i]->hitbox.getCenter() << '\n';
+                                DrawableStuff.push_back(Enemies[i]);
                             }
                             ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfBox);
                             for (int i = 0; i < i32PacketData; i++) {
                                 listOfBox.push_back(new Interactable()); setBox(listOfBox[i]);
                                 ReceivePacket >> listOfBox[i];
                                 placedOnMap(listOfBox[i]);
-                                std::cout << "listOfBox " << listOfBox[i]->hitbox.getCenter() << '\n';
                             }
                             ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfArtifact);
                             for (int i = 0; i < i32PacketData; i++) {
                                 listOfArtifact.push_back(new Interactable()); setArtifact(listOfArtifact[i]);
                                 ReceivePacket >> listOfArtifact[i];
                                 placedOnMap(listOfArtifact[i]);
-                                std::cout << "listOfArtifact " << listOfArtifact[i]->hitbox.getCenter() << '\n';
                             }
                             ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfFire);
                             for (int i = 0; i < i32PacketData; i++) {
