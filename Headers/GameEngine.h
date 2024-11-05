@@ -34,7 +34,7 @@ sf::Sprite preRenderSprite, outlineRenderSprite;
 float MiniMapZoom = 1.f;
 bool MiniMapActivated;
 std::vector<sf::Drawable*> DrawableStuff; // references to objects that exist somewhere
-std::vector<Interactable*> InteractibeStuff; // references to objects that exist somewhere
+std::vector<Interactable*> InteractableStuff; // references to objects that exist somewhere
 Interactable* CurInteractable;
 
 std::vector<Item*> PickupStuff;
@@ -62,7 +62,7 @@ Bar<float> EnemyHealthBar;
 sf::Sprite FLoorTileSprite;
 sf::Sprite FloorForkSprite;
 sf::Sprite undergroundBG;
-
+sf::Image icon;
 
 //////////////////////////////////////////////////////////// Online tools
 sf::TcpListener listener;
@@ -244,6 +244,9 @@ void init() {
     loadMusics();
     loadSave();
     loadDescriptions();
+
+    icon.loadFromFile("sources/icon.png");
+    window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
     playerCanDashing = player.inventory.find(ItemID::dasher) != -1;
 
@@ -510,6 +513,12 @@ void draw() {
         for (Enemy*& enemy : Enemies) {
             EnemyHealthBar.setPosition(enemy->hitbox.getCenter() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, enemy->hitbox.getRadius() + 50.f));
             EnemyHealthBar.setValue(enemy->Health);
+            preRenderTexture.draw(EnemyHealthBar);
+        }
+
+        for (Player& p : ConnectedPlayers) {
+            EnemyHealthBar.setPosition(p.hitbox.getCenter() - sf::Vector2f(EnemyHealthBar.getSize().x / 2.f, p.hitbox.getRadius() + 50.f));
+            EnemyHealthBar.setValue(p.Health);
             preRenderTexture.draw(EnemyHealthBar);
         }
 
@@ -807,6 +816,7 @@ void EventHandler() {
                         }
 
                         SendPacket << packetStates::FirstConnect << player.Name.getText();
+                        SendPacket << player.Health << player.HealthRecovery;
                         MySocket.send(SendPacket);
                         SendPacket.clear();
 
@@ -909,7 +919,7 @@ void EventHandler() {
                 }
             }
 
-            for (Interactable*& x : InteractibeStuff) {
+            for (Interactable*& x : InteractableStuff) {
                 if (x->CanBeActivated(player.hitbox)) {
                     x->isActivated(player.hitbox, event);
                     break;
@@ -1125,7 +1135,15 @@ void setBox(Interactable*& box) {
             inventoryInterface::doInventoryUpdate[inventoryPage::Items] = true;
             DeleteFromVector(listOfBox, i);
             DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
-            DeleteFromVector(InteractibeStuff, i);
+            DeleteFromVector(InteractableStuff, i);
+
+            if (ClientFuncRun || HostFuncRun) {
+                mutex.lock();
+                SendPacket << ComputerID << packetStates::UseInteractable << DescriptionID::box << i;
+                if (ClientFuncRun) MySocket.send(SendPacket);
+                else               SendToClients(SendPacket);
+                mutex.unlock();
+            }
             delete i;
         } else {
             addMessageText("Not enough Mana: " + std::to_string((int)player.Mana.cur) + "/20", sf::Color(255, 0, 0));
@@ -1162,7 +1180,15 @@ void setArtifact(Interactable*& artifact) {
         addMessageText(artifactText[r], artifactColors[r]);
         DeleteFromVector(listOfArtifact, i);
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
-        DeleteFromVector(InteractibeStuff, i);
+        DeleteFromVector(InteractableStuff, i);
+
+        if (ClientFuncRun || HostFuncRun) {
+            mutex.lock();
+            SendPacket << ComputerID << packetStates::UseInteractable << DescriptionID::artifact << i;
+            if (ClientFuncRun) MySocket.send(SendPacket);
+            else               SendToClients(SendPacket);
+            mutex.unlock();
+        }
         delete i;
     });
 }
@@ -1181,21 +1207,21 @@ void placedOnMap(Interactable*& i, int& m, int& n) {
     } while (!LabyrinthLocation.EnableTiles[y][x]);
     i->setPosition(sf::Vector2f(x, y) * (float)size + sf::Vector2f(posX, posY));
 
-    InteractibeStuff.push_back(i);
+    InteractableStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
 void placedOnMap(Interactable*& i, float x, float y) {
     i->setPosition(x, y);
-    InteractibeStuff.push_back(i);
+    InteractableStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
 void placedOnMap(Interactable*& i, sf::Vector2f v) {
     i->setPosition(v);
-    InteractibeStuff.push_back(i);
+    InteractableStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
 void placedOnMap(Interactable* i) {
-    InteractibeStuff.push_back(i);
+    InteractableStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
 
@@ -1266,7 +1292,7 @@ void LoadMainMenu() {
 
             DrawableStuff.clear();
             HUD::InterfaceStuff.clear();
-            InteractibeStuff.clear();
+            InteractableStuff.clear();
             removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
             player.hitbox.setCenter((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size);
@@ -1307,7 +1333,7 @@ void LoadMainMenu() {
 
             if (HostFuncRun) {
                 mutex.lock();
-                SendPacket << packetStates::Labyrinth << *CurLocation;
+                SendPacket << packetStates::Labyrinth << CurLocation;
                 SendPacket << (sf::Int32)Enemies.size() << Enemies;
                 SendPacket << (sf::Int32)listOfBox.size() << listOfBox;
                 SendPacket << (sf::Int32)listOfArtifact.size() << listOfArtifact;
@@ -1364,9 +1390,9 @@ void LoadMainMenu() {
     HUD::InterfaceStuff.push_back(&chat);
     addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
-    InteractibeStuff.clear();
-    InteractibeStuff.push_back(&shopSector);
-    InteractibeStuff.push_back(&upgradeSector);
+    InteractableStuff.clear();
+    InteractableStuff.push_back(&shopSector);
+    InteractableStuff.push_back(&upgradeSector);
 
     placedOnMap(&portal);
     placedOnMap(&puddle);
@@ -1444,8 +1470,8 @@ void updateEnemies() {
                 HUD::TempTextsOnScreen.push_back(enemiesKilledText);
 
                 if (CurLocation == &LabyrinthLocation) {
-                    if (!in(InteractibeStuff, (Interactable*)&portal)) {
-                        InteractibeStuff.push_back(&portal);
+                    if (!in(InteractableStuff, (Interactable*)&portal)) {
+                        InteractableStuff.push_back(&portal);
                     }
                 }
             }
@@ -1755,7 +1781,7 @@ void updateShaders() {
 //============================================================================================== HELPER FUNCTIONS
 bool CanSomethingBeActivated() {
     CurInteractable = nullptr;
-    for (Interactable*& x : InteractibeStuff) {
+    for (Interactable*& x : InteractableStuff) {
         if (x->CanBeActivated(player.hitbox)) {
             CurInteractable = x;
             return true;
@@ -2069,10 +2095,12 @@ void funcOfHost() {
                             switch (packetStates::curState) {
                                 case packetStates::FirstConnect:
                                     ReceivePacket >> sPacketData;
+                                    ReceivePacket >> ConnectedPlayers[i].Health >> ConnectedPlayers[i].HealthRecovery;
                                     ConnectedPlayers[i].Name.setString(sPacketData);
                                     std::cout << "Connected " << sPacketData << " whith ID:" << i + 1 << '\n';
                                     mutex.lock();
                                     SendPacket << packetStates::PlayerConnect << sPacketData;
+                                    SendPacket << player.Health << player.HealthRecovery;
                                     SendToClients(SendPacket, i);
                                     SendPacket.clear();
                                     mutex.unlock();
@@ -2106,6 +2134,31 @@ void funcOfHost() {
                                     SendPacket.clear();
                                     mutex.unlock();
                                     break;
+                                case packetStates::UseInteractable: {
+                                    mutex.lock();
+                                    DescriptionID::Type id;
+                                    ReceivePacket >> i32PacketData >> id >> V2fPacketData;
+                                    SendPacket << packetStates::UseInteractable << i32PacketData << id << V2fPacketData;
+                                    for (Interactable*& x: InteractableStuff) {
+                                        if (x->descriptionID == id && x->hitbox.getCenter() == V2fPacketData) {
+                                            if (id == DescriptionID::box) {
+                                                DeleteFromVector(listOfBox, x);
+                                            } else if (id == DescriptionID::artifact) {
+                                                DeleteFromVector(listOfArtifact, x);
+                                                ReceivePacket >> ConnectedPlayers[i32PacketData - 1].Health >> ConnectedPlayers[i32PacketData - 1].HealthRecovery;
+                                                SendPacket << ConnectedPlayers[i32PacketData - 1].Health << ConnectedPlayers[i32PacketData - 1].HealthRecovery;
+                                            }
+                                            DeleteFromVector(DrawableStuff, (sf::Drawable*)x);
+                                            DeleteFromVector(InteractableStuff, x);
+                                            SendToClients(SendPacket, i32PacketData - 1);
+                                            delete x;
+                                            break;
+                                        }
+                                    }
+                                    SendPacket.clear();
+                                    mutex.unlock();
+                                    break;
+                                }
                             }
                         }
                     }
@@ -2152,7 +2205,7 @@ void funcOfClient() {
 
                             DrawableStuff.clear();
                             HUD::InterfaceStuff.clear();
-                            InteractibeStuff.clear();
+                            InteractableStuff.clear();
                             removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
                             MiniMapActivated = false;
@@ -2175,7 +2228,7 @@ void funcOfClient() {
                             MiniMapView.zoom(1 / MiniMapZoom);
                             MiniMapZoom = std::pow(1.1, -10);
                             MiniMapView.zoom(MiniMapZoom);
-                            ReceivePacket >> LabyrinthLocation;
+                            ReceivePacket >> &LabyrinthLocation;
                             FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
                             ReceivePacket >> i32PacketData; clearVectorOfPointer(Enemies);
                             for (int i = 0; i < i32PacketData; i++) {
@@ -2260,6 +2313,28 @@ void funcOfClient() {
                             }
                             std::cout << "bullet recieved\n";
                             break;
+                        case packetStates::UseInteractable: {
+                            mutex.lock();
+                            DescriptionID::Type id;
+                            ReceivePacket >> i32PacketData >> id >> V2fPacketData;
+                            i32PacketData -= i32PacketData > ComputerID;
+                            for (Interactable*& x: InteractableStuff) {
+                                if (x->descriptionID == id && x->hitbox.getCenter() == V2fPacketData) {
+                                    if (id == DescriptionID::box) {
+                                        DeleteFromVector(listOfBox, x);
+                                    } else if (id == DescriptionID::artifact) {
+                                        DeleteFromVector(listOfArtifact, x);
+                                        ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
+                                    }
+                                    DeleteFromVector(DrawableStuff, (sf::Drawable*)x);
+                                    DeleteFromVector(InteractableStuff, x);
+                                    delete x;
+                                    break;
+                                }
+                            }
+                            mutex.unlock();
+                            break;
+                        }
                     }
                 }
             }

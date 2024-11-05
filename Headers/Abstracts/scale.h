@@ -100,3 +100,12 @@ template <class T>
 std::istream& operator>>(std::istream& stream, Scale<T>& a) {
     return stream >> a.bottom >> a.top >> a.cur;
 }
+
+template <class T>
+sf::Packet& operator<<(sf::Packet& packet, Scale<T>& a) {
+    return packet << a.bottom << a.top << a.cur;
+}
+template <class T>
+sf::Packet& operator>>(sf::Packet& packet, Scale<T>& a) {
+    return packet >> a.bottom >> a.top >> a.cur;
+}

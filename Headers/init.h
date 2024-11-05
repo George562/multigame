@@ -38,7 +38,8 @@ namespace packetStates {
         SetPos,           // for set pos of player, because PlayerPos just say positions of others players
         ChatEvent,        // Any new message from chat
         Shooting,         // Someone shoot
-        FirstConnect      // first connect of new players
+        FirstConnect,     // first connect of new players
+        UseInteractable   // When client use some interactable item
     };
 };
 

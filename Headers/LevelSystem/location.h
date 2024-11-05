@@ -226,27 +226,27 @@ bool Location::WriteToFile(std::string FileName) {
 //
 ////////////////////////////////////////////////////////////
 
-sf::Packet& operator>>(sf::Packet& packet, Location& loc) {
-    packet >> loc.n >> loc.m;
-    std::cout << "n = " << loc.n << " m = " << loc.m << '\n';
-    loc.SetSize(loc.n, loc.m);
+sf::Packet& operator>>(sf::Packet& packet, Location* loc) {
+    packet >> loc->n >> loc->m;
+    std::cout << "n = " << loc->n << " m = " << loc->m << '\n';
+    loc->SetSize(loc->n, loc->m);
     bool t;
-    for (int i = 0; i < loc.walls.size(); i++) {
-        for (int j = 0; j < loc.walls[i].size(); j++) {
+    for (int i = 0; i < loc->walls.size(); i++) {
+        for (int j = 0; j < loc->walls[i].size(); j++) {
             packet >> t;
-            loc.walls[i][j] = t;
+            loc->walls[i][j] = t;
         }
     }
-    loc.FillWallsRect();
-    loc.ClearSeenWalls();
+    loc->FillWallsRect();
+    loc->ClearSeenWalls();
     return packet;
 }
 
-sf::Packet& operator<<(sf::Packet& packet, Location& loc) {
-    packet << loc.n << loc.m;
-    for (int i = 0; i < loc.walls.size(); i++)
-        for (int j = 0; j < loc.walls[i].size(); j++)
-            packet << loc.walls[i][j];
+sf::Packet& operator<<(sf::Packet& packet, Location* loc) {
+    packet << loc->n << loc->m;
+    for (int i = 0; i < loc->walls.size(); i++)
+        for (int j = 0; j < loc->walls[i].size(); j++)
+            packet << loc->walls[i][j];
     return packet;
 }
 
