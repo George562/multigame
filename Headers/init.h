@@ -98,7 +98,6 @@ namespace Textures {
                 Box,
                 floor,
                 floorFork,
-                Puddle,
                 Fire,
                 Architect,
                 Noise,
@@ -163,7 +162,6 @@ void loadTextures() {
     Textures::Box                     .loadFromFile("sources/textures/Box.png");
     Textures::floor                   .loadFromFile("sources/textures/floor.png");
     Textures::floorFork               .loadFromFile("sources/textures/fork.png");
-    Textures::Puddle                  .loadFromFile("sources/textures/Puddle.png");
     Textures::Fire                    .create(140.f, 175.f);
     Textures::Architect               .loadFromFile("sources/textures/Architect.png");
     Textures::Noise                   .loadFromFile("sources/textures/noise.png");

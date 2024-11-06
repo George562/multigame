@@ -11,7 +11,6 @@ namespace DescriptionID {
     enum : Type {
         portal,
         box,
-        puddle,
         shopSector,
         upgradeSector,
         artifact,

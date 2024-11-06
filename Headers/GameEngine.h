@@ -81,7 +81,6 @@ std::regex regexOfIP("\\d+.\\d+.\\d+.\\d+");
 
 //////////////////////////////////////////////////////////// Interactables
 Interactable portal(DescriptionID::portal),
-             puddle(DescriptionID::puddle),
              shopSector(DescriptionID::shopSector),
              upgradeSector(DescriptionID::upgradeSector);
 std::vector<Interactable*> listOfBox,
@@ -258,8 +257,6 @@ void init() {
     portal.setAnimation(Textures::Portal, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
     player.setAnimation(Textures::Player, &Shaders::Player);
-    puddle.setAnimation(Textures::Puddle);
-    puddle.setSize(90.f, 90.f);
     shopSector.setAnimation(Textures::INVISIBLE);
     shopSector.setPosition(0, 2 * size);
 
@@ -338,9 +335,6 @@ void initMinimap() {
 
     MMBoxRect.setSize(sf::Vector2f(105.f, 117.f) * ScaleParam);
     MMBoxRect.setFillColor(sf::Color(252, 108, 24, 200));
-
-    MMPuddleRect.setSize(puddle.hitbox.getSize() * ScaleParam);
-    MMPuddleRect.setFillColor(sf::Color(0, 0, 255, 200));
 
     MMArtifact.setSize(sf::Vector2f(150.f, 105.f) * ScaleParam);
     MMArtifact.setFillColor(sf::Color::White);
@@ -621,9 +615,6 @@ void drawMiniMap() {
         MMBoxRect.setPosition(i->hitbox.getPosition() * ScaleParam);
         window.draw(MMBoxRect);
     }
-
-    MMPuddleRect.setPosition(puddle.hitbox.getPosition() * ScaleParam);
-    window.draw(MMPuddleRect);
 
     for (Interactable*& i : listOfArtifact) {
         MMArtifact.setPosition(i->hitbox.getPosition() * ScaleParam);
@@ -1221,7 +1212,6 @@ void LevelGenerate(int n, int m) {
     LabyrinthLocation.GenerateLocation(n, m, player.hitbox.getCenter() / float(size));
 
     portal.setCenter(player.hitbox.getCenter());
-    puddle.setCenter(player.hitbox.getCenter() + sf::Vector2f(size, size));
 
     clearVectorOfPointer(listOfBox);
     for (int i = 0; i < 10; i++) {
@@ -1267,7 +1257,6 @@ void LoadMainMenu() {
     player.ChangeWeapon(Weapons[CurWeapon.cur]);
 
     portal.setPosition(1612.5, 1545);
-    puddle.setPosition(1012.5, 1545);
 
     CurLocation->FindEnableTilesFrom(player.hitbox.getCenter() / (float)size);
 
@@ -1316,7 +1305,6 @@ void LoadMainMenu() {
             }
             HUD::InterfaceStuff.push_back(&chat);
 
-            placedOnMap(&puddle);
             saveGame();
 
             if (HostFuncRun) {
@@ -1326,7 +1314,7 @@ void LoadMainMenu() {
                 SendPacket << (sf::Int32)listOfBox.size() << listOfBox;
                 SendPacket << (sf::Int32)listOfArtifact.size() << listOfArtifact;
                 SendPacket << (sf::Int32)listOfFire.size() << listOfFire;
-                SendPacket << &portal << &puddle << player;
+                SendPacket << &portal << player;
                 SendToClients(SendPacket);
                 SendPacket.clear();
                 mutex.unlock();
@@ -1335,10 +1323,6 @@ void LoadMainMenu() {
                 }
             }
         }
-    });
-
-    puddle.setFunction([](Interactable* i) {
-        player.getDamage(5.f);
     });
 
     shopSector.setFunction([](Interactable* i) {
@@ -1383,7 +1367,6 @@ void LoadMainMenu() {
     InteractableStuff.push_back(&upgradeSector);
 
     placedOnMap(&portal);
-    placedOnMap(&puddle);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
     newItem->setAnimation(*itemTexture[ItemID::regenDrug]);
@@ -1952,9 +1935,6 @@ void MainLoop() {
 
         draw();
 
-        if (puddle.hitbox.intersect(player.hitbox))
-            applyEffect(player, new Effect(Effects::Heal, std::vector<float>{30.f}, sf::seconds(1.5f)));
-
         for (int i = 0; i < listOfFire.size(); i++) {
             if (listOfFire[i]->hitbox.intersect(player.hitbox))
                 applyEffect(player, new Effect(Effects::Burn, std::vector<float>{5.f}, sf::seconds(5.f), sf::seconds(1.f)));
@@ -2261,12 +2241,11 @@ void funcOfClient() {
                                 placedOnMap(listOfFire[i]);
                                 std::cout << "listOfFire " << listOfFire[i]->hitbox.getCenter() << '\n';
                             }
-                            ReceivePacket >> &portal >> &puddle >> player;
+                            ReceivePacket >> &portal >> player;
 
                             CurLocation->FindEnableTilesFrom(player.hitbox.getCenter() / (float)size);
                             
                             placedOnMap(&portal);
-                            placedOnMap(&puddle);
 
                             addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
                             for (int i = 0; i < HUD::WeaponNameTexts.size(); i++) {

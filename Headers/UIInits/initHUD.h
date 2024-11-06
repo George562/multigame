@@ -102,7 +102,6 @@ void loadDescriptions() {
             nlohmann::json j = nlohmann::json::parse(descFile);
             interactibleDiscriptions[DescriptionID::portal]        = j["portal"]        .template get<std::string>();
             interactibleDiscriptions[DescriptionID::box]           = j["box"]           .template get<std::string>();
-            interactibleDiscriptions[DescriptionID::puddle]        = j["puddle"]        .template get<std::string>();
             interactibleDiscriptions[DescriptionID::shopSector]    = j["shopSector"]    .template get<std::string>();
             interactibleDiscriptions[DescriptionID::upgradeSector] = j["upgradeSector"] .template get<std::string>();
             interactibleDiscriptions[DescriptionID::artifact]      = j["artifact"]      .template get<std::string>();
