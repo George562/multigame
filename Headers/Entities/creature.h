@@ -89,6 +89,8 @@ public:
             if (length(Difference) >= Acceleration * ElapsedTimeAsSecond) {
                 sf::Vector2f Direction = sf::Vector2f(sign(Difference)) * Acceleration;
                 Velocity += Direction * ElapsedTimeAsSecond;
+            } else {
+                Velocity += Difference;
             }
         } else {
             Velocity = normalize(target - hitbox.getCenter()) * MaxVelocity * VelocityBuff;
