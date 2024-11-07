@@ -39,7 +39,8 @@ namespace packetStates {
         ChatEvent,        // Any new message from chat
         Shooting,         // Someone shoot
         FirstConnect,     // first connect of new players
-        UseInteractable   // When client use some interactable item
+        UseInteractable,  // When client use some interactable item
+        EnemiesPos        // send Enemies position
     };
 };
 

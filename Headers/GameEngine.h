@@ -103,15 +103,9 @@ void loadLocations() {
 }
 
 
-//////////////////////////////////////////////////////////// Chat
-Chat chat(scw, sch);
-
-
 //////////////////////////////////////////////////////////// Other stuff
+Chat chat(scw, sch);
 sf::Vector2i MouseBuffer;
-
-
-//////////////////////////////////////////////////////////// Enemies
 std::vector<Enemy*> Enemies;
 
 
@@ -206,6 +200,7 @@ void SelfDisconnect();
 void SendToClients(sf::Packet&, int = -1);
 void funcOfHost();
 void funcOfClient();
+void sendSendPacket();
 
 
 //////////////////////////////////////////////////////////// Threads
@@ -293,6 +288,7 @@ void init() {
     std::cout << "PublicAddress: " << MyIP << '\n';
 
     CurWeapon = { {0, (int)Weapons.size() - 1, 0} };
+    player.ChangeWeapon(Weapons[CurWeapon.cur]);
 
     EnemyHealthBar.setColors(CommonColors::barWall, sf::Color(192, 0, 0, 160), CommonColors::barBG);
     EnemyHealthBar.setSize(125.f, 15.f);
@@ -383,19 +379,6 @@ void initScripts() {
         });
     }
     HUD::EscapeButton.setFunction([]() {
-        HUD::EscapeMenuActivated = false;
-        HUD::ListOfPlayers.clearText();
-        clearVectorOfPointer(Bullets);
-        clearVectorOfPointer(Enemies);
-        clearVectorOfPointer(TempTextsOnGround);
-        clearVectorOfPointer(HUD::TempTextsOnScreen);
-        clearVectorOfPointer(DamageText);
-        clearVectorOfPointer(HUD::MessageText);
-        clearVectorOfPointer(listOfBox);
-        clearVectorOfPointer(listOfArtifact);
-        clearVectorOfPointer(listOfFire);
-        clearVectorOfPointer(PickupStuff);
-        player.CurWeapon->lock = true;
         LoadMainMenu();
         saveGame();
     });
@@ -409,13 +392,17 @@ void initScripts() {
     });
     chat.SetCommand("/server on", []{
         if (!HostFuncRun) {
-            listener.listen(53000);
-            selector.add(listener);
-            HUD::ListOfPlayers.setString(MyIP);
-            ComputerID = 0;
-            HostFuncRun = true;
-            HostTread.launch();
-            chat.addLine("Server is running! Your IP: " + MyIP);
+            if (CurLocation == &MainMenuLocation) {
+                listener.listen(53000);
+                selector.add(listener);
+                HUD::ListOfPlayers.setString(MyIP);
+                ComputerID = 0;
+                HostFuncRun = true;
+                HostTread.launch();
+                chat.addLine("Server is running! Your IP: " + MyIP);
+            } else {
+                chat.addLine("You can run serer only in start location");
+            }
         } else {
             chat.addLine("Server is already running! Your IP: " + MyIP);
         }
@@ -442,8 +429,12 @@ void initScripts() {
     });
     chat.SetCommand("/connect", []{
         if (!ClientFuncRun) {
-            Connecting = true;
-            chat.addLine("input IP of host");
+            if (CurLocation == &MainMenuLocation) {
+                Connecting = true;
+                chat.addLine("input IP of host");
+            } else {
+                chat.addLine("You can connect only in start location");
+            }
         }
     });
     chat.SetCommand("/disconnect", []{
@@ -765,7 +756,7 @@ void EventHandler() {
         }
         if (chat.InputText(event)) {
             if (keyPressed(event, sf::Keyboard::Enter)) {
-                if (Connecting) {
+                if (Connecting && CurLocation == &MainMenuLocation) {
                     IPOfHost = chat.Last();
                     if (!std::regex_match(IPOfHost, regexOfIP)) continue;
                     chat.addLine("connecting...");
@@ -805,15 +796,13 @@ void EventHandler() {
                         chat.addLine("Failed to connect to server");
                     }
                 }
-                mutex.lock();
-                SendPacket << packetStates::ChatEvent << chat.Last();
-                if (HostFuncRun) {
-                    SendToClients(SendPacket);
-                } else if (ClientFuncRun) {
-                    MySocket.send(SendPacket);
+                if (ClientFuncRun || HostFuncRun) {
+                    mutex.lock();
+                    SendPacket << packetStates::ChatEvent << chat.Last();
+                    sendSendPacket();
+                    SendPacket.clear();
+                    mutex.unlock();
                 }
-                SendPacket.clear();
-                mutex.unlock();
             }
         } else if (HUD::EscapeMenuActivated) {
             HUD::EscapeButton.isActivated(event);
@@ -842,7 +831,7 @@ void EventHandler() {
                 if (event.key.code == sf::Keyboard::R) {
                     player.CurWeapon->HolsterAction();
                 }
-                if (event.key.code == sf::Keyboard::M) {
+                if (event.key.code == sf::Keyboard::Tab) {
                     MiniMapActivated = !MiniMapActivated;
                     if (MiniMapActivated) {
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
@@ -855,7 +844,7 @@ void EventHandler() {
                         MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
                     }
                 }
-                if (event.key.code == sf::Keyboard::Tab) {
+                if (event.key.code == sf::Keyboard::I) {
                     {
                         using namespace inventoryInterface;
                         isDrawInventory = true;
@@ -1250,11 +1239,24 @@ void LevelGenerate(int n, int m) {
 }
 
 void LoadMainMenu() {
+    HUD::EscapeMenuActivated = false;
+    HUD::ListOfPlayers.clearText();
+    clearVectorOfPointer(Bullets);
+    clearVectorOfPointer(Enemies);
+    clearVectorOfPointer(TempTextsOnGround);
+    clearVectorOfPointer(HUD::TempTextsOnScreen);
+    clearVectorOfPointer(DamageText);
+    clearVectorOfPointer(HUD::MessageText);
+    clearVectorOfPointer(listOfBox);
+    clearVectorOfPointer(listOfArtifact);
+    clearVectorOfPointer(listOfFire);
+    clearVectorOfPointer(PickupStuff);
+    player.CurWeapon->lock = true;
+
     CurLocation = &MainMenuLocation;
 
     player.hitbox.setCenter(3.5f * size, 2.5f * size);
     FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
-    player.ChangeWeapon(Weapons[CurWeapon.cur]);
 
     portal.setPosition(1612.5, 1545);
 
@@ -1839,10 +1841,28 @@ void MainLoop() {
     while (window.isOpen()) {
 
         if (player.Health.toBottom() == 0) {
-            HUD::EscapeButton.buttonFunction();
+            if (ClientFuncRun || HostFuncRun) {
+                chat.addLine(player.Name.getText() + " was killed");
+                mutex.lock();
+                SendPacket << packetStates::ChatEvent << chat.Last();
+                sendSendPacket();
+                mutex.unlock();
+                DeleteFromVector(DrawableStuff, (sf::Drawable*)&player);
+            } else {
+                HUD::EscapeButton.buttonFunction();
+            }
         }
 
-        updateEnemies();
+        if (!ClientFuncRun) {
+            updateEnemies();
+            if (HostFuncRun) {
+                mutex.lock();
+                SendPacket << packetStates::EnemiesPos << Enemies;
+                SendToClients(SendPacket);
+                SendPacket.clear();
+                mutex.unlock();
+            }
+        }
         player.UpdateState();
 
         if (CurLocation == &LabyrinthLocation) {
@@ -1871,18 +1891,24 @@ void MainLoop() {
             }
         } else {
             if (!chat.inputted && !inventoryInterface::isDrawInventory && !MenuShop::isDrawShop) {
-                player.move(CurLocation);
-                GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
-                std::vector<sf::Vector2f> centers;
-                for (int i = 0, k = 0; i < ConnectedPlayers.size() + 1; i++) {
-                    if (i != ComputerID) {
-                        centers.push_back(ConnectedPlayers[i - k].hitbox.getCenter());
-                    } else {
-                        centers.push_back(player.hitbox.getCenter());
-                        k++;
-                    }
+                if (player.Health.toBottom() > 0) {
+                    player.move(CurLocation);
+                    GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
                 }
-                FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
+                if (!ClientFuncRun) {
+                    std::vector<sf::Vector2f> centers;
+                    for (int i = 0, k = 0; i < ConnectedPlayers.size() + 1; i++) {
+                        if (i != ComputerID) {
+                            if (ConnectedPlayers[i].Health.toBottom() > 0) {
+                                centers.push_back(ConnectedPlayers[i - k].hitbox.getCenter());
+                            }
+                        } else if (player.Health.toBottom() > 0) {
+                            centers.push_back(player.hitbox.getCenter());
+                            k++;
+                        }
+                    }
+                    FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
+                }
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
                     player.makeADash = playerMakingADash && playerCanDashing;
                 }
@@ -1901,11 +1927,7 @@ void MainLoop() {
                 for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
                     SendPacket << *Bullets[wasBulletsSize];
                 }
-                if (HostFuncRun) {
-                    SendToClients(SendPacket);
-                } else if (ClientFuncRun) {
-                    MySocket.send(SendPacket);
-                }
+                sendSendPacket();
                 SendPacket.clear();
                 mutex.unlock();
             }
@@ -1915,12 +1937,8 @@ void MainLoop() {
             if (HostFuncRun || ClientFuncRun) {
                 mutex.lock();
                 SendPacket << packetStates::PlayerPos << player;
-                if (HostFuncRun) {
-                    SendPacket << ConnectedPlayers;
-                    SendToClients(SendPacket);
-                } else if (ClientFuncRun) {
-                    MySocket.send(SendPacket);
-                }
+                if (HostFuncRun) SendPacket << ConnectedPlayers;
+                sendSendPacket();
                 SendPacket.clear();
                 mutex.unlock();
             }
@@ -1962,7 +1980,7 @@ void MainLoop() {
 //////////////////////////////////////////////////////////// Server-Client functions
 void ClientConnect() {
     sf::TcpSocket* client = new sf::TcpSocket;
-    if (listener.accept(*client) == sf::Socket::Done) {
+    if (listener.accept(*client) == sf::Socket::Done && CurLocation == &MainMenuLocation) {
         mutex.lock();
 
         std::string ConnectedClientIP = (*client).getRemoteAddress().toString();
@@ -2317,9 +2335,22 @@ void funcOfClient() {
                             mutex.unlock();
                             break;
                         }
+                        case packetStates::EnemiesPos:
+                            for (Enemy*& enemy: Enemies) {
+                                ReceivePacket >> enemy;
+                            }
+                            break;
                     }
                 }
             }
         }
     }
+}
+
+void sendSendPacket() {
+    if (HostFuncRun) {
+        SendToClients(SendPacket);
+    } else if (ClientFuncRun) {
+        MySocket.send(SendPacket);
+    }   
 }
