@@ -141,6 +141,10 @@ public:
     void addItem(Item* item) {
         inventory.addItem(item);
     }
+
+    bool isAlive() {
+        return Health.toBottom() > 0;
+    }
 };
 #pragma pack(pop)
 

@@ -828,7 +828,7 @@ void EventHandler() {
                         continue;
                     }
                 }
-                if (event.key.code == sf::Keyboard::R) {
+                if (event.key.code == sf::Keyboard::R && player.isAlive()) {
                     player.CurWeapon->HolsterAction();
                 }
                 if (event.key.code == sf::Keyboard::Tab) {
@@ -852,7 +852,7 @@ void EventHandler() {
                         doInventoryUpdate[activePage] = true;
                     }
                 }
-                if (event.key.code == sf::Keyboard::LShift) {
+                if (event.key.code == sf::Keyboard::LShift && player.isAlive()) {
                     player.makeADash = SHiftClickTime.restart().asSeconds() < 0.2f && playerCanDashing;
                     playerMakingADash = player.makeADash;
                 }
@@ -884,21 +884,27 @@ void EventHandler() {
                 }
             }
 
-            for (Interactable*& x : InteractableStuff) {
-                if (x->CanBeActivated(player.hitbox)) {
-                    x->isActivated(player.hitbox, event);
-                    break;
-                }
-            }
-
-            for (int i = 0; i < PickupStuff.size(); i++) {
-                if (PickupStuff[i]->CanBeActivated(player.hitbox)) {
-                    if (PickupStuff[i]->isActivated(player.hitbox, event)) {
-                        player.addItem(PickupStuff[i]);
-                        inventoryInterface::doInventoryUpdate[inventoryPage::Items] = true;
-                        DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
-                        DeletePointerFromVector(PickupStuff, i--);
+            if (player.isAlive()) {
+                for (Interactable*& x : InteractableStuff) {
+                    if (x->CanBeActivated(player.hitbox)) {
+                        x->isActivated(player.hitbox, event);
+                        break;
                     }
+                }
+
+                for (int i = 0; i < PickupStuff.size(); i++) {
+                    if (PickupStuff[i]->CanBeActivated(player.hitbox)) {
+                        if (PickupStuff[i]->isActivated(player.hitbox, event)) {
+                            player.addItem(PickupStuff[i]);
+                            inventoryInterface::doInventoryUpdate[inventoryPage::Items] = true;
+                            DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(PickupStuff[i]));
+                            DeletePointerFromVector(PickupStuff, i--);
+                        }
+                    }
+                }
+
+                if (player.CurWeapon != nullptr && !MiniMapActivated) {
+                    player.CurWeapon->Update(event);
                 }
             }
 
@@ -913,9 +919,6 @@ void EventHandler() {
                 }
             }
 
-            if (player.CurWeapon != nullptr && !MiniMapActivated) {
-                player.CurWeapon->Update(event);
-            }
 
             if (CurLocation == &MainMenuLocation) {
                 if (event.type == sf::Event::KeyPressed) {
@@ -1421,7 +1424,7 @@ void updateBullets() {
 
 void updateEnemies() {
     for (int i = 0; i < Enemies.size(); i++) {
-        if (Enemies[i]->Health.toBottom() == 0) {
+        if (!Enemies[i]->isAlive()) {
             if (Enemies[i]->dropInventory) {
                 for (Item*& item : Enemies[i]->inventory.items) {
                     item->dropTo(Enemies[i]->hitbox.getPosition());
@@ -1436,6 +1439,17 @@ void updateEnemies() {
             DeletePointerFromVector(Enemies, i--);
 
             if (Enemies.size() == 0) {
+                if (!player.isAlive()) {
+                    player.Health.cur = player.Health.top;
+                    DrawableStuff.push_back(&player);
+                }
+                for (Player& p: ConnectedPlayers) {
+                    if (!p.isAlive()) {
+                        p.Health.cur = p.Health.top;
+                        DrawableStuff.push_back(&p);
+                    }
+                }
+
                 TempText* enemiesKilledText = new TempText(sf::seconds(10));
                 enemiesKilledText->setCharacterSize(40);
                 enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
@@ -1840,17 +1854,14 @@ void loadSave() {
 void MainLoop() {
     while (window.isOpen()) {
 
-        if (player.Health.toBottom() == 0) {
+        if (!player.isAlive()) {
             if (ClientFuncRun || HostFuncRun) {
-                chat.addLine(player.Name.getText() + " was killed");
-                mutex.lock();
-                SendPacket << packetStates::ChatEvent << chat.Last();
-                sendSendPacket();
-                mutex.unlock();
                 DeleteFromVector(DrawableStuff, (sf::Drawable*)&player);
             } else {
                 HUD::EscapeButton.buttonFunction();
             }
+        } else {
+            player.UpdateState();
         }
 
         if (!ClientFuncRun) {
@@ -1863,7 +1874,6 @@ void MainLoop() {
                 mutex.unlock();
             }
         }
-        player.UpdateState();
 
         if (CurLocation == &LabyrinthLocation) {
             if (Musics::Fight1.getDuration() - Musics::Fight1.getPlayingOffset() < sf::seconds(0.3f)) {
@@ -1874,7 +1884,7 @@ void MainLoop() {
             }
         }
         if (!window.hasFocus()) {
-            if (player.CurWeapon != nullptr) {
+            if (player.CurWeapon != nullptr && player.isAlive()) {
                 player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             updateBullets();
@@ -1891,7 +1901,7 @@ void MainLoop() {
             }
         } else {
             if (!chat.inputted && !inventoryInterface::isDrawInventory && !MenuShop::isDrawShop) {
-                if (player.Health.toBottom() > 0) {
+                if (player.isAlive()) {
                     player.move(CurLocation);
                     GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
                 }
@@ -1899,23 +1909,23 @@ void MainLoop() {
                     std::vector<sf::Vector2f> centers;
                     for (int i = 0, k = 0; i < ConnectedPlayers.size() + 1; i++) {
                         if (i != ComputerID) {
-                            if (ConnectedPlayers[i].Health.toBottom() > 0) {
+                            if (ConnectedPlayers[i].isAlive()) {
                                 centers.push_back(ConnectedPlayers[i - k].hitbox.getCenter());
                             }
-                        } else if (player.Health.toBottom() > 0) {
+                        } else if (player.isAlive()) {
                             centers.push_back(player.hitbox.getCenter());
                             k++;
                         }
                     }
                     FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
                 }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && player.isAlive()) {
                     player.makeADash = playerMakingADash && playerCanDashing;
                 }
             }
             int wasBulletsSize = Bullets.size();
 
-            if (player.CurWeapon != nullptr) {
+            if (player.CurWeapon != nullptr && player.isAlive()) {
                 player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             for (Weapon*& weapon : Weapons)
