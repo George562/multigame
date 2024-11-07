@@ -7,6 +7,13 @@
 #include <string>
 #include "../Abstracts/UIElement.h"
 
+template <typename T> int sign(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+template <typename T> sf::Vector2i sign(sf::Vector2<T> v) {
+    return sf::Vector2i((T(0) < v.x) - (v.x < T(0)), (T(0) < v.y) - (v.y < T(0)));
+}
+
 std::string floatToString(float num) {
     int wholePart = std::floor(num);
     int fracPart = (num - wholePart) * 10;

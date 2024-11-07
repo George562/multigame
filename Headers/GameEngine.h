@@ -337,17 +337,14 @@ void initMinimap() {
 }
 
 void initScripts() {
-    {
-        using namespace upgradeInterface;
-        switchGunLBtn.setFunction([](){
-            CurWeapon.cur = (CurWeapon.cur - 1 + Weapons.size()) % Weapons.size();
-            player.CurWeapon = Weapons[CurWeapon.cur];
-        });
-        switchGunRBtn.setFunction([](){
-            CurWeapon.cur = (CurWeapon.cur + 1) % Weapons.size();
-            player.CurWeapon = Weapons[CurWeapon.cur];
-        });
-    }
+    upgradeInterface::switchGunLBtn.setFunction([](){
+        CurWeapon.cur = (CurWeapon.cur - 1 + Weapons.size()) % Weapons.size();
+        player.ChangeWeapon(Weapons[CurWeapon.cur]);
+    });
+    upgradeInterface::switchGunRBtn.setFunction([](){
+        CurWeapon.cur = (CurWeapon.cur + 1) % Weapons.size();
+        player.ChangeWeapon(Weapons[CurWeapon.cur]);
+    });
 
     {
         using namespace MenuShop;
@@ -401,7 +398,7 @@ void initScripts() {
                 HostTread.launch();
                 chat.addLine("Server is running! Your IP: " + MyIP);
             } else {
-                chat.addLine("You can run serer only in start location");
+                chat.addLine("You must run serer at start location");
             }
         } else {
             chat.addLine("Server is already running! Your IP: " + MyIP);
@@ -433,7 +430,7 @@ void initScripts() {
                 Connecting = true;
                 chat.addLine("input IP of host");
             } else {
-                chat.addLine("You can connect only in start location");
+                chat.addLine("You must connect at start location");
             }
         }
     });
@@ -1858,6 +1855,7 @@ void MainLoop() {
             if (ClientFuncRun || HostFuncRun) {
                 DeleteFromVector(DrawableStuff, (sf::Drawable*)&player);
             } else {
+                player.Health.cur = player.Health.top;
                 HUD::EscapeButton.buttonFunction();
             }
         } else {

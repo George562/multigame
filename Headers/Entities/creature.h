@@ -85,14 +85,14 @@ public:
     virtual void move(Location* location) {
         float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), oneOverSixty);
         if (!makeADash) {
-            sf::Vector2f VelocityTarget = clamp(target - hitbox.getCenter(), 0.f, MaxVelocity * VelocityBuff);
-            sf::Vector2f Direction = clamp(VelocityTarget - Velocity, 0.f, Acceleration);
+            sf::Vector2f Difference = target - hitbox.getCenter() - Velocity;
+            if (length(Difference) < Acceleration * ElapsedTimeAsSecond) Difference = {0.f, 0.f};
+            sf::Vector2f Direction = sf::Vector2f(sign(Difference)) * Acceleration;
             Velocity += Direction * ElapsedTimeAsSecond;
         } else {
             Velocity = normalize(target - hitbox.getCenter()) * MaxVelocity * VelocityBuff;
             makeADash = false;
         }
-        // visualization https://www.desmos.com/calculator/oumleenz1s
 
         sf::Vector2i tempv = WillCollisionWithWalls(location->wallsRect, hitbox, Velocity * ElapsedTimeAsSecond);
 
