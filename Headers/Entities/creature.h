@@ -86,9 +86,10 @@ public:
         float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), oneOverSixty);
         if (!makeADash) {
             sf::Vector2f Difference = target - hitbox.getCenter() - Velocity;
-            if (length(Difference) < Acceleration * ElapsedTimeAsSecond) Difference = {0.f, 0.f};
-            sf::Vector2f Direction = sf::Vector2f(sign(Difference)) * Acceleration;
-            Velocity += Direction * ElapsedTimeAsSecond;
+            if (length(Difference) >= Acceleration * ElapsedTimeAsSecond) {
+                sf::Vector2f Direction = sf::Vector2f(sign(Difference)) * Acceleration;
+                Velocity += Direction * ElapsedTimeAsSecond;
+            }
         } else {
             Velocity = normalize(target - hitbox.getCenter()) * MaxVelocity * VelocityBuff;
             makeADash = false;

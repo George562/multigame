@@ -50,7 +50,7 @@ Player::Player() : Creature("Player", faction::Player) {
     Armor = { {0.f, 0.f, 0.f} };
     hitbox.setRadius(60.f);
     Velocity = {0.f, 0.f}; MaxVelocity = 700.f;
-    Acceleration = 3500.f;
+    Acceleration = MaxVelocity * 10.f;
     Name.setOutlineColor(sf::Color::Green);
     Name.setFillColor(sf::Color::Black);
 }

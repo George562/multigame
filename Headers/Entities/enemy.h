@@ -22,7 +22,7 @@ public:
         ManaRecovery   = 1;
         Armor  = { {0, 100, 100} };
         Velocity = {0, 0}; MaxVelocity = 400.f;
-        Acceleration = MaxVelocity * 5.f;
+        Acceleration = MaxVelocity * 10.f;
         hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
         CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
@@ -55,7 +55,7 @@ public:
         ManaRecovery   = 1;
 		Armor = { {0, 100, 100} };
         Velocity = {0, 0}; MaxVelocity = 400.f;
-        Acceleration = MaxVelocity * 5.f;
+        Acceleration = MaxVelocity * 10.f;
         hitbox.setRadius(60.f);
         CurWeapon = new Pistol();
         CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
