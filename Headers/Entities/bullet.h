@@ -19,7 +19,6 @@ public:
     sf::Vector2f Velocity;
     faction::Type fromWho;
     sf::Clock* localClock = nullptr;
-    sf::Time timer;
     sf::Color color;
     CollisionCircle hitbox;
 
@@ -29,14 +28,13 @@ public:
     }
 
     Bullet(faction::Type faction, sf::Vector2f pos, sf::Vector2f velocity, float dmg,
-           int penetr = COMMON_BULLET_PENETRATION, sf::Time time = sf::Time::Zero) : Bullet() {
+           int penetr = COMMON_BULLET_PENETRATION) : Bullet() {
         hitbox.setCenter(pos);
         damage = dmg;
         penetration = penetr;
         Velocity = velocity;
 
         fromWho = faction;
-        timer = time;
         switch (faction) {
             case faction::Player: color = sf::Color(30, 195, 255); break;
             case faction::Enemy:  color = sf::Color(72,  61, 139); break;
@@ -72,13 +70,12 @@ public:
 std::vector<Bullet*> Bullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
-    return packet << b.fromWho << b.hitbox.getCenter().x << b.hitbox.getCenter().y << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage << b.timer.asSeconds();
+    return packet << b.fromWho << b.hitbox.getCenter().x << b.hitbox.getCenter().y << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
     float timer;
     sf::Vector2f pos;
     packet >> b.fromWho >> pos.x >> pos.y >> b.Velocity.x >> b.Velocity.y >> b.penetration >> b.color >> b.damage >> timer;
     b.hitbox.setCenter(pos);
-    b.timer = sf::seconds(timer);
     return packet;
 }
