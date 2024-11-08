@@ -236,6 +236,7 @@ void init() {
     loadFonts();
     loadShaders();
     loadMusics();
+    loadSoundBuffers();
     loadSave();
     loadDescriptions();
 
@@ -245,9 +246,10 @@ void init() {
     playerCanDashing = player.inventory.find(ItemID::dasher) != -1;
 
     Musics::MainMenu.setLoop(true);
-    Musics::MainMenu.setVolume(5);
-    Musics::Fight1.setVolume(5);
-    Musics::Fight2.setVolume(5);
+    Musics::MainMenu.setVolume(15);
+    Musics::Fight1.setVolume(15);
+    Musics::Fight2.setVolume(15);
+    // sf::Listener::setDirection(0.f, 0.f, 1.f);
 
     portal.setAnimation(Textures::Portal, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
@@ -270,15 +272,6 @@ void init() {
     Shaders::Bullet.setUniform("noise_png", Textures::Noise);
 
     Shaders::Fire.setUniform("noise_png", Textures::Noise);
-
-    {
-        using namespace HUD;
-        ListOfPlayers.setTexture(Textures::GradientFrameAlpha);
-
-        EscapeButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed, UI::texture);
-        EscapeButton.setHitboxPoints({ EscapeButton.getLeftTop(), EscapeButton.getRightTop(),
-                                       EscapeButton.getRightBottom(), EscapeButton.getLeftBottom() });
-    }
 
     CurWeapon.looped = true;
 
@@ -415,8 +408,8 @@ void initScripts() {
             selector.clear();
             listener.close();
             HostFuncRun = false;
-            for (int i = 0; i < ConnectedPlayers.size(); i++) {
-                DeleteFromVector(DrawableStuff, (sf::Drawable*)&ConnectedPlayers[i]);
+            for (Player& p : ConnectedPlayers) {
+                DeleteFromVector(DrawableStuff, (sf::Drawable*)&p);
             }
             ConnectedPlayers.clear();
             chat.addLine("Server is closed!");
@@ -1251,6 +1244,9 @@ void LoadMainMenu() {
     clearVectorOfPointer(listOfArtifact);
     clearVectorOfPointer(listOfFire);
     clearVectorOfPointer(PickupStuff);
+    for (Effect *effect : player.effects) {
+        clearEffect(player, effect);
+    }
     player.CurWeapon->lock = true;
 
     CurLocation = &MainMenuLocation;
@@ -1320,8 +1316,8 @@ void LoadMainMenu() {
                 SendToClients(SendPacket);
                 SendPacket.clear();
                 mutex.unlock();
-                for (Player& player : ConnectedPlayers) {
-                    DrawableStuff.push_back(&player);
+                for (Player& p : ConnectedPlayers) {
+                    DrawableStuff.push_back(&p);
                 }
             }
         }
@@ -1902,6 +1898,7 @@ void MainLoop() {
                 if (player.isAlive()) {
                     player.move(CurLocation);
                     GameView.setCenter(player.hitbox.getCenter() + static_cast<sf::Vector2f>((sf::Mouse::getPosition() - sf::Vector2i(scw, sch) / 2) / 8));
+                    sf::Listener::setPosition(player.hitbox.getCenter().x, player.hitbox.getCenter().y, 50.f);
                 }
                 if (!ClientFuncRun) {
                     std::vector<sf::Vector2f> centers;
@@ -2013,8 +2010,8 @@ void ClientConnect() {
 
         std::cout << "amount players = " << ConnectedPlayers.size() + 1 << '\n';
         SendPacket << player << player.Name.getText();
-        for (int i = 0; i < ConnectedPlayers.size(); i++) {
-            SendPacket << ConnectedPlayers[i] << ConnectedPlayers[i].Name.getText();
+        for (Player& p : ConnectedPlayers) {
+            SendPacket << p << p.Name.getText();
         }
 
         if (client->send(SendPacket) == sf::Socket::Done) {
@@ -2072,8 +2069,8 @@ void SelfDisconnect() {
     mutex.unlock();
     MySocket.disconnect();
     selector.clear();
-    for (int i = 0; i < ConnectedPlayers.size(); i++) {
-        DeleteFromVector(DrawableStuff, (sf::Drawable*)&ConnectedPlayers[i]);
+    for (Player& p : ConnectedPlayers) {
+        DeleteFromVector(DrawableStuff, (sf::Drawable*)&p);
     }
     ConnectedPlayers.clear();
 }
@@ -2279,8 +2276,8 @@ void funcOfClient() {
                             }
                             HUD::InterfaceStuff.push_back(&chat);
                             DrawableStuff.push_back(&player);
-                            for (Player& player : ConnectedPlayers) {
-                                DrawableStuff.push_back(&player);
+                            for (Player& p : ConnectedPlayers) {
+                                DrawableStuff.push_back(&p);
                             }
                             mutexOnDraw.unlock();
                             break;

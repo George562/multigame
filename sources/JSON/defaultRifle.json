@@ -12,9 +12,9 @@
         "curLevel": 0,
         "maxLevel": 3,
         "stats": [
-            0.25,
-            0.20000000298023224,
-            0.10000000149011612
+            0.2,
+            0.175,
+            0.17
         ]
     },
     "ManaCostOfBullet": {
@@ -52,11 +52,12 @@
     "Name": "Rifle",
     "ReloadSpeed": {
         "curLevel": 0,
-        "maxLevel": 3,
+        "maxLevel": 4,
         "stats": [
-            1.0,
             2.0,
-            4.0
+            4.0,
+            6.0,
+            8.0
         ]
     },
     "Scatter": {

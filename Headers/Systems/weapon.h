@@ -21,25 +21,27 @@ public:
 	std::string Name;
 
 	Scale<float> ManaStorage;
-	Upgradable<float> MaxManaStorage;           // Is used so that we don't have an entire vector of scales, and just change the max for the storage
+	Upgradable<float> MaxManaStorage;      // Is used so that we don't have an entire vector of scales, and just change the max for the storage
 	Upgradable<float> ReloadSpeed;
 	sf::Clock* ReloadTimer = nullptr;
 
 	Upgradable<sf::Time> TimeToHolster;
 	Upgradable<sf::Time> TimeToDispatch;
-	sf::Clock* HolsterTimer = nullptr;          // Putting the weapon in the holster to reload takes time
-	sf::Clock* DispatchTimer = nullptr;         // Same thing with getting it out
-	bool holstered;                             // All weapons are active by default. A holstered state for them is when they are being reloaded.
+	sf::Clock* HolsterTimer = nullptr;     // Putting the weapon in the holster to reload takes time
+	sf::Clock* DispatchTimer = nullptr;    // Same thing with getting it out
+	bool holstered;                        // All weapons are active by default. A holstered state for them is when they are being reloaded.
 
-	Upgradable<float> ManaCostOfBullet;         // Is equal to the damage of bullet
-	Upgradable<int> Multishot;                  // How many projectiles to fire after 1 shot
+	Upgradable<float> ManaCostOfBullet;    // Is equal to the damage of bullet
+	Upgradable<int> Multishot;             // How many projectiles to fire after 1 shot
 	Upgradable<sf::Time> FireRate;
 
 	Upgradable<float> BulletVelocity;
-	Upgradable<float> Scatter; // at degree
+	Upgradable<float> Scatter;             // at degre
 
 	sf::Clock* TimeFromLastShot = nullptr;
-	bool lock;                                  // Bullets are like a stream and "lock" is blocking the stream
+	bool lock;                             // Bullets are like a stream and "lock" is blocking the stream
+
+	sf::Sound ShootSound;
 
 	Weapon() {
 		ReloadTimer = new sf::Clock();
@@ -67,6 +69,9 @@ public:
 
 		this->lock = true;
 		defaultWeapon.close();
+		ShootSound.setVolume(50);
+		ShootSound.setAttenuation(1.f / size);
+		ShootSound.setMinDistance(size / 4.f);
 	}
 	virtual ~Weapon() {
 		if (TimeFromLastShot) { delete TimeFromLastShot; }
@@ -101,15 +106,20 @@ public:
 		Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
 		ManaStorage -= ManaCostOfBullet;
 		TimeFromLastShot->restart();
+		ShootSound.setBuffer(SoundBuffers::Shoot);
+		ShootSound.setPosition(shooter.getCenter().x, shooter.getCenter().y, 0.f);
+		ShootSound.play();
 	}
 
 	virtual void Reload(Scale<float>& Mana) { // Reloads ReloadSpeed/sec
 		if (ManaStorage.fromTop() == 0) return;
 		if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
 			float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed,
-				ManaStorage.fromTop()), Mana.toBottom());
+									    ManaStorage.fromTop()),
+							   Mana.toBottom());
 			Mana -= x;
 			ManaStorage += x;
+			if (ManaStorage.fromTop() == 0) HolsterAction();
 			return;
 		}
 	}
@@ -245,6 +255,9 @@ public:
         ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
         lock = true;
+		ShootSound.setBuffer(SoundBuffers::Shoot2);
+		ShootSound.setPosition(shooter.getCenter().x, shooter.getCenter().y, 0.f);
+		ShootSound.play();
     }
 };
 

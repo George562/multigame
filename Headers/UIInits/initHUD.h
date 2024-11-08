@@ -43,6 +43,13 @@ namespace HUD {
 void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
     {
         using namespace HUD;
+        
+        ListOfPlayers.setTexture(Textures::GradientFrameAlpha);
+
+        EscapeButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed, UI::texture);
+        EscapeButton.setHitboxPoints({ EscapeButton.getLeftTop(), EscapeButton.getRightTop(),
+                                       EscapeButton.getRightBottom(), EscapeButton.getLeftBottom() });
+
         EscapeButton.setCharacterSize(110);
         ListOfPlayers.text.setCharacterSize(60);
 

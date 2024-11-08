@@ -254,6 +254,19 @@ void loadMusics() {
     Musics::Fight2   .openFromFile("sources/music/Fight2.flac");
 }
 
+namespace SoundBuffers {
+//////////////////////////////////////////////////////////// SoundBuffers
+    sf::SoundBuffer Shoot, Shoot2,
+                    Engine
+                    ;
+}
+
+void loadSoundBuffers() {
+    SoundBuffers::Shoot  .loadFromFile("sources/music/Shoot.flac");
+    SoundBuffers::Shoot2 .loadFromFile("sources/music/Shoot2.flac");
+    SoundBuffers::Engine .loadFromFile("sources/music/Engine.flac");
+}
+
 float random(sf::Vector2f v) {
     float whole;
     return std::modf( ( 1.f + std::sin( v.x * 12.9898f + v.y * 78.233f ) ) * 43758.5453123f, &whole);
