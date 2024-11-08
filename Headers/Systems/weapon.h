@@ -106,7 +106,7 @@ public:
 		Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
 		ManaStorage -= ManaCostOfBullet;
 		TimeFromLastShot->restart();
-		ShootSound.setBuffer(SoundBuffers::Shoot);
+		ShootSound.setBuffer(SoundBuffers::Shoot2);
 		ShootSound.setPosition(shooter.getCenter().x, shooter.getCenter().y, 0.f);
 		ShootSound.play();
 	}
@@ -255,7 +255,7 @@ public:
         ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
         lock = true;
-		ShootSound.setBuffer(SoundBuffers::Shoot2);
+		ShootSound.setBuffer(SoundBuffers::Shoot);
 		ShootSound.setPosition(shooter.getCenter().x, shooter.getCenter().y, 0.f);
 		ShootSound.play();
     }
@@ -266,36 +266,6 @@ class Rifle : public Weapon {
 public:
     Rifle() : Weapon("Rifle") {}
 };
-
-// Bubblegun
-// class Bubblegun : public Weapon {
-// public:
-//     Bubblegun() : Weapon("Bubblegun", 30, 3, 0.03, 4, 3, 1) {
-//         BulletVelocity = Upgradable(std::vector<int>(5, 540));
-//         Multishot = Upgradable(std::vector<int>(5, 10));
-//         Scatter = Upgradable(std::vector<int>(5, 40));
-//     }
-//     void Update(sf::Event& event) {
-//         if (mouseButtonPressed(event, sf::Mouse::Left))
-//             lock = false;
-//     }
-//     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-//         if (!CanShoot()) return;
-
-//         sf::Vector2f d = direction - shooter.getCenter();
-//         float len = hypotf(d.x, d.y);
-//         if (len == 0) return;
-//         d = RotateOn(-M_PI_RAD * (rand() % (int)(Scatter - Scatter / 2.f)), d) * BulletVelocity / len;
-//         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
-//         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet, COMMON_BULLET_PENETRATION, Bullet::Bubble, sf::seconds(1)));
-//         ManaStorage -= ManaCostOfBullet;
-//         TimeFromLastShot->restart();
-//         if (--(Multishot.stats[Multishot.curLevel]) == 0) {
-//             Multishot = 10;
-//             lock = true;
-//         }
-//     }
-// };
 
 // Armageddon
 // class Armageddon : public Weapon {
