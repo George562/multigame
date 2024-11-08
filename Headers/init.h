@@ -40,7 +40,8 @@ namespace packetStates {
         Shooting,         // Someone shoot
         FirstConnect,     // first connect of new players
         UseInteractable,  // When client use some interactable item
-        EnemiesPos        // send Enemies position
+        EnemiesPos,       // send Enemies position
+        EnemyDie         // send when Enemy die
     };
 };
 

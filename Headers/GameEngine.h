@@ -73,7 +73,7 @@ std::string ClientState, IPOfHost, MyIP, sPacketData;
 sf::TcpSocket MySocket; // this computer socket
 sf::Int32 ComputerID, i32PacketData;
 sf::Vector2f V2fPacketData;
-sf::Mutex mutex, mutexOnDraw;
+sf::Mutex mutexOnSendReceive, mutexOnDataChange;
 bool ClientFuncRun, HostFuncRun;
 bool Connecting = false;
 std::regex regexOfIP("\\d+.\\d+.\\d+.\\d+");
@@ -154,6 +154,7 @@ void setFire(Interactable*&);
 
 //---------------------------- GAME STATE FUNCTIONS
 void updateBullets();
+void EnemyDie(int i);
 void updateEnemies();
 void updateUpgradeShopStats();
 void openUpgradeShop();
@@ -399,11 +400,11 @@ void initScripts() {
     });
     chat.SetCommand("/server off", []{
         if (HostFuncRun) {
-            mutex.lock();
+            mutexOnSendReceive.lock();
             SendPacket << packetStates::Disconnect;
             SendToClients(SendPacket);
             SendPacket.clear();
-            mutex.unlock();
+            mutexOnSendReceive.unlock();
             clients.clear();
             selector.clear();
             listener.close();
@@ -430,6 +431,10 @@ void initScripts() {
     chat.SetCommand("/disconnect", []{
         if (ClientFuncRun) {
             SelfDisconnect();
+            mutexOnSendReceive.lock();
+            SendPacket << packetStates::Disconnect;
+            sendSendPacket();
+            mutexOnSendReceive.unlock();
         }
     });
 }
@@ -439,7 +444,7 @@ void initScripts() {
 
 //============================================================================================== DRAW FUNCTIONS
 void draw() {
-    mutexOnDraw.lock();
+    mutexOnDataChange.lock();
     window.clear(sf::Color::Transparent);
     updateShaders();
     if (inventoryInterface::isDrawInventory) {
@@ -527,7 +532,7 @@ void draw() {
         }
     }
     window.display();
-    mutexOnDraw.unlock();
+    mutexOnDataChange.unlock();
 }
 
 void drawFloor() {
@@ -770,28 +775,29 @@ void EventHandler() {
                                 ConnectedPlayers[i].Name.setString(sPacketData);
                                 std::cout << sPacketData << '\n';
                             }
+                            SendPacket << packetStates::FirstConnect << player.Name.getText();
+                            SendPacket << player.Health << player.HealthRecovery;
+
+                            ClientFuncRun = true;
+                            sendSendPacket();
+                            ClientTread.launch();
+                            Connecting = false;
+
+                            chat.addLine("done");
+                        } else {
+                            chat.addLine("Failed to connect to server");
+                            Connecting = false;
+                            SelfDisconnect();
                         }
-
-                        SendPacket << packetStates::FirstConnect << player.Name.getText();
-                        SendPacket << player.Health << player.HealthRecovery;
-                        MySocket.send(SendPacket);
-                        SendPacket.clear();
-
-                        ClientFuncRun = true;
-                        ClientTread.launch();
-                        Connecting = false;
-
-                        chat.addLine("done");
                     } else {
                         chat.addLine("Failed to connect to server");
                     }
                 }
                 if (ClientFuncRun || HostFuncRun) {
-                    mutex.lock();
+                    mutexOnSendReceive.lock();
                     SendPacket << packetStates::ChatEvent << chat.Last();
                     sendSendPacket();
-                    SendPacket.clear();
-                    mutex.unlock();
+                    mutexOnSendReceive.unlock();
                 }
             }
         } else if (HUD::EscapeMenuActivated) {
@@ -875,6 +881,7 @@ void EventHandler() {
             }
 
             if (player.isAlive()) {
+                mutexOnDataChange.lock();
                 for (Interactable*& x : InteractableStuff) {
                     if (x->CanBeActivated(player.hitbox)) {
                         x->isActivated(player.hitbox, event);
@@ -892,6 +899,7 @@ void EventHandler() {
                         }
                     }
                 }
+                mutexOnDataChange.unlock();
 
                 if (player.CurWeapon != nullptr && !MiniMapActivated) {
                     player.CurWeapon->Update(event);
@@ -915,11 +923,15 @@ void EventHandler() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         Musics::MainMenu.pause();
                         window.close();
-                        HUD::EscapeButton.buttonFunction();
                         if (ClientFuncRun) {
                             SelfDisconnect();
+                            mutexOnSendReceive.lock();
+                            SendPacket << packetStates::Disconnect;
+                            sendSendPacket();
+                            mutexOnSendReceive.unlock();
                         } else if (HostFuncRun) {
                             chat.commands["/server off"];
+                            HUD::EscapeButton.buttonFunction();
                         }
                         return;
                     }
@@ -1096,12 +1108,11 @@ void setBox(Interactable*& box) {
             DeleteFromVector(InteractableStuff, i);
 
             if (ClientFuncRun || HostFuncRun) {
-                mutex.lock();
+                mutexOnSendReceive.lock();
                 SendPacket << packetStates::UseInteractable << ComputerID << DescriptionID::box << i;
-                if (ClientFuncRun) MySocket.send(SendPacket);
-                else               SendToClients(SendPacket);
-                SendPacket.clear();
-                mutex.unlock();
+                SendPacket << player.Health << player.HealthRecovery;
+                sendSendPacket();
+                mutexOnSendReceive.unlock();
             }
             delete i;
         } else {
@@ -1142,13 +1153,11 @@ void setArtifact(Interactable*& artifact) {
         DeleteFromVector(InteractableStuff, i);
 
         if (ClientFuncRun || HostFuncRun) {
-            mutex.lock();
+            mutexOnSendReceive.lock();
             SendPacket << packetStates::UseInteractable << ComputerID << DescriptionID::artifact << i;
             SendPacket << player.Health << player.HealthRecovery;
-            if (ClientFuncRun) MySocket.send(SendPacket);
-            else               SendToClients(SendPacket);
-            SendPacket.clear();
-            mutex.unlock();
+            sendSendPacket();
+            mutexOnSendReceive.unlock();
         }
         delete i;
     });
@@ -1268,7 +1277,6 @@ void LoadMainMenu() {
             DrawableStuff.clear();
             HUD::InterfaceStuff.clear();
             InteractableStuff.clear();
-            removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
             player.hitbox.setCenter((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size);
 
@@ -1306,7 +1314,7 @@ void LoadMainMenu() {
             saveGame();
 
             if (HostFuncRun) {
-                mutex.lock();
+                mutexOnSendReceive.lock();
                 SendPacket << packetStates::Labyrinth << CurLocation;
                 SendPacket << (sf::Int32)Enemies.size() << Enemies;
                 SendPacket << (sf::Int32)listOfBox.size() << listOfBox;
@@ -1315,7 +1323,7 @@ void LoadMainMenu() {
                 SendPacket << &portal << player;
                 SendToClients(SendPacket);
                 SendPacket.clear();
-                mutex.unlock();
+                mutexOnSendReceive.unlock();
                 for (Player& p : ConnectedPlayers) {
                     DrawableStuff.push_back(&p);
                 }
@@ -1415,46 +1423,55 @@ void updateBullets() {
     }
 }
 
+void EnemyDie(int i) {
+    if (HostFuncRun) {
+        mutexOnSendReceive.lock();
+        SendPacket << packetStates::EnemyDie << i;
+        sendSendPacket();
+        mutexOnSendReceive.unlock();
+    }
+    if (Enemies[i]->dropInventory) {
+        for (Item*& item : Enemies[i]->inventory.items) {
+            item->dropTo(Enemies[i]->hitbox.getPosition());
+
+            PickupStuff.push_back(item);
+            DrawableStuff.push_back(item);
+        }
+    }
+    Enemies[i]->inventory.items.clear();
+
+    DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
+    DeletePointerFromVector(Enemies, i);
+    if (Enemies.size() == 0) {
+        if (!player.isAlive()) {
+            player.Health.cur = player.Health.top;
+            DrawableStuff.push_back(&player);
+        }
+        for (Player& p: ConnectedPlayers) {
+            if (!p.isAlive()) {
+                p.Health.cur = p.Health.top;
+                DrawableStuff.push_back(&p);
+            }
+        }
+
+        TempText* enemiesKilledText = new TempText(sf::seconds(10));
+        enemiesKilledText->setCharacterSize(40);
+        enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
+        enemiesKilledText->setCenter(scw / 2.0f, sch / 3.0f);
+        HUD::TempTextsOnScreen.push_back(enemiesKilledText);
+
+        if (CurLocation == &LabyrinthLocation) {
+            if (!in(InteractableStuff, (Interactable*)&portal)) {
+                InteractableStuff.push_back(&portal);
+            }
+        }
+    }
+}
+
 void updateEnemies() {
     for (int i = 0; i < Enemies.size(); i++) {
         if (!Enemies[i]->isAlive()) {
-            if (Enemies[i]->dropInventory) {
-                for (Item*& item : Enemies[i]->inventory.items) {
-                    item->dropTo(Enemies[i]->hitbox.getPosition());
-
-                    PickupStuff.push_back(item);
-                    DrawableStuff.push_back(item);
-                }
-            }
-            Enemies[i]->inventory.items.clear();
-
-            DeleteFromVector(DrawableStuff, static_cast<sf::Drawable*>(Enemies[i]));
-            DeletePointerFromVector(Enemies, i--);
-
-            if (Enemies.size() == 0) {
-                if (!player.isAlive()) {
-                    player.Health.cur = player.Health.top;
-                    DrawableStuff.push_back(&player);
-                }
-                for (Player& p: ConnectedPlayers) {
-                    if (!p.isAlive()) {
-                        p.Health.cur = p.Health.top;
-                        DrawableStuff.push_back(&p);
-                    }
-                }
-
-                TempText* enemiesKilledText = new TempText(sf::seconds(10));
-                enemiesKilledText->setCharacterSize(40);
-                enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
-                enemiesKilledText->setCenter(scw / 2.0f, sch / 3.0f);
-                HUD::TempTextsOnScreen.push_back(enemiesKilledText);
-
-                if (CurLocation == &LabyrinthLocation) {
-                    if (!in(InteractableStuff, (Interactable*)&portal)) {
-                        InteractableStuff.push_back(&portal);
-                    }
-                }
-            }
+            EnemyDie(i--);
         } else {
             sf::Vector2f bullet_path;
             for (int j = 0; j < Bullets.size(); j++) {
@@ -1861,11 +1878,10 @@ void MainLoop() {
         if (!ClientFuncRun) {
             updateEnemies();
             if (HostFuncRun) {
-                mutex.lock();
+                mutexOnSendReceive.lock();
                 SendPacket << packetStates::EnemiesPos << Enemies;
-                SendToClients(SendPacket);
-                SendPacket.clear();
-                mutex.unlock();
+                sendSendPacket();
+                mutexOnSendReceive.unlock();
             }
         }
 
@@ -1878,20 +1894,22 @@ void MainLoop() {
             }
         }
         if (!window.hasFocus()) {
+            mutexOnDataChange.lock();
             if (player.CurWeapon != nullptr && player.isAlive()) {
                 player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
             updateBullets();
+            mutexOnDataChange.unlock();
 
             sf::Event event;
             while (window.pollEvent(event)) {}
 
             if (HostFuncRun) {
-                mutex.lock();
+                mutexOnSendReceive.lock();
                 SendPacket << packetStates::PlayerPos << player << ConnectedPlayers;
                 SendToClients(SendPacket);
                 SendPacket.clear();
-                mutex.unlock();
+                mutexOnSendReceive.unlock();
             }
         } else {
             if (!chat.inputted && !inventoryInterface::isDrawInventory && !MenuShop::isDrawShop) {
@@ -1901,10 +1919,11 @@ void MainLoop() {
                     sf::Listener::setPosition(player.hitbox.getCenter().x, player.hitbox.getCenter().y, 50.f);
                 }
                 if (!ClientFuncRun) {
+                    mutexOnDataChange.lock();
                     std::vector<sf::Vector2f> centers;
                     for (int i = 0, k = 0; i < ConnectedPlayers.size() + 1; i++) {
                         if (i != ComputerID) {
-                            if (ConnectedPlayers[i].isAlive()) {
+                            if (ConnectedPlayers[i - k].isAlive()) {
                                 centers.push_back(ConnectedPlayers[i - k].hitbox.getCenter());
                             }
                         } else if (player.isAlive()) {
@@ -1912,12 +1931,15 @@ void MainLoop() {
                             k++;
                         }
                     }
+                    mutexOnDataChange.unlock();
                     FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
                 }
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && player.isAlive()) {
                     player.makeADash = playerMakingADash && playerCanDashing;
                 }
             }
+            
+            mutexOnDataChange.lock();
             int wasBulletsSize = Bullets.size();
 
             if (player.CurWeapon != nullptr && player.isAlive()) {
@@ -1927,25 +1949,25 @@ void MainLoop() {
                 if (weapon->holstered) weapon->Reload(player.Mana);
 
             if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
-                mutex.lock();
+                mutexOnSendReceive.lock();
                 SendPacket << packetStates::Shooting << (sf::Int32)(Bullets.size() - wasBulletsSize);
                 for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
                     SendPacket << *Bullets[wasBulletsSize];
                 }
                 sendSendPacket();
-                SendPacket.clear();
-                mutex.unlock();
+                mutexOnSendReceive.unlock();
             }
 
             updateBullets();
+            
+            mutexOnDataChange.unlock();
 
             if (HostFuncRun || ClientFuncRun) {
-                mutex.lock();
+                mutexOnSendReceive.lock();
                 SendPacket << packetStates::PlayerPos << player;
                 if (HostFuncRun) SendPacket << ConnectedPlayers;
                 sendSendPacket();
-                SendPacket.clear();
-                mutex.unlock();
+                mutexOnSendReceive.unlock();
             }
 
             if (MiniMapActivated) {
@@ -1986,7 +2008,7 @@ void MainLoop() {
 void ClientConnect() {
     sf::TcpSocket* client = new sf::TcpSocket;
     if (listener.accept(*client) == sf::Socket::Done && CurLocation == &MainMenuLocation) {
-        mutex.lock();
+        mutexOnSendReceive.lock();
 
         std::string ConnectedClientIP = (*client).getRemoteAddress().toString();
 
@@ -1997,7 +2019,9 @@ void ClientConnect() {
         }
 
         std::cout << ConnectedClientIP << " connected\n";
+        mutexOnDataChange.lock();
         HUD::ListOfPlayers.addWord(ConnectedClientIP);
+        mutexOnDataChange.unlock();
         std::cout << "list of players:\n" << HUD::ListOfPlayers.text.getText() << '\n';
 
         clients.push_back(client);
@@ -2027,15 +2051,20 @@ void ClientConnect() {
         for (int i = 0; i < Bullets.size(); i++) {
             SendPacket << *Bullets[i];
         }
-        client->send(SendPacket);
 
+        if (client->send(SendPacket) == sf::Socket::Done) {
+            std::cout << "bullets was sended\n";
+        } else {
+            std::cout << "bullets didn't sended\n";
+        }
         SendPacket.clear();
+        mutexOnSendReceive.unlock();
 
+        mutexOnDataChange.lock();
         ConnectedPlayers.push_back(*(new Player()));
         ConnectedPlayers.back().setAnimation(Textures::Player, &Shaders::Player);
         DrawableStuff.push_back(&(ConnectedPlayers.back()));
-
-        mutex.unlock();
+        mutexOnDataChange.unlock();
     } else {
         delete client;
         std::cout << "Error: Unable to accept connection\n";
@@ -2046,38 +2075,41 @@ void ClientDisconnect(int i) {
     selector.remove(*clients[i]);
     std::cout << (*clients[i]).getRemoteAddress().toString() << " disconnected; number = " << i << "\n";
     DeletePointerFromVector(clients, i);
+
+    mutexOnDataChange.lock();
     DeleteFromVector(DrawableStuff, (sf::Drawable*)&ConnectedPlayers[i]);
     ConnectedPlayers.erase(ConnectedPlayers.begin() + i);
     HUD::ListOfPlayers.removeWord(i);
+    mutexOnDataChange.unlock();
 
     std::cout << "amount of clients = " << clients.size() << "\n";
-    mutex.lock();
+    mutexOnSendReceive.lock();
     SendPacket << packetStates::PlayerDisconnect << i;
     SendToClients(SendPacket);
     SendPacket.clear();
-    mutex.unlock();
+    mutexOnSendReceive.unlock();
 }
 
 void SelfDisconnect() {
+    mutexOnDataChange.lock();
     std::cout << "SelfDisconnect\n";
     ClientFuncRun = false;
+    ComputerID = 0;
     LoadMainMenu();
-    mutex.lock();
-    SendPacket << packetStates::Disconnect;
-    MySocket.send(SendPacket);
-    SendPacket.clear();
-    mutex.unlock();
     MySocket.disconnect();
     selector.clear();
     for (Player& p : ConnectedPlayers) {
         DeleteFromVector(DrawableStuff, (sf::Drawable*)&p);
     }
     ConnectedPlayers.clear();
+    mutexOnDataChange.unlock();
 }
 
 void SendToClients(sf::Packet& pac, int ExceptOf) {
     for (int i = 0; i < clients.size(); i++) {
-        if (i != ExceptOf && clients[i]->send(pac) != sf::Socket::Done) {}
+        if (i != ExceptOf && clients[i]->send(pac) != sf::Socket::Done) {
+            ClientDisconnect(i--);
+        }
     }
 }
 
@@ -2094,73 +2126,83 @@ void funcOfHost() {
                             ReceivePacket >> packetStates::curState;
                             switch (packetStates::curState) {
                                 case packetStates::FirstConnect:
+                                    mutexOnDataChange.lock();
                                     ReceivePacket >> sPacketData;
                                     ReceivePacket >> ConnectedPlayers[i].Health >> ConnectedPlayers[i].HealthRecovery;
                                     ConnectedPlayers[i].Name.setString(sPacketData);
+                                    mutexOnDataChange.unlock();
                                     std::cout << "Connected " << sPacketData << " whith ID:" << i + 1 << '\n';
-                                    mutex.lock();
+                                    mutexOnSendReceive.lock();
                                     SendPacket << packetStates::PlayerConnect << sPacketData;
                                     SendPacket << player.Health << player.HealthRecovery;
                                     SendToClients(SendPacket, i);
                                     SendPacket.clear();
-                                    mutex.unlock();
+                                    mutexOnSendReceive.unlock();
                                     break;
                                 case packetStates::Disconnect:
                                     std::cout << "client disconected\n";
                                     ClientDisconnect(i--);
                                     break;
                                 case packetStates::PlayerPos:
+                                    mutexOnDataChange.lock();
                                     ReceivePacket >> ConnectedPlayers[i];
+                                    mutexOnDataChange.unlock();
                                     break;
                                 case packetStates::ChatEvent:
                                     ReceivePacket >> sPacketData;
                                     chat.addLine(sPacketData);
-                                    mutex.lock();
+                                    mutexOnSendReceive.lock();
                                     SendPacket << packetStates::ChatEvent << sPacketData;
                                     SendToClients(SendPacket, i);
                                     SendPacket.clear();
-                                    mutex.unlock();
+                                    mutexOnSendReceive.unlock();
                                     break;
                                 case packetStates::Shooting:
-                                    mutex.lock();
+                                    mutexOnSendReceive.lock();
                                     ReceivePacket >> i32PacketData;
                                     SendPacket << packetStates::Shooting << i;
+                                    mutexOnDataChange.lock();
                                     for (sf::Int32 i = 0; i < i32PacketData; i++) {
                                         Bullets.push_back(new Bullet());
                                         ReceivePacket >> *(Bullets.back());
                                         SendPacket << Bullets.back();
                                     }
+                                    mutexOnDataChange.unlock();
                                     SendToClients(SendPacket, i);
                                     SendPacket.clear();
-                                    mutex.unlock();
+                                    mutexOnSendReceive.unlock();
                                     break;
                                 case packetStates::UseInteractable: {
-                                    mutex.lock();
+                                    mutexOnSendReceive.lock();
                                     DescriptionID::Type id;
                                     ReceivePacket >> i32PacketData >> id >> V2fPacketData;
                                     SendPacket << packetStates::UseInteractable << i32PacketData << id << V2fPacketData;
                                     Interactable* x1 = nullptr;
+                                    mutexOnDataChange.lock();
                                     for (Interactable*& x2: InteractableStuff) {
                                         if (x2->descriptionID == id && x2->hitbox.getCenter() == V2fPacketData) {
-                                            if (id == DescriptionID::box) {
-                                                DeleteFromVector(listOfBox, x2);
-                                            } else if (id == DescriptionID::artifact) {
-                                                DeleteFromVector(listOfArtifact, x2);
-                                                ReceivePacket >> ConnectedPlayers[i32PacketData - 1].Health >> ConnectedPlayers[i32PacketData - 1].HealthRecovery;
-                                                SendPacket << ConnectedPlayers[i32PacketData - 1].Health << ConnectedPlayers[i32PacketData - 1].HealthRecovery;
-                                            }
-                                            DeleteFromVector(DrawableStuff, (sf::Drawable*)x2);
-                                            SendToClients(SendPacket, i32PacketData - 1);
                                             x1 = x2;
                                             break;
                                         }
                                     }
                                     if (x1) {
+                                        if (id == DescriptionID::box) {
+                                            DeleteFromVector(listOfBox, x1);
+                                        } else if (id == DescriptionID::artifact) {
+                                            DeleteFromVector(listOfArtifact, x1);
+                                            ReceivePacket >> ConnectedPlayers[i32PacketData - 1].Health >> ConnectedPlayers[i32PacketData - 1].HealthRecovery;
+                                            SendPacket << ConnectedPlayers[i32PacketData - 1].Health << ConnectedPlayers[i32PacketData - 1].HealthRecovery;
+                                        }
+                                        DeleteFromVector(DrawableStuff, (sf::Drawable*)x1);
+                                        SendToClients(SendPacket, i32PacketData - 1);
                                         DeleteFromVector(InteractableStuff, x1);
                                         delete x1;
+                                    } else {
+                                        ReceivePacket >> ConnectedPlayers[i32PacketData - 1].Health >> ConnectedPlayers[i32PacketData - 1].HealthRecovery;
                                     }
+                                    mutexOnDataChange.unlock();
                                     SendPacket.clear();
-                                    mutex.unlock();
+                                    mutexOnSendReceive.unlock();
                                     break;
                                 }
                             }
@@ -2184,33 +2226,36 @@ void funcOfClient() {
                             SelfDisconnect();
                             break;
                         case packetStates::PlayerConnect:
-                            mutex.lock();
+                            mutexOnSendReceive.lock();
                             ReceivePacket >> sPacketData;
+                            mutexOnDataChange.lock();
                             HUD::ListOfPlayers.addWord(sPacketData);
                             ConnectedPlayers.push_back(*(new Player()));
                             ConnectedPlayers.back().setAnimation(Textures::Player, &Shaders::Player);
                             ConnectedPlayers.back().Name.setString(sPacketData);
                             DrawableStuff.push_back(&(ConnectedPlayers.back()));
+                            mutexOnDataChange.unlock();
                             std::cout << sPacketData + " connected\n";
-                            mutex.unlock();
+                            mutexOnSendReceive.unlock();
                             break;
                         case packetStates::PlayerDisconnect:
                             int index;
                             ReceivePacket >> index;
                             std::cout << std::string(HUD::ListOfPlayers[index]) << " disconnected\n";
+                            mutexOnDataChange.lock();
                             if (index < ComputerID) ComputerID--;
                             HUD::ListOfPlayers.removeWord(index);
                             ConnectedPlayers.erase(ConnectedPlayers.begin() + index);
+                            mutexOnDataChange.unlock();
                             break;
                         case packetStates::Labyrinth:
-                            mutexOnDraw.lock();
+                            mutexOnDataChange.lock();
                             clearVectorOfPointer(PickupStuff);
                             clearVectorOfPointer(Bullets);
 
                             DrawableStuff.clear();
                             HUD::InterfaceStuff.clear();
                             InteractableStuff.clear();
-                            removeUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
                             MiniMapActivated = false;
                             HUD::EscapeMenuActivated = false;
@@ -2279,9 +2324,10 @@ void funcOfClient() {
                             for (Player& p : ConnectedPlayers) {
                                 DrawableStuff.push_back(&p);
                             }
-                            mutexOnDraw.unlock();
+                            mutexOnDataChange.unlock();
                             break;
                         case packetStates::PlayerPos:
+                            mutexOnDataChange.lock();
                             for (int i = 0, k = 0; i < ConnectedPlayers.size() + 1; i++) {
                                 if (i != ComputerID) {
                                     ReceivePacket >> ConnectedPlayers[i - k];
@@ -2291,8 +2337,10 @@ void funcOfClient() {
                                     k++;
                                 }
                             }
+                            mutexOnDataChange.unlock();
                             break;
                         case packetStates::SetPos:
+                            mutexOnDataChange.lock();
                             for (int i = 0, k = 0; i < ConnectedPlayers.size() + 1; i++) {
                                 if (i != ComputerID) {
                                     ReceivePacket >> ConnectedPlayers[i - k];
@@ -2301,6 +2349,7 @@ void funcOfClient() {
                                     k++;
                                 }
                             }
+                            mutexOnDataChange.unlock();
                             break;
                         case packetStates::ChatEvent:
                             ReceivePacket >> sPacketData;
@@ -2308,42 +2357,57 @@ void funcOfClient() {
                             break;
                         case packetStates::Shooting:
                             ReceivePacket >> i32PacketData;
+                            mutexOnDataChange.lock();
                             for (int i = 0; i < i32PacketData; i++) {
                                 Bullets.push_back(new Bullet());
                                 ReceivePacket >> *(Bullets.back());
                             }
+                            mutexOnDataChange.unlock();
                             std::cout << "bullet recieved\n";
                             break;
                         case packetStates::UseInteractable: {
-                            mutex.lock();
+                            mutexOnSendReceive.lock();
                             DescriptionID::Type id;
                             ReceivePacket >> i32PacketData >> id >> V2fPacketData;
                             i32PacketData -= i32PacketData > ComputerID;
                             Interactable* x1 = nullptr;
+                            mutexOnDataChange.lock();
                             for (Interactable*& x2: InteractableStuff) {
                                 if (x2->descriptionID == id && x2->hitbox.getCenter() == V2fPacketData) {
-                                    if (id == DescriptionID::box) {
-                                        DeleteFromVector(listOfBox, x2);
-                                    } else if (id == DescriptionID::artifact) {
-                                        DeleteFromVector(listOfArtifact, x2);
-                                        ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
-                                    }
-                                    DeleteFromVector(DrawableStuff, (sf::Drawable*)x2);
                                     x1 = x2;
                                     break;
                                 }
                             }
                             if (x1) {
+                                if (id == DescriptionID::box) {
+                                    DeleteFromVector(listOfBox, x1);
+                                } else if (id == DescriptionID::artifact) {
+                                    DeleteFromVector(listOfArtifact, x1);
+                                    ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
+                                }
+                                DeleteFromVector(DrawableStuff, (sf::Drawable*)x1);
                                 DeleteFromVector(InteractableStuff, x1);
                                 delete x1;
+                            } else {
+                                ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
                             }
-                            mutex.unlock();
+                            mutexOnDataChange.unlock();
+                            mutexOnSendReceive.unlock();
                             break;
                         }
                         case packetStates::EnemiesPos:
+                            mutexOnDataChange.lock();
                             for (Enemy*& enemy: Enemies) {
+                                ReceivePacket >> sPacketData;
                                 ReceivePacket >> enemy;
                             }
+                            mutexOnDataChange.unlock();
+                            break;
+                        case packetStates::EnemyDie:
+                            ReceivePacket >> i32PacketData;
+                            mutexOnDataChange.lock();
+                            EnemyDie(i32PacketData);
+                            mutexOnDataChange.unlock();
                             break;
                     }
                 }
@@ -2353,9 +2417,13 @@ void funcOfClient() {
 }
 
 void sendSendPacket() {
-    if (HostFuncRun) {
-        SendToClients(SendPacket);
-    } else if (ClientFuncRun) {
-        MySocket.send(SendPacket);
-    }   
+    if (HostFuncRun)        SendToClients(SendPacket);
+    else if (ClientFuncRun) {
+        if (MySocket.send(SendPacket) == sf::Socket::Done) {
+            std::cout << "succes send packet\n";
+        } else {
+            std::cout << "failed send packet\n";
+        }
+    }
+    SendPacket.clear();
 }

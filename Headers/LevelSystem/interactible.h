@@ -27,7 +27,7 @@ void displayDescription(DescriptionID::Type);
 class Interactable : public sf::Drawable {
 public:
     Animation* animation = nullptr;
-    void (*function)(Interactable*);
+    void (*function)(Interactable*) = nullptr;
     CollisionRect hitbox;
     DescriptionID::Type descriptionID;
 
@@ -44,7 +44,9 @@ public:
 
     virtual bool isActivated(CollisionCircle&, sf::Event& event) {
         if (keyPressed(event, ActivationButton)) {
-            function(this);
+            if (function) {
+                function(this);
+            }
             return true;
         }
         if (keyPressed(event, InformationButton)) {

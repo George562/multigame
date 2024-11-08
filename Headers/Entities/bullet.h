@@ -73,9 +73,8 @@ sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
     return packet << b.fromWho << b.hitbox.getCenter().x << b.hitbox.getCenter().y << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
-    float timer;
     sf::Vector2f pos;
-    packet >> b.fromWho >> pos.x >> pos.y >> b.Velocity.x >> b.Velocity.y >> b.penetration >> b.color >> b.damage >> timer;
+    packet >> b.fromWho >> pos.x >> pos.y >> b.Velocity.x >> b.Velocity.y >> b.penetration >> b.color >> b.damage;
     b.hitbox.setCenter(pos);
     return packet;
 }
