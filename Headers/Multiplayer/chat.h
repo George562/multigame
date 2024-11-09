@@ -35,7 +35,6 @@ public:
     void SetCommand(std::string CommandString, void (*CommandFunction)(void)) { commands[CommandString] = CommandFunction; }
 
 private:
-    void pushLine();
     void setLines();
 };
 
@@ -152,29 +151,21 @@ bool Chat::InputText(sf::Event& event) {
 }
 
 bool Chat::Entered() {
-    if (inputted && lines[0].TextSize() > 0) {
+    if (inputted && lines[0].getText().size() > 0) {
         if (commands.count(lines[0].getString()) != 0) {
             commands[lines[0].getString()]();
-            cursorPos = 0;
         } else {
-            if (lines[0].getText() != "") {
-                pushLine();
-            }
+            addLine(lines[0].getText());
         }
     }
+    lines[0].setString("");
+    pos = cursorPos = 0;
     inputted = !inputted;
     return !inputted;
 }
 
 void Chat::addLine(std::string word) {
-    lines[0].setString(word);
-    pushLine();
-}
-
-void Chat::pushLine() {
-    strings.push_back(lines[0].getString());
-    lines[0].setString("");
-    pos = cursorPos = 0;
+    strings.push_back(word);
     setLines();
     for (int i = clocks.size() - 1; i >= 0 && clocks[i]->getElapsedTime() >= sf::seconds(5); i--) {
         delete clocks[i];
