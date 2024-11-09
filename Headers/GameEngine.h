@@ -370,6 +370,9 @@ void initScripts() {
         });
     }
     HUD::EscapeButton.setFunction([]() {
+        if (HostFuncRun) {
+            chat.commands["/server off"]();
+        }
         LoadMainMenu();
         saveGame();
     });
@@ -1397,9 +1400,17 @@ void updateBullets() {
             DeletePointerFromVector(Bullets, i--);
         } else {
             Bullets[i]->move(CurLocation);
-            if (!faction::friends(Bullets[i]->fromWho, player.faction) && player.hitbox.intersect(Bullets[i]->hitbox)) {
-                player.getDamage(Bullets[i]->damage);
-                Bullets[i]->penetration--;
+            if (!faction::friends(Bullets[i]->fromWho, player.faction)) {
+                if (player.hitbox.intersect(Bullets[i]->hitbox)) {
+                    player.getDamage(Bullets[i]->damage);
+                    Bullets[i]->penetration--;
+                }
+                for (Player& p: ConnectedPlayers) {
+                    if (p.hitbox.intersect(Bullets[i]->hitbox)) {
+                        p.getDamage(Bullets[i]->damage);
+                        Bullets[i]->penetration--;
+                    }
+                }
             } else {
                 for (Enemy*& enemy : Enemies) {
                     if (!faction::friends(Bullets[i]->fromWho, enemy->faction) && enemy->hitbox.intersect(Bullets[i]->hitbox)) {
@@ -1864,6 +1875,7 @@ void MainLoop() {
             player.UpdateState();
         }
 
+        int wasBulletsSize = Bullets.size();
         if (!ClientFuncRun) {
             updateEnemies();
             if (HostFuncRun) {
@@ -1928,7 +1940,6 @@ void MainLoop() {
             }
             
             mutexOnDataChange.lock();
-            int wasBulletsSize = Bullets.size();
 
             if (player.CurWeapon != nullptr && player.isAlive()) {
                 player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
