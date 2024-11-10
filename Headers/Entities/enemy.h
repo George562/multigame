@@ -36,8 +36,6 @@ public:
 
     void move(Location* location) override {
         VelocityBuff = 1;
-
-        setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
 
@@ -69,8 +67,6 @@ public:
 
     void move(Location* location) override {
         VelocityBuff = 1;
-
-        setTarget(TheWayToPlayer[int(hitbox.getCenter().y) / size][int(hitbox.getCenter().x) / size]);
         Creature::move(location);
     }
 

@@ -250,7 +250,8 @@ void init() {
     Musics::MainMenu.setVolume(15);
     Musics::Fight1.setVolume(15);
     Musics::Fight2.setVolume(15);
-    // sf::Listener::setDirection(0.f, 0.f, 1.f);
+
+    for (Weapon*& w: Weapons) w->ShootSound.setRelativeToListener(true);
 
     portal.setAnimation(Textures::Portal, 9, 1, sf::seconds(1), &Shaders::Portal);
     portal.setSize(170.f, 320.f);
@@ -1484,10 +1485,25 @@ void updateEnemies() {
         if (!Enemies[i]->isAlive()) {
             EnemyDie(i--);
         } else {
+            std::vector<sf::Vector2f> centers;
+            if (CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), player.hitbox.getCenter()))
+                centers.push_back(player.hitbox.getCenter());
+            for (int i = 0, k = 0; i < ConnectedPlayers.size(); i++) {
+                if (CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), ConnectedPlayers[i - k].hitbox.getCenter()))
+                    centers.push_back(ConnectedPlayers[i - k].hitbox.getCenter());
+            }
+            if (centers.size() > 0) {
+                Enemies[i]->setTarget(centers[0]);
+                for (int i = 1; i < centers.size(); i++)
+                    if (distance(Enemies[i]->hitbox.getCenter(), centers[i]) < distance(Enemies[i]->hitbox.getCenter(), Enemies[i]->target))
+                        Enemies[i]->setTarget(centers[i]);
+                Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, Enemies[i]->target, Enemies[i]->faction);
+            } else {
+                Enemies[i]->setTarget(TheWayToPlayer[int(Enemies[i]->hitbox.getCenter().y) / size][int(Enemies[i]->hitbox.getCenter().x) / size]);
+            }
             Enemies[i]->move(CurLocation);
             Enemies[i]->UpdateState();
             Enemies[i]->CurWeapon->lock = false;
-            Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, player.hitbox.getCenter(), Enemies[i]->faction);
             Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
         }
     }
@@ -1899,6 +1915,8 @@ void MainLoop() {
             if (player.CurWeapon != nullptr && player.isAlive()) {
                 player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
+            for (Weapon*& weapon : Weapons)
+                if (weapon->holstered) weapon->Reload(player.Mana);
             updateBullets();
             mutexOnDataChange.unlock();
 

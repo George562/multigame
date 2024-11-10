@@ -43,6 +43,7 @@ public:
     std::vector<sf::Vector2i> getPassages(int x, int y);
     void FindEnableTilesFrom(sf::Vector2f);
     void FillWallsRect();
+    bool ExistDirectWay(sf::Vector2f from, sf::Vector2f to);
     bool LoadFromFile(std::string FileName);
     bool WriteToFile(std::string FileName);
     void ClearSeenWalls() {
@@ -166,6 +167,39 @@ void Location::FillWallsRect() {
                     wallsRect[i].push_back(CollisionRect(size * j, size * i / 2 - WallMinSize / 2, WallMaxSize, WallMinSize));
                 }
             } else wallsRect[i].push_back(CollisionRect(0, 0, 0, 0));
+}
+
+bool Location::ExistDirectWay(sf::Vector2f from, sf::Vector2f to) {
+    if (from.x > to.x) std::swap(to, from); // from left to right
+    sf::Vector2i fromTile(from.x / size, from.y / size), toTile(to.x / size, to.y / size);
+    sf::Vector2i d = toTile - fromTile;
+    if (d.x == 0 && d.y == 0) return true;
+    if (d.x == 0) {
+        if (to.y > from.y) std::swap(to, from); // from top to bottom
+        for (int i = 1; i <= std::abs(d.y); i++)
+            if (walls[fromTile.y * 2 + i * 2][fromTile.x])
+                return false;
+    } else if (d.y == 0) {
+        for (int i = 1; i <= std::abs(d.x); i++)
+            if (walls[fromTile.y * 2 + 1][fromTile.x + i])
+                return false;
+    } else {
+        float k = (to.y - from.y) / (to.x - from.x);
+        // std::cout << "k = " << k << '\n';
+        while (fromTile != toTile) {
+            // std::cout << "fromTile = " << fromTile << "\n toTile = " << toTile << '\n';
+            if (int(((fromTile.x + 1) * size - from.x) * k + from.y) / size == fromTile.y) {
+                if (walls[fromTile.y * 2 + 1][fromTile.x + 1])
+                    return false;
+                fromTile.x++;
+            } else {
+                if (walls[fromTile.y * 2 + 2 * (d.y > 0)][fromTile.x])
+                    return false;
+                fromTile.y += d.y > 0 ? 1 : -1;
+            }
+        }
+    }
+    return true;
 }
 
 bool Location::LoadFromFile(std::string FileName) {

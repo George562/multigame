@@ -69,9 +69,8 @@ public:
 
 		this->lock = true;
 		defaultWeapon.close();
-		ShootSound.setVolume(50);
-		ShootSound.setAttenuation(1.f / size);
-		ShootSound.setMinDistance(size / 4.f);
+		ShootSound.setAttenuation(1.f / 2.f);
+		ShootSound.setMinDistance(size / 6.f);
 	}
 	virtual ~Weapon() {
 		if (TimeFromLastShot) { delete TimeFromLastShot; }
@@ -106,8 +105,13 @@ public:
 		Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
 		ManaStorage -= ManaCostOfBullet;
 		TimeFromLastShot->restart();
+
 		ShootSound.setBuffer(SoundBuffers::Shoot2);
 		ShootSound.setPosition(shooter.getCenter().x, shooter.getCenter().y, 0.f);
+
+		float minDistance = ShootSound.getMinDistance(), Distance = distance(shooter.getCenter(), sf::Vector2f(sf::Listener::getPosition().x, sf::Listener::getPosition().y));
+		float factor = minDistance / (minDistance + ShootSound.getAttenuation() * (std::max(Distance, minDistance) - minDistance));
+		ShootSound.setVolume(50 * factor);
 		ShootSound.play();
 	}
 
@@ -255,8 +259,13 @@ public:
         ManaStorage -= ManaCostOfBullet;
         TimeFromLastShot->restart();
         lock = true;
+
 		ShootSound.setBuffer(SoundBuffers::Shoot);
 		ShootSound.setPosition(shooter.getCenter().x, shooter.getCenter().y, 0.f);
+
+		float minDistance = ShootSound.getMinDistance(), Distance = distance(shooter.getCenter(), sf::Vector2f(sf::Listener::getPosition().x, sf::Listener::getPosition().y));
+		float factor = minDistance / (minDistance + ShootSound.getAttenuation() * (std::max(Distance, minDistance) - minDistance));
+		ShootSound.setVolume(50 * factor);
 		ShootSound.play();
     }
 };
