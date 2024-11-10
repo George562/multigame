@@ -1488,10 +1488,12 @@ void updateEnemies() {
             std::vector<sf::Vector2f> centers;
             if (CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), player.hitbox.getCenter()))
                 centers.push_back(player.hitbox.getCenter());
+            mutexOnDataChange.lock();
             for (int i = 0, k = 0; i < ConnectedPlayers.size(); i++) {
                 if (CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), ConnectedPlayers[i - k].hitbox.getCenter()))
                     centers.push_back(ConnectedPlayers[i - k].hitbox.getCenter());
             }
+            mutexOnDataChange.unlock();
             if (centers.size() > 0) {
                 Enemies[i]->setTarget(centers[0]);
                 for (int i = 1; i < centers.size(); i++)
@@ -1917,6 +1919,19 @@ void MainLoop() {
             }
             for (Weapon*& weapon : Weapons)
                 if (weapon->holstered) weapon->Reload(player.Mana);
+            mutexOnDataChange.unlock();
+
+            if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
+                mutexOnSend.lock();
+                SendPacket << packetStates::Shooting << (sf::Int32)(Bullets.size() - wasBulletsSize);
+                for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
+                    SendPacket << *Bullets[wasBulletsSize];
+                }
+                sendSendPacket();
+                mutexOnSend.unlock();
+            }
+
+            mutexOnDataChange.lock();
             updateBullets();
             mutexOnDataChange.unlock();
 
@@ -1957,8 +1972,8 @@ void MainLoop() {
                 }
             }
             
-            mutexOnDataChange.lock();
 
+            mutexOnDataChange.lock();
             if (player.CurWeapon != nullptr && player.isAlive()) {
                 player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
             }
@@ -2171,13 +2186,13 @@ void funcOfHost() {
                                 break;
                             case packetStates::Shooting:
                                 ReceivePacket >> i32PacketData;
-                                mutexOnDataChange.lock();
                                 mutexOnSend.lock();
-                                SendPacket << packetStates::Shooting << i;
-                                for (sf::Int32 i = 0; i < i32PacketData; i++) {
+                                mutexOnDataChange.lock();
+                                SendPacket << packetStates::Shooting << i32PacketData;
+                                for (int j = 0; j < i32PacketData; j++) {
                                     Bullets.push_back(new Bullet());
                                     ReceivePacket >> *(Bullets.back());
-                                    SendPacket << Bullets[Bullets.size() - i];
+                                    SendPacket << *(Bullets.back());
                                 }
                                 mutexOnDataChange.unlock();
                                 SendToClients(SendPacket, i);
@@ -2413,11 +2428,7 @@ void sendSendPacket() {
     if (HostFuncRun) {
         SendToClients(SendPacket);
     } else if (ClientFuncRun) {
-        if (MySocket.send(SendPacket) == sf::Socket::Done) {
-            std::cout << "succes send packet\n";
-        } else {
-            std::cout << "failed send packet\n";
-        }
+        MySocket.send(SendPacket);
     }
     SendPacket.clear();
 }
