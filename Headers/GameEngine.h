@@ -371,9 +371,8 @@ void initScripts() {
         });
     }
     HUD::EscapeButton.setFunction([]() {
-        if (HostFuncRun) {
-            chat.commands["/server off"]();
-        }
+        if (HostFuncRun)        chat.commands["/server off"]();
+        else if (ClientFuncRun) chat.commands["/disconnect"]();
         LoadMainMenu();
         saveGame();
     });
@@ -545,7 +544,7 @@ void drawFloor() {
             if (CurLocation->EnableTiles[i][j]) {
                 FLoorTileSprite.setPosition(size * j, size * i);
                 preRenderTexture.draw(FLoorTileSprite);
-                if (CurLocation->getPassagesAmount(j, i) > 2) {
+                if (CurLocation->getPassagesAmount(j, i) > 3) {
                     FloorForkSprite.setPosition(size * j + 120, size * i + 120);
                     preRenderTexture.draw(FloorForkSprite);
                 }
@@ -777,6 +776,7 @@ void EventHandler() {
                             for (int i = 0; i < ComputerID; i++) {
                                 ReceivePacket >> ConnectedPlayers[i] >> sPacketData;
                                 ConnectedPlayers[i].Name.setString(sPacketData);
+                                ReceivePacket >> ConnectedPlayers[i].Health >> ConnectedPlayers[i].HealthRecovery;
                                 std::cout << sPacketData << '\n';
                             }
                             SendPacket << packetStates::FirstConnect << player.Name.getText();
@@ -844,7 +844,7 @@ void EventHandler() {
                         MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
                     }
                 }
-                if (event.key.code == sf::Keyboard::I) {
+                if (event.key.code == sf::Keyboard::E) {
                     {
                         using namespace inventoryInterface;
                         isDrawInventory = true;
@@ -925,15 +925,8 @@ void EventHandler() {
             if (CurLocation == &MainMenuLocation) {
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
-                        if (ClientFuncRun) {
-                            mutexOnSend.lock();
-                            SendPacket << packetStates::Disconnect;
-                            sendSendPacket();
-                            mutexOnSend.unlock();
-                            SelfDisconnect();
-                        } else if (HostFuncRun) {
-                            chat.commands["/server off"]();
-                        }
+                        if (ClientFuncRun)    chat.commands["/disconnect"]();
+                        else if (HostFuncRun) chat.commands["/server off"]();
                         Musics::MainMenu.pause();
                         window.close();
                         return;
@@ -1487,19 +1480,19 @@ void updateEnemies() {
             EnemyDie(i--);
         } else {
             std::vector<sf::Vector2f> centers;
-            if (CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), player.hitbox.getCenter()))
+            if (player.isAlive() && CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), player.hitbox.getCenter()))
                 centers.push_back(player.hitbox.getCenter());
             mutexOnDataChange.lock();
-            for (int i = 0, k = 0; i < ConnectedPlayers.size(); i++) {
-                if (CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), ConnectedPlayers[i - k].hitbox.getCenter()))
-                    centers.push_back(ConnectedPlayers[i - k].hitbox.getCenter());
+            for (int j = 0; j < ConnectedPlayers.size(); j++) {
+                if (ConnectedPlayers[j].isAlive() && CurLocation->ExistDirectWay(Enemies[j]->hitbox.getCenter(), ConnectedPlayers[j].hitbox.getCenter()))
+                    centers.push_back(ConnectedPlayers[j].hitbox.getCenter());
             }
             mutexOnDataChange.unlock();
             if (centers.size() > 0) {
                 Enemies[i]->setTarget(centers[0]);
-                for (int i = 1; i < centers.size(); i++)
-                    if (distance(Enemies[i]->hitbox.getCenter(), centers[i]) < distance(Enemies[i]->hitbox.getCenter(), Enemies[i]->target))
-                        Enemies[i]->setTarget(centers[i]);
+                for (int j = 1; j < centers.size(); j++)
+                    if (distance(Enemies[i]->hitbox.getCenter(), centers[j]) < distance(Enemies[i]->hitbox.getCenter(), Enemies[i]->target))
+                        Enemies[i]->setTarget(centers[j]);
                 Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, Enemies[i]->target, Enemies[i]->faction);
             } else {
                 Enemies[i]->setTarget(TheWayToPlayer[int(Enemies[i]->hitbox.getCenter().y) / size][int(Enemies[i]->hitbox.getCenter().x) / size]);
@@ -1922,7 +1915,6 @@ void MainLoop() {
 
             if (newBullets.size() > 0 && (HostFuncRun || ClientFuncRun)) {
                 mutexOnSend.lock();
-                std::cout << "send " << newBullets.size() << " bullets\n";
                 SendPacket << packetStates::Shooting << (sf::Int32)(newBullets.size());
                 for (int i = 0; i < newBullets.size(); i++) {
                     SendPacket << *newBullets[i];
@@ -1979,7 +1971,6 @@ void MainLoop() {
 
             if (newBullets.size() > 0 && (HostFuncRun || ClientFuncRun)) {
                 mutexOnSend.lock();
-                std::cout << "send " << newBullets.size() << " bullets\n";
                 SendPacket << packetStates::Shooting << (sf::Int32)(newBullets.size());
                 for (int i = 0; i < newBullets.size(); i++) {
                     SendPacket << *newBullets[i];
@@ -2061,9 +2052,9 @@ void ClientConnect() {
         }
 
         std::cout << "amount players = " << ConnectedPlayers.size() + 1 << '\n';
-        SendPacket << player << player.Name.getText();
+        SendPacket << player << player.Name.getText() << player.Health << player.HealthRecovery;
         for (Player& p : ConnectedPlayers) {
-            SendPacket << p << p.Name.getText();
+            SendPacket << p << p.Name.getText() << p.Health << p.HealthRecovery;
         }
 
         if (client->send(SendPacket) == sf::Socket::Done) {
@@ -2376,7 +2367,6 @@ void funcOfClient() {
                                 ReceivePacket >> *(Bullets.back());
                             }
                             mutexOnDataChange.unlock();
-                            std::cout << "recieved " << i32PacketData << " bullets\n";
                             break;
                         case packetStates::UseInteractable: {
                             DescriptionID::Type id;
