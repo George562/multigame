@@ -121,7 +121,11 @@ void drawEffects(sf::RenderWindow& window, Player* player) {
 void displayDescription(DescriptionID::Type id) {
     {
         using namespace HUD;
-        showDiscriptions = true;
-        DescriptionText.setString(interactibleDiscriptions[id]);
+        if (interactibleDiscriptions[id] != DescriptionText.getText()) {
+            showDiscriptions = true;
+            DescriptionText.setString(interactibleDiscriptions[id]);
+        } else {
+            showDiscriptions ^= true;
+        }
     }
 }

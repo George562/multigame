@@ -95,10 +95,9 @@ sf::RectangleShape MMPortalRect, MMBoxRect, MMPuddleRect, MMArtifact;
 
 //////////////////////////////////////////////////////////// Locations
 Location* CurLocation = nullptr;
-Location LabyrinthLocation, WaitingRoomLoaction, MainMenuLocation;
+Location LabyrinthLocation, MainMenuLocation;
 
 void loadLocations() {
-    WaitingRoomLoaction.LoadFromFile("sources/locations/WaitingRoom.txt");
     MainMenuLocation.LoadFromFile("sources/locations/MainMenu.txt");
 }
 
@@ -844,6 +843,15 @@ void EventHandler() {
                         MiniMapHoldOnPlayer = !MiniMapHoldOnPlayer;
                     }
                 }
+                if (event.key.code == sf::Keyboard::H) {
+                    int index = player.inventory.find(ItemID::regenDrug);
+                    if (index != -1 && useItem(player.inventory.items[index])) {
+                        if (player.inventory.items[index]->amount <= 0) {
+                            player.inventory.removeItem(player.inventory.items[index], false);
+                        }
+                        inventoryInterface::doInventoryUpdate[inventoryPage::Items] = true;
+                    }
+                }
                 if (event.key.code == sf::Keyboard::E) {
                     {
                         using namespace inventoryInterface;
@@ -936,9 +944,6 @@ void EventHandler() {
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
                         HUD::EscapeMenuActivated = true;
-                    } else if (event.key.code == sf::Keyboard::H) {
-                        player.hitbox.setCenter(size, size);
-                        CurLocation = &WaitingRoomLoaction;
                     }
                 }
             }
@@ -950,7 +955,7 @@ void inventoryHandler(sf::Event& event) {
     {
         using namespace inventoryInterface;
 
-        if (keyPressed(event, sf::Keyboard::Escape)) {
+        if (keyPressed(event, sf::Keyboard::E) || keyPressed(event, sf::Keyboard::Escape)) {
             if (upgradeInterface::isChoosingComponent) {
                 upgradeInterface::isChoosingComponent = false;
                 return;
