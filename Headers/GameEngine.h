@@ -1222,7 +1222,7 @@ void LevelGenerate(int n, int m) {
     }
 
     clearVectorOfPointer(listOfFire);
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 0; i++) {
         listOfFire.push_back(new Interactable());
         setFire(listOfFire[i]);
         placedOnMap(listOfFire[i], m, n);

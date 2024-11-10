@@ -185,9 +185,7 @@ bool Location::ExistDirectWay(sf::Vector2f from, sf::Vector2f to) {
                 return false;
     } else {
         float k = (to.y - from.y) / (to.x - from.x);
-        // std::cout << "k = " << k << '\n';
         while (fromTile != toTile) {
-            // std::cout << "fromTile = " << fromTile << "\n toTile = " << toTile << '\n';
             if (int(((fromTile.x + 1) * size - from.x) * k + from.y) / size == fromTile.y) {
                 if (walls[fromTile.y * 2 + 1][fromTile.x + 1])
                     return false;

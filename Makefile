@@ -5,8 +5,8 @@ all: multigame
 multigame: multigame.cpp icon
 	g++ multigame.cpp my.res -o multigame $(CFLAGS) -I./SFML-2.5.1/include/ -L ./SFML-2.5.1/lib/
 
-hide: multigame.cpp
-	g++ multigame.cpp -o multigame $(CFLAGS) -mwindows -L ./SFML-2.5.1/lib/
+hide: multigame.cpp icon
+	g++ multigame.cpp my.res -o multigame $(CFLAGS) -mwindows -I./SFML-2.5.1/include/ -L ./SFML-2.5.1/lib/
 
 editor: level_Editor
 
