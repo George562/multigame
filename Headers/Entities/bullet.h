@@ -68,13 +68,14 @@ public:
 #pragma pack(pop)
 
 std::vector<Bullet*> Bullets(0);
+std::vector<Bullet*> newBullets(0);
 
 sf::Packet& operator<<(sf::Packet& packet, Bullet& b) {
-    return packet << b.fromWho << b.hitbox.getCenter().x << b.hitbox.getCenter().y << b.Velocity.x << b.Velocity.y << b.penetration << b.color << b.damage;
+    return packet << b.fromWho << b.hitbox.getCenter() << b.Velocity << b.penetration << b.color << b.damage;
 }
 sf::Packet& operator>>(sf::Packet& packet, Bullet& b) {
     sf::Vector2f pos;
-    packet >> b.fromWho >> pos.x >> pos.y >> b.Velocity.x >> b.Velocity.y >> b.penetration >> b.color >> b.damage;
+    packet >> b.fromWho >> pos >> b.Velocity >> b.penetration >> b.color >> b.damage;
     b.hitbox.setCenter(pos);
     return packet;
 }

@@ -434,11 +434,11 @@ void initScripts() {
     });
     chat.SetCommand("/disconnect", []{
         if (ClientFuncRun) {
-            SelfDisconnect();
             mutexOnSend.lock();
             SendPacket << packetStates::Disconnect;
             sendSendPacket();
             mutexOnSend.unlock();
+            SelfDisconnect();
         }
     });
 }
@@ -926,11 +926,11 @@ void EventHandler() {
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
                         if (ClientFuncRun) {
-                            SelfDisconnect();
                             mutexOnSend.lock();
                             SendPacket << packetStates::Disconnect;
                             sendSendPacket();
                             mutexOnSend.unlock();
+                            SelfDisconnect();
                         } else if (HostFuncRun) {
                             chat.commands["/server off"]();
                         }
@@ -1431,6 +1431,7 @@ void updateBullets() {
             }
         }
     }
+    newBullets.clear();
 }
 
 void EnemyDie(int i) {
@@ -1893,7 +1894,6 @@ void MainLoop() {
             player.UpdateState();
         }
 
-        int wasBulletsSize = Bullets.size();
         if (!ClientFuncRun) {
             updateEnemies();
             if (HostFuncRun) {
@@ -1919,19 +1919,17 @@ void MainLoop() {
             }
             for (Weapon*& weapon : Weapons)
                 if (weapon->holstered) weapon->Reload(player.Mana);
-            mutexOnDataChange.unlock();
 
-            if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
+            if (newBullets.size() > 0 && (HostFuncRun || ClientFuncRun)) {
                 mutexOnSend.lock();
-                SendPacket << packetStates::Shooting << (sf::Int32)(Bullets.size() - wasBulletsSize);
-                for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
-                    SendPacket << *Bullets[wasBulletsSize];
+                std::cout << "send " << newBullets.size() << " bullets\n";
+                SendPacket << packetStates::Shooting << (sf::Int32)(newBullets.size());
+                for (int i = 0; i < newBullets.size(); i++) {
+                    SendPacket << *newBullets[i];
                 }
                 sendSendPacket();
                 mutexOnSend.unlock();
             }
-
-            mutexOnDataChange.lock();
             updateBullets();
             mutexOnDataChange.unlock();
 
@@ -1971,7 +1969,6 @@ void MainLoop() {
                     player.makeADash = playerMakingADash && playerCanDashing;
                 }
             }
-            
 
             mutexOnDataChange.lock();
             if (player.CurWeapon != nullptr && player.isAlive()) {
@@ -1979,19 +1976,18 @@ void MainLoop() {
             }
             for (Weapon*& weapon : Weapons)
                 if (weapon->holstered) weapon->Reload(player.Mana);
-            mutexOnDataChange.unlock();
 
-            if (wasBulletsSize < Bullets.size() && (HostFuncRun || ClientFuncRun)) {
+            if (newBullets.size() > 0 && (HostFuncRun || ClientFuncRun)) {
                 mutexOnSend.lock();
-                SendPacket << packetStates::Shooting << (sf::Int32)(Bullets.size() - wasBulletsSize);
-                for (; wasBulletsSize < Bullets.size(); wasBulletsSize++) {
-                    SendPacket << *Bullets[wasBulletsSize];
+                std::cout << "send " << newBullets.size() << " bullets\n";
+                SendPacket << packetStates::Shooting << (sf::Int32)(newBullets.size());
+                for (int i = 0; i < newBullets.size(); i++) {
+                    SendPacket << *newBullets[i];
                 }
                 sendSendPacket();
                 mutexOnSend.unlock();
             }
 
-            mutexOnDataChange.lock();
             updateBullets();
             mutexOnDataChange.unlock();
 
@@ -2186,17 +2182,17 @@ void funcOfHost() {
                                 break;
                             case packetStates::Shooting:
                                 ReceivePacket >> i32PacketData;
-                                mutexOnSend.lock();
                                 mutexOnDataChange.lock();
+                                mutexOnSend.lock();
                                 SendPacket << packetStates::Shooting << i32PacketData;
                                 for (int j = 0; j < i32PacketData; j++) {
                                     Bullets.push_back(new Bullet());
                                     ReceivePacket >> *(Bullets.back());
                                     SendPacket << *(Bullets.back());
                                 }
-                                mutexOnDataChange.unlock();
                                 SendToClients(SendPacket, i);
                                 mutexOnSend.unlock();
+                                mutexOnDataChange.unlock();
                                 break;
                             case packetStates::UseInteractable: {
                                 DescriptionID::Type id;
@@ -2380,7 +2376,7 @@ void funcOfClient() {
                                 ReceivePacket >> *(Bullets.back());
                             }
                             mutexOnDataChange.unlock();
-                            std::cout << "bullet recieved\n";
+                            std::cout << "recieved " << i32PacketData << " bullets\n";
                             break;
                         case packetStates::UseInteractable: {
                             DescriptionID::Type id;

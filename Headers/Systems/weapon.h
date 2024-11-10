@@ -103,6 +103,7 @@ public:
 		d = RotateOn(M_PI_RAD * (rand() % (int)(Scatter)-Scatter / 2.f), d) * BulletVelocity / len;
 		sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
 		Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+		newBullets.push_back(Bullets.back());
 		ManaStorage -= ManaCostOfBullet;
 		TimeFromLastShot->restart();
 
