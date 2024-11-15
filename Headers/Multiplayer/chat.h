@@ -33,6 +33,13 @@ public:
     std::string Last() { return strings.size() ? strings.back() : ""; }
 
     void SetCommand(std::string CommandString, void (*CommandFunction)(void)) { commands[CommandString] = CommandFunction; }
+    bool UseCommand(std::string Commandstring) {
+        if (commands.count(lines[0].getText()) != 0) {
+            commands[Commandstring]();
+            return true;
+        }
+        return false;
+    }
 
 private:
     void setLines();
@@ -152,9 +159,7 @@ bool Chat::InputText(sf::Event& event) {
 
 bool Chat::Entered() {
     if (inputted && lines[0].getText().size() > 0) {
-        if (commands.count(lines[0].getString()) != 0) {
-            commands[lines[0].getString()]();
-        } else {
+        if (!UseCommand(lines[0].getText())) {
             addLine(lines[0].getText());
         }
     }

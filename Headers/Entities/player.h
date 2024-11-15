@@ -73,11 +73,10 @@ void Player::move(Location* location) {
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Player& a) {
-    return packet << a.hitbox.getCenter().x << a.hitbox.getCenter().y;
+    return packet << a.hitbox.getCenter();
 }
 sf::Packet& operator>>(sf::Packet& packet, Player& a) {
-    sf::Vector2f v;
-    packet >> v.x >> v.y;
+    sf::Vector2f v; packet >> v;
     a.hitbox.setCenter(v);
     return packet;
 }

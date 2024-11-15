@@ -71,6 +71,15 @@ inline Vector2<T>& operator +=(Vector2<T>& left, const Vector2<T>& right)
     return left;
 }
 
+template <typename T>
+inline Vector2<T>& operator +=(Vector2<T>& left, const T& right)
+{
+    left.x += right;
+    left.y += right;
+
+    return left;
+}
+
 
 ////////////////////////////////////////////////////////////
 template <typename T>
@@ -78,6 +87,15 @@ inline Vector2<T>& operator -=(Vector2<T>& left, const Vector2<T>& right)
 {
     left.x -= right.x;
     left.y -= right.y;
+
+    return left;
+}
+
+template <typename T>
+inline Vector2<T>& operator -=(Vector2<T>& left, const T& right)
+{
+    left.x -= right;
+    left.y -= right;
 
     return left;
 }
@@ -90,12 +108,36 @@ inline Vector2<T> operator +(const Vector2<T>& left, const Vector2<T>& right)
     return Vector2<T>(left.x + right.x, left.y + right.y);
 }
 
+template <typename T>
+inline Vector2<T> operator +(const T& left, const Vector2<T>& right)
+{
+    return Vector2<T>(left + right.x, left + right.y);
+}
+
+template <typename T>
+inline Vector2<T> operator +(const Vector2<T>& left, const T& right)
+{
+    return Vector2<T>(left.x + right, left.y + right);
+}
+
 
 ////////////////////////////////////////////////////////////
 template <typename T>
 inline Vector2<T> operator -(const Vector2<T>& left, const Vector2<T>& right)
 {
     return Vector2<T>(left.x - right.x, left.y - right.y);
+}
+
+template <typename T>
+inline Vector2<T> operator -(const T& left, const Vector2<T>& right)
+{
+    return Vector2<T>(left - right.x, left - right.y);
+}
+
+template <typename T>
+inline Vector2<T> operator -(const Vector2<T>& left, const T& right)
+{
+    return Vector2<T>(left.x - right, left.y - right);
 }
 
 
@@ -106,8 +148,6 @@ inline Vector2<T> operator *(const Vector2<T>& left, T right)
     return Vector2<T>(left.x * right, left.y * right);
 }
 
-
-////////////////////////////////////////////////////////////
 template <typename T>
 inline Vector2<T> operator *(T left, const Vector2<T>& right)
 {
@@ -131,6 +171,12 @@ template <typename T>
 inline Vector2<T> operator /(const Vector2<T>& left, T right)
 {
     return Vector2<T>(left.x / right, left.y / right);
+}
+
+template <typename T>
+inline Vector2<T> operator /(T left, const Vector2<T>& right)
+{
+    return Vector2<T>(left / right.x, left / right.y);
 }
 
 
@@ -158,4 +204,18 @@ template <typename T>
 inline bool operator !=(const Vector2<T>& left, const Vector2<T>& right)
 {
     return (left.x != right.x) || (left.y != right.y);
+}
+
+
+////////////////////////////////////////////////////////////
+template <typename T>
+inline Vector2<T> operator %(const Vector2<T>& left, const Vector2<T>& right)
+{
+    return Vector2<T>(left.x % right.x, left.y % right.y);
+}
+
+template <typename T>
+inline Vector2<T> operator %(const Vector2<T>& left, T right)
+{
+    return Vector2<T>(left.x % right, left.y % right);
 }

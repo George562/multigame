@@ -137,7 +137,7 @@ void Location::FindEnableTilesFrom(sf::Vector2f p) {
     sf::IntRect UsedAreaRect(0, 0, m, n);
     while (!q.empty()) {
         cur = q.front(); q.pop();
-        if (EnableTiles[cur.y][cur.x]) continue;
+        if (!UsedAreaRect.contains(cur) || EnableTiles[cur.y][cur.x]) continue;
         EnableTiles[cur.y][cur.x] = true;
         AmountOfEnableTiles++;
         check = cur + dirs[0]; // {1, 0}

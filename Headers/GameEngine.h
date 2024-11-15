@@ -145,6 +145,7 @@ void upgradeInterfaceHandler(sf::Event&);
 void LevelGenerate(int, int);
 void LoadMainMenu();
 
+void setInteractable(Interactable*&);
 void setBox(Interactable*&);
 void setArtifact(Interactable*&);
 void setFire(Interactable*&);
@@ -370,8 +371,8 @@ void initScripts() {
         });
     }
     HUD::EscapeButton.setFunction([]() {
-        if (HostFuncRun)        chat.commands["/server off"]();
-        else if (ClientFuncRun) chat.commands["/disconnect"]();
+        if (HostFuncRun)        chat.UseCommand("/server off");
+        else if (ClientFuncRun) chat.UseCommand("/disconnect");
         LoadMainMenu();
         saveGame();
     });
@@ -933,8 +934,8 @@ void EventHandler() {
             if (CurLocation == &MainMenuLocation) {
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
-                        if (ClientFuncRun)    chat.commands["/disconnect"]();
-                        else if (HostFuncRun) chat.commands["/server off"]();
+                        if (ClientFuncRun)    chat.UseCommand("/disconnect");
+                        else if (HostFuncRun) chat.UseCommand("/server off");
                         Musics::MainMenu.pause();
                         window.close();
                         return;
@@ -1091,10 +1092,15 @@ void upgradeInterfaceHandler(sf::Event& event) {
 
 
 //============================================================================================== LEVEL GENERATION FUNCTIONS
+void setInteractable(Interactable*& x) {
+    if      (x->descriptionID == DescriptionID::box     ) { listOfBox.push_back(x);      setBox(x);      }
+    else if (x->descriptionID == DescriptionID::artifact) { listOfArtifact.push_back(x); setArtifact(x); }
+    else if (x->descriptionID == DescriptionID::fire    ) { listOfFire.push_back(x);     setFire(x);     }
+}
+
 void setBox(Interactable*& box) {
     box->setAnimation(Textures::Box);
     box->setSize(105.f, 117.f);
-    box->descriptionID = DescriptionID::box;
     box->setFunction([](Interactable* i) {
         if (player.Mana.cur >= 20) {
             player.Mana -= 20.f;
@@ -1143,7 +1149,6 @@ std::vector<sf::Color> artifactColors = {
 void setArtifact(Interactable*& artifact) {
     artifact->setAnimation(Textures::Architect, &Shaders::Architect);
     artifact->setSize(150.f, 150.f);
-    artifact->descriptionID = DescriptionID::artifact;
     artifact->setFunction([](Interactable* i) {
         std::rand(); int r = std::rand() % artifactEffects.size();
         artifactEffects[r]();
@@ -1170,13 +1175,13 @@ void setFire(Interactable*& fire) {
 }
 
 void placedOnMap(Interactable*& i, int& m, int& n) {
-    int x, y, posX = WallMinSize + std::rand() % int(size - i->hitbox.getSize().x - WallMinSize),
-              posY = WallMinSize + std::rand() % int(size - i->hitbox.getSize().y - WallMinSize);
+    int x, y;
+    sf::Vector2f pos(sf::Vector2i(std::rand(), std::rand()) % int(size - i->hitbox.getSize().x - WallMinSize));
     do {
         x = std::rand() % m;
         y = std::rand() % n;
     } while (!LabyrinthLocation.EnableTiles[y][x]);
-    i->setPosition(sf::Vector2f(x, y) * (float)size + sf::Vector2f(posX, posY));
+    i->setPosition(sf::Vector2f(x, y) * (float)size + WallMinSize + pos);
 
     InteractableStuff.push_back(i);
     DrawableStuff.push_back(i);
@@ -1205,28 +1210,23 @@ void LevelGenerate(int n, int m) {
 
     portal.setCenter(player.hitbox.getCenter());
 
-    clearVectorOfPointer(listOfBox);
+    clearVectorOfPointers(listOfBox);
+    Interactable* x;
     for (int i = 0; i < 10; i++) {
-        listOfBox.push_back(new Interactable());
-        setBox(listOfBox[i]);
-        placedOnMap(listOfBox[i], m, n);
+        x = new Interactable(DescriptionID::box); setInteractable(x); placedOnMap(x, m, n);
     }
 
-    clearVectorOfPointer(listOfArtifact);
+    clearVectorOfPointers(listOfArtifact);
     for (int i = 0; i < 10; i++) {
-        listOfArtifact.push_back(new Interactable());
-        setArtifact(listOfArtifact[i]);
-        placedOnMap(listOfArtifact[i], m, n);
+        x = new Interactable(DescriptionID::artifact); setInteractable(x); placedOnMap(x, m, n);
     }
 
-    clearVectorOfPointer(listOfFire);
+    clearVectorOfPointers(listOfFire);
     for (int i = 0; i < 0; i++) {
-        listOfFire.push_back(new Interactable());
-        setFire(listOfFire[i]);
-        placedOnMap(listOfFire[i], m, n);
+        x = new Interactable(DescriptionID::fire); setInteractable(x); placedOnMap(x, m, n);
     }
 
-    clearVectorOfPointer(Enemies);
+    clearVectorOfPointers(Enemies);
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
         Enemies.push_back(new DistortedScientist());
@@ -1244,22 +1244,23 @@ void LevelGenerate(int n, int m) {
 void LoadMainMenu() {
     HUD::EscapeMenuActivated = false;
     HUD::ListOfPlayers.clearText();
-    clearVectorOfPointer(Bullets);
-    clearVectorOfPointer(Enemies);
-    clearVectorOfPointer(TempTextsOnGround);
-    clearVectorOfPointer(HUD::TempTextsOnScreen);
-    clearVectorOfPointer(DamageText);
-    clearVectorOfPointer(HUD::MessageText);
-    clearVectorOfPointer(listOfBox);
-    clearVectorOfPointer(listOfArtifact);
-    clearVectorOfPointer(listOfFire);
-    clearVectorOfPointer(PickupStuff);
+    clearVectorOfPointers(Bullets);
+    clearVectorOfPointers(Enemies);
+    clearVectorOfPointers(TempTextsOnGround);
+    clearVectorOfPointers(HUD::TempTextsOnScreen);
+    clearVectorOfPointers(DamageText);
+    clearVectorOfPointers(HUD::MessageText);
+    clearVectorOfPointers(listOfBox);
+    clearVectorOfPointers(listOfArtifact);
+    clearVectorOfPointers(listOfFire);
+    clearVectorOfPointers(PickupStuff);
     for (Effect *effect : player.effects) {
         clearEffect(player, effect);
     }
     player.CurWeapon->lock = true;
 
     CurLocation = &MainMenuLocation;
+    curLevel = 0;
 
     player.hitbox.setCenter(3.5f * size, 2.5f * size);
     FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
@@ -1272,8 +1273,8 @@ void LoadMainMenu() {
         if (ClientFuncRun) {
             addMessageText("Host must start next level", sf::Color::Black);
         } else {
-            clearVectorOfPointer(PickupStuff);
-            clearVectorOfPointer(Bullets);
+            clearVectorOfPointers(PickupStuff);
+            clearVectorOfPointers(Bullets);
 
             DrawableStuff.clear();
             HUD::InterfaceStuff.clear();
@@ -1318,9 +1319,7 @@ void LoadMainMenu() {
                 mutexOnSend.lock();
                 SendPacket << packetStates::Labyrinth << CurLocation;
                 SendPacket << (sf::Int32)Enemies.size() << Enemies;
-                SendPacket << (sf::Int32)listOfBox.size() << listOfBox;
-                SendPacket << (sf::Int32)listOfArtifact.size() << listOfArtifact;
-                SendPacket << (sf::Int32)listOfFire.size() << listOfFire;
+                SendPacket << (sf::Int32)InteractableStuff.size() << InteractableStuff;
                 SendPacket << &portal << player;
                 sendSendPacket();
                 mutexOnSend.unlock();
@@ -1380,13 +1379,15 @@ void LoadMainMenu() {
     DrawableStuff.push_back(PickupStuff[0]);
     PickupStuff[0]->dropTo(player.hitbox.getCenter() + sf::Vector2f(100, 100));
 
-    listOfBox.push_back(new Interactable()); setBox(listOfBox[0]);
-    listOfBox[0]->setPosition(1912.5, 1545);
-    placedOnMap(listOfBox[0]);
+    Interactable* x = new Interactable(DescriptionID::box);
+    setInteractable(x);
+    x->setPosition(1912.5, 1545);
+    placedOnMap(x);
 
-    listOfArtifact.push_back(new Interactable()); setArtifact(listOfArtifact[0]);
-    listOfArtifact[0]->setPosition(1312.5, 1545);
-    placedOnMap(listOfArtifact[0]);
+    x = new Interactable(DescriptionID::artifact);
+    setInteractable(x);
+    x->setPosition(1312.5, 1545);
+    placedOnMap(x);
 }
 //==============================================================================================
 
@@ -2259,8 +2260,8 @@ void funcOfClient() {
                             break;
                         case packetStates::Labyrinth:
                             mutexOnDataChange.lock();
-                            clearVectorOfPointer(PickupStuff);
-                            clearVectorOfPointer(Bullets);
+                            clearVectorOfPointers(PickupStuff);
+                            clearVectorOfPointers(Bullets);
 
                             DrawableStuff.clear();
                             HUD::InterfaceStuff.clear();
@@ -2288,40 +2289,28 @@ void funcOfClient() {
                             MiniMapView.zoom(MiniMapZoom);
                             ReceivePacket >> &LabyrinthLocation;
                             FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
-                            ReceivePacket >> i32PacketData; clearVectorOfPointer(Enemies);
+                            ReceivePacket >> i32PacketData; clearVectorOfPointers(Enemies);
                             for (int i = 0; i < i32PacketData; i++) {
                                 ReceivePacket >> sPacketData;
-                                if (sPacketData == "Distorted Scientist") {
-                                    Enemies.push_back(new DistortedScientist());
-                                } else if (sPacketData == "Distorted") {
-                                    Enemies.push_back(new Distorted());
-                                }
+                                if (sPacketData == "Distorted Scientist") Enemies.push_back(new DistortedScientist());
+                                else if (sPacketData == "Distorted")      Enemies.push_back(new Distorted());
                                 ReceivePacket >> Enemies[i];
                                 DrawableStuff.push_back(Enemies[i]);
                             }
-                            ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfBox);
+                            ReceivePacket >> i32PacketData;
+                            clearVectorOfPointers(listOfBox);
+                            clearVectorOfPointers(listOfArtifact);
+                            clearVectorOfPointers(listOfFire);
                             for (int i = 0; i < i32PacketData; i++) {
-                                listOfBox.push_back(new Interactable()); setBox(listOfBox[i]);
-                                ReceivePacket >> listOfBox[i];
-                                placedOnMap(listOfBox[i]);
-                            }
-                            ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfArtifact);
-                            for (int i = 0; i < i32PacketData; i++) {
-                                listOfArtifact.push_back(new Interactable()); setArtifact(listOfArtifact[i]);
-                                ReceivePacket >> listOfArtifact[i];
-                                placedOnMap(listOfArtifact[i]);
-                            }
-                            ReceivePacket >> i32PacketData; clearVectorOfPointer(listOfFire);
-                            for (int i = 0; i < i32PacketData; i++) {
-                                listOfFire.push_back(new Interactable()); setFire(listOfFire[i]);
-                                ReceivePacket >> listOfFire[i];
-                                placedOnMap(listOfFire[i]);
-                                std::cout << "listOfFire " << listOfFire[i]->hitbox.getCenter() << '\n';
+                                Interactable* x = new Interactable();
+                                ReceivePacket >> x;
+                                setInteractable(x);
+                                placedOnMap(x);
                             }
                             ReceivePacket >> &portal >> player;
 
                             CurLocation->FindEnableTilesFrom(player.hitbox.getCenter() / (float)size);
-                            
+
                             placedOnMap(&portal);
 
                             addUI(&HUD::HUDFrame, HUD::InterfaceStuff);

@@ -112,6 +112,7 @@ void loadDescriptions() {
             interactibleDiscriptions[DescriptionID::shopSector]    = j["shopSector"]    .template get<std::string>();
             interactibleDiscriptions[DescriptionID::upgradeSector] = j["upgradeSector"] .template get<std::string>();
             interactibleDiscriptions[DescriptionID::artifact]      = j["artifact"]      .template get<std::string>();
+            interactibleDiscriptions[DescriptionID::fire]          = j["fire"]          .template get<std::string>();
         } catch(const std::exception& e) {
             for (DescriptionID::Type i = DescriptionID::portal; i < DescriptionID::DescriptionCount; i++) { 
                 interactibleDiscriptions[i] = "Error loading description";

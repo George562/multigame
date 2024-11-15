@@ -14,6 +14,7 @@ namespace DescriptionID {
         shopSector,
         upgradeSector,
         artifact,
+        fire,
         DescriptionCount
     };
 }
@@ -58,13 +59,13 @@ public:
     virtual bool CanBeActivated(CollisionCircle& circle) { return hitbox.intersect(circle); }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
-        if (animation != nullptr) {
+        if (animation) {
             target.draw(*animation, states);
         }
     }
 
     void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader *shader = nullptr) {
-        if (animation != nullptr) {
+        if (animation) {
             delete animation;
         }
         animation = new Animation("");
@@ -74,7 +75,7 @@ public:
     };
 
     void setAnimation(sf::Texture& texture, sf::Shader *shader = nullptr) {
-        if (animation != nullptr) {
+        if (animation) {
             delete animation;
         }
         animation = new Animation("");
@@ -83,10 +84,10 @@ public:
         animation->play();
     };
 
-    void setSize(float w, float h) { hitbox.setSize(w, h); animation->setSize(sf::Vector2f(w, h)); }
-    void setSize(sf::Vector2f v) { hitbox.setSize(v); animation->setSize(v); }
+    void setSize(float w, float h) { hitbox.setSize(w, h); if (animation) animation->setSize(sf::Vector2f(w, h)); }
+    void setSize(sf::Vector2f v) { hitbox.setSize(v); if (animation) animation->setSize(v); }
 
-    void setPosition(float x, float y) { hitbox.setPosition(x, y); animation->setPosition(x, y); }
+    void setPosition(float x, float y) { hitbox.setPosition(x, y); if (animation) animation->setPosition(x, y); }
     void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
 
     void setCenter(float x, float y) { setPosition(x - hitbox.getSize().x / 2, y - hitbox.getSize().y / 2); }
@@ -94,10 +95,10 @@ public:
 };
 
 sf::Packet& operator<<(sf::Packet& packet, Interactable* i) {
-    return packet << i->hitbox.getCenter();
+    return packet << i->descriptionID << i->hitbox.getCenter();
 }
 sf::Packet& operator>>(sf::Packet& packet, Interactable* i) {
-    sf::Vector2f v; packet >> v;
+    sf::Vector2f v; packet >> i->descriptionID >> v;
     i->setCenter(v);
     return packet;
 }

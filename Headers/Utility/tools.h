@@ -84,7 +84,7 @@ void DeletePointerFromVector(std::vector<T>& arr, size_t index) {
 }
 
 template <typename T>
-void clearVectorOfPointer(std::vector<T>& arr) {
+void clearVectorOfPointers(std::vector<T>& arr) {
     for (size_t i = 0; i < arr.size(); i++) {
         delete arr[i];
     }
