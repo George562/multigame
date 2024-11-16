@@ -33,7 +33,7 @@ namespace HUD {
     std::vector<PlacedText*> WeaponNameTexts;
     PlacedText ReloadWeaponText;
     Frame XButtonSprite("xBtn", UI::L, UI::BL, { 0, 0 });
-    Frame InfoLogoSprite("infoBtn", UI::L, UI::TL, { 0, 0 });
+    Frame InfoLogoSprite("infoBtn", UI::TL, UI::BL, { 0, 0 });
 
     std::map<DescriptionID::Type, std::string> interactibleDiscriptions;
     PlacedText DescriptionText("descTxt", UI::center, UI::center, FontString("", 32));
@@ -82,13 +82,13 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         ReloadWeaponText.setFillColor(sf::Color(255, 20, 20));
         ReloadWeaponText.setCharacterSize(100);
 
-        InfoLogoSprite.setTexture(Textures::InfoLogo, UI::texture);
-        InfoLogoSprite.setScale(2.f, 2.f);
-        InfoLogoSprite.parentTo(&HUDFrame, true, { 0, 20 });
-
         XButtonSprite.setTexture(Textures::XButton, UI::texture);
         XButtonSprite.setScale(2.f, 2.f);
         XButtonSprite.parentTo(&HUDFrame, true, { 0, -20 });
+
+        InfoLogoSprite.setTexture(Textures::InfoLogo, UI::texture);
+        InfoLogoSprite.setScale(2.f, 2.f);
+        InfoLogoSprite.parentTo(&XButtonSprite, true, { 0, -10 });
 
         DescriptionText.parentTo(&HUDFrame, true);
 

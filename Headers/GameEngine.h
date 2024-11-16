@@ -1212,6 +1212,7 @@ void LevelGenerate(int n, int m) {
     for (int i = 0; i < Enemies.size(); i++) {
         do {
             Enemies[i]->hitbox.setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
+            Enemies[i]->setTarget(Enemies[i]->hitbox.getCenter());
         } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->hitbox.getPosition().y / size][(int)Enemies[i]->hitbox.getPosition().x / size] ||
                  distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
     }
@@ -1473,8 +1474,6 @@ void updateEnemies() {
                     if (distance(Enemies[i]->hitbox.getCenter(), centers[j]) < distance(Enemies[i]->hitbox.getCenter(), Enemies[i]->target))
                         Enemies[i]->setTarget(centers[j]);
                 Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, Enemies[i]->target, Enemies[i]->faction);
-            } else {
-                Enemies[i]->setTarget(TheWayToPlayer[int(Enemies[i]->hitbox.getCenter().y) / size][int(Enemies[i]->hitbox.getCenter().x) / size]);
             }
             Enemies[i]->move(CurLocation);
             Enemies[i]->UpdateState();

@@ -175,7 +175,7 @@ bool Location::ExistDirectWay(sf::Vector2f from, sf::Vector2f to) {
     sf::Vector2i d = toTile - fromTile;
     if (d.x == 0 && d.y == 0) return true;
     if (d.x == 0) {
-        if (from.y > to.y) std::swap(to, from); // from up to down
+        if (from.y > to.y) std::swap(toTile, fromTile); // from up to down
         for (int i = 1; i <= std::abs(d.y); i++)
             if (walls[fromTile.y * 2 + i * 2][fromTile.x])
                 return false;
