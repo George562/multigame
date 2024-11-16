@@ -1174,31 +1174,25 @@ void setFire(Interactable*& fire) {
     fire->setSize(70.f, 70.f);
 }
 
-void placedOnMap(Interactable*& i, int& m, int& n) {
-    int x, y;
-    sf::Vector2f pos(sf::Vector2i(std::rand(), std::rand()) % int(size - i->hitbox.getSize().x - WallMinSize));
-    do {
-        x = std::rand() % m;
-        y = std::rand() % n;
-    } while (!LabyrinthLocation.EnableTiles[y][x]);
-    i->setPosition(sf::Vector2f(x, y) * (float)size + WallMinSize + pos);
-
+void placedOnMap(Interactable* i) {
     InteractableStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
 void placedOnMap(Interactable*& i, float x, float y) {
     i->setPosition(x, y);
-    InteractableStuff.push_back(i);
-    DrawableStuff.push_back(i);
+    placedOnMap(i);
 }
 void placedOnMap(Interactable*& i, sf::Vector2f v) {
-    i->setPosition(v);
-    InteractableStuff.push_back(i);
-    DrawableStuff.push_back(i);
+    placedOnMap(i, v.x, v.y);
 }
-void placedOnMap(Interactable* i) {
-    InteractableStuff.push_back(i);
-    DrawableStuff.push_back(i);
+void placedOnMap(Interactable*& i, int& m, int& n) {
+    int x, y;
+    sf::Vector2f pos(sf::Vector2i(std::rand(), std::rand()) % (size - sf::Vector2i(i->hitbox.getSize() + WallMinSize)));
+    do {
+        x = std::rand() % m;
+        y = std::rand() % n;
+    } while (!LabyrinthLocation.EnableTiles[y][x]);
+    placedOnMap(i, sf::Vector2f(x, y) * (float)size + WallMinSize + pos);
 }
 
 void LevelGenerate(int n, int m) {
