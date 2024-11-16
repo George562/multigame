@@ -370,11 +370,17 @@ void initScripts() {
             }
         });
     }
+
     HUD::EscapeButton.setFunction([]() {
-        if (HostFuncRun)        chat.UseCommand("/server off");
-        else if (ClientFuncRun) chat.UseCommand("/disconnect");
-        LoadMainMenu();
-        saveGame();
+        if (ClientFuncRun)    chat.UseCommand("/disconnect");
+        else if (HostFuncRun) chat.UseCommand("/server off");
+        if (CurLocation == &MainMenuLocation) {
+            Musics::MainMenu.pause();
+            window.close();
+        } else {
+            LoadMainMenu();
+            saveGame();
+        }
     });
 
     chat.SetCommand("/?", []{
@@ -807,7 +813,7 @@ void EventHandler() {
         } else if (HUD::EscapeMenuActivated) {
             HUD::EscapeButton.isActivated(event);
             if (keyPressed(event, sf::Keyboard::Escape)) {
-                HUD::EscapeMenuActivated ^= true;
+                HUD::EscapeMenuActivated = false;
             }
         } else if (inventoryInterface::isDrawInventory) {
             inventoryHandler(event);
@@ -822,10 +828,11 @@ void EventHandler() {
                         MiniMapActivated = false;
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                         continue;
-                    }
-                    if (HUD::showDiscriptions) {
+                    } else if (HUD::showDiscriptions) {
                         HUD::showDiscriptions = false;
                         continue;
+                    } else {
+                        HUD::EscapeMenuActivated = true;
                     }
                 }
                 if (event.key.code == sf::Keyboard::R && player.isAlive()) {
@@ -927,25 +934,6 @@ void EventHandler() {
                     std::string reloadStr = player.CurWeapon->Name + " is out of ammo!";
                     HUD::ReloadWeaponText.setString(reloadStr);
                     HUD::ReloadWeaponText.setCenter(sf::Vector2f(scw / 2, sch / 4));
-                }
-            }
-
-
-            if (CurLocation == &MainMenuLocation) {
-                if (event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Escape) {
-                        if (ClientFuncRun)    chat.UseCommand("/disconnect");
-                        else if (HostFuncRun) chat.UseCommand("/server off");
-                        Musics::MainMenu.pause();
-                        window.close();
-                        return;
-                    }
-                }
-            } else if (CurLocation == &LabyrinthLocation) {
-                if (event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Escape) {
-                        HUD::EscapeMenuActivated = true;
-                    }
                 }
             }
         }
@@ -1152,7 +1140,7 @@ void setArtifact(Interactable*& artifact) {
     artifact->setFunction([](Interactable* i) {
         std::rand(); int r = std::rand() % artifactEffects.size();
         artifactEffects[r]();
-        
+
         addMessageText(artifactText[r], artifactColors[r]);
         DeleteFromVector(listOfArtifact, i);
         DeleteFromVector(DrawableStuff, (sf::Drawable*)i);
@@ -1205,20 +1193,13 @@ void LevelGenerate(int n, int m) {
     portal.setCenter(player.hitbox.getCenter());
 
     clearVectorOfPointers(listOfBox);
-    Interactable* x;
-    for (int i = 0; i < 10; i++) {
-        x = new Interactable(DescriptionID::box); setInteractable(x); placedOnMap(x, m, n);
-    }
-
     clearVectorOfPointers(listOfArtifact);
-    for (int i = 0; i < 10; i++) {
-        x = new Interactable(DescriptionID::artifact); setInteractable(x); placedOnMap(x, m, n);
-    }
-
     clearVectorOfPointers(listOfFire);
-    for (int i = 0; i < 0; i++) {
-        x = new Interactable(DescriptionID::fire); setInteractable(x); placedOnMap(x, m, n);
-    }
+    Interactable* x;
+    for (int i = 0; i < 10; i++) { x = new Interactable(DescriptionID::box);      setInteractable(x); placedOnMap(x, m, n); }
+    for (int i = 0; i < 10; i++) { x = new Interactable(DescriptionID::artifact); setInteractable(x); placedOnMap(x, m, n); }
+    for (int i = 0; i < 0; i++)  { x = new Interactable(DescriptionID::fire);     setInteractable(x); placedOnMap(x, m, n); }
+
 
     clearVectorOfPointers(Enemies);
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
@@ -1226,6 +1207,7 @@ void LevelGenerate(int n, int m) {
         Enemies.push_back(new DistortedScientist());
         Enemies.push_back(new Distorted());
     }
+    for (Enemy*& enemy : Enemies) DrawableStuff.push_back(enemy);
 
     for (int i = 0; i < Enemies.size(); i++) {
         do {
@@ -1297,9 +1279,6 @@ void LoadMainMenu() {
 
             DrawableStuff.push_back(&player);
             DrawableStuff.push_back(&portal);
-            for (Enemy*& enemy : Enemies) {
-                DrawableStuff.push_back(enemy);
-            }
 
             addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
             for (int i = 0; i < HUD::WeaponNameTexts.size(); i++) {
@@ -1848,7 +1827,7 @@ void saveGame() {
     j["Pistol"] = pistol;
     j["Shotgun"] = shotgun;
     j["Rifle"] = rifle;
-    
+
     fileToSave << j.dump(4);
 
     fileToSave.close();
