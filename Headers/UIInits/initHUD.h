@@ -32,11 +32,11 @@ namespace HUD {
     std::vector<Bar<float>*> AmmoBars;
     std::vector<PlacedText*> WeaponNameTexts;
     PlacedText ReloadWeaponText;
-    sf::Sprite XButtonSprite;
-    sf::Sprite InfoLogoSprite;
+    Frame XButtonSprite("xBtn", UI::L, UI::BL, { 0, 0 });
+    Frame InfoLogoSprite("infoBtn", UI::L, UI::TL, { 0, 0 });
 
     std::map<DescriptionID::Type, std::string> interactibleDiscriptions;
-    PlacedText DescriptionText;
+    PlacedText DescriptionText("descTxt", UI::center, UI::center, FontString("", 32));
     bool showDiscriptions;
 }
 
@@ -82,15 +82,15 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         ReloadWeaponText.setFillColor(sf::Color(255, 20, 20));
         ReloadWeaponText.setCharacterSize(100);
 
-        InfoLogoSprite.setTexture(Textures::InfoLogo);
+        InfoLogoSprite.setTexture(Textures::InfoLogo, UI::texture);
         InfoLogoSprite.setScale(2.f, 2.f);
-        InfoLogoSprite.setPosition(20, sch * 0.35f - InfoLogoSprite.getGlobalBounds().height);
+        InfoLogoSprite.parentTo(&HUDFrame, true, { 0, 20 });
 
-        XButtonSprite.setTexture(Textures::XButton);
+        XButtonSprite.setTexture(Textures::XButton, UI::texture);
         XButtonSprite.setScale(2.f, 2.f);
-        XButtonSprite.setPosition(InfoLogoSprite.getPosition() + sf::Vector2f(0, InfoLogoSprite.getGlobalBounds().height + 10));
+        XButtonSprite.parentTo(&HUDFrame, true, { 0, -20 });
 
-        DescriptionText.setPosition(scw / 2.f, sch / 2.f);
+        DescriptionText.parentTo(&HUDFrame, true);
 
         for (int i = 0; i < Effects::EffectCount; i++) {
             effectIconsTimers[i] = new TempText(sf::Time::Zero);

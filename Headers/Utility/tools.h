@@ -175,6 +175,14 @@ sf::Vector2f operator*(sf::Vector2f a, sf::Vector2f b) {
     return sf::Vector2f(a.x * b.x, a.y * b.y);
 }
 
+sf::Vector2i operator%(sf::Vector2i v, int num) {
+    return sf::Vector2i(v.x % num, v.y % num);
+}
+
+sf::Vector2f operator+(sf::Vector2f v, float num) {
+    return sf::Vector2f(v.x + num, v.y + num);
+}
+
 template <typename T>
 std::ostream& operator<<(std::ostream& stream, sf::Vector2<T> a) {
     return stream << a.x << ", " << a.y;

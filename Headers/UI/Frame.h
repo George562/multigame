@@ -23,7 +23,7 @@ public:
 
     void setPosition(float x, float y) {
         UIRect::setPosition(x, y);
-        sprite.setPosition(getPosition());
+        //sprite.setPosition(getPosition());
         shape.setPosition(getPosition());
     }
 
@@ -56,6 +56,9 @@ public:
     void setSpriteColor(sf::Color color) { sprite.setColor(color); }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states) const {
+        if (getName() == "xBtn")
+            std::cout << "";
+        states.transform *= getTransform();
         target.draw(sprite, states);
         target.draw(shape, states);
     }

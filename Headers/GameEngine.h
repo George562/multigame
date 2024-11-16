@@ -1174,14 +1174,6 @@ void setFire(Interactable*& fire) {
     fire->setSize(70.f, 70.f);
 }
 
-sf::Vector2i operator%(sf::Vector2i v, int num) {
-    return sf::Vector2i(v.x % num, v.y % num);
-}
-
-sf::Vector2f operator+(sf::Vector2f v, float num) {
-    return sf::Vector2f(v.x + num, v.y + num);
-}
-
 void placedOnMap(Interactable*& i, int& m, int& n) {
     int x, y;
     sf::Vector2f pos(sf::Vector2i(std::rand(), std::rand()) % int(size - i->hitbox.getSize().x - WallMinSize));
@@ -2021,15 +2013,11 @@ void MainLoop() {
         processEffects();
 
         if (CanSomethingBeActivated()) {
-            if (!in(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::XButtonSprite))) {
-                HUD::InterfaceStuff.push_back(&HUD::XButtonSprite);
-            }
-            if (!in(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::InfoLogoSprite))) {
-                HUD::InterfaceStuff.push_back(&HUD::InfoLogoSprite);
-            }
+            addUI(&HUD::XButtonSprite, HUD::InterfaceStuff);
+            addUI(&HUD::InfoLogoSprite, HUD::InterfaceStuff);
         } else {
-            DeleteFromVector(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::XButtonSprite));
-            DeleteFromVector(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::InfoLogoSprite));
+            removeUI(&HUD::XButtonSprite, HUD::InterfaceStuff);
+            removeUI(&HUD::InfoLogoSprite, HUD::InterfaceStuff);
         }
 
         EventHandler();
