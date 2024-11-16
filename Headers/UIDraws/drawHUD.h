@@ -124,6 +124,7 @@ void displayDescription(DescriptionID::Type id) {
         if (interactibleDiscriptions[id] != DescriptionText.getText()) {
             showDiscriptions = true;
             DescriptionText.setString(interactibleDiscriptions[id]);
+            DescriptionText.parentTo(&HUD::HUDFrame, true, { 0, -200 });
         } else {
             showDiscriptions ^= true;
         }

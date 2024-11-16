@@ -34,7 +34,7 @@ namespace UI {
     related UIElements into a tree hierarchy for easy manipulations on groups of UI elements.
 
     Anchor locations:
-                    UL----------U----------UR
+                    TL----------T----------TR
                     |                       |
                     |                       |
                     L         Center        R
@@ -45,7 +45,7 @@ namespace UI {
     Anchor is a point, where the added element wants to be put. As default - it cares only about it's upper-left corner.
     anchoringPoint - a parameter that will put the corresponding corner on the anchor. For example:
     Anchor = BL, anchoringPoint = BL:
-                    UL----------U----------UR
+                    TL----------T----------TR
                     |                       |
                     /------\                |
                     |      |  Center        R
@@ -53,12 +53,12 @@ namespace UI {
                     |      |                |
                     \------/---------------BR
 
-    Anchor = UR, anchoringPoint = BL:
+    Anchor = TR, anchoringPoint = BL:
                                            /-------\
                                            |       |
                                            |       |
                                            |       |
-                    UL----------U----------\-------/
+                    TL----------T----------\-------/
                     |                       |
                     |                       |
                     L         Center        R
@@ -66,8 +66,8 @@ namespace UI {
                     |                       |
                     BL----------B-----------BR
 
-    Anchor = B, anchoringPoint = UL:
-                    UL----------U----------UR
+    Anchor = B, anchoringPoint = TL:
+                    TL----------T----------TR
                     |                       |
                     |                       |
                     L         Center        R
@@ -117,8 +117,8 @@ private:
             return;
         sf::Vector2f posVec = UIRect::getPosition();
         if (elem->anchor == UI::Anchor::center) posVec = getCenter();
-        else posVec -= getShiftByPoint(sf::Vector2f(getGlobalBounds().getSize()), elem->anchor);
-        posVec += getShiftByPoint(sf::Vector2f(elem->getGlobalBounds().getSize()), elem->anchoringPoint);
+        else posVec -= getShiftByPoint(getGlobalBounds().getSize(), elem->anchor);
+        posVec += getShiftByPoint(elem->getGlobalBounds().getSize(), elem->anchoringPoint);
         elem->setPosition(posVec + offset);
     }
 protected:

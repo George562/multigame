@@ -75,9 +75,6 @@ template <typename T>
 void Bar<T>::setPosition(float x, float y) {
     sf::Vector2f prevPos = getPosition();
     UIElement::setPosition(x, y);
-    wall.setPosition(getPosition());
-    background.setPosition(wall.getPosition() + sf::Vector2f(wallWidth, wallWidth));
-    foreground.setPosition(wall.getPosition() + sf::Vector2f(wallWidth, wallWidth));
     ValueText.setCenter(getCenter());
 }
 
@@ -95,8 +92,8 @@ void Bar<T>::draw(sf::RenderTarget& target, sf::RenderStates states) const {
         ValueText.setString(std::to_string((int)value->cur) + " / " + std::to_string((int)value->top));
         ValueText.setCenter(getCenter());
     }
-    if (ShowWall) target.draw(wall, states);
-    if (ShowBackground) target.draw(background, states);
-    if (ShowForeground) target.draw(foreground, states);
+    if (ShowWall) target.draw(wall, states.transform * getTransform());
+    if (ShowBackground) target.draw(background, states.transform * getTransform());
+    if (ShowForeground) target.draw(foreground, states.transform * getTransform());
     if (ShowText) target.draw(ValueText, states);
 }

@@ -111,14 +111,14 @@ void PolygonButton::setPosition(float x, float y) {
     UIElement::setPosition(x, y);
     hitbox.setPosition(x, y);
 	setConvexShape(shape, hitbox.getPoints());
-    sprite.setPosition(x, y);
     ButtonText.setCenter(getCenter());
 }
 
 void PolygonButton::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    if (showShape) target.draw(shape, states);
+    states.transform *= getTransform();
+    if (showShape) target.draw(shape);
     target.draw(sprite, states);
-    target.draw(ButtonText, states);
+    target.draw(ButtonText);
 }
 
 bool PolygonButton::isActivated(sf::Event& event) {

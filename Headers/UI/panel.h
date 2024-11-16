@@ -71,7 +71,6 @@ Panel::Panel(std::string name, sf::FloatRect rect, std::string word)
 
 void Panel::setPosition(float x, float y) {
     UIElement::setPosition(x, y);
-    sprite.setPosition(x, y);
     text.setCenter(getCenter());
 }
 
@@ -100,7 +99,7 @@ void Panel::removeWord(int index) {
 }
 
 void Panel::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    // states.transform *= states;
+    states.transform *= getTransform();
     target.draw(sprite, states);
     target.draw(text);
 }

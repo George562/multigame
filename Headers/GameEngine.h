@@ -1986,15 +1986,11 @@ void MainLoop() {
         processEffects();
 
         if (CanSomethingBeActivated()) {
-            if (!in(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::XButtonSprite))) {
-                HUD::InterfaceStuff.push_back(&HUD::XButtonSprite);
-            }
-            if (!in(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::InfoLogoSprite))) {
-                HUD::InterfaceStuff.push_back(&HUD::InfoLogoSprite);
-            }
+            addUI(&HUD::XButtonSprite, HUD::InterfaceStuff);
+            addUI(&HUD::InfoLogoSprite, HUD::InterfaceStuff);
         } else {
-            DeleteFromVector(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::XButtonSprite));
-            DeleteFromVector(HUD::InterfaceStuff, static_cast<sf::Drawable*>(&HUD::InfoLogoSprite));
+            removeUI(&HUD::XButtonSprite, HUD::InterfaceStuff);
+            removeUI(&HUD::InfoLogoSprite, HUD::InterfaceStuff);
         }
 
         EventHandler();
