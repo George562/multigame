@@ -1174,6 +1174,14 @@ void setFire(Interactable*& fire) {
     fire->setSize(70.f, 70.f);
 }
 
+sf::Vector2i operator%(sf::Vector2i v, int num) {
+    return sf::Vector2i(v.x % num, v.y % num);
+}
+
+sf::Vector2f operator+(sf::Vector2f v, float num) {
+    return sf::Vector2f(v.x + num, v.y + num);
+}
+
 void placedOnMap(Interactable*& i, int& m, int& n) {
     int x, y;
     sf::Vector2f pos(sf::Vector2i(std::rand(), std::rand()) % int(size - i->hitbox.getSize().x - WallMinSize));

@@ -37,7 +37,7 @@ public:
 
 	operator Upgradable<sf::Time>() {
 		Upgradable<sf::Time> timeUpg;
-		timeUpg.curLevel = 0;
+		timeUpg.curLevel = this->curLevel;
 		timeUpg.maxLevel = this->maxLevel;
 		timeUpg.stats = floatToTime(this->stats, timeType::seconds);
 		return timeUpg;
@@ -59,7 +59,7 @@ void to_json(json& j, const Upgradable<T>& u) {
 	}
 
 	j["stats"] = statArr;
-	j["curLevel"] = u.curLevel;
+	j["curLevel"] = u.curLevel + 1;
 }
 
 template <class T>
@@ -71,6 +71,7 @@ void from_json(const json& j, Upgradable<T>& u) {
 		j.at("stats").get_to<std::vector<T>>(u.stats);
 	}
 	j.at("curLevel").get_to(u.curLevel);
+    u.curLevel -= 1;
 }
 
 template <class T> T operator+(Upgradable<T> left, Upgradable<T> right) { return left.getStat() + right.getStat(); }

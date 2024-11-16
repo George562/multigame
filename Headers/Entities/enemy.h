@@ -17,7 +17,7 @@ class DistortedScientist : public Enemy {
 public:
     DistortedScientist() : Enemy("Distorted Scientist") {
 		Health = { {0, 10 + 4.f * curLevel, 10 + 4.f * curLevel} };
-        HealthRecovery = 1;
+        HealthRecovery = 2.5;
 		Mana = { {0, 10, 10} };
         ManaRecovery   = 1;
         Armor  = { {0, 100, 100} };
@@ -47,14 +47,14 @@ public:
 class Distorted : public Enemy {
 public:
     Distorted() : Enemy("Distorted") {
-		Health = { {0, 10 + 4.f * curLevel, 10 + 4.f * curLevel} };
-        HealthRecovery = 1;
-		Mana = { {0, 10, 10} };
-        ManaRecovery   = 1;
-		Armor = { {0, 100, 100} };
-        Velocity = {0, 0}; MaxVelocity = 400.f;
-        Acceleration = MaxVelocity * 10.f;
-        hitbox.setRadius(60.f);
+		Health = { {0, 5 + 2.5f * curLevel, 5 + 2.5f * curLevel} };
+        HealthRecovery = 0.5;
+		Mana = { {0, 20, 20} };
+        ManaRecovery   = 2.5;
+		Armor = { {0, 25, 25} };
+        Velocity = {0, 0}; MaxVelocity = 700.f;
+        Acceleration = MaxVelocity * 17.5f;
+        hitbox.setRadius(45.f);
         CurWeapon = new Pistol();
         CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
         CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
