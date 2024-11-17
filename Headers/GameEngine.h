@@ -428,7 +428,11 @@ void initScripts() {
         }
     });
     chat.SetCommand("/connect", []{
-        if (!ClientFuncRun && !HostFuncRun) {
+        if (HostFuncRun) {
+            chat.addLine("Cannot connect to server while running server!");
+        } else if (ClientFuncRun) {
+            chat.addLine("input IP of host");
+        } else {
             if (CurLocation == &MainMenuLocation) {
                 Connecting = true;
                 chat.addLine("input IP of host");

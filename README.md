@@ -13,8 +13,9 @@ You can suggest various features in VK messages: https://vk.com/majong562
 At the moment the game is not playable. We are at the development stage of the engine. In the future, game mechanics and a plot that are already being written will be added. The game is conceived in the roguelike style. Our team has artists, so all the sprites for the game will be their own.
 
 <p align="center">
-    <img src="./sources/mainMenuExample1.png">
-    <img src="./sources/mainMenuExample2.png">
+    <img src="./sources/Example1.png">
+    <img src="./sources/Example2.png">
+    <img src="./sources/Example3.png">
 </p>
 
 # currently available mechanics:
@@ -26,18 +27,22 @@ At the moment the game is not playable. We are at the development stage of the e
 - weapons (selected by scrolling wheel)
   - Pistol
   - Shotgun
-  - Revolver
   - Rifle
-  - Bubblegun
-- Interactible objects (interaction with the X button)
-  - portal (step on it and push X)
+- Interactible objects (interaction with the X button while on it)
+  - portal (teleport you to dangeon)
+  - box (give you money)
+  - Artifact (improved player stats like mana capacity and health)
 - minimap
   - acrivated by Tab
   - move and zoom by mouse
   - can be hold on player by Space
 - Enemies
   - DistortedScientist
-
+  - Distorted
+- Shop (you can buy something usefull)
+  - drugs (healing can be used by H)
+  - dasher (aplpy you to dashing while holding Shift)
+- Upgrade shop (you can upgrade weapons)
 
 # Our sprites and arts
 - **[Textures](https://github.com/George562/multigame/blob/main/sources/textures)**
