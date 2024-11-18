@@ -111,15 +111,15 @@ void initShop(Player* player) {
                                    itemStatsFrame.getSize().y / 2));
         itemSlot.setTexture(Textures::ItemPanel, UI::element);
         itemSlot.background->setSpriteColor(sf::Color(0xAA, 0x88, 0x00));
+        itemSlot.amountText->setCharacterSize(40);
         itemSlot.priceText->setCharacterSize(40);
         itemSlot.parentTo(&itemStatsFrame, true, { 50, 50 });
-        itemSlot.priceText->setCenter(itemSlot.getPosition().x, itemSlot.priceText->getCenter().y);
 
         itemCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                      1, itemTextureDuration[ItemID::coin]);
         itemCoinsSprite.setSize({ 50, 50 });
-        itemCoinsSprite.parentTo(itemSlot.priceText, true, { 20, -15 });
         itemCoinsSprite.parentTo(&itemSlot);
+        itemSlot.priceText->moveToAnchor(&itemCoinsSprite, itemSlot.getPosition() + sf::Vector2f(10, -15));
         itemCoinsSprite.play();
 
         itemSprite.setTexture(Textures::INVISIBLE, UI::texture);

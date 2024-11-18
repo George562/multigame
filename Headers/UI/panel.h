@@ -13,6 +13,7 @@ public:
     sf::Sprite sprite;
     std::vector<std::string> lines;
 
+    Panel();
     Panel(std::string, std::string = "");
     Panel(std::string, UI::Anchor, UI::Anchor, sf::Vector2f = { 0, 0 }, std::string = "");
     Panel(std::string, sf::FloatRect, std::string = "");
@@ -48,7 +49,11 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Panel::Panel(std::string name, std::string word) {
+Panel::Panel() {
+    setScale(scwScale, schScale);
+}
+
+Panel::Panel(std::string name, std::string word) : Panel() {
     setName(name);
     if (word != "") {
         text.setCharacterSize(30);
@@ -99,7 +104,6 @@ void Panel::removeWord(int index) {
 }
 
 void Panel::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    states.transform *= getTransform();
-    target.draw(sprite, states);
+    target.draw(sprite, states.transform * getTransform());
     target.draw(text);
 }

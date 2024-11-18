@@ -18,7 +18,7 @@ public:
     bool ShowWall = true, ShowBackground = true, ShowForeground = true, ShowText = true;
     float wallWidth = STANDART_BAR_WALL_WIDTH;
 
-    Bar() { foreground.setPosition(wallWidth, wallWidth); background.setPosition(wallWidth, wallWidth); }
+    Bar();
     Bar(std::string name);
     Bar(std::string name, UI::Anchor anchor, UI::Anchor anchoringPoint, sf::Vector2f = { 0, 0 });
     Bar(std::string name, sf::FloatRect rect);
@@ -37,6 +37,13 @@ public:
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
+
+template <class T>
+Bar<T>::Bar() {
+    setScale(scwScale, schScale);
+    foreground.setPosition(wallWidth, wallWidth);
+    background.setPosition(wallWidth, wallWidth);
+}
 
 template <class T>
 Bar<T>::Bar(std::string name) : Bar() {

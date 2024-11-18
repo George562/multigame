@@ -24,7 +24,7 @@ class PlacedText : public UIElement {
 public:
     sf::Text text;
 
-    PlacedText() { text.setFont(Fonts::ljk_Inky); }
+    PlacedText();
     PlacedText(std::string, FontString);
     PlacedText(std::string, UI::Anchor, UI::Anchor, FontString);
     PlacedText(std::string, sf::Vector2f, FontString);
@@ -46,8 +46,6 @@ public:
     void setFillColor(sf::Color color)      { text.setFillColor(color); }
     void setPosition(float x, float y);
     void setPosition(sf::Vector2f v)        { setPosition(v.x, v.y); }
-    //void setScale(sf::Vector2f);
-    //void setScale(float, float);
     size_t TextSize()                       { return getString().charSize; }
     void insert(int pos, std::string t) {
         setString(getString().text.substring(0, pos) + t +
@@ -55,6 +53,7 @@ public:
     }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        states.transform *= getTransform();
         target.draw(text, states);
     };
 };
@@ -63,6 +62,11 @@ public:
 ////////////////////////////////////////////////////////////
 // Realization
 ////////////////////////////////////////////////////////////
+
+PlacedText::PlacedText() {
+    text.setFont(Fonts::ljk_Inky);
+    setScale(scwScale, schScale);
+}
 
 PlacedText::PlacedText(std::string name, FontString s = "") : PlacedText() {
     setName(name);
@@ -103,14 +107,4 @@ void PlacedText::setCharacterSize(int x) {
 
 void PlacedText::setPosition(float x, float y) {
     UIRect::setPosition(x, y);
-    text.setPosition(getPosition());
 }
-//
-//void PlacedText::setScale(sf::Vector2f factors) {
-//    text.setScale(factors);
-//    setSize(Width * factors.x, Height * factors.y);
-//}
-//void PlacedText::setScale(float factorX, float factorY) {
-//    text.setScale(factorX, factorY);
-//    setSize(Width * factorX, Height * factorY);
-//}

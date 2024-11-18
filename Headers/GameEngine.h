@@ -244,7 +244,7 @@ void init() {
     icon.loadFromFile("sources/icon.png");
     window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
-    playerCanDashing = player.inventory.find(ItemID::dasher) != -1;
+    playerCanDash = player.inventory.find(ItemID::dasher) != -1;
 
     Musics::MainMenu.setLoop(true);
     Musics::MainMenu.setVolume(15);
@@ -832,8 +832,8 @@ void EventHandler() {
                         MiniMapActivated = false;
                         MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
                         continue;
-                    } else if (HUD::showDiscriptions) {
-                        HUD::showDiscriptions = false;
+                    } else if (HUD::showDescriptions) {
+                        HUD::showDescriptions = false;
                         continue;
                     } else {
                         HUD::EscapeMenuActivated = true;
@@ -873,7 +873,7 @@ void EventHandler() {
                     }
                 }
                 if (event.key.code == sf::Keyboard::LShift && player.isAlive()) {
-                    player.makeADash = SHiftClickTime.restart().asSeconds() < 0.2f && playerCanDashing;
+                    player.makeADash = SHiftClickTime.restart().asSeconds() < 0.2f && playerCanDash;
                     playerMakingADash = player.makeADash;
                 }
                 if (sf::Keyboard::Num1 <= event.key.code && event.key.code <= sf::Keyboard::Num3) {
@@ -1011,7 +1011,7 @@ void shopHandler(sf::Event& event) {
         }
         if (backButton.isActivated(event)) return;
         if (buyButton.isActivated(event)) {
-            playerCanDashing = player.inventory.find(ItemID::dasher) != -1;
+            playerCanDash = player.inventory.find(ItemID::dasher) != -1;
         }
 
         if (mouseButtonPressed(event, sf::Mouse::Left)) {
@@ -1024,10 +1024,10 @@ void shopHandler(sf::Event& event) {
 
                         selectedItem = item;
                         itemSlot.priceText->setString(std::string(std::to_string(shop.itemPrices[item->id]) + " C"));
-                        itemSlot.priceText->setCenter(itemSlot.getCenter().x, itemSlot.priceText->getCenter().y);
-                        itemCoinsSprite.parentTo(itemSlot.priceText, true, { 20, -15 });
                         itemCoinsSprite.parentTo(&itemSlot);
-                        itemStatsText.setString(textWrap(itemDesc[item->id], 65));
+                        itemSlot.priceText->moveToAnchor(&itemCoinsSprite,
+                                                         itemSlot.getPosition() + sf::Vector2f(10, -15));
+                        itemStatsText.setString(textWrap(itemDesc[item->id], 62));
                         itemSprite.setTexture(*itemTexture[item->id], UI::texture);
                         itemSprite.parentTo(&itemSlot, true);
 
@@ -1166,25 +1166,25 @@ void setFire(Interactable*& fire) {
     fire->setSize(70.f, 70.f);
 }
 
-void placedOnMap(Interactable* i) {
+void placeOnMap(Interactable* i) {
     InteractableStuff.push_back(i);
     DrawableStuff.push_back(i);
 }
-void placedOnMap(Interactable*& i, float x, float y) {
+void placeOnMap(Interactable*& i, float x, float y) {
     i->setPosition(x, y);
-    placedOnMap(i);
+    placeOnMap(i);
 }
-void placedOnMap(Interactable*& i, sf::Vector2f v) {
-    placedOnMap(i, v.x, v.y);
+void placeOnMap(Interactable*& i, sf::Vector2f v) {
+    placeOnMap(i, v.x, v.y);
 }
-void placedOnMap(Interactable*& i, int& m, int& n) {
+void placeOnMap(Interactable*& i, int& m, int& n) {
     int x, y;
-    sf::Vector2f pos(sf::Vector2i(std::rand(), std::rand()) % (size - sf::Vector2i(i->hitbox.getSize() + WallMinSize)));
+    sf::Vector2f pos(sf::Vector2i(std::rand(), std::rand()) % (-sf::Vector2i(i->hitbox.getSize() + WallMinSize) + size));
     do {
         x = std::rand() % m;
         y = std::rand() % n;
     } while (!LabyrinthLocation.EnableTiles[y][x]);
-    placedOnMap(i, sf::Vector2f(x, y) * (float)size + WallMinSize + pos);
+    placeOnMap(i, sf::Vector2f(x, y) * (float)size + WallMinSize + pos);
 }
 
 void LevelGenerate(int n, int m) {
@@ -1200,9 +1200,9 @@ void LevelGenerate(int n, int m) {
     clearVectorOfPointers(listOfArtifact);
     clearVectorOfPointers(listOfFire);
     Interactable* x;
-    for (int i = 0; i < 10; i++) { x = new Interactable(DescriptionID::box);      setInteractable(x); placedOnMap(x, m, n); }
-    for (int i = 0; i < 10; i++) { x = new Interactable(DescriptionID::artifact); setInteractable(x); placedOnMap(x, m, n); }
-    for (int i = 0; i < 0; i++)  { x = new Interactable(DescriptionID::fire);     setInteractable(x); placedOnMap(x, m, n); }
+    for (int i = 0; i < 10; i++) { x = new Interactable(DescriptionID::box);      setInteractable(x); placeOnMap(x, m, n); }
+    for (int i = 0; i < 10; i++) { x = new Interactable(DescriptionID::artifact); setInteractable(x); placeOnMap(x, m, n); }
+    for (int i = 0; i < 0; i++)  { x = new Interactable(DescriptionID::fire);     setInteractable(x); placeOnMap(x, m, n); }
 
 
     clearVectorOfPointers(Enemies);
@@ -1349,7 +1349,7 @@ void LoadMainMenu() {
     InteractableStuff.push_back(&shopSector);
     InteractableStuff.push_back(&upgradeSector);
 
-    placedOnMap(&portal);
+    placeOnMap(&portal);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
     newItem->setAnimation(*itemTexture[ItemID::regenDrug]);
@@ -1360,12 +1360,12 @@ void LoadMainMenu() {
     Interactable* x = new Interactable(DescriptionID::box);
     setInteractable(x);
     x->setPosition(1912.5, 1545);
-    placedOnMap(x);
+    placeOnMap(x);
 
     x = new Interactable(DescriptionID::artifact);
     setInteractable(x);
     x->setPosition(1312.5, 1545);
-    placedOnMap(x);
+    placeOnMap(x);
 }
 //==============================================================================================
 
@@ -1940,7 +1940,7 @@ void MainLoop() {
                     FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
                 }
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && player.isAlive()) {
-                    player.makeADash = playerMakingADash && playerCanDashing;
+                    player.makeADash = playerMakingADash && playerCanDash;
                 }
             }
 
@@ -2277,13 +2277,13 @@ void funcOfClient() {
                                 Interactable* x = new Interactable();
                                 ReceivePacket >> x;
                                 setInteractable(x);
-                                placedOnMap(x);
+                                placeOnMap(x);
                             }
                             ReceivePacket >> &portal >> player;
 
                             CurLocation->FindEnableTilesFrom(player.hitbox.getCenter() / (float)size);
 
-                            placedOnMap(&portal);
+                            placeOnMap(&portal);
 
                             addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
                             for (int i = 0; i < HUD::WeaponNameTexts.size(); i++) {

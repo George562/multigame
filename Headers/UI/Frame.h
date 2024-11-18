@@ -6,7 +6,9 @@ public:
     sf::Sprite sprite;
     sf::ConvexShape shape;
 
-    Frame() {}
+    Frame() {
+        setScale(scwScale, schScale);
+    }
 
     Frame(std::string name) {
         setName(name);

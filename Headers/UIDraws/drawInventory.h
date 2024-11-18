@@ -20,11 +20,7 @@ void drawInventory(sf::RenderWindow& window, Player* player) {
                     window.draw(*elem);
 
                 for (Item*& item : player->inventory.items) {
-                    if (itemSlotsElements[item->id].isInitialized) {
-                        window.draw(*itemSlotsElements[item->id].background);
-
-                        if (item->amount >= 1) window.draw(*itemSlotsElements[item->id].amountText);
-                    }
+                    window.draw(itemSlotsElements[item->id]);
                     window.draw(*item);
                 }
 

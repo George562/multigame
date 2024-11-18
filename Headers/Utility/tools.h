@@ -179,6 +179,14 @@ sf::Vector2i operator%(sf::Vector2i v, int num) {
     return sf::Vector2i(v.x % num, v.y % num);
 }
 
+sf::Vector2i operator%(sf::Vector2i v1, sf::Vector2i v2) {
+    return sf::Vector2i(v1.x % v2.x, v1.y % v2.y);
+}
+
+sf::Vector2i operator+(sf::Vector2i v, int num) {
+    return sf::Vector2i(v.x + num, v.y + num);
+}
+
 sf::Vector2f operator+(sf::Vector2f v, float num) {
     return sf::Vector2f(v.x + num, v.y + num);
 }

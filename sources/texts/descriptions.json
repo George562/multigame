@@ -1,8 +1,8 @@
 {
-    "portal" : "Portal is a device from the Era of multidimentional",
+    "portal" : "Portal is a device from the Era of Multidimensional",
     "box" : "Treasure box, created by Architector",
-    "shopSector" : "Company can get you things to get your work",
-    "upgradeSector" : "Our partners can improve your device's",
-    "artifact" : "didn't known object, called \"Artifact\". Provide some effect on you",
-    "fire" : "high energy unstable field"
+    "shopSector" : "This company can get you things to help with your work",
+    "upgradeSector" : "Our partners can improve your devices",
+    "artifact" : "Unknown object called \"Artifact\". Provides some effects on you",
+    "fire" : "Unstable high energy field"
 }

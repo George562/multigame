@@ -15,21 +15,17 @@ void drawShop(sf::RenderWindow& window, Player* player) {
         window.setView(ShopStockView);
         for (Item*& item : shop.soldItems.items) {
             if (slotsElements[item->id].isInitialized) {
-                window.draw(*slotsElements[item->id].background, stockTransform);
-                if (item->amount >= 1) window.draw(*slotsElements[item->id].amountText, stockTransform);
-                window.draw(*slotsElements[item->id].priceText, stockTransform);
+                window.draw(slotsElements[item->id], stockTransform);
+                window.draw(*item, stockTransform);
             }
-            window.draw(*item, stockTransform);
         }
 
         window.setView(ShopPlayerInvView);
         for (Item*& item : player->inventory.items) {
             if (playerSlotsElements[item->id].isInitialized) {
-                window.draw(*playerSlotsElements[item->id].background, playerInvTransform);
-                if (item->amount >= 1) window.draw(*playerSlotsElements[item->id].amountText, playerInvTransform);
-                window.draw(*playerSlotsElements[item->id].priceText, playerInvTransform);
+                window.draw(playerSlotsElements[item->id], playerInvTransform);
+                window.draw(*item, playerInvTransform);
             }
-            window.draw(*item, playerInvTransform);
         }
 
     }

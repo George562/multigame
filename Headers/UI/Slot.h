@@ -37,9 +37,8 @@ public:
 
     virtual void setPosition(float x, float y) {
         UIRect::setPosition(x, y);
-        background->setPosition(x, y);
-        amountText->setCenter({ getRight() + getSize().x / 8,
-                                getBottom() + getSize().y / 8 });
+        amountText->setCenter(sf::Vector2f(9 * background->getGlobalBounds().getSize().x / 8,
+                                           9 * background->getGlobalBounds().getSize().y / 8));
     }
 
     void setTexture(sf::Texture& texture, UI::TextureResize mode, sf::Vector2f size = { 0, 0 }) {
@@ -50,8 +49,10 @@ public:
     }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        states.transform *= getTransform();
         target.draw(*background, states);
-        target.draw(*amountText, states);
+        if (amountText->getText() != "0")
+            target.draw(*amountText, states);
     }
 };
 
@@ -83,12 +84,13 @@ public:
 
     virtual void setPosition(float x, float y) {
         ItemSlot::setPosition(x, y);
-        priceText->setCenter({ getLeft() - getSize().x / 8,
-                               getBottom() + getSize().y / 8 });
+        priceText->setCenter(sf::Vector2f(-background->getGlobalBounds().getSize().x / 8,
+                                          9 * background->getGlobalBounds().getSize().y / 8));
     }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         ItemSlot::draw(target, states);
+        states.transform *= getTransform();
         target.draw(*priceText, states);
     }
 };

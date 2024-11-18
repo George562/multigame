@@ -71,7 +71,7 @@ void drawHUD(sf::RenderWindow& window, Player* player, std::vector<Weapon*>* Wea
 
         drawEffects(window, player);
 
-        if (showDiscriptions) {
+        if (showDescriptions) {
             window.draw(DescriptionText);
         }
 
@@ -121,12 +121,12 @@ void drawEffects(sf::RenderWindow& window, Player* player) {
 void displayDescription(DescriptionID::Type id) {
     {
         using namespace HUD;
-        if (interactibleDiscriptions[id] != DescriptionText.getText()) {
-            showDiscriptions = true;
-            DescriptionText.setString(interactibleDiscriptions[id]);
+        if (interactibleDescriptions[id] != DescriptionText.getText()) {
+            showDescriptions = true;
+            DescriptionText.setString(interactibleDescriptions[id]);
             DescriptionText.parentTo(&HUD::HUDFrame, true, { 0, -200 });
         } else {
-            showDiscriptions ^= true;
+            showDescriptions ^= true;
         }
     }
 }

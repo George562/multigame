@@ -35,9 +35,9 @@ namespace HUD {
     Frame XButtonSprite("xBtn", UI::L, UI::BL, { 0, 0 });
     Frame InfoLogoSprite("infoBtn", UI::TL, UI::BL, { 0, 0 });
 
-    std::map<DescriptionID::Type, std::string> interactibleDiscriptions;
+    std::map<DescriptionID::Type, std::string> interactibleDescriptions;
     PlacedText DescriptionText("descTxt", UI::center, UI::center, FontString("", 32));
-    bool showDiscriptions;
+    bool showDescriptions;
 }
 
 void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
@@ -68,11 +68,16 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         MPBar.parentTo(&HPBar, true);
 
         for (int i = 0; i < Weapons->size(); i++) {
-            AmmoBars.push_back(new Bar<float>("AmmoBar_" + (*Weapons)[i]->Name,
-                                            { 20, sch - 20 - (Weapons->size() - i) * 60, 160, 50 }));
+            AmmoBars.push_back(new Bar<float>("AmmoBar_" + (*Weapons)[i]->Name, UI::TL, UI::BL, { 160, 50 }));
             AmmoBars[i]->setColors(CommonColors::barWall, sf::Color(128, 128, 128, 160), CommonColors::barBG);
-            AmmoBars[i]->parentTo(&HUDFrame);
+        }
+        AmmoBars.back()->setAnchor(UI::BL);
+        AmmoBars.back()->parentTo(&HUDFrame, true, { 50, -20 });
+        for (int i = AmmoBars.size() - 2; i >= 0; i--) {
+            AmmoBars[i]->parentTo(AmmoBars[i + 1], true, { 0, -20 });
+        }
 
+        for (int i = 0; i < Weapons->size(); i++) {
             WeaponNameTexts.push_back(new PlacedText("weapName" + i + 1, UI::R, UI::L, FontString((*Weapons)[i]->Name, 36)));
             WeaponNameTexts[i]->setFillColor(sf::Color(25, 192, 25, 160));
             WeaponNameTexts[i]->setOutlineColor(sf::Color::Black);
@@ -90,8 +95,6 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         InfoLogoSprite.setScale(2.f, 2.f);
         InfoLogoSprite.parentTo(&XButtonSprite, true, { 0, -10 });
 
-        DescriptionText.parentTo(&HUDFrame, true);
-
         for (int i = 0; i < Effects::EffectCount; i++) {
             effectIconsTimers[i] = new TempText(sf::Time::Zero);
             effectIcons[i] = new Frame("effect_" + i, UI::none, UI::none, (sf::Vector2f)Textures::Eff_HPRegen.getSize() / 2.f);
@@ -107,15 +110,15 @@ void loadDescriptions() {
         std::ifstream descFile("sources/texts/descriptions.json");
         try {
             nlohmann::json j = nlohmann::json::parse(descFile);
-            interactibleDiscriptions[DescriptionID::portal]        = j["portal"]        .template get<std::string>();
-            interactibleDiscriptions[DescriptionID::box]           = j["box"]           .template get<std::string>();
-            interactibleDiscriptions[DescriptionID::shopSector]    = j["shopSector"]    .template get<std::string>();
-            interactibleDiscriptions[DescriptionID::upgradeSector] = j["upgradeSector"] .template get<std::string>();
-            interactibleDiscriptions[DescriptionID::artifact]      = j["artifact"]      .template get<std::string>();
-            interactibleDiscriptions[DescriptionID::fire]          = j["fire"]          .template get<std::string>();
+            interactibleDescriptions[DescriptionID::portal]        = j["portal"]        .template get<std::string>();
+            interactibleDescriptions[DescriptionID::box]           = j["box"]           .template get<std::string>();
+            interactibleDescriptions[DescriptionID::shopSector]    = j["shopSector"]    .template get<std::string>();
+            interactibleDescriptions[DescriptionID::upgradeSector] = j["upgradeSector"] .template get<std::string>();
+            interactibleDescriptions[DescriptionID::artifact]      = j["artifact"]      .template get<std::string>();
+            interactibleDescriptions[DescriptionID::fire]          = j["fire"]          .template get<std::string>();
         } catch(const std::exception& e) {
             for (DescriptionID::Type i = DescriptionID::portal; i < DescriptionID::DescriptionCount; i++) { 
-                interactibleDiscriptions[i] = "Error loading description";
+                interactibleDescriptions[i] = "Error loading description";
             }
         }
         descFile.close();

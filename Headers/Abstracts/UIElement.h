@@ -111,16 +111,6 @@ sf::Vector2f getShiftByPoint(sf::Vector2f size, UI::Anchor anchoringPoint) {
 }
 
 class UIElement : public sf::Drawable, public UIRect {
-private:
-    void moveToAnchor(UIElement* elem, sf::Vector2f offset = {0, 0}) {
-        if (elem->anchor == UI::none)
-            return;
-        sf::Vector2f posVec = UIRect::getPosition();
-        if (elem->anchor == UI::Anchor::center) posVec = getCenter();
-        else posVec -= getShiftByPoint(getGlobalBounds().getSize(), elem->anchor);
-        posVec += getShiftByPoint(elem->getGlobalBounds().getSize(), elem->anchoringPoint);
-        elem->setPosition(posVec + offset);
-    }
 protected:
     std::string name;
     UI::Anchor anchor = UI::Anchor::TL;
@@ -146,6 +136,16 @@ public:
     void setAnchor(UI::Anchor anchor, bool update = false) { this->anchor = anchor; if (update && parent) parent->updateElement(this); }
     void setAnchoringPoint(UI::Anchor corner, bool update = false) { this->anchoringPoint = corner; if (update && parent) parent->updateElement(this); }
     void setAnchors(UI::Anchor anchor, UI::Anchor point, bool update = false) { setAnchor(anchor, update); setAnchoringPoint(point, update); }
+
+    void moveToAnchor(UIElement* elem, sf::Vector2f offset = { 0, 0 }) {
+        if (elem->anchor == UI::none)
+            return;
+        sf::Vector2f posVec = UIRect::getPosition();
+        if (elem->anchor == UI::Anchor::center) posVec = getCenter();
+        else posVec -= getShiftByPoint(getGlobalBounds().getSize(), elem->anchor);
+        posVec += getShiftByPoint(elem->getGlobalBounds().getSize(), elem->anchoringPoint);
+        elem->setPosition(posVec + offset);
+    }
 
     virtual void updateElement(UIElement* elem) { moveToAnchor(elem); }
     virtual void updateChildren() {

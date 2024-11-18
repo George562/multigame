@@ -5,6 +5,8 @@
 
 struct UIRect : public sf::Transformable {
     unsigned int Width = 0, Height = 0;
+    float scwScale = sf::VideoMode::getDesktopMode().width / 1920.f;
+    float schScale = sf::VideoMode::getDesktopMode().height / 1080.f;
 
     float getTop() const { return getPosition().y; }
     float getRight() const { return getPosition().x + Width; }

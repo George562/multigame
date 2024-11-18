@@ -73,7 +73,7 @@ sf::Clock* coutClock;
 sf::Time coutEvery = sf::milliseconds(1000);
 int drawCount = 0;
 
-bool playerCanDashing;
+bool playerCanDash;
 bool playerMakingADash = false;
 
 sf::View GameView({0, 0, (float)scw, (float)sch});
