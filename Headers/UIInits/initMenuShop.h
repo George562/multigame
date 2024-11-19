@@ -24,7 +24,7 @@ namespace MenuShop {
     Frame itemSprite("shop_ItemSprite", UI::center, UI::center, { 0, 0 });
 
     RectButton backButton("shop_backBtn", UI::TL, UI::TL, { 250, 50 });
-    RectButton buyButton("shop_buyBtn", UI::B, UI::T, { 400, 150 }, "Buy", []() { shop.buyFunction(); });
+    RectButton buyButton("shop_buyBtn", UI::B, UI::B, { 400, 150 }, "Buy", []() { shop.buyFunction(); });
 
     ShopSlot itemSlot;
     Item* selectedItem = nullptr;
@@ -104,7 +104,7 @@ void initShop(Player* player) {
 
         itemStatsFrame.setTexture(Textures::GradientFrameAlpha);
         itemStatsFrame.setSpriteColor(sf::Color(0xCC, 0xAA, 0x11));
-        itemStatsFrame.parentTo(&itemsFrame, true, { 0, 100 });
+        itemStatsFrame.parentTo(&itemsFrame, true, { 0, 20 });
 
         itemSlot.init("mShop_ChosenItemSlot", UI::TL, UI::TL,
                       sf::Vector2f(itemStatsFrame.getSize().y / 2,

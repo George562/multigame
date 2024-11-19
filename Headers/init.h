@@ -58,6 +58,9 @@ namespace inventoryPage {
 float scw = sf::VideoMode::getDesktopMode().width; // screen width
 float sch = sf::VideoMode::getDesktopMode().height; // screen height
 
+float scwScale = sf::VideoMode::getDesktopMode().width / 1920.f;
+float schScale = sf::VideoMode::getDesktopMode().height / 1080.f;
+
 constexpr int size = 480, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
 constexpr float ScaleParam = float(miniSize) / float(size);
 int START_N = 9, START_M = 6;
