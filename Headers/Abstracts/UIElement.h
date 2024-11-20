@@ -111,6 +111,18 @@ sf::Vector2f getShiftByPoint(sf::Vector2f size, UI::Anchor anchoringPoint) {
 }
 
 class UIElement : public sf::Drawable, public UIRect {
+private:
+    void anchorChildToParent(UIElement* elem, UI::Anchor anchor, UI::Anchor anchoringPoint,
+                             sf::Vector2f offset = { 0, 0 }) {
+        if (anchor == UI::none)
+            return;
+        sf::Vector2f posVec = UIRect::getPosition();
+        if (anchor == UI::Anchor::center) posVec = { getCenter().x * getScale().x,
+                                                     getCenter().y * getScale().y };
+        else posVec -= getShiftByPoint(getGlobalBounds().getSize(), anchor);
+        posVec += getShiftByPoint(elem->getGlobalBounds().getSize(), anchoringPoint);
+        elem->setPosition(posVec + offset);
+    }
 protected:
     std::string name;
     UI::Anchor anchor = UI::Anchor::TL;
@@ -137,14 +149,13 @@ public:
     void setAnchoringPoint(UI::Anchor corner, bool update = false) { this->anchoringPoint = corner; if (update && parent) parent->updateElement(this); }
     void setAnchors(UI::Anchor anchor, UI::Anchor point, bool update = false) { setAnchor(anchor, update); setAnchoringPoint(point, update); }
 
-    void moveToAnchor(UIElement* elem, sf::Vector2f offset = { 0, 0 }) {
-        if (elem->anchor == UI::none)
-            return;
-        sf::Vector2f posVec = UIRect::getPosition();
-        if (elem->anchor == UI::Anchor::center) posVec = getCenter();
-        else posVec -= getShiftByPoint(getGlobalBounds().getSize(), elem->anchor);
-        posVec += getShiftByPoint(elem->getGlobalBounds().getSize(), elem->anchoringPoint);
-        elem->setPosition(posVec + offset);
+    void moveToAnchor(UIElement* parentElem, sf::Vector2f offset = { 0, 0 }) {
+        parentElem->anchorChildToParent(this, this->anchor, this->anchoringPoint, offset);
+    }
+
+    void moveToAnchor(UIElement* parentElem, UI::Anchor anchor, UI::Anchor anchoringPoint,
+                      sf::Vector2f offset = { 0, 0 }) {
+        parentElem->anchorChildToParent(this, anchor, anchoringPoint, offset);
     }
 
     virtual void updateElement(UIElement* elem) { moveToAnchor(elem); }
@@ -153,20 +164,19 @@ public:
             moveToAnchor(child);
     }
 
-    virtual void centerOnAnchor(std::string name, UI::Centering mode) {
-        UIElement* child = children[nameMap[name]];
-        bool xCentered = child->getCenter().x == this->getCenter().x;
+    virtual void centerOnAnchor(UIElement* elem, UI::Centering mode) {
+        bool xCentered = elem->getCenter().x == getCenter().x;
         if (mode == UI::Centering::x && !xCentered) {
-            child->move(this->getCenter().x - child->getCenter().x, 0);
+            move(elem->getCenter().x - getCenter().x, 0);
             return;
         }
-        bool yCentered = children[nameMap[name]]->getCenter().y == this->getCenter().y;
+        bool yCentered = elem->getCenter().y == getCenter().y;
         if (mode == UI::Centering::y && !yCentered) {
-            child->move(this->getCenter().x - child->getCenter().x, 0);
+            move(elem->getCenter().x - getCenter().x, 0);
             return;
         }
         if (!xCentered || !yCentered) {
-            child->move(this->getCenter().x - child->getCenter().x, this->getCenter().y - child->getCenter().y);
+            move(elem->getCenter().x - getCenter().x, elem->getCenter().y - getCenter().y);
             return;
         }
     }
@@ -174,7 +184,7 @@ public:
     virtual void addElement(UIElement* elem, bool update = false, sf::Vector2f offset = {0, 0}) {
         elem->parent = this;
         this->children.push_back(elem);
-        if (update) moveToAnchor(elem, offset);
+        if (update) anchorChildToParent(elem, elem->anchor, elem->anchoringPoint, offset);
         this->nameMap[elem->name] = children.size() - 1;
     }
     virtual void parentTo(UIElement* elem, bool update = false, sf::Vector2f offset = {0, 0}) {

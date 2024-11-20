@@ -247,9 +247,9 @@ void init() {
     playerCanDash = player.inventory.find(ItemID::dasher) != -1;
 
     Musics::MainMenu.setLoop(true);
-    Musics::MainMenu.setVolume(15);
-    Musics::Fight1.setVolume(15);
-    Musics::Fight2.setVolume(15);
+    Musics::MainMenu.setVolume(0);
+    Musics::Fight1.setVolume(0);
+    Musics::Fight2.setVolume(0);
 
     for (Weapon*& w: Weapons) w->ShootSound.setRelativeToListener(true);
 
@@ -353,7 +353,7 @@ void initScripts() {
                     selectedItem->amount--;
 
                     playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
-                    playerCoinsSprite.parentTo(&MenuShop::playerCoinsText, true, { 25, -10 });
+                    playerCoinsSprite.moveToAnchor(&MenuShop::playerCoinsText, { 25, -10 });
                     shop.soldItems.removeItem(selectedItem, false);
                     NPCText.setString("Thank you for buying a " + stringLower(itemName[selectedItem->id]) + "!");
 
@@ -366,7 +366,7 @@ void initScripts() {
                 } else {
                     NPCText.setString("Sorry, but you cannot afford a " + stringLower(itemName[selectedItem->id]) + ".");
                 }
-                NPCText.parentTo(&NPCTextFrame, true);
+                NPCText.moveToAnchor(&NPCTextFrame);
             }
         });
     }
@@ -647,23 +647,27 @@ void updateInventoryUI() {
 
         if (doInventoryUpdate[inventoryPage::Items]) {
             int slotNumber = 0;
+            unsigned int offsetLarge = 200;
+            unsigned int offsetSmall = 50;
+            unsigned int slotSize = 150;
             for (Item*& drawnItem : player.inventory.items) {
                 drawnItem->animation->setScale({ 0.75, 0.75 });
 
-                float itemX = (slotNumber % 6) * 200 + itemListBG.getPosition().x + 50;
-                float itemY = (slotNumber / 6) * 200 + itemListBG.getPosition().y + 50;
+                float itemX = (slotNumber % 6) * offsetLarge +
+                              itemListBG.getPosition().x + offsetSmall;
+                float itemY = (slotNumber / 6) * offsetLarge +
+                              itemListBG.getPosition().y + offsetSmall;
 
                 ItemSlot* slot = &itemSlotsElements[drawnItem->id];
                 if (!slot->isInitialized) {
                     slot->init("inv_ItemIDSlot" + drawnItem->id);
                 }
-                slot->setSize({ 150, 150 });
+                slot->amountText->setFontString(FontString(std::to_string(drawnItem->amount), 20));
+                slot->setSize({ slotSize, slotSize });
                 slot->setTexture(Textures::ItemPanel, UI::element);
                 slot->setPosition(itemX, itemY);
 
-                drawnItem->setPosition(itemX, itemY);
-
-                slot->amountText->setFontString(FontString(std::to_string(drawnItem->amount), 20));
+                drawnItem->animation->moveToAnchor(slot, UI::center, UI::center);
 
                 slotNumber++;
             }
@@ -685,23 +689,26 @@ void updateShopUI() {
     {
         using namespace MenuShop;
         int slotNumber = 0;
+        unsigned int offsetLarge = 200;
+        unsigned int offsetSmall = 50;
+        unsigned int slotSize = 100;
         for (Item*& drawnItem : shop.soldItems.items) {
             drawnItem->animation->setScale({ 0.5, 0.5 });
 
-            float itemX = (slotNumber % 5) * 200 + 30;
-            float itemY = (slotNumber / 5) * 200 + 20;
+            float itemX = (slotNumber % 5) * offsetLarge + offsetSmall;
+            float itemY = (slotNumber / 5) * offsetLarge + offsetSmall;
 
             ShopSlot* slot = &slotsElements[drawnItem->id];
             if (!slotsElements[drawnItem->id].isInitialized) {
                 slot->init("mShop_ItemIDSlot" + drawnItem->id);
             }
-            slot->setSize({ 100, 100 });
+            slot->amountText->setFontString(FontString(std::to_string(drawnItem->amount), 20));
+            slot->setSize({ slotSize, slotSize });
             slot->setTexture(Textures::ItemPanel, UI::element);
             slot->setPosition(itemX, itemY);
 
-            drawnItem->setPosition(itemX, itemY);
+            drawnItem->animation->moveToAnchor(slot, UI::center, UI::center);
 
-            slot->amountText->setFontString(FontString(std::to_string(drawnItem->amount), 20));
 
             PlacedText& itemPriceText = *slot->priceText;
             itemPriceText.setFontString(
@@ -715,24 +722,24 @@ void updateShopUI() {
         for (Item*& drawnItem : player.inventory.items) {
             drawnItem->animation->setScale({ 0.5, 0.5 });
 
-            float itemX = (slotNumber % 3) * 200 + 30;
-            float itemY = (slotNumber / 3) * 200 + 20;
+            float itemX = (slotNumber % 3) * offsetLarge + offsetSmall;
+            float itemY = (slotNumber / 3) * offsetLarge + offsetSmall;
 
             ShopSlot* pslot = &playerSlotsElements[drawnItem->id];
             if (!pslot->isInitialized) {
                 pslot->init("mShop_PlItemIDSlot" + drawnItem->id);
             }
-            pslot->setSize({ 100, 100 });
-            pslot->setTexture(Textures::ItemPanel, UI::element);
-            pslot->setPosition(itemX, itemY);
-
-            drawnItem->setPosition(itemX, itemY);
-
             pslot->amountText->setFontString(FontString(std::to_string(drawnItem->amount), 20));
 
             pslot->priceText->setFontString(
                 FontString(std::to_string(shop.itemPrices[drawnItem->id]) + " C", 20)
             );
+
+            pslot->setSize({ slotSize, slotSize });
+            pslot->setTexture(Textures::ItemPanel, UI::element);
+            pslot->setPosition(itemX, itemY);
+
+            drawnItem->animation->moveToAnchor(pslot, UI::center, UI::center);
 
             slotNumber++;
         }
@@ -746,8 +753,8 @@ void updateUpgradeInterfaceUI() {
         updateUpgradeShopStats();
         playerCoinAmount.setFontString(FontString("You have: " + std::to_string(player.inventory.money),
                                                   50, sf::Color(200, 200, 200)));
-        playerCoinAmount.parentTo(&choiceComp, true, { -100, -50 });
-        coinSprite.parentTo(&playerCoinAmount, true);
+        playerCoinAmount.moveToAnchor(&choiceComp, { -100, -50 });
+        coinSprite.moveToAnchor(&playerCoinAmount);
     }
 }
 //==============================================================================================
@@ -1024,12 +1031,11 @@ void shopHandler(sf::Event& event) {
 
                         selectedItem = item;
                         itemSlot.priceText->setString(std::string(std::to_string(shop.itemPrices[item->id]) + " C"));
-                        itemCoinsSprite.parentTo(&itemSlot);
-                        itemSlot.priceText->moveToAnchor(&itemCoinsSprite,
-                                                         itemSlot.getPosition() + sf::Vector2f(10, -15));
+                        itemCoinsSprite.moveToAnchor((itemSlot.priceText),
+                                                      itemSlot.getPosition() + sf::Vector2f(10, -15));
                         itemStatsText.setString(textWrap(itemDesc[item->id], 62));
-                        itemSprite.setTexture(*itemTexture[item->id], UI::texture);
-                        itemSprite.parentTo(&itemSlot, true);
+                        itemSprite.setTexture(*itemTexture[item->id]);
+                        itemSprite.moveToAnchor(&itemSlot);
 
                         addUI(&itemSlot, UIElements);
                     }
@@ -1313,11 +1319,11 @@ void LoadMainMenu() {
             using namespace MenuShop;
             isDrawShop = true;
             playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
-            playerCoinsSprite.parentTo(&playerCoinsText, true, { 25, -10 });
-            NPCText.setString(textWrap("Hello! Welcome to the \"We are literally standing near a phenomenon beyond our"
-                                       " entire plane of existence in a literal motherfucking sense, that we have no fucking clue on"
-                                       " how it fucking works why did we decide it was a good idea to station a shop exactly here\?!\?\?!\?!\?\" shop!", 94));
-            NPCText.parentTo(&NPCTextFrame, true);
+            playerCoinsText.moveToAnchor(&buyButton, { -25, -50 });
+            playerCoinsSprite.moveToAnchor(&playerCoinsText, { 25, -10 });
+            NPCText.setString(textWrap("Hello! Welcome to our shop! "
+                                       "Do not mind the eldritch-geometric fuckery outside :)", 94));
+            NPCText.moveToAnchor(&NPCName, { 100, 0 });
             addUI(&BG, UIElements);
             if (!selectedItem)
                 removeUI(&itemSlot, UIElements);

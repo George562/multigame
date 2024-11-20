@@ -40,7 +40,6 @@ public:
 
 template <class T>
 Bar<T>::Bar() {
-    setScale(scwScale, schScale);
     foreground.setPosition(wallWidth, wallWidth);
     background.setPosition(wallWidth, wallWidth);
 }

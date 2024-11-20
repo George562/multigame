@@ -65,7 +65,6 @@ public:
 
 PlacedText::PlacedText() {
     text.setFont(Fonts::ljk_Inky);
-    setScale(scwScale, schScale);
 }
 
 PlacedText::PlacedText(std::string name, FontString s = "") : PlacedText() {

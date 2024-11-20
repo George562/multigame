@@ -6,11 +6,9 @@ public:
     sf::Sprite sprite;
     sf::ConvexShape shape;
 
-    Frame() {
-        setScale(scwScale, schScale);
-    }
+    Frame() {}
 
-    Frame(std::string name) {
+    Frame(std::string name) : Frame() {
         setName(name);
     }
 
@@ -25,8 +23,6 @@ public:
 
     void setPosition(float x, float y) {
         UIRect::setPosition(x, y);
-        //sprite.setPosition(getPosition());
-        shape.setPosition(getPosition());
     }
 
     void setTexture(sf::Texture& texture, UI::TextureResize mode = UI::element, sf::Vector2u size = { 0, 0 }) {
@@ -39,10 +35,9 @@ public:
         sprite.setScale(1, 1);
         if (mode == UI::element)
             setSpriteSize(getSize());
-        else if (mode == UI::texture)
-            setSpriteSize(texture.getSize());
         else if (mode == UI::size && size != sf::Vector2u{0, 0})
             setSpriteSize(size);
+        else setSize(texture.getSize());
     }
 
     void setSpriteSize(sf::Vector2u size) {
@@ -52,13 +47,14 @@ public:
             float(size.x) / sprite.getTexture()->getSize().x,
             float(size.y) / sprite.getTexture()->getSize().y
         );
+        sprite.scale(getScale());
         setSize(size);
     }
 
     void setSpriteColor(sf::Color color) { sprite.setColor(color); }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states) const {
-        if (getName() == "xBtn")
+        if (this->name == "InventoryFrame")
             std::cout << "";
         states.transform *= getTransform();
         target.draw(sprite, states);

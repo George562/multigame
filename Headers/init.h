@@ -58,8 +58,10 @@ namespace inventoryPage {
 float scw = sf::VideoMode::getDesktopMode().width; // screen width
 float sch = sf::VideoMode::getDesktopMode().height; // screen height
 
-float scwScale = sf::VideoMode::getDesktopMode().width / 1920.f;
-float schScale = sf::VideoMode::getDesktopMode().height / 1080.f;
+std::string errStr = "Error. This shouldn't happen...\nSeems like someone's shit at programming!";
+
+float scwScale = scw / 1920.f;
+float schScale = sch / 1080.f;
 
 constexpr int size = 480, miniSize = 50; // map is matrix n x m cells with size of one; minisize for minimap
 constexpr float ScaleParam = float(miniSize) / float(size);
@@ -83,7 +85,7 @@ sf::View GameView({0, 0, (float)scw, (float)sch});
 sf::View HUDView({0, 0, (float)scw, (float)sch});
 sf::View MiniMapView({0, 0, (float)scw, (float)sch});
 
-sf::View InventoryView({0, 0, (float)scw, (float)sch});
+sf::View InventoryView({0, 0, (float)scw , (float)sch});
 sf::View InterfaceView({0, 0, (float)scw, (float)sch});
 sf::View ShopStockView;
 sf::View ShopPlayerInvView;

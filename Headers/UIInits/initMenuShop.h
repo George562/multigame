@@ -24,7 +24,7 @@ namespace MenuShop {
     Frame itemSprite("shop_ItemSprite", UI::center, UI::center, { 0, 0 });
 
     RectButton backButton("shop_backBtn", UI::TL, UI::TL, { 250, 50 });
-    RectButton buyButton("shop_buyBtn", UI::B, UI::B, { 400, 150 }, "Buy", []() { shop.buyFunction(); });
+    RectButton buyButton("shop_buyBtn", UI::BR, UI::BL, { 400, 150 }, "Buy", []() { shop.buyFunction(); });
 
     ShopSlot itemSlot;
     Item* selectedItem = nullptr;
@@ -39,9 +39,9 @@ namespace MenuShop {
     sf::Transform playerInvTransform;
 
     PlacedText NPCName("shop_NPCName", UI::R, UI::L);
-    PlacedText NPCText("shop_NPCText", UI::center, UI::center);
+    PlacedText NPCText("shop_NPCText", UI::R, UI::L);
     PlacedText itemStatsText("shop_ItemStats", UI::R, UI::L);
-    PlacedText playerCoinsText("shop_PlCoinsText", UI::TL, UI::B);
+    PlacedText playerCoinsText("shop_PlCoinsText", UI::T, UI::B);
 }
 
 void initShop(Player* player) {
@@ -78,7 +78,7 @@ void initShop(Player* player) {
         NPCName.parentTo(&NPCSprite, true, { 50, 0 });
 
         NPCText.setCharacterSize(32);
-        NPCText.parentTo(&NPCTextFrame, true);
+        NPCText.parentTo(&NPCTextFrame, true, { -100, 0 });
 
         itemsFrame.setTexture(Textures::GradientFrameAlpha);
         itemsFrame.setSpriteColor(sf::Color(0xCC, 0xAA, 0x11));
@@ -119,10 +119,11 @@ void initShop(Player* player) {
                                      1, itemTextureDuration[ItemID::coin]);
         itemCoinsSprite.setSize({ 50, 50 });
         itemCoinsSprite.parentTo(&itemSlot);
-        itemSlot.priceText->moveToAnchor(&itemCoinsSprite, itemSlot.getPosition() + sf::Vector2f(10, -15));
+        itemCoinsSprite.moveToAnchor(itemSlot.priceText, itemSlot.getPosition() + sf::Vector2f(10, -15));
         itemCoinsSprite.play();
 
-        itemSprite.setTexture(Textures::INVISIBLE, UI::texture);
+        itemSprite.setSize(itemSlot.getSize());
+        itemSprite.setTexture(Textures::INVISIBLE);
         itemSprite.parentTo(&itemSlot, true);
 
         itemStatsText.setCharacterSize(30);
@@ -130,10 +131,11 @@ void initShop(Player* player) {
 
         buyButton.setTexture(Textures::YellowPanel, Textures::YellowPanelPushed);
         buyButton.setCharacterSize(70);
-        buyButton.parentTo(&playerInvFrame, true, { 0, 300 });
+        buyButton.parentTo(&itemStatsFrame, true, { 300, 0 });
+        buyButton.centerOnAnchor(&playerInvFrame, UI::x);
 
         playerCoinsText.setCharacterSize(40);
-        playerCoinsText.parentTo(&buyButton, true, { 0, -100 });
+        playerCoinsText.parentTo(&buyButton, true, { -25, -50 });
 
         playerCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                        1, itemTextureDuration[ItemID::coin]);

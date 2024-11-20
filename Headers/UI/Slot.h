@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "text.h"
 #include "Frame.h"
 
@@ -26,7 +26,7 @@ public:
 
     virtual void init(std::string name, sf::FloatRect rect) {
         init(name, UI::none, UI::none, rect.getSize());
-        setPosition(rect.getPosition().x, rect.getPosition().y);
+        setPosition(rect.getPosition());
     };
 
     virtual void erase() {
@@ -41,6 +41,10 @@ public:
                                            9 * background->getGlobalBounds().getSize().y / 8));
     }
 
+    virtual void setPosition(sf::Vector2f v) {
+        setPosition(v.x, v.y);
+    }
+
     void setTexture(sf::Texture& texture, UI::TextureResize mode, sf::Vector2f size = { 0, 0 }) {
         if (!background->sprite.getTexture() && getSize() != sf::Vector2u{ 0, 0 } && mode == UI::element) {
             background->setTexture(texture, UI::size, getSize());
@@ -51,8 +55,7 @@ public:
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         states.transform *= getTransform();
         target.draw(*background, states);
-        if (amountText->getText() != "0")
-            target.draw(*amountText, states);
+        target.draw(*amountText, states);
     }
 };
 
@@ -91,6 +94,8 @@ public:
     void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
         ItemSlot::draw(target, states);
         states.transform *= getTransform();
+        if (priceText->getText() == "0")
+            priceText->setString("Free");
         target.draw(*priceText, states);
     }
 };

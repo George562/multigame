@@ -63,8 +63,6 @@ namespace inventoryInterface {
 void setUpgradeFunctions();
 void updateUpgradeShopStats();
 
-///////////////////// CHECK THE CRASH AFTER CLICKING ON WEAPONS PAGE YOU ABSOLUTE BUFOON CRETIN IDIOT
-
 namespace upgradeInterface {
     bool isDrawUpgradeInterface = false;
     std::vector<sf::Drawable*> UIElements;
@@ -88,7 +86,7 @@ namespace upgradeInterface {
     Frame choiceBG("choiceUI_BG", { 0, 0, scw, sch });
     Frame choiceComp("choiceUI_comp", UI::center, UI::center, { 0.75f * scw, 0.5f * sch });
     Panel choiceMessage("choiceUI_msg", UI::T, UI::B, { 0.5f * scw, 0.125f * sch });
-    Frame choiceCompImg("choiceUI_img", UI::TR, UI::TR, { 0.25f * scw, 0.25f * sch });
+    Frame choiceCompImg("choiceUI_img", UI::R, UI::R, { 0.25f * scw, 0.25f * sch });
     std::vector<UIElement*> compUpgPages;
     std::vector<std::vector<RectButton*>> compUpgBtns;
     std::vector<std::vector<PlacedText*>> compUpgCosts;
@@ -107,7 +105,7 @@ namespace upgradeInterface {
         addUI(&choiceBG, choiceUIElements);
         addUI(compUpgPages[compType], choiceUIElements);
         std::string compName;
-        sf::Texture* compTexture = nullptr;
+        sf::Texture* compTexture = &Textures::INVISIBLE;;
         switch (type) {
             case 0:
                 compName = "Coch Generator";
@@ -125,17 +123,20 @@ namespace upgradeInterface {
                 compName = "Targeting";
                 compTexture = &Textures::PH_Targeting;
                 break;
+            default:
+                compName = errStr;
         }
         if (inventoryInterface::isDrawInventory) {
             choiceMessage.setFontString(FontString("You can only upgrade at a special upgrade shop.",
-                                                   50, CommonColors::warning));
+                                                   40, CommonColors::warning));
             removeUI(&playerCoinAmount, choiceUIElements);
         } else {
             choiceMessage.setFontString(FontString("Choose a " + compName + " upgrade   (press RMB to close)",
-                                                   50, CommonColors::text));
+                                                   40, CommonColors::text));
             addUI(&playerCoinAmount, choiceUIElements);
         }
-        choiceCompImg.setTexture(*compTexture, UI::size, { 375, 375 });
+        choiceCompImg.setTexture(*compTexture, UI::TextureResize::texture);
+        choiceCompImg.moveToAnchor(&choiceComp, { -50, 0 });
     }
 }
 
@@ -229,8 +230,9 @@ void initInventory(Player* player) {
         coinSlot.amountText->setAnchors(UI::R, UI::L);
         coinSlot.amountText->setFontString(FontString("0", 50));
         coinSlot.amountText->parentTo(&coinSprite, true, { 50, 0 });
-        doInventoryUpdate[inventoryPage::Stats] = true;
+        doInventoryUpdate[inventoryPage::Items] = true;
         doInventoryUpdate[inventoryPage::Weapons] = true;
+        doInventoryUpdate[inventoryPage::Stats] = true;
 
         addUI(&inventoryFrame, commonElements);
 
@@ -292,8 +294,8 @@ void initUpgradeShop() {
         choiceMessage.setFontString(FontString("Choose a component upgrade", 40));
         choiceMessage.parentTo(&choiceComp, true, { 0, -100 });
 
-        choiceCompImg.setTexture(Textures::PH_FormFactor);
-        choiceCompImg.parentTo(&choiceComp, true, { -50, 50 });
+        choiceCompImg.setTexture(Textures::INVISIBLE);
+        choiceCompImg.parentTo(&choiceComp, true, { -50, 0 });
 
         generatorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
         generatorBtn.setHitboxPoints(CommonShapes::starShape);

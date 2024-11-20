@@ -49,9 +49,7 @@ public:
 // Realization
 ////////////////////////////////////////////////////////////
 
-Panel::Panel() {
-    setScale(scwScale, schScale);
-}
+Panel::Panel() {}
 
 Panel::Panel(std::string name, std::string word) : Panel() {
     setName(name);

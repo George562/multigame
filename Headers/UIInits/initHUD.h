@@ -24,7 +24,7 @@ namespace HUD {
 
 
 //////////////////////////////////////////////////////////// Buttons
-    RectButton EscapeButton("exitBtn", UI::none, UI::none, { 0, 0 }, "Exit");
+    RectButton EscapeButton("exitBtn", UI::center, UI::center, { 0, 0 }, "Exit");
 
 //////////////////////////////////////////////////////////// HUDStuff
     Frame HUDFrame("HUD", { 0, 0, scw, sch });
@@ -53,9 +53,9 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         EscapeButton.setCharacterSize(110);
         ListOfPlayers.text.setCharacterSize(60);
 
-        EscapeButton.setCenter(scw / 2, sch * 3 / 4);
+        EscapeButton.moveToAnchor(&HUDFrame, { 0, sch / 4 });
 
-        ListOfPlayers.setCenter(scw / 2, sch / 4);
+        ListOfPlayers.moveToAnchor(&HUDFrame, { 0, -sch / 4 });
 
         HPBar.setValue(player->Health);
         HPBar.setFontString(FontString("", 36));
