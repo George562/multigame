@@ -1477,9 +1477,9 @@ void updateEnemies() {
             if (player.isAlive() && CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), player.hitbox.getCenter()))
                 centers.push_back(player.hitbox.getCenter());
             mutexOnDataChange.lock();
-            for (int j = 0; j < ConnectedPlayers.size(); j++) {
-                if (ConnectedPlayers[j].isAlive() && CurLocation->ExistDirectWay(Enemies[j]->hitbox.getCenter(), ConnectedPlayers[j].hitbox.getCenter()))
-                    centers.push_back(ConnectedPlayers[j].hitbox.getCenter());
+            for (Player& p: ConnectedPlayers) {
+                if (p.isAlive() && CurLocation->ExistDirectWay(Enemies[i]->hitbox.getCenter(), p.hitbox.getCenter()))
+                    centers.push_back(p.hitbox.getCenter());
             }
             mutexOnDataChange.unlock();
             if (centers.size() > 0) {
@@ -1871,7 +1871,7 @@ void MainLoop() {
         mutexOnDataChange.lock();
         if (player.isAlive()) {
             player.UpdateState();
-        } else {
+        } else if (!HostFuncRun && !ClientFuncRun) {
             player.Health.cur = player.Health.top;
             HUD::EscapeButton.buttonFunction();
         }
@@ -1923,9 +1923,10 @@ void MainLoop() {
             sf::Event event;
             while (window.pollEvent(event)) {}
 
-            if (HostFuncRun) {
+            if (HostFuncRun || ClientFuncRun) {
                 mutexOnSend.lock();
-                SendPacket << packetStates::PlayerPos << player << ConnectedPlayers;
+                SendPacket << packetStates::PlayerPos << player;
+                if (HostFuncRun) SendPacket << ConnectedPlayers;
                 sendSendPacket();
                 mutexOnSend.unlock();
             }
