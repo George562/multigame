@@ -1874,6 +1874,10 @@ void MainLoop() {
         } else {
             player.UpdateState();
         }
+        for (Player& p: ConnectedPlayers) {
+            if (!p.isAlive()) DeleteFromVector(DrawableStuff, (sf::Drawable*)&p);
+            else              p.UpdateState();
+        }
 
         if (!ClientFuncRun) {
             updateEnemies();
@@ -2190,7 +2194,7 @@ void funcOfHost() {
                                 }
                                 mutexOnDataChange.unlock();
                                 mutexOnSend.lock();
-                                SendPacket << packetStates::UseInteractable << i32PacketData << id << V2fPacketData;
+                                SendPacket << packetStates::UseInteractable << i32PacketData + 1 << id << V2fPacketData;
                                 SendPacket << ConnectedPlayers[i32PacketData].Health << ConnectedPlayers[i32PacketData].HealthRecovery;
                                 SendToClients(SendPacket, i32PacketData);
                                 mutexOnSend.unlock();
