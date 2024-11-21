@@ -1120,8 +1120,7 @@ void setBox(Interactable*& box) {
 
             if (ClientFuncRun || HostFuncRun) {
                 mutexOnSend.lock();
-                SendPacket << packetStates::UseInteractable << ComputerID << DescriptionID::box << i;
-                SendPacket << player.Health << player.HealthRecovery;
+                SendPacket << packetStates::UseInteractable << ComputerID << i << player.Health << player.HealthRecovery;
                 sendSendPacket();
                 mutexOnSend.unlock();
             }
@@ -1164,8 +1163,7 @@ void setArtifact(Interactable*& artifact) {
 
         if (ClientFuncRun || HostFuncRun) {
             mutexOnSend.lock();
-            SendPacket << packetStates::UseInteractable << ComputerID << DescriptionID::artifact << i;
-            SendPacket << player.Health << player.HealthRecovery;
+            SendPacket << packetStates::UseInteractable << ComputerID << i << player.Health << player.HealthRecovery;
             sendSendPacket();
             mutexOnSend.unlock();
         }
@@ -2185,7 +2183,7 @@ void funcOfHost() {
                                 Interactable* x1 = nullptr;
                                 mutexOnDataChange.lock();
                                 for (Interactable*& x2: InteractableStuff) {
-                                    if (x2->descriptionID == id && x2->hitbox.getCenter() == V2fPacketData) {
+                                    if (x2->descriptionID == id && x2->hitbox.getPosition() == V2fPacketData) {
                                         x1 = x2;
                                         break;
                                     }
@@ -2357,7 +2355,7 @@ void funcOfClient() {
                             mutexOnDataChange.lock();
                             ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
                             for (Interactable*& x2: InteractableStuff) {
-                                if (x2->descriptionID == id && x2->hitbox.getCenter() == V2fPacketData) {
+                                if (x2->descriptionID == id && x2->hitbox.getPosition() == V2fPacketData) {
                                     x1 = x2;
                                     break;
                                 }
