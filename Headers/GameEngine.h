@@ -764,6 +764,12 @@ sf::Clock SHiftClickTime;
 void EventHandler() {
     sf::Event event;
     while (window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed) {
+            if (ClientFuncRun)    chat.UseCommand("/disconnect");
+            else if (HostFuncRun) chat.UseCommand("/server off");
+            Musics::MainMenu.pause();
+            window.close();
+        }
         if (Connecting) {
             if (keyPressed(event, sf::Keyboard::Escape)) {
                 Connecting = false;
