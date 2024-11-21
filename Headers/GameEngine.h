@@ -1864,20 +1864,19 @@ void loadSave() {
 void MainLoop() {
     while (window.isOpen()) {
 
-        if (!player.isAlive()) {
-            if (ClientFuncRun || HostFuncRun) {
-                DeleteFromVector(DrawableStuff, (sf::Drawable*)&player);
-            } else {
-                player.Health.cur = player.Health.top;
-                HUD::EscapeButton.buttonFunction();
-            }
-        } else {
+        mutexOnDataChange.lock();
+        if (player.isAlive()) {
             player.UpdateState();
+        } else {
+            player.Health.cur = player.Health.top;
+            HUD::EscapeButton.buttonFunction();
         }
         for (Player& p: ConnectedPlayers) {
-            if (!p.isAlive()) DeleteFromVector(DrawableStuff, (sf::Drawable*)&p);
-            else              p.UpdateState();
+            if (p.isAlive()) {
+                p.UpdateState();
+            }
         }
+        mutexOnDataChange.unlock();
 
         if (!ClientFuncRun) {
             updateEnemies();
@@ -2099,11 +2098,11 @@ void ClientDisconnect(int i) {
 void SelfDisconnect() {
     mutexOnDataChange.lock();
     std::cout << "SelfDisconnect\n";
-    ClientFuncRun = false;
     ComputerID = 0;
     LoadMainMenu();
     MySocket.disconnect();
     selector.clear();
+    ClientFuncRun = false;
     for (Player& p : ConnectedPlayers) {
         DeleteFromVector(DrawableStuff, (sf::Drawable*)&p);
     }
@@ -2135,12 +2134,12 @@ void funcOfHost() {
                                 mutexOnDataChange.lock();
                                 ReceivePacket >> ConnectedPlayers[i].Health >> ConnectedPlayers[i].HealthRecovery;
                                 ConnectedPlayers[i].Name.setString(sPacketData);
+                                mutexOnDataChange.unlock();
+                                std::cout << "Connected " << sPacketData << " whith ID:" << i + 1 << '\n';
                                 mutexOnSend.lock();
                                 SendPacket << packetStates::PlayerConnect << sPacketData << player.Health << player.HealthRecovery;
                                 SendToClients(SendPacket, i);
                                 mutexOnSend.unlock();
-                                mutexOnDataChange.unlock();
-                                std::cout << "Connected " << sPacketData << " whith ID:" << i + 1 << '\n';
                                 break;
                             case packetStates::Disconnect:
                                 std::cout << "client disconected\n";
@@ -2176,9 +2175,9 @@ void funcOfHost() {
                             case packetStates::UseInteractable: {
                                 DescriptionID::Type id;
                                 ReceivePacket >> i32PacketData >> id >> V2fPacketData; i32PacketData--;
+                                ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
                                 Interactable* x1 = nullptr;
                                 mutexOnDataChange.lock();
-                                ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
                                 for (Interactable*& x2: InteractableStuff) {
                                     if (x2->descriptionID == id && x2->hitbox.getCenter() == V2fPacketData) {
                                         x1 = x2;
@@ -2192,12 +2191,12 @@ void funcOfHost() {
                                     DeleteFromVector(InteractableStuff, x1);
                                     delete x1;
                                 }
+                                mutexOnDataChange.unlock();
                                 mutexOnSend.lock();
-                                SendPacket << packetStates::UseInteractable << i32PacketData + 1 << id << V2fPacketData;
+                                SendPacket << packetStates::UseInteractable << i32PacketData << id << V2fPacketData;
                                 SendPacket << ConnectedPlayers[i32PacketData].Health << ConnectedPlayers[i32PacketData].HealthRecovery;
                                 SendToClients(SendPacket, i32PacketData);
                                 mutexOnSend.unlock();
-                                mutexOnDataChange.unlock();
                                 break;
                             }
                         }

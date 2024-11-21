@@ -34,7 +34,7 @@ public:
 
     void SetCommand(std::string CommandString, void (*CommandFunction)(void)) { commands[CommandString] = CommandFunction; }
     bool UseCommand(std::string Commandstring) {
-        if (commands.count(lines[0].getText()) != 0) {
+        if (commands.count(Commandstring) != 0) {
             commands[Commandstring]();
             return true;
         }
