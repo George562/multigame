@@ -383,6 +383,64 @@ void initScripts() {
         }
     });
 
+    portal.setFunction([](Interactable* i) {
+        if (ClientFuncRun) {
+            addMessageText("Host must start next level", sf::Color::Black);
+        } else {
+            clearVectorOfPointers(PickupStuff);
+            clearVectorOfPointers(Bullets);
+
+            DrawableStuff.clear();
+            HUD::InterfaceStuff.clear();
+            InteractableStuff.clear();
+
+            player.hitbox.setCenter((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size);
+
+            MiniMapActivated = false;
+            HUD::EscapeMenuActivated = false;
+
+            MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
+            MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
+
+            Musics::MainMenu.pause();
+            if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
+                Musics::Fight1.play();
+            }
+            if (CurLocation != &LabyrinthLocation) {
+                CurLocation = &LabyrinthLocation;
+            } else {
+                completedLevels = std::max(curLevel, completedLevels);
+                curLevel++;
+            }
+            LevelGenerate(START_N + curLevel, START_M + curLevel * 2);
+            FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+
+            DrawableStuff.push_back(&player);
+            DrawableStuff.push_back(&portal);
+
+            addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
+            for (int i = 0; i < HUD::WeaponNameTexts.size(); i++) {
+                HUD::InterfaceStuff.push_back(HUD::WeaponNameTexts[i]);
+            }
+            HUD::InterfaceStuff.push_back(&chat);
+
+            saveGame();
+
+            if (HostFuncRun) {
+                mutexOnSend.lock();
+                SendPacket << packetStates::Labyrinth << CurLocation;
+                SendPacket << (sf::Int32)Enemies.size() << Enemies;
+                SendPacket << (sf::Int32)InteractableStuff.size() << InteractableStuff;
+                SendPacket << &portal << player;
+                sendSendPacket();
+                mutexOnSend.unlock();
+                for (Player& p : ConnectedPlayers) {
+                    DrawableStuff.push_back(&p);
+                }
+            }
+        }
+    });
+
     chat.SetCommand("/?", []{
         chat.addLine("/? - info");
         chat.addLine("/server on - start server");
@@ -813,7 +871,6 @@ void EventHandler() {
                             chat.addLine("done");
                         } else {
                             chat.addLine("Failed to connect to server");
-                            Connecting = false;
                             SelfDisconnect();
                         }
                     } else {
@@ -1245,6 +1302,9 @@ void LoadMainMenu() {
     clearVectorOfPointers(listOfArtifact);
     clearVectorOfPointers(listOfFire);
     clearVectorOfPointers(PickupStuff);
+    DrawableStuff.clear();
+    InteractableStuff.clear();
+
     for (Effect *effect : player.effects) {
         clearEffect(player, effect);
     }
@@ -1254,69 +1314,14 @@ void LoadMainMenu() {
     curLevel = 0;
 
     player.hitbox.setCenter(3.5f * size, 2.5f * size);
+    for (Player& p: ConnectedPlayers) {
+        p.hitbox.setCenter(3.5f * size, 2.5f * size);
+    }
     FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
 
     portal.setPosition(1612.5, 1545);
 
     CurLocation->FindEnableTilesFrom(player.hitbox.getCenter() / (float)size);
-
-    portal.setFunction([](Interactable* i) {
-        if (ClientFuncRun) {
-            addMessageText("Host must start next level", sf::Color::Black);
-        } else {
-            clearVectorOfPointers(PickupStuff);
-            clearVectorOfPointers(Bullets);
-
-            DrawableStuff.clear();
-            HUD::InterfaceStuff.clear();
-            InteractableStuff.clear();
-
-            player.hitbox.setCenter((START_M / 2 + 0.5f) * size, (START_N / 2 + 0.5f) * size);
-
-            MiniMapActivated = false;
-            HUD::EscapeMenuActivated = false;
-
-            MiniMapView.setViewport(sf::FloatRect(0.f, 0.f, 0.25f, 0.25f));
-            MiniMapView.setCenter(player.hitbox.getCenter() * ScaleParam);
-
-            Musics::MainMenu.pause();
-            if (Musics::Fight1.getStatus() != sf::Music::Playing && Musics::Fight2.getStatus() != sf::Music::Playing) {
-                Musics::Fight1.play();
-            }
-            if (CurLocation != &LabyrinthLocation) {
-                CurLocation = &LabyrinthLocation;
-            } else {
-                completedLevels = std::max(curLevel, completedLevels);
-                curLevel++;
-            }
-            LevelGenerate(START_N + curLevel, START_M + curLevel * 2);
-            FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
-
-            DrawableStuff.push_back(&player);
-            DrawableStuff.push_back(&portal);
-
-            addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
-            for (int i = 0; i < HUD::WeaponNameTexts.size(); i++) {
-                HUD::InterfaceStuff.push_back(HUD::WeaponNameTexts[i]);
-            }
-            HUD::InterfaceStuff.push_back(&chat);
-
-            saveGame();
-
-            if (HostFuncRun) {
-                mutexOnSend.lock();
-                SendPacket << packetStates::Labyrinth << CurLocation;
-                SendPacket << (sf::Int32)Enemies.size() << Enemies;
-                SendPacket << (sf::Int32)InteractableStuff.size() << InteractableStuff;
-                SendPacket << &portal << player;
-                sendSendPacket();
-                mutexOnSend.unlock();
-                for (Player& p : ConnectedPlayers) {
-                    DrawableStuff.push_back(&p);
-                }
-            }
-        }
-    });
 
     shopSector.setFunction([](Interactable* i) {
         {
@@ -1348,14 +1353,15 @@ void LoadMainMenu() {
     Musics::Fight2.stop();
     Musics::MainMenu.play();
 
-    DrawableStuff.clear();
     DrawableStuff.push_back(&player);
+    for (Player& p: ConnectedPlayers) {
+        DrawableStuff.push_back(&p);
+    }
 
     HUD::InterfaceStuff.clear();
     HUD::InterfaceStuff.push_back(&chat);
     addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
 
-    InteractableStuff.clear();
     InteractableStuff.push_back(&shopSector);
     InteractableStuff.push_back(&upgradeSector);
 
@@ -1869,15 +1875,30 @@ void MainLoop() {
     while (window.isOpen()) {
 
         mutexOnDataChange.lock();
+        bool someoneAlive = false;
         if (player.isAlive()) {
             player.UpdateState();
-        } else if (!HostFuncRun && !ClientFuncRun) {
-            player.Health.cur = player.Health.top;
-            HUD::EscapeButton.buttonFunction();
+            someoneAlive = true;
         }
         for (Player& p: ConnectedPlayers) {
             if (p.isAlive()) {
                 p.UpdateState();
+                someoneAlive = true;
+            }
+        }
+        if (!someoneAlive) {
+            if (HostFuncRun) {
+                mutexOnSend.lock();
+                SendPacket << packetStates::AllPlayerDie;
+                sendSendPacket();
+                mutexOnSend.unlock();
+            }
+            if (!ClientFuncRun) {
+                LoadMainMenu();
+                player.Health.cur = player.Health.top;
+                for (Player& p: ConnectedPlayers) {
+                    p.Health.cur = p.Health.top;
+                }
             }
         }
         mutexOnDataChange.unlock();
@@ -2382,6 +2403,15 @@ void funcOfClient() {
                         case packetStates::EnemyDie:
                             ReceivePacket >> i32PacketData;
                             EnemyDie(i32PacketData);
+                            break;
+                        case packetStates::AllPlayerDie:
+                            mutexOnDataChange.lock();
+                            LoadMainMenu();
+                            player.Health.cur = player.Health.top;
+                            for (Player& p: ConnectedPlayers) {
+                                p.Health.cur = p.Health.top;
+                            }
+                            mutexOnDataChange.unlock();
                             break;
                     }
                 }

@@ -41,7 +41,8 @@ namespace packetStates {
         FirstConnect,     // first connect of new players
         UseInteractable,  // When client use some interactable item
         EnemiesPos,       // send Enemies position
-        EnemyDie         // send when Enemy die
+        EnemyDie,         // send when Enemy die
+        AllPlayerDie      // when all players die
     };
 };
 
