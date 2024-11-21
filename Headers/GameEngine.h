@@ -2176,9 +2176,9 @@ void funcOfHost() {
                             case packetStates::UseInteractable: {
                                 DescriptionID::Type id;
                                 ReceivePacket >> i32PacketData >> id >> V2fPacketData; i32PacketData--;
-                                ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
                                 Interactable* x1 = nullptr;
                                 mutexOnDataChange.lock();
+                                ReceivePacket >> ConnectedPlayers[i32PacketData].Health >> ConnectedPlayers[i32PacketData].HealthRecovery;
                                 for (Interactable*& x2: InteractableStuff) {
                                     if (x2->descriptionID == id && x2->hitbox.getCenter() == V2fPacketData) {
                                         x1 = x2;
