@@ -407,9 +407,6 @@ void initScripts() {
             }
             if (CurLocation != &LabyrinthLocation) {
                 CurLocation = &LabyrinthLocation;
-            } else {
-                completedLevels = std::max(curLevel, completedLevels);
-                curLevel++;
             }
             LevelGenerate(START_N + curLevel, START_M + curLevel * 2);
             FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
@@ -1464,11 +1461,11 @@ void EnemyDie(int i) {
         enemiesKilledText->setCenter(scw / 2.0f, sch / 3.0f);
         HUD::TempTextsOnScreen.push_back(enemiesKilledText);
 
-        if (CurLocation == &LabyrinthLocation) {
-            if (!in(InteractableStuff, (Interactable*)&portal)) {
-                InteractableStuff.push_back(&portal);
-            }
+        if (!in(InteractableStuff, (Interactable*)&portal)) {
+            InteractableStuff.push_back(&portal);
         }
+        curLevel++;
+        completedLevels = std::max(curLevel, completedLevels);
     }
     mutexOnDataChange.unlock();
 }
