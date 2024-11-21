@@ -81,10 +81,11 @@ public:
         animation = new Animation("");
         animation->setTexture(texture, shader);
         hitbox.setSize(animation->getGlobalSize());
+        animation->setPosition(hitbox.getPosition());
         animation->play();
     };
 
-    void setSize(float w, float h) { hitbox.setSize(w, h); if (animation) animation->setSize(sf::Vector2f(w, h)); }
+    void setSize(float w, float h) { hitbox.setSize(w, h); if (animation) animation->setSize(w, h); }
     void setSize(sf::Vector2f v) { hitbox.setSize(v); if (animation) animation->setSize(v); }
 
     void setPosition(float x, float y) { hitbox.setPosition(x, y); if (animation) animation->setPosition(x, y); }
@@ -95,10 +96,10 @@ public:
 };
 
 sf::Packet& operator<<(sf::Packet& packet, Interactable* i) {
-    return packet << i->descriptionID << i->hitbox.getCenter();
+    return packet << i->descriptionID << i->hitbox.getPosition();
 }
 sf::Packet& operator>>(sf::Packet& packet, Interactable* i) {
     sf::Vector2f v; packet >> i->descriptionID >> v;
-    i->setCenter(v);
+    i->setPosition(v);
     return packet;
 }

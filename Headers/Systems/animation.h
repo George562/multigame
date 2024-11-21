@@ -34,9 +34,10 @@ public:
     void setShader(sf::Shader* shader);
     void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader* shader = nullptr);
     void setAnimationLevel(int);
-    void setSize(sf::Vector2f size);
+    void setSize(float w, float h);
+    void setSize(sf::Vector2f size) { setSize(size.x, size.y); }
     void setPosition(float x, float y);
-    void setPosition(sf::Vector2f v) { setPosition(v.x, v.y); }
+    void setPosition(sf::Vector2f pos) { setPosition(pos.x, pos.y); }
     sf::Vector2f getGlobalSize() const;
     sf::Vector2f getLocalSize() const;
 };
@@ -127,9 +128,9 @@ void Animation::setShader(sf::Shader* shader) {
     this->shader = shader;
 }
 
-void Animation::setSize(sf::Vector2f size) {
-    UIRect::setSize(size.x / frameAmount, size.y / maxLevel);
-    setScale(sf::Vector2f{size.x / getLocalSize().x, size.y / getLocalSize().y});
+void Animation::setSize(float w, float h) {
+    UIRect::setSize(w / frameAmount, h / maxLevel);
+    setScale(w / getLocalSize().x, h / getLocalSize().y);
 }
 
 void Animation::setPosition(float x, float y) {

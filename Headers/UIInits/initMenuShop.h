@@ -117,7 +117,7 @@ void initShop(Player* player) {
 
         itemCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                      1, itemTextureDuration[ItemID::coin]);
-        itemCoinsSprite.setSize({ 50, 50 });
+        itemCoinsSprite.setSize(50, 50);
         itemCoinsSprite.parentTo(&itemSlot);
         itemCoinsSprite.moveToAnchor(itemSlot.priceText, itemSlot.getPosition() + sf::Vector2f(10, -15));
         itemCoinsSprite.play();
@@ -139,7 +139,7 @@ void initShop(Player* player) {
 
         playerCoinsSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                        1, itemTextureDuration[ItemID::coin]);
-        playerCoinsSprite.setSize({ 75, 75 });
+        playerCoinsSprite.setSize(75, 75);
         playerCoinsSprite.parentTo(&playerCoinsText, true);
         playerCoinsSprite.play();
     }

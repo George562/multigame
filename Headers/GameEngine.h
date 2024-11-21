@@ -247,9 +247,9 @@ void init() {
     playerCanDash = player.inventory.find(ItemID::dasher) != -1;
 
     Musics::MainMenu.setLoop(true);
-    Musics::MainMenu.setVolume(0);
-    Musics::Fight1.setVolume(0);
-    Musics::Fight2.setVolume(0);
+    Musics::MainMenu.setVolume(15);
+    Musics::Fight1.setVolume(15);
+    Musics::Fight2.setVolume(15);
 
     for (Weapon*& w: Weapons) w->ShootSound.setRelativeToListener(true);
 
