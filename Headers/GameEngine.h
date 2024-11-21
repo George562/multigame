@@ -2135,12 +2135,12 @@ void funcOfHost() {
                                 mutexOnDataChange.lock();
                                 ReceivePacket >> ConnectedPlayers[i].Health >> ConnectedPlayers[i].HealthRecovery;
                                 ConnectedPlayers[i].Name.setString(sPacketData);
-                                mutexOnDataChange.unlock();
-                                std::cout << "Connected " << sPacketData << " whith ID:" << i + 1 << '\n';
                                 mutexOnSend.lock();
                                 SendPacket << packetStates::PlayerConnect << sPacketData << player.Health << player.HealthRecovery;
                                 SendToClients(SendPacket, i);
                                 mutexOnSend.unlock();
+                                mutexOnDataChange.unlock();
+                                std::cout << "Connected " << sPacketData << " whith ID:" << i + 1 << '\n';
                                 break;
                             case packetStates::Disconnect:
                                 std::cout << "client disconected\n";
@@ -2192,12 +2192,12 @@ void funcOfHost() {
                                     DeleteFromVector(InteractableStuff, x1);
                                     delete x1;
                                 }
-                                mutexOnDataChange.unlock();
                                 mutexOnSend.lock();
                                 SendPacket << packetStates::UseInteractable << i32PacketData + 1 << id << V2fPacketData;
                                 SendPacket << ConnectedPlayers[i32PacketData].Health << ConnectedPlayers[i32PacketData].HealthRecovery;
                                 SendToClients(SendPacket, i32PacketData);
                                 mutexOnSend.unlock();
+                                mutexOnDataChange.unlock();
                                 break;
                             }
                         }
