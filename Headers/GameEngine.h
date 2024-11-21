@@ -366,7 +366,6 @@ void initScripts() {
                 } else {
                     NPCText.setString("Sorry, but you cannot afford a " + stringLower(itemName[selectedItem->id]) + ".");
                 }
-                NPCText.moveToAnchor(&NPCTextFrame);
             }
         });
     }
