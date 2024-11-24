@@ -82,7 +82,8 @@ std::regex regexOfIP("\\d+.\\d+.\\d+.\\d+");
 //////////////////////////////////////////////////////////// Interactables
 Interactable portal(DescriptionID::portal),
              shopSector(DescriptionID::shopSector),
-             upgradeSector(DescriptionID::upgradeSector);
+             upgradeSector(DescriptionID::upgradeSector),
+             portal2(DescriptionID::portal);
 std::vector<Interactable*> listOfBox,
                            listOfArtifact,
                            listOfFire;
@@ -254,8 +255,13 @@ void init() {
     for (Weapon*& w: Weapons) w->ShootSound.setRelativeToListener(true);
 
     portal.setAnimation(Textures::Portal, 9, 1, sf::seconds(1), &Shaders::Portal);
-    portal.setSize(170.f, 320.f);
+    portal.setSize(140.f, 270.f);
+
+    portal2.setAnimation(Textures::Portal2, &Shaders::Portal2);
+    portal2.setSize(140.f, 250.f);
+
     player.setAnimation(Textures::Player, &Shaders::Player);
+
     shopSector.setAnimation(Textures::INVISIBLE);
     shopSector.setPosition(0, 2 * size);
 
@@ -268,6 +274,8 @@ void init() {
     Shaders::Distortion1.setUniform("noise_png", Textures::Noise);
 
     Shaders::Distortion2.setUniform("noise_png", Textures::Noise);
+
+    Shaders::Portal2.setUniform("noise_png", Textures::Noise);
 
     Shaders::Outline.setUniform("uResolution", sf::Vector2f(scw, sch));
 
@@ -382,6 +390,27 @@ void initScripts() {
         }
     });
 
+    shopSector.setFunction([](Interactable* i) {
+        {
+            using namespace MenuShop;
+            isDrawShop = true;
+            playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
+            playerCoinsText.moveToAnchor(&buyButton, { -25, -50 });
+            playerCoinsSprite.moveToAnchor(&playerCoinsText, { 25, -10 });
+            NPCText.setString(textWrap("Hello! Welcome to our shop! "
+                                       "Do not mind the eldritch-geometric fuckery outside :)", 94));
+            NPCText.moveToAnchor(&NPCName, { 100, 0 });
+            addUI(&BG, UIElements);
+            if (!selectedItem)
+                removeUI(&itemSlot, UIElements);
+        }
+    });
+
+    upgradeSector.setFunction([](Interactable* i) {
+        upgradeInterface::isDrawUpgradeInterface = true;
+        openUpgradeShop();
+    });
+
     portal.setFunction([](Interactable* i) {
         if (ClientFuncRun) {
             addMessageText("Host must start next level", sf::Color::Black);
@@ -409,7 +438,7 @@ void initScripts() {
                 CurLocation = &LabyrinthLocation;
             }
             LevelGenerate(START_N + curLevel, START_M + curLevel * 2);
-            FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+            // FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
 
             DrawableStuff.push_back(&player);
             DrawableStuff.push_back(&portal);
@@ -1313,32 +1342,12 @@ void LoadMainMenu() {
     for (Player& p: ConnectedPlayers) {
         p.hitbox.setCenter(3.5f * size, 2.5f * size);
     }
-    FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+    // FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
 
     portal.setPosition(1612.5, 1545);
+    portal2.setPosition(1612.5 - size * 1.5, 1545);
 
     CurLocation->FindEnableTilesFrom(player.hitbox.getCenter() / (float)size);
-
-    shopSector.setFunction([](Interactable* i) {
-        {
-            using namespace MenuShop;
-            isDrawShop = true;
-            playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
-            playerCoinsText.moveToAnchor(&buyButton, { -25, -50 });
-            playerCoinsSprite.moveToAnchor(&playerCoinsText, { 25, -10 });
-            NPCText.setString(textWrap("Hello! Welcome to our shop! "
-                                       "Do not mind the eldritch-geometric fuckery outside :)", 94));
-            NPCText.moveToAnchor(&NPCName, { 100, 0 });
-            addUI(&BG, UIElements);
-            if (!selectedItem)
-                removeUI(&itemSlot, UIElements);
-        }
-    });
-
-    upgradeSector.setFunction([](Interactable* i) {
-        upgradeInterface::isDrawUpgradeInterface = true;
-        openUpgradeShop();
-    });
 
     // Set cameras
     GameView.setCenter(player.hitbox.getCenter());
@@ -1349,11 +1358,6 @@ void LoadMainMenu() {
     Musics::Fight2.stop();
     Musics::MainMenu.play();
 
-    DrawableStuff.push_back(&player);
-    for (Player& p: ConnectedPlayers) {
-        DrawableStuff.push_back(&p);
-    }
-
     HUD::InterfaceStuff.clear();
     HUD::InterfaceStuff.push_back(&chat);
     addUI(&HUD::HUDFrame, HUD::InterfaceStuff);
@@ -1362,6 +1366,7 @@ void LoadMainMenu() {
     InteractableStuff.push_back(&upgradeSector);
 
     placeOnMap(&portal);
+    // placeOnMap(&portal2);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
     newItem->setAnimation(*itemTexture[ItemID::regenDrug]);
@@ -1378,6 +1383,11 @@ void LoadMainMenu() {
     setInteractable(x);
     x->setPosition(1312.5, 1545);
     placeOnMap(x);
+
+    DrawableStuff.push_back(&player);
+    for (Player& p: ConnectedPlayers) {
+        DrawableStuff.push_back(&p);
+    }
 }
 //==============================================================================================
 
@@ -1766,6 +1776,8 @@ void updateShaders() {
 
     Shaders::Portal.setUniform("uTime", uTime);
 
+    Shaders::Portal2.setUniform("uTime", uTime);
+
     Shaders::Architect.setUniform("uTime", uTime);
 
     Shaders::Distortion1.setUniform("uTime", uTime);
@@ -1968,7 +1980,7 @@ void MainLoop() {
                         }
                     }
                     mutexOnDataChange.unlock();
-                    FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
+                    // FindAllWaysTo(CurLocation, centers, TheWayToPlayer);
                 }
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && player.isAlive()) {
                     player.makeADash = playerMakingADash && playerCanDash;
@@ -2291,7 +2303,7 @@ void funcOfClient() {
                             MiniMapZoom = std::pow(1.1, -10);
                             MiniMapView.zoom(MiniMapZoom);
                             ReceivePacket >> &LabyrinthLocation;
-                            FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
+                            // FindAllWaysTo(CurLocation, player.hitbox.getCenter(), TheWayToPlayer);
                             ReceivePacket >> i32PacketData; clearVectorOfPointers(Enemies);
                             for (int i = 0; i < i32PacketData; i++) {
                                 ReceivePacket >> sPacketData;

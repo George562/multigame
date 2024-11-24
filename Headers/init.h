@@ -99,6 +99,7 @@ namespace Textures {
                 DistortedScientist,
                 Player,
                 Portal,
+                Portal2,
                 WallG,
                 WallV,
                 XButton,
@@ -163,6 +164,7 @@ void loadTextures() {
     Textures::DistortedScientist      .loadFromFile("sources/textures/DistortedScientist.png");
     Textures::Player                  .loadFromFile("sources/textures/Player.png");
     Textures::Portal                  .loadFromFile("sources/textures/Portal.png");
+    Textures::Portal2                 .loadFromFile("sources/textures/Portal2.png");
     Textures::WallG                   .loadFromFile("sources/textures/wallG.png");
     Textures::WallV                   .loadFromFile("sources/textures/wallV.png");
     Textures::XButton                 .loadFromFile("sources/textures/XButton.png");
@@ -221,6 +223,7 @@ namespace Shaders {
     sf::Shader Flashlight,
                Player,
                Portal,
+               Portal2,
                PickupItem,
                Architect,
                FloatingUp,  // text moving up
@@ -237,6 +240,7 @@ void loadShaders() {
     Shaders::Flashlight  .loadFromFile("sources/shaders/flashlight/flashlight.vert", "sources/shaders/flashlight/flashlight.frag" );
     Shaders::Player      .loadFromFile("sources/shaders/player/player.vert",         "sources/shaders/player/player.frag"         );
     Shaders::Portal      .loadFromFile("sources/shaders/portal/portal.vert",         "sources/shaders/portal/portal.frag"         );
+    Shaders::Portal2     .loadFromFile("sources/shaders/portal2/portal2.vert",       "sources/shaders/portal2/portal2.frag"       );
     Shaders::PickupItem  .loadFromFile("sources/shaders/pickupItem/pickupItem.vert", "sources/shaders/pickupItem/pickupItem.frag" );
     Shaders::Architect   .loadFromFile("sources/shaders/Architect/Architect.vert",   "sources/shaders/Architect/Architect.frag"   );
     Shaders::FloatingUp  .loadFromFile("sources/shaders/FloatingUp/FloatingUp.vert", "sources/shaders/FloatingUp/FloatingUp.frag" );
