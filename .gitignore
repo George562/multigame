@@ -6,3 +6,5 @@ versions/
 *.exe
 *.ico
 sources/saves/*.json
+my.rc
+my.res
