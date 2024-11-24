@@ -470,6 +470,10 @@ void initScripts() {
         }
     });
 
+    portal2.setFunction([](Interactable* i) {
+        addMessageText("We're not sure where it ends.\n    You shouldn't go there.", sf::Color(200, 0, 200));
+    });
+
     chat.SetCommand("/?", []{
         chat.addLine("/? - info");
         chat.addLine("/server on - start server");
