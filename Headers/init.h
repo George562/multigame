@@ -144,6 +144,8 @@ namespace Textures {
 
                 SettingButton,
                 SettingButtonPushed,
+                EscapeButton,
+                EscapeButtonPushed,
 
                 NPCDialogueFrame_Square,
                 NPCDialogueFrame_Wide,
@@ -212,6 +214,8 @@ void loadTextures() {
 
     Textures::SettingButton           .loadFromFile("sources/textures/Buttons/SettingButton.png");
     Textures::SettingButtonPushed     .loadFromFile("sources/textures/Buttons/SettingButtonPushed.png");
+    Textures::EscapeButton            .loadFromFile("sources/textures/Buttons/EscapeButton.png");
+    Textures::EscapeButtonPushed      .loadFromFile("sources/textures/Buttons/EscapeButtonPushed.png");
 
     Textures::GridBG                  .loadFromFile("sources/textures/Panels/GridBackground.png");
 

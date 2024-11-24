@@ -23,7 +23,7 @@ namespace HUD {
     Panel ListOfPlayers("listOfPlayers");
 
 //////////////////////////////////////////////////////////// Buttons
-    RectButton EscapeButton("exitBtn", UI::center, UI::center, { 0, 0 }, "Exit");
+    RectButton EscapeButton("exitBtn", UI::center, UI::R, { 0, 0 }, "");
     RectButton SettingsButton("settingsBtn", UI::R, UI::L, { 0, 0 }, "");
 
 //////////////////////////////////////////////////////////// HUDStuff
@@ -46,7 +46,7 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         
         ListOfPlayers.setTexture(Textures::GradientFrameAlpha);
 
-        EscapeButton.setTexture(Textures::RedPanel, Textures::RedPanelPushed, UI::texture);
+        EscapeButton.setTexture(Textures::EscapeButton, Textures::EscapeButtonPushed, UI::texture);
         EscapeButton.setHitboxPoints({ EscapeButton.getLeftTop(), EscapeButton.getRightTop(),
                                        EscapeButton.getRightBottom(), EscapeButton.getLeftBottom() });
 
@@ -54,10 +54,9 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         SettingsButton.setHitboxPoints({ SettingsButton.getLeftTop(), SettingsButton.getRightTop(),
                                          SettingsButton.getRightBottom(), SettingsButton.getLeftBottom() });
 
-        EscapeButton.setCharacterSize(110);
         ListOfPlayers.text.setCharacterSize(60);
 
-        EscapeButton.moveToAnchor(&HUDFrame, { 0, sch / 4 });
+        EscapeButton.moveToAnchor(&HUDFrame, { -10, sch / 4 });
         SettingsButton.moveToAnchor(&EscapeButton, { 20, 0 });
 
         ListOfPlayers.moveToAnchor(&HUDFrame, { 0, -sch / 4 });
