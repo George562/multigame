@@ -1371,7 +1371,7 @@ void LoadMainMenu() {
     InteractableStuff.push_back(&upgradeSector);
 
     placeOnMap(&portal);
-    // placeOnMap(&portal2);
+    placeOnMap(&portal2);
 
     Item* newItem = new Item(ItemID::regenDrug, 1);
     newItem->setAnimation(*itemTexture[ItemID::regenDrug]);
