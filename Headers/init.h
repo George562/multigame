@@ -142,6 +142,9 @@ namespace Textures {
                 YellowButton,
                 YellowButtonPushed,
 
+                SettingButton,
+                SettingButtonPushed,
+
                 NPCDialogueFrame_Square,
                 NPCDialogueFrame_Wide,
 
@@ -206,6 +209,9 @@ void loadTextures() {
     Textures::RedButtonPushed         .loadFromFile("sources/textures/Buttons/RedButtonPushed.png");
     Textures::YellowButton            .loadFromFile("sources/textures/Buttons/YellowButton.png");
     Textures::YellowButtonPushed      .loadFromFile("sources/textures/Buttons/YellowButtonPushed.png");
+
+    Textures::SettingButton           .loadFromFile("sources/textures/Buttons/SettingButton.png");
+    Textures::SettingButtonPushed     .loadFromFile("sources/textures/Buttons/SettingButtonPushed.png");
 
     Textures::GridBG                  .loadFromFile("sources/textures/Panels/GridBackground.png");
 

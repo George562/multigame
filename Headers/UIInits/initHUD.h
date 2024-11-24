@@ -22,9 +22,9 @@ namespace HUD {
 //////////////////////////////////////////////////////////// Panels
     Panel ListOfPlayers("listOfPlayers");
 
-
 //////////////////////////////////////////////////////////// Buttons
     RectButton EscapeButton("exitBtn", UI::center, UI::center, { 0, 0 }, "Exit");
+    RectButton SettingsButton("settingsBtn", UI::R, UI::L, { 0, 0 }, "");
 
 //////////////////////////////////////////////////////////// HUDStuff
     Frame HUDFrame("HUD", { 0, 0, scw, sch });
@@ -50,10 +50,15 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         EscapeButton.setHitboxPoints({ EscapeButton.getLeftTop(), EscapeButton.getRightTop(),
                                        EscapeButton.getRightBottom(), EscapeButton.getLeftBottom() });
 
+        SettingsButton.setTexture(Textures::SettingButton, Textures::SettingButtonPushed, UI::texture);
+        SettingsButton.setHitboxPoints({ SettingsButton.getLeftTop(), SettingsButton.getRightTop(),
+                                         SettingsButton.getRightBottom(), SettingsButton.getLeftBottom() });
+
         EscapeButton.setCharacterSize(110);
         ListOfPlayers.text.setCharacterSize(60);
 
         EscapeButton.moveToAnchor(&HUDFrame, { 0, sch / 4 });
+        SettingsButton.moveToAnchor(&EscapeButton, { 20, 0 });
 
         ListOfPlayers.moveToAnchor(&HUDFrame, { 0, -sch / 4 });
 

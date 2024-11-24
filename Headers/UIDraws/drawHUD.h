@@ -42,6 +42,7 @@ void drawHUD(sf::RenderWindow& window, Player* player, std::vector<Weapon*>* Wea
         if (EscapeMenuActivated) {
             window.draw(ListOfPlayers);
             window.draw(EscapeButton);
+            window.draw(SettingsButton);
         }
 
         FPSCounter++;
