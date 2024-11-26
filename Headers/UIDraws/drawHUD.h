@@ -1,11 +1,14 @@
 #include "../UIInits/initHUD.h"
 
 void drawEffects(sf::RenderWindow&, Player*);
+void updateHUDUI();
 
 void drawHUD(sf::RenderWindow& window, Player* player, std::vector<Weapon*>* Weapons) {
+    window.setView(HUDView);
+
+    updateHUDUI();
     {
         using namespace HUD;
-        window.setView(HUDView);
         for (sf::Drawable*& d : InterfaceStuff) {
             window.draw(*d);
         }

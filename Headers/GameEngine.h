@@ -127,8 +127,8 @@ void drawMiniMap();
 
 
 //---------------------------- UI UPDATERS/CREATORS
+void updateHUDUI();
 void updateInventoryUI();
-
 void updateShopUI();
 void updateUpgradeInterfaceUI();
 //----------------------------
@@ -360,7 +360,7 @@ void initScripts() {
                     player.inventory.money -= shop.itemPrices[selectedItem->id];
                     selectedItem->amount--;
 
-                    playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
+                    playerCoinsText.setString(std::to_string(player.inventory.money));
                     playerCoinsSprite.moveToAnchor(&MenuShop::playerCoinsText, { 25, -10 });
                     shop.soldItems.removeItem(selectedItem, false);
                     NPCText.setString("Thank you for buying a " + stringLower(itemName[selectedItem->id]) + "!");
@@ -398,9 +398,6 @@ void initScripts() {
         {
             using namespace MenuShop;
             isDrawShop = true;
-            playerCoinsText.setString("You have: " + std::to_string(player.inventory.money));
-            playerCoinsText.moveToAnchor(&buyButton, { -25, -50 });
-            playerCoinsSprite.moveToAnchor(&playerCoinsText, { 25, -10 });
             NPCText.setString(textWrap("Hello! Welcome to our shop! "
                                        "Do not mind the eldritch-geometric fuckery outside :)", 94));
             NPCText.moveToAnchor(&NPCName, { 100, 0 });
@@ -732,6 +729,11 @@ void drawMiniMap() {
 
 
 //============================================================================================== UI UPDATERS/CREATORS
+void updateHUDUI() {
+    HUD::playerCoinAmount.setFontString(FontString(std::to_string(player.inventory.money), 50, sf::Color(200, 200, 200)));
+    HUD::playerCoinAmount.parentTo(&HUD::coinSprite, true, { -10, 0 });
+}
+
 void updateInventoryUI() {
     {
         using namespace inventoryInterface;
@@ -773,6 +775,7 @@ void updateInventoryUI() {
         statsArmorText.setString("Armor: " + floatToString(player.Armor.cur));
         statsCompletedLevelsText.setString("Completed Levels: " + std::to_string(completedLevels));
         statsCurLevelsText.setString("Current Level: " + std::to_string(curLevel));
+        updateUpgradeInterfaceUI();
     }
 }
 
@@ -842,10 +845,8 @@ void updateUpgradeInterfaceUI() {
         using namespace upgradeInterface;
         updateUpgradeTexts();
         updateUpgradeShopStats();
-        playerCoinAmount.setFontString(FontString("You have: " + std::to_string(player.inventory.money),
-                                                  50, sf::Color(200, 200, 200)));
-        playerCoinAmount.moveToAnchor(&choiceComp, { -100, -50 });
-        coinSprite.moveToAnchor(&playerCoinAmount);
+        upgradeInterface::playerCoinAmount.setFontString(FontString(std::to_string(player.inventory.money), 50, sf::Color(200, 200, 200)));
+        upgradeInterface::playerCoinAmount.parentTo(&upgradeInterface::coinSprite, true, { -10, 0 });
     }
 }
 //==============================================================================================
@@ -1053,17 +1054,22 @@ void inventoryHandler(sf::Event& event) {
         using namespace inventoryInterface;
 
         if (keyPressed(event, sf::Keyboard::E) || keyPressed(event, sf::Keyboard::Escape)) {
-            if (upgradeInterface::isChoosingComponent) {
-                upgradeInterface::isChoosingComponent = false;
-                return;
-            }
             backButton.buttonFunction();
             return;
         }
 
-        if (!upgradeInterface::isChoosingComponent) {
-            backButton.isActivated(event);
-            frameButtonsHolder.isButtonsActive(event);
+        backButton.isActivated(event);
+        frameButtonsHolder.isButtonsActive(event);
+        
+        if ((mouseButtonPressed(event, sf::Mouse::Left) && upgradeInterface::switchGunLBtn.isActivated(event)) || keyPressed(event, sf::Keyboard::Left)) {
+            upgradeInterface::switchGunLBtn.buttonFunction();
+            setUpgradeFunctions();
+            updateUpgradeShopStats();
+        }
+        if ((mouseButtonPressed(event, sf::Mouse::Left) && upgradeInterface::switchGunRBtn.isActivated(event)) || keyPressed(event, sf::Keyboard::Right)) {
+            upgradeInterface::switchGunRBtn.buttonFunction();
+            setUpgradeFunctions();
+            updateUpgradeShopStats();
         }
 
         bool isAnythingHovered = false;
@@ -1101,7 +1107,6 @@ void inventoryHandler(sf::Event& event) {
                 for (int j = 0; j < upgradeInterface::compUpgBtns[i].size(); j++)
                     upgradeInterface::compUpgBtns[i][j]->setSpriteColor(sf::Color(128, 128, 128));
             }
-            upgradeInterfaceHandler(event);
         }
     }
 }
@@ -1811,6 +1816,7 @@ bool CanSomethingBeActivated() {
             return true;
         }
     }
+    HUD::showDescriptions = false;
     return false;
 }
 

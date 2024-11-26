@@ -38,6 +38,8 @@ namespace HUD {
     std::map<DescriptionID::Type, std::string> interactibleDescriptions;
     PlacedText DescriptionText("descTxt", UI::center, UI::center, FontString("", 32));
     bool showDescriptions;
+    Animation coinSprite("upg_coinAnim", UI::BR, UI::BR);
+    PlacedText playerCoinAmount("plCoin_amount", UI::L, UI::R);
 }
 
 void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
@@ -105,6 +107,18 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         }
         effectIcons[2]->setTexture(Textures::Eff_HPRegen, UI::element);
         effectIcons[3]->setTexture(Textures::Eff_Burn, UI::element);
+
+        coinSprite.setScale({ 0.5, 0.5 });
+        coinSprite.setPosition({ playerCoinAmount.getRight() + 20, playerCoinAmount.getTop() - 50 });
+        coinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
+                                1, itemTextureDuration[ItemID::coin]);
+        coinSprite.play();
+        coinSprite.parentTo(&HUDFrame, true, { -20, -10 });
+
+        playerCoinAmount.setFontString(FontString("", 50, sf::Color(200, 200, 200)));
+        playerCoinAmount.parentTo(&coinSprite, true, { -10, 0 });
+        playerCoinAmount.setOutlineColor(sf::Color::Black);
+        playerCoinAmount.setOutlineThickness(2.f);
     }
 }
 

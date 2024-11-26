@@ -5,6 +5,38 @@ void updateUpgradeInterfaceUI();
 void updateInventoryUI();
 void drawUpgradeInterface(sf::RenderWindow& window);
 
+void drawChoosingComponent(sf::RenderWindow& window) {
+    {
+        using namespace upgradeInterface;
+        float listBGVal = 128 * std::pow(std::sin(GameClock->getElapsedTime().asSeconds()), 2);
+        if (isChoosingComponent) {
+            switch (compType) {
+                case 0:
+                    choiceComp.setSpriteColor(sf::Color(0, 0, listBGVal));
+                    break;
+                case 1:
+                    choiceComp.setSpriteColor(sf::Color(listBGVal, listBGVal, 0));
+                    break;
+                case 2:
+                    choiceComp.setSpriteColor(sf::Color(0, listBGVal, 0));
+                    break;
+                case 3:
+                    choiceComp.setSpriteColor(sf::Color(listBGVal, 0, 0));
+                    break;
+            }
+            for (sf::Drawable* elem : choiceUIElements)
+                window.draw(*elem);
+
+            for (sf::Drawable* elem : compUpgCosts[compType])
+                window.draw(*elem);
+            for (sf::Drawable* elem : compUpgStats[compType])
+                window.draw(*elem);
+            for (sf::Drawable* elem : compUpgCount[compType])
+                window.draw(*elem);
+        }
+    }
+}
+
 void drawInventory(sf::RenderWindow& window, Player* player) {
     window.setView(InventoryView);
 
@@ -33,7 +65,6 @@ void drawInventory(sf::RenderWindow& window, Player* player) {
             case inventoryPage::Weapons:
                 for (sf::Drawable*& elem : pageElements[activePage])
                     window.draw(*elem);
-                drawUpgradeInterface(window);
                 break;
 
             case inventoryPage::Stats:
@@ -49,43 +80,16 @@ void drawInventory(sf::RenderWindow& window, Player* player) {
 }
 
 void drawUpgradeInterface(sf::RenderWindow& window) {
-    window.setView(inventoryInterface::isDrawInventory ? InventoryView : InterfaceView);
+    window.setView(InterfaceView);
 
     updateUpgradeInterfaceUI();
-    {
-        using namespace upgradeInterface;
+    for (sf::Drawable*& elem : upgradeInterface::UIElements) // not working
+        window.draw(*elem);
+    
+    window.draw(upgradeInterface::coinSprite);
+    window.draw(upgradeInterface::playerCoinAmount);
 
-        if (!inventoryInterface::isDrawInventory)
-            for (sf::Drawable*& elem : UIElements)
-                window.draw(*elem);
+    drawChoosingComponent(window);
 
-        float listBGVal = 128 * std::pow(std::sin(GameClock->getElapsedTime().asSeconds()), 2);
-        if (isChoosingComponent) {
-            switch (compType) {
-                case 0:
-                    choiceComp.setSpriteColor(sf::Color(0, 0, listBGVal));
-                    break;
-                case 1:
-                    choiceComp.setSpriteColor(sf::Color(listBGVal, listBGVal, 0));
-                    break;
-                case 2:
-                    choiceComp.setSpriteColor(sf::Color(0, listBGVal, 0));
-                    break;
-                case 3:
-                    choiceComp.setSpriteColor(sf::Color(listBGVal, 0, 0));
-                    break;
-            }
-            for (sf::Drawable* elem : choiceUIElements)
-                window.draw(*elem);
-
-            for (sf::Drawable* elem : compUpgCosts[compType])
-                window.draw(*elem);
-            for (sf::Drawable* elem : compUpgStats[compType])
-                window.draw(*elem);
-            for (sf::Drawable* elem : compUpgCount[compType])
-                window.draw(*elem);
-        }
-    }
-
-    window.setView(inventoryInterface::isDrawInventory ? InventoryView : HUDView);
+    window.setView(HUDView);
 }

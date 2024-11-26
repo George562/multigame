@@ -1,3 +1,5 @@
+#iChannel0 "file://../textures/noise.png"
+
 vec2 hash(vec2 p) {
     return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453);
 }
@@ -32,9 +34,9 @@ vec2 twirl(vec2 UV, vec2 Center, float Strength, vec2 Offset) {
 
 void main() {
     vec2 uv = gl_FragCoord.xy / iResolution.xy - vec2(0.5);
-    float time = iTime * 0.5;
-    vec2 Muv = uv * vec2(6., 6.);
-    Muv = twirl(Muv, vec2(0., 0.), 1.95, vec2(-time));
+    vec2 Muv = uv * 6.;
+    float Strength = 1.95 * (1. + 0.2 * texture2D(iChannel0, uv + 0.05 * iTime).r);
+    Muv = twirl(Muv, vec2(0., 0.), Strength, vec2(0.));
 
     vec4 color = vec4(1., 0., 1., 1.);
     float param = voronoi(Muv);

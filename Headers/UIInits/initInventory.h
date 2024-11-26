@@ -67,7 +67,6 @@ namespace upgradeInterface {
     bool isDrawUpgradeInterface = false;
     std::vector<sf::Drawable*> UIElements;
 
-    Animation coinSprite("upg_coinAnim", UI::R, UI::L);
     Frame BG("upg_BG", { 0, 0, scw, sch });
     Frame weaponImg("upg_weapImg", UI::center, UI::center, { 0, 0 });
     Panel weaponDescPanel("upg_weapDescPanel", UI::T, UI::T, { 0.5f * scw - 50.f, 475 });
@@ -92,7 +91,8 @@ namespace upgradeInterface {
     std::vector<std::vector<PlacedText*>> compUpgCosts;
     std::vector<std::vector<PlacedText*>> compUpgStats;
     std::vector<std::vector<PlacedText*>> compUpgCount;
-    PlacedText playerCoinAmount("plCoin_amount", UI::BR, UI::BR);
+    Animation coinSprite("upg_coinAnim", UI::BR, UI::BR);
+    PlacedText playerCoinAmount("plCoin_amount", UI::L, UI::R);
 
     bool isChoosingComponent = false;
     int compType = 0;
@@ -325,15 +325,18 @@ void initUpgradeShop() {
         targetingBtn.setShape(sf::Color::Transparent, sf::Color(255, 192, 192, 255), 3);
         targetingBtn.parentTo(&BG);
 
-        playerCoinAmount.setFontString(FontString("You have:", 50, sf::Color(200, 20, 200)));
-        playerCoinAmount.parentTo(&choiceComp, true, { -100, -50 });
-
         coinSprite.setScale({ 0.5, 0.5 });
-        coinSprite.setPosition({ playerCoinAmount.getRight() + 20, playerCoinAmount.getTop() - 50 });
         coinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                 1, itemTextureDuration[ItemID::coin]);
         coinSprite.play();
-        coinSprite.parentTo(&playerCoinAmount, true);
+        coinSprite.moveToAnchor(&BG, { -20, -10 });
+        // UIElements.push_back(&coinSprite);
+
+        playerCoinAmount.setFontString(FontString("", 50, sf::Color(200, 200, 200)));
+        playerCoinAmount.parentTo(&coinSprite, true, { -10, 0 });
+        playerCoinAmount.setOutlineColor(sf::Color::Black);
+        playerCoinAmount.setOutlineThickness(2.f);
+        // UIElements.push_back(&playerCoinAmount);
 
         initUpgradeUI();
     }
