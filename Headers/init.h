@@ -146,6 +146,8 @@ namespace Textures {
                 SettingButtonPushed,
                 EscapeButton,
                 EscapeButtonPushed,
+                EncyclopediaButton,
+                EncyclopediaButtonPushed,
 
                 NPCDialogueFrame_Square,
                 NPCDialogueFrame_Wide,
@@ -165,67 +167,69 @@ namespace Textures {
 }
 
 void loadTextures() {
-    Textures::Distorted               .loadFromFile("sources/textures/Distorted.png");
-    Textures::DistortedScientist      .loadFromFile("sources/textures/DistortedScientist.png");
-    Textures::Player                  .loadFromFile("sources/textures/Player.png");
-    Textures::Portal                  .loadFromFile("sources/textures/Portal.png");
-    Textures::Portal2                 .loadFromFile("sources/textures/Portal2.png");
-    Textures::WallG                   .loadFromFile("sources/textures/wallG.png");
-    Textures::WallV                   .loadFromFile("sources/textures/wallV.png");
-    Textures::XButton                 .loadFromFile("sources/textures/XButton.png");
-    Textures::InfoLogo                .loadFromFile("sources/textures/infoLogo.png");
-    Textures::Box                     .loadFromFile("sources/textures/Box.png");
-    Textures::floor                   .loadFromFile("sources/textures/floor.png");
-    Textures::floorFork               .loadFromFile("sources/textures/fork.png");
-    Textures::Fire                    .create(140.f, 175.f);
-    Textures::Architect               .loadFromFile("sources/textures/Architect.png");
-    Textures::Noise                   .loadFromFile("sources/textures/noise.png");
+    Textures::Distorted                .loadFromFile("sources/textures/Distorted.png");
+    Textures::DistortedScientist       .loadFromFile("sources/textures/DistortedScientist.png");
+    Textures::Player                   .loadFromFile("sources/textures/Player.png");
+    Textures::Portal                   .loadFromFile("sources/textures/Portal.png");
+    Textures::Portal2                  .loadFromFile("sources/textures/Portal2.png");
+    Textures::WallG                    .loadFromFile("sources/textures/wallG.png");
+    Textures::WallV                    .loadFromFile("sources/textures/wallV.png");
+    Textures::XButton                  .loadFromFile("sources/textures/XButton.png");
+    Textures::InfoLogo                 .loadFromFile("sources/textures/infoLogo.png");
+    Textures::Box                      .loadFromFile("sources/textures/Box.png");
+    Textures::floor                    .loadFromFile("sources/textures/floor.png");
+    Textures::floorFork                .loadFromFile("sources/textures/fork.png");
+    Textures::Fire                     .create(140.f, 175.f);
+    Textures::Architect                .loadFromFile("sources/textures/Architect.png");
+    Textures::Noise                    .loadFromFile("sources/textures/noise.png");
 
-    Textures::Eff_HPRegen             .loadFromFile("sources/textures/effects/HPRegenEffect.png");
-    Textures::Eff_Burn                .loadFromFile("sources/textures/effects/BurnEffect.png");
+    Textures::Eff_HPRegen              .loadFromFile("sources/textures/effects/HPRegenEffect.png");
+    Textures::Eff_Burn                 .loadFromFile("sources/textures/effects/BurnEffect.png");
 
-    Textures::GreenPanel              .loadFromFile("sources/textures/Panels/GreenPanel.png");
-    Textures::GreenPanelPushed        .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
-    Textures::RedPanel                .loadFromFile("sources/textures/Panels/RedPanel.png");
-    Textures::RedPanelPushed          .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
-    Textures::BluePanel               .loadFromFile("sources/textures/Panels/BluePanel.png");
-    Textures::BluePanelPushed         .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
-    Textures::YellowPanel             .loadFromFile("sources/textures/Panels/YellowPanel.png");
-    Textures::YellowPanelPushed       .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
-    Textures::GradientFrame           .loadFromFile("sources/textures/Panels/GradientFrame.png");
-    Textures::GradientFrameAlpha      .loadFromFile("sources/textures/Panels/GradientFrameAlpha.png");
-    Textures::ItemPanel               .loadFromFile("sources/textures/Panels/ItemPanel.png");
-    Textures::Frame4                  .loadFromFile("sources/textures/Panels/frame4.png");
+    Textures::GreenPanel               .loadFromFile("sources/textures/Panels/GreenPanel.png");
+    Textures::GreenPanelPushed         .loadFromFile("sources/textures/Panels/GreenPanelPushed.png");
+    Textures::RedPanel                 .loadFromFile("sources/textures/Panels/RedPanel.png");
+    Textures::RedPanelPushed           .loadFromFile("sources/textures/Panels/RedPanelPushed.png");
+    Textures::BluePanel                .loadFromFile("sources/textures/Panels/BluePanel.png");
+    Textures::BluePanelPushed          .loadFromFile("sources/textures/Panels/BluePanelPushed.png");
+    Textures::YellowPanel              .loadFromFile("sources/textures/Panels/YellowPanel.png");
+    Textures::YellowPanelPushed        .loadFromFile("sources/textures/Panels/YellowPanelPushed.png");
+    Textures::GradientFrame            .loadFromFile("sources/textures/Panels/GradientFrame.png");
+    Textures::GradientFrameAlpha       .loadFromFile("sources/textures/Panels/GradientFrameAlpha.png");
+    Textures::ItemPanel                .loadFromFile("sources/textures/Panels/ItemPanel.png");
+    Textures::Frame4                   .loadFromFile("sources/textures/Panels/frame4.png");
 
-    Textures::BlueButton              .loadFromFile("sources/textures/Buttons/BlueButton.png");
-    Textures::BlueButtonPushed        .loadFromFile("sources/textures/Buttons/BlueButtonPushed.png");
-    Textures::CyanButton              .loadFromFile("sources/textures/Buttons/CyanButton.png");
-    Textures::CyanButtonPushed        .loadFromFile("sources/textures/Buttons/CyanButtonPushed.png");
-    Textures::GreenButton             .loadFromFile("sources/textures/Buttons/GreenButton.png");
-    Textures::GreenButtonPushed       .loadFromFile("sources/textures/Buttons/GreenButtonPushed.png");
-    Textures::GreyButton              .loadFromFile("sources/textures/Buttons/GreyButton.png");
-    Textures::GreyButtonPushed        .loadFromFile("sources/textures/Buttons/GreyButtonPushed.png");
-    Textures::MagentaButton           .loadFromFile("sources/textures/Buttons/MagentaButton.png");
-    Textures::MagentaButtonPushed     .loadFromFile("sources/textures/Buttons/MagentaButtonPushed.png");
-    Textures::RedButton               .loadFromFile("sources/textures/Buttons/RedButton.png");
-    Textures::RedButtonPushed         .loadFromFile("sources/textures/Buttons/RedButtonPushed.png");
-    Textures::YellowButton            .loadFromFile("sources/textures/Buttons/YellowButton.png");
-    Textures::YellowButtonPushed      .loadFromFile("sources/textures/Buttons/YellowButtonPushed.png");
+    Textures::BlueButton               .loadFromFile("sources/textures/Buttons/BlueButton.png");
+    Textures::BlueButtonPushed         .loadFromFile("sources/textures/Buttons/BlueButtonPushed.png");
+    Textures::CyanButton               .loadFromFile("sources/textures/Buttons/CyanButton.png");
+    Textures::CyanButtonPushed         .loadFromFile("sources/textures/Buttons/CyanButtonPushed.png");
+    Textures::GreenButton              .loadFromFile("sources/textures/Buttons/GreenButton.png");
+    Textures::GreenButtonPushed        .loadFromFile("sources/textures/Buttons/GreenButtonPushed.png");
+    Textures::GreyButton               .loadFromFile("sources/textures/Buttons/GreyButton.png");
+    Textures::GreyButtonPushed         .loadFromFile("sources/textures/Buttons/GreyButtonPushed.png");
+    Textures::MagentaButton            .loadFromFile("sources/textures/Buttons/MagentaButton.png");
+    Textures::MagentaButtonPushed      .loadFromFile("sources/textures/Buttons/MagentaButtonPushed.png");
+    Textures::RedButton                .loadFromFile("sources/textures/Buttons/RedButton.png");
+    Textures::RedButtonPushed          .loadFromFile("sources/textures/Buttons/RedButtonPushed.png");
+    Textures::YellowButton             .loadFromFile("sources/textures/Buttons/YellowButton.png");
+    Textures::YellowButtonPushed       .loadFromFile("sources/textures/Buttons/YellowButtonPushed.png");
 
-    Textures::SettingButton           .loadFromFile("sources/textures/Buttons/SettingButton.png");
-    Textures::SettingButtonPushed     .loadFromFile("sources/textures/Buttons/SettingButtonPushed.png");
-    Textures::EscapeButton            .loadFromFile("sources/textures/Buttons/EscapeButton.png");
-    Textures::EscapeButtonPushed      .loadFromFile("sources/textures/Buttons/EscapeButtonPushed.png");
+    Textures::SettingButton            .loadFromFile("sources/textures/Buttons/SettingButton.png");
+    Textures::SettingButtonPushed      .loadFromFile("sources/textures/Buttons/SettingButtonPushed.png");
+    Textures::EscapeButton             .loadFromFile("sources/textures/Buttons/EscapeButton.png");
+    Textures::EscapeButtonPushed       .loadFromFile("sources/textures/Buttons/EscapeButtonPushed.png");
+    Textures::EncyclopediaButton       .loadFromFile("sources/textures/Buttons/EncyclopediaButton.png");
+    Textures::EncyclopediaButtonPushed .loadFromFile("sources/textures/Buttons/EncyclopediaButtonPushed.png");
 
-    Textures::GridBG                  .loadFromFile("sources/textures/Panels/GridBackground.png");
+    Textures::GridBG                   .loadFromFile("sources/textures/Panels/GridBackground.png");
 
-    Textures::INVISIBLE               .create(size, size);
+    Textures::INVISIBLE                .create(size, size);
 
-    Textures::PH_CochGen              .loadFromFile("sources/textures/Placeholders/CochGen.png");
-    Textures::PH_FormFactor           .loadFromFile("sources/textures/Placeholders/FormFactor.png");
-    Textures::PH_Converter            .loadFromFile("sources/textures/Placeholders/Converter.png");
-    Textures::PH_Targeting            .loadFromFile("sources/textures/Placeholders/Targeting.png");
-    Textures::PH_Pistol               .loadFromFile("sources/textures/Placeholders/Pistol.png");
+    Textures::PH_CochGen               .loadFromFile("sources/textures/Placeholders/CochGen.png");
+    Textures::PH_FormFactor            .loadFromFile("sources/textures/Placeholders/FormFactor.png");
+    Textures::PH_Converter             .loadFromFile("sources/textures/Placeholders/Converter.png");
+    Textures::PH_Targeting             .loadFromFile("sources/textures/Placeholders/Targeting.png");
+    Textures::PH_Pistol                .loadFromFile("sources/textures/Placeholders/Pistol.png");
 }
 
 namespace Shaders {

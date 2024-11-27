@@ -23,8 +23,9 @@ namespace HUD {
     Panel ListOfPlayers("listOfPlayers");
 
 //////////////////////////////////////////////////////////// Buttons
-    RectButton EscapeButton("exitBtn", UI::center, UI::R, { 0, 0 }, "");
-    RectButton SettingsButton("settingsBtn", UI::R, UI::L, { 0, 0 }, "");
+    RectButton EscapeButton("exitBtn", UI::L, UI::R, { 0, 0 }, "");
+    RectButton SettingsButton("settingsBtn", UI::center, UI::center, { 0, 0 }, "");
+    RectButton EncyclopediaButton("encyclopediaBtn", UI::R, UI::L, { 0, 0 }, "");
 
 //////////////////////////////////////////////////////////// HUDStuff
     Frame HUDFrame("HUD", { 0, 0, scw, sch });
@@ -56,10 +57,15 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         SettingsButton.setHitboxPoints({ SettingsButton.getLeftTop(), SettingsButton.getRightTop(),
                                          SettingsButton.getRightBottom(), SettingsButton.getLeftBottom() });
 
+        EncyclopediaButton.setTexture(Textures::EncyclopediaButton, Textures::EncyclopediaButtonPushed, UI::texture);
+        EncyclopediaButton.setHitboxPoints({ EncyclopediaButton.getLeftTop(), EncyclopediaButton.getRightTop(),
+                                             EncyclopediaButton.getRightBottom(), EncyclopediaButton.getLeftBottom() });
+
         ListOfPlayers.text.setCharacterSize(60);
 
-        EscapeButton.moveToAnchor(&HUDFrame, { -10, sch / 4 });
-        SettingsButton.moveToAnchor(&EscapeButton, { 20, 0 });
+        SettingsButton.moveToAnchor(&HUDFrame, { 0, sch / 4 });
+        EscapeButton.moveToAnchor(&SettingsButton, { -10, 0 });
+        EncyclopediaButton.moveToAnchor(&SettingsButton, { 10, 0 });
 
         ListOfPlayers.moveToAnchor(&HUDFrame, { 0, -sch / 4 });
 

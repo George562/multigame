@@ -86,10 +86,10 @@ void drawUpgradeInterface(sf::RenderWindow& window) {
     for (sf::Drawable*& elem : upgradeInterface::UIElements) // not working
         window.draw(*elem);
     
+    drawChoosingComponent(window);
+
     window.draw(upgradeInterface::coinSprite);
     window.draw(upgradeInterface::playerCoinAmount);
-
-    drawChoosingComponent(window);
 
     window.setView(HUDView);
 }

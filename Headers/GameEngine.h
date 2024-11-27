@@ -394,6 +394,10 @@ void initScripts() {
         saveGame();
     });
 
+    HUD::EncyclopediaButton.setFunction([]() {
+        saveGame();
+    });
+
     shopSector.setFunction([](Interactable* i) {
         {
             using namespace MenuShop;
@@ -921,6 +925,7 @@ void EventHandler() {
         } else if (HUD::EscapeMenuActivated) {
             HUD::EscapeButton.isActivated(event);
             HUD::SettingsButton.isActivated(event);
+            HUD::EncyclopediaButton.isActivated(event);
             if (keyPressed(event, sf::Keyboard::Escape)) {
                 HUD::EscapeMenuActivated = false;
             }
