@@ -392,10 +392,12 @@ void initScripts() {
 
     HUD::SettingsButton.setFunction([]() {
         saveGame();
+        addMessageText("You don't have to press this button. It's not done yet.", sf::Color(170, 50, 50), sf::Color(150, 150, 150));
     });
 
     HUD::EncyclopediaButton.setFunction([]() {
         saveGame();
+        addMessageText("You don't have to press this button. It's not done yet.", sf::Color(170, 50, 50), sf::Color(150, 150, 150));
     });
 
     shopSector.setFunction([](Interactable* i) {
