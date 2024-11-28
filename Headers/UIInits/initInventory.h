@@ -1,16 +1,16 @@
 #pragma once
-#include "../UI/bar.h"
+#include "../UI/Bar.h"
 #include "../UI/Frame.h"
-#include "../UI/panel.h"
+#include "../UI/Panel.h"
 #include "../UI/PolygonButton.h"
 #include "../UI/Slot.h"
-#include "../UI/tempText.h"
-#include "../UI/text.h"
+#include "../UI/TempText.h"
+#include "../UI/PlacedText.h"
 #include "../Entities/player.h"
-#include "../Systems/inventory.h"
-#include "../Systems/weapon.h"
-#include "../Utility/tools.h"
-#include "../Utility/vectorTools.h"
+#include "../Systems/Inventory.h"
+#include "../Systems/Weapon.h"
+#include "../Utility/Tools.h"
+#include "../Utility/VectorTools.h"
 
 namespace inventoryInterface {
     bool isDrawInventory = false;
@@ -68,17 +68,43 @@ namespace upgradeInterface {
     std::vector<sf::Drawable*> UIElements;
 
     Frame BG("upg_BG", { 0, 0, scw, sch });
-    Frame weaponImg("upg_weapImg", UI::center, UI::center, { 0, 0 });
-    Panel weaponDescPanel("upg_weapDescPanel", UI::T, UI::T, { 0.5f * scw - 50.f, 475 });
+    Frame weaponImg("upg_weapImg", UI::B, UI::T, { 0, 0 });
+    Panel weaponDescPanel("upg_weapDescPanel", UI::T, UI::T, { 0.5f * scw - 50.f, sch * 0.15f });
+
+    PlacedText manaStStat("manaSt_Stat", UI::T, UI::T);
+    PlacedText relSpStat("relSp_Stat", UI::B, UI::T);
+
+    PlacedText tthStat("tth_Stat", UI::T, UI::T);
+    PlacedText ttdStat("ttd_Stat", UI::B, UI::T);
+
+    PlacedText dmgStat("dmg_Stat", UI::T, UI::T);
+    PlacedText frStat("fr_Stat", UI::B, UI::T);
+    PlacedText msStat("ms_Stat", UI::B, UI::T);
+
+    PlacedText velStat("vel_Stat", UI::T, UI::T);
+    PlacedText scatStat("scat_Stat", UI::B, UI::T);
 
     RectButton backButton("upg_backBtn", UI::TL, UI::TL, { 250, 50 });
     PolygonButton switchGunLBtn("upg_lGunBtn", UI::L, UI::R, { 0, 0 });
     PolygonButton switchGunRBtn("upg_rGunBtn", UI::R, UI::L, { 0, 0 });
 
-    PolygonButton generatorBtn("upg_genBtn", { 0.100f * scw, 0.50f * sch + 100.f, 0, 0 }),
-        formFactorBtn("upg_ffaBtn", { 0.333f * scw, 0.70f * sch + 50.0f, 0, 0 }),
-        converterBtn("upg_conBtn", { 0.600f * scw, 0.65f * sch + 50.0f, 0, 0 }),
-        targetingBtn("upg_tarBtn", { 0.825f * scw, 0.50f * sch + 100.f, 0, 0 });
+
+    Frame genStats("genStats_Frame", { 0.1f * scw, 0.5f * sch, 425, 425 });
+    PolygonButton generatorBtn("upg_genBtn", UI::B, UI::B, { 0, 0 });
+    sf::Color genColor = sf::Color(192, 192, 255, 255);
+
+    Frame ffaStats("ffaStats_Frame", { 0.3f * scw, 0.5f * sch, 425, 425 });
+    PolygonButton formFactorBtn("upg_ffaBtn", UI::B, UI::B, { 0, 0 });
+    sf::Color ffaColor = sf::Color(255, 255, 192, 255);
+
+    Frame convStats("convStats_Frame", { 0.534f * scw, 0.5f * sch, 425, 425 });
+    PolygonButton converterBtn("upg_conBtn", UI::B, UI::B, { 0, 0 });
+    sf::Color convColor = sf::Color(192, 255, 192, 255);
+
+    Frame targStats("targStats_Frame", { 0.734f * scw, 0.5f * sch, 425, 425 });
+    PolygonButton targetingBtn("upg_tarBtn", UI::B, UI::B, { 0, 0 });
+    sf::Color targColor = sf::Color(255, 192, 192, 255);
+
 
     // UPGRADE SHOP COMPONENT CHOICE ELEMENTS
     std::vector<sf::Drawable*> choiceUIElements;
@@ -258,8 +284,18 @@ void initUpgradeShop() {
         weaponDescPanel.setCharacterSize(30);
         weaponDescPanel.parentTo(&BG, true, { 0, 75 });
 
+        manaStStat.setFontString(FontString("Mana storage", 30));
+        relSpStat.setFontString(FontString("Reload Speed", 30));
+        tthStat.setFontString(FontString("Time To Holster", 30));
+        ttdStat.setFontString(FontString("Time To Dispatch", 30));
+        dmgStat.setFontString(FontString("Damage", 30));
+        msStat.setFontString(FontString("Bullet per shot", 30));
+        frStat.setFontString(FontString("Rate of fire", 30));
+        velStat.setFontString(FontString("Bullet velocity", 30));
+        scatStat.setFontString(FontString("Scatter", 30));
+
         weaponImg.setTexture(Textures::PH_Pistol, UI::texture);
-        weaponImg.parentTo(&BG, true, { 0, 150 });
+        weaponImg.parentTo(&weaponDescPanel, true, { 0, 100 });
 
         switchGunLBtn.setHitboxPoints(std::vector<sf::Vector2f>{{50, 100}, { 50, 0 }, { 0, 50 }});
         switchGunLBtn.setShape(sf::Color::Black, sf::Color::White, 2);
@@ -297,46 +333,84 @@ void initUpgradeShop() {
         choiceCompImg.setTexture(Textures::INVISIBLE);
         choiceCompImg.parentTo(&choiceComp, true, { -50, 0 });
 
+        sf::Vector2f statSpacing = { 0, 60 };
+        genStats.setTexture(Textures::GradientFrame);
+        genStats.setSpriteColor(genColor);
+        genStats.parentTo(&BG);
+
         generatorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        generatorBtn.setHitboxPoints(CommonShapes::starShape);
+        generatorBtn.setHitboxPoints(CommonShapes::starShape2div3);
         generatorBtn.enableShape(true);
         generatorBtn.setFunction([]() { openComponentUpgrade(0); });
-        generatorBtn.setShape(sf::Color::Transparent, sf::Color(192, 192, 255, 255), 3);
-        generatorBtn.parentTo(&BG);
+        std::vector<float> innerColor = RGBtoHSV(genColor);
+        float hueShift = 20, satShift = -0.1, valShift = -0.2;
+        innerColor[0] += hueShift; innerColor[1] += satShift; innerColor[2] += valShift;
+        generatorBtn.setShape(HSVtoRGB(innerColor), genColor, 3);
+        generatorBtn.parentTo(&genStats, true, -statSpacing / 2.f);
+
+        manaStStat.parentTo(&genStats, true, statSpacing);
+        relSpStat.parentTo(&manaStStat, true, statSpacing);
+
+        ffaStats.setTexture(Textures::GradientFrame);
+        ffaStats.setSpriteColor(ffaColor);
+        ffaStats.parentTo(&BG);
 
         formFactorBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
         formFactorBtn.setHitboxPoints(CommonShapes::rectShape);
         formFactorBtn.enableShape(true);
         formFactorBtn.setFunction([]() { openComponentUpgrade(1); });
-        formFactorBtn.setShape(sf::Color::Transparent, sf::Color(255, 255, 192, 255), 3);
-        formFactorBtn.parentTo(&BG);
+        innerColor = RGBtoHSV(ffaColor);
+        innerColor[0] += hueShift; innerColor[1] += satShift; innerColor[2] += valShift;
+        formFactorBtn.setShape(HSVtoRGB(innerColor), ffaColor, 3);
+        formFactorBtn.parentTo(&ffaStats, true, -statSpacing / 2.f);
+
+        tthStat.parentTo(&ffaStats, true, statSpacing);
+        ttdStat.parentTo(&tthStat, true, statSpacing);
+
+        convStats.setTexture(Textures::GradientFrame);
+        convStats.setSpriteColor(convColor);
+        convStats.parentTo(&BG);
 
         converterBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        converterBtn.setHitboxPoints(RotateOn(-30, CommonShapes::triangleShape));
+        converterBtn.setHitboxPoints(CommonShapes::triangleShape);
         converterBtn.enableShape(true);
         converterBtn.setFunction([]() { openComponentUpgrade(2); });
-        converterBtn.setShape(sf::Color::Transparent, sf::Color(192, 255, 192, 255), 3);
-        converterBtn.parentTo(&BG);
+        innerColor = RGBtoHSV(convColor);
+        innerColor[0] += hueShift; innerColor[1] += satShift; innerColor[2] += valShift;
+        converterBtn.setShape(HSVtoRGB(innerColor), convColor, 3);
+        converterBtn.parentTo(&convStats, true, -statSpacing / 2.f);
+
+        dmgStat.parentTo(&convStats, true, statSpacing);
+        msStat.parentTo(&dmgStat, true, statSpacing);
+        frStat.parentTo(&msStat, true, statSpacing);
+
+        targStats.setTexture(Textures::GradientFrame);
+        targStats.setSpriteColor(targColor);
+        targStats.parentTo(&BG);
 
         targetingBtn.setTexture(Textures::INVISIBLE, Textures::INVISIBLE);
-        targetingBtn.setHitboxPoints(RotateOn(60, CommonShapes::frustumShape));
+        std::vector<sf::Vector2f> rotatedFrustum = RotateOn(90, CommonShapes::frustumShape);
+        targetingBtn.setHitboxPoints(Translate({ 0, 150 }, rotatedFrustum));
         targetingBtn.enableShape(true);
         targetingBtn.setFunction([]() { openComponentUpgrade(3); });
-        targetingBtn.setShape(sf::Color::Transparent, sf::Color(255, 192, 192, 255), 3);
-        targetingBtn.parentTo(&BG);
+        innerColor = RGBtoHSV(targColor);
+        innerColor[0] += hueShift; innerColor[1] += satShift; innerColor[2] += valShift;
+        targetingBtn.setShape(HSVtoRGB(innerColor), targColor, 3);
+        targetingBtn.parentTo(&targStats, true, -statSpacing / 2.f);
+
+        velStat.parentTo(&targStats, true, statSpacing);
+        scatStat.parentTo(&velStat, true, statSpacing);
 
         coinSprite.setScale({ 0.5, 0.5 });
         coinSprite.setAnimation(*itemTexture[ItemID::coin], itemTextureFrameAmount[ItemID::coin],
                                 1, itemTextureDuration[ItemID::coin]);
         coinSprite.play();
         coinSprite.moveToAnchor(&BG, { -20, -10 });
-        // UIElements.push_back(&coinSprite);
 
         playerCoinAmount.setFontString(FontString("", 50, sf::Color(200, 200, 200)));
         playerCoinAmount.parentTo(&coinSprite, true, { -10, 0 });
         playerCoinAmount.setOutlineColor(sf::Color::Black);
         playerCoinAmount.setOutlineThickness(2.f);
-        // UIElements.push_back(&playerCoinAmount);
 
         initUpgradeUI();
     }

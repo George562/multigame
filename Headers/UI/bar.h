@@ -1,5 +1,5 @@
 #pragma once
-#include "text.h"
+#include "PlacedText.h"
 #include "../Abstracts/scale.h"
 #include "../Abstracts/UIElement.h"
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "text.h"
+#include "PlacedText.h"
 #include "../CollisionShapes/collisionRect.h"
 #include "../Abstracts/UIElement.h"
 #include "../Utility/commonShapes.h"
@@ -24,6 +24,8 @@ public:
     PolygonButton(std::string, FontString = "", void (*)(void) = nullptr);
     PolygonButton(std::string, UI::Anchor, UI::Anchor, sf::Vector2f = { 0, 0 }, FontString = FontString(""), void (*)(void) = nullptr);
     PolygonButton(std::string, sf::FloatRect, FontString = FontString(""), void (*)(void) = nullptr);
+
+    virtual sf::FloatRect getGlobalBounds() { return hitbox.getBounds(); };
 
     void setPosition(float, float);
 

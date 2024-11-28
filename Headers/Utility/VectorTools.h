@@ -53,6 +53,13 @@ std::vector<sf::Vector2f> RotateOn(float phi, std::vector<sf::Vector2f>& vec) {
     return newVec;
 }
 
+std::vector<sf::Vector2f> Translate(sf::Vector2f shiftBy, std::vector<sf::Vector2f>& vec) {
+    std::vector<sf::Vector2f> newVec;
+    for (int i = 0; i < vec.size(); i++)
+        newVec.push_back(vec[i] + shiftBy);
+    return newVec;
+}
+
 void RotateAround(float phi, float& x, float& y, float& X, float& Y) {
     float oldX = x, OldY = y;
     x =   (oldX - X) * cos(phi) + (OldY - Y) * sin(phi) + X;

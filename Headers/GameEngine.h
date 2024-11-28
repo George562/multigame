@@ -1,15 +1,15 @@
 #pragma once
-#include "Entities/enemy.h"
-#include "Entities/player.h"
-#include "Multiplayer/chat.h"
+#include "Entities/Enemy.h"
+#include "Entities/Player.h"
+#include "Multiplayer/Chat.h"
 #include "UI/PolygonButton.h"
-#include "UI/panel.h"
-#include "UI/bar.h"
+#include "UI/Panel.h"
+#include "UI/Bar.h"
 #include "UI/tempText.h"
 #include "UI/Slot.h"
 #include "UI/Frame.h"
-#include "Systems/effect.h"
-#include "Systems/shop.h"
+#include "Systems/Effect.h"
+#include "Systems/Shop.h"
 #include "UIInits/initInventory.h"
 #include "UIInits/initMenuShop.h"
 #include "UIInits/initHUD.h"
@@ -1533,24 +1533,31 @@ void updateEnemies() {
 void updateUpgradeShopStats() {
     {
         using namespace upgradeInterface;
-        PlacedText& weaponDescText = weaponDescPanel.text;
-        weaponDescText.setString(player.CurWeapon->Name + '\n');
-        weaponDescText.addString(weaponDescString[player.CurWeapon->Name] + '\n');
-        weaponDescText.addString("\nStats:");
+        std::string descString = player.CurWeapon->Name + '\n';
+        descString += weaponDescString[player.CurWeapon->Name];
+        weaponDescPanel.setString(descString);
 
-        weaponDescText.addString("\nMana storage: " + floatToString(player.CurWeapon->MaxManaStorage));
-        weaponDescText.addString("\t\t\tReload Speed: " + floatToString(player.CurWeapon->ReloadSpeed.getStat()) + " mana/sec");
-        weaponDescText.addString("\n\nTime To Holster: " + floatToString(player.CurWeapon->TimeToHolster.getStat().asSeconds()) + " sec");
-        weaponDescText.addString("\t\t\tTime To Dispatch: " + floatToString(player.CurWeapon->TimeToDispatch.getStat().asSeconds()) + " sec");
-        weaponDescText.addString("\n\nDamage: " + floatToString(player.CurWeapon->ManaCostOfBullet));
-        if (player.CurWeapon->Multishot != 1) {
-            weaponDescText.addString("\t\t\tBullet per shot: " + std::to_string(player.CurWeapon->Multishot));
-        }
-        weaponDescText.addString("\t\t\tRate of fire: " + floatToString(1 / player.CurWeapon->FireRate.getStat().asSeconds()) + " shots/sec");
-        weaponDescText.addString("\n\nVelocity of Bullet: " + floatToString(player.CurWeapon->BulletVelocity));
-        weaponDescText.addString("\t\t\tScatter: " + floatToString(player.CurWeapon->Scatter) + " deg");
+        manaStStat.setString("Mana storage: " + floatToString(player.CurWeapon->MaxManaStorage));
+        relSpStat.setString("Reload Speed: " + floatToString(player.CurWeapon->ReloadSpeed.getStat()) + " mana/sec");
+        manaStStat.updateAnchor({ 0, 50 });
+        relSpStat.updateAnchor({ 0, 50 });
 
-        weaponDescText.setCenter(weaponDescPanel.getCenter());
+        tthStat.setString("Time To Holster: " + floatToString(player.CurWeapon->TimeToHolster.getStat().asSeconds()) + " sec");
+        ttdStat.setString("Time To Dispatch: " + floatToString(player.CurWeapon->TimeToDispatch.getStat().asSeconds()) + " sec");
+        tthStat.updateAnchor({ 0, 50 });
+        ttdStat.updateAnchor({ 0, 50 });
+
+        dmgStat.setString("Damage: " + floatToString(player.CurWeapon->ManaCostOfBullet));
+        msStat.setString("Bullet per shot: " + std::to_string(player.CurWeapon->Multishot));
+        frStat.setString("Rate of fire: " + floatToString(1 / player.CurWeapon->FireRate.getStat().asSeconds()) + " shots/sec");
+        dmgStat.updateAnchor({ 0, 50 });
+        msStat.updateAnchor({ 0, 50 });
+        frStat.updateAnchor({ 0, 50 });
+
+        velStat.setString("Bullet velocity: " + floatToString(player.CurWeapon->BulletVelocity));
+        scatStat.setString("Scatter: " + floatToString(player.CurWeapon->Scatter) + " deg");
+        velStat.updateAnchor({ 0, 50 });
+        scatStat.updateAnchor({ 0, 50 });
 
         if (player.CurWeapon == &pistol)
             weaponImg.setTexture(Textures::PH_Pistol, UI::texture);

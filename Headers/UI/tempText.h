@@ -1,5 +1,5 @@
 #pragma once
-#include "text.h"
+#include "PlacedText.h"
 
 class TempText : public PlacedText {
 public:

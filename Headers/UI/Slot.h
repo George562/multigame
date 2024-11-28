@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "text.h"
+#include "PlacedText.h"
 #include "Frame.h"
 
 class ItemSlot : public UIElement {

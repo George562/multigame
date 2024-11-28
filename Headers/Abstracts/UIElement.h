@@ -137,6 +137,8 @@ public:
             elem->parent = nullptr;
     }
 
+    virtual sf::FloatRect getGlobalBounds() { return UIRect::getGlobalBounds(); }
+
     virtual void setPosition(float x, float y) {
         for (UIElement*& elem : this->children)
             elem->move(elem->UIRect::getPosition() - sf::Vector2f(x, y));
@@ -148,6 +150,10 @@ public:
     void setAnchor(UI::Anchor anchor, bool update = false) { this->anchor = anchor; if (update && parent) parent->updateElement(this); }
     void setAnchoringPoint(UI::Anchor corner, bool update = false) { this->anchoringPoint = corner; if (update && parent) parent->updateElement(this); }
     void setAnchors(UI::Anchor anchor, UI::Anchor point, bool update = false) { setAnchor(anchor, update); setAnchoringPoint(point, update); }
+
+    void updateAnchor(sf::Vector2f offset = { 0, 0 }) {
+        this->parent->anchorChildToParent(this, this->anchor, this->anchoringPoint, offset);
+    }
 
     void moveToAnchor(UIElement* parentElem, sf::Vector2f offset = { 0, 0 }) {
         parentElem->anchorChildToParent(this, this->anchor, this->anchoringPoint, offset);

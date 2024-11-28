@@ -1,5 +1,5 @@
 #pragma once
-#include "../Utility/commonColors.h"
+#include "../Utility/ColorTools.h"
 #include "../../SFML-2.5.1/include/SFML/Graphics.hpp"
 #include <string>
 

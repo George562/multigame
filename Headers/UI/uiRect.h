@@ -40,7 +40,7 @@ struct UIRect : public sf::Transformable {
     void setRect(sf::Vector2f pos, sf::Vector2u size) { setRect(pos.x, pos.y, size.x, pos.y); }
     void setRect(UIRect rect) { setRect(rect.getLeft(), rect.getTop(), rect.Width, rect.Height); }
 
-    sf::FloatRect getGlobalBounds() {
+    virtual sf::FloatRect getGlobalBounds() {
         return sf::FloatRect(getPosition(),
                              sf::Vector2f(getSize().x * getScale().x,
                                           getSize().y * getScale().y));

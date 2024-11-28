@@ -1,6 +1,6 @@
 #pragma once
 #include "../../SFML-2.5.1/include/SFML/Network.hpp"
-#include "../UI/text.h"
+#include "../UI/PlacedText.h"
 
 #define SPACE_BETWEEN_LINES_IN_PIXELS 35
 #define CHARACTER_SIZE 27
