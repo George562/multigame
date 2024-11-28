@@ -33,6 +33,10 @@ public:
 
     // Get size
     sf::Vector2f getSize() const { return sf::Vector2f(Radius * 2, Radius * 2); }
+    void setSize(float x, float y) {
+        Radius = std::hypot(x, y) / 2;
+        updateShape();
+    }
 
     // Get and set radius
     float getRadius() const { return Radius; }

@@ -50,6 +50,19 @@ public:
     virtual void setCenter(sf::Vector2f v)   { setCenter(v.x, v.y); }
 
     virtual sf::Vector2f getSize() const { return size; }
+    virtual void setSize(float w, float h) {
+        if (size.x == 0 || size.y == 0) throw "You cannot set the size before you set the points.";
+        for (size_t i = 0; i < pointCount; i++) {
+            points[i].x = (points[i].x - position.x) * w / size.x + position.x;
+            points[i].y = (points[i].y - position.y) * h / size.y + position.y;
+        }
+        size.x = w;
+        size.y = h;
+    }
+    void setSize(sf::Vector2f size) { setSize(size.x, size.y); }
+
+    void setScale(float x, float y) { setSize(size.x * x, size.y * y); }
+    void setScale(sf::Vector2f scale) { setScale(scale.x, scale.y); }
 
     virtual void move(float x, float y)  { setPosition(position.x + x, position.y + y); }
     virtual void move(sf::Vector2f v)    { setPosition(position + v); }
