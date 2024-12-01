@@ -1319,6 +1319,7 @@ void LevelGenerate(int n, int m) {
 
 
     clearVectorOfPointers(Enemies);
+    Enemies.push_back(new Boss());
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
         Enemies.push_back(new DistortedScientist());
@@ -1486,7 +1487,7 @@ void EnemyDie(int i) {
             }
         }
 
-        TempText* enemiesKilledText = new TempText(sf::seconds(10));
+        TempText* enemiesKilledText = new TempText(sf::seconds(7));
         enemiesKilledText->setCharacterSize(40);
         enemiesKilledText->setString("      All enemies cleared!\nPortal to the next area has now opened.");
         enemiesKilledText->setCenter(scw / 2.0f, sch / 3.0f);
@@ -1525,7 +1526,9 @@ void updateEnemies() {
             Enemies[i]->move(CurLocation);
             Enemies[i]->UpdateState();
             Enemies[i]->CurWeapon->lock = false;
+            Enemies[i]->CurWeapon->holstered = true;
             Enemies[i]->CurWeapon->Reload(Enemies[i]->Mana);
+            Enemies[i]->CurWeapon->holstered = false;
         }
     }
 }

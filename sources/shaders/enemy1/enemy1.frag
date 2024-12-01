@@ -71,14 +71,12 @@ void main() {
     vec2 uv = (gl_TexCoord[0].xy - 0.5) * 1.45;
     float d = length(uv);
     float time = 0.15 + pow(sin(0.45 * uTime), 2.) / 5.;
-    float result = 0.9 * (1. - step(d, 0.36));
+    float result = 0.;
     vec2 Muv = rotateAround(abs(uv), vec2(0.25, 0.25), PI / 4.);
-    result -= tree(Muv, vec2(0.25, 0.27), vec2(0.08, 0.14), PI * time, 4);
-    // result -= rect(uv, vec2(-0.249), vec2(0.08, 0.7), PI / 4.);
-    // result -= rect(uv, vec2(-0.249, 0.249), vec2(0.08, 0.7), PI * 3. / 4.);
-    result = result * step(result, 0.75) + (1. - step(result, 0.75));
-    result += (1. - smoothstep(d, 0.36, (0.9 + 0.15 * sin(4. * atan(uv.x, uv.y) - PI / 2.)) * (0.25 + 0.08 * f(3.2 * fract(uTime) - 0.29)))) * step(d, 0.34);
-    result -= (1. - smoothstep(0.36, 0.37, d)) * (1. - step(d, 0.34));
-    vec3 color = vec3(1. - result) - vec3(0., 1., 1.) * step(d, 0.36);
-    gl_FragColor = vec4(color, max(1. - result, 1. - smoothstep(0.36, 0.37, d)));
+    result += tree(Muv, vec2(0.25, 0.26), vec2(0.05, 0.14), PI * time, 4);
+    vec3 color = vec3(1., 0., 0.) * smoothstep(d, 0.36, (0.9 + 0.15 * sin(4. * atan(uv.x, uv.y) - PI / 2.)) * (0.25 + 0.08 * f(3.2 * fract(uTime) - 0.29)));
+    color = color * step(d, 0.36);
+    color += smoothstep(-0.02, 0., d - 0.36) - smoothstep(0., -0.02, -d + 0.37);
+    color += vec3(result);
+    gl_FragColor = vec4(color, max(result, 1. - smoothstep(0.36, 0.37, d)));
 }

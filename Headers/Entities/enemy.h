@@ -19,7 +19,7 @@ public:
 		Health = { {0, 10 + 4.f * curLevel, 10 + 4.f * curLevel} };
         HealthRecovery = 2.5;
 		Mana = { {0, 10, 10} };
-        ManaRecovery   = 1;
+        ManaRecovery = 1;
         Armor  = { {0, 100, 100} };
         Velocity = {0, 0}; MaxVelocity = 400.f;
         Acceleration = MaxVelocity * 10.f;
@@ -47,10 +47,10 @@ public:
 class Distorted : public Enemy {
 public:
     Distorted() : Enemy("Distorted") {
-		Health = { {0, 15 + 2.5f * curLevel, 15 + 2.5f * curLevel} };
+		Health = { {0, 5 + 2.5f * curLevel, 5 + 2.5f * curLevel} };
         HealthRecovery = 0.5;
 		Mana = { {0, 20, 20} };
-        ManaRecovery   = 2.5;
+        ManaRecovery = 2.5;
 		Armor = { {0, 25, 25} };
         Velocity = {0, 0}; MaxVelocity = 700.f;
         Acceleration = MaxVelocity * 17.5f;
@@ -59,9 +59,40 @@ public:
         CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
         CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
 
+        hitbox.setRadius(60.f);
+        setAnimation(Textures::Distorted, &Shaders::Distortion1);
+
+        addItem(new Item(ItemID::regenDrug, 1));
+    }
+
+    void move(Location* location) override {
+        VelocityBuff = 1;
+        Creature::move(location);
+    }
+
+    void shift(sf::Vector2f shift) override { Velocity += normalize(shift) * 4.f; }
+    void shift(float x, float y) override { Velocity += normalize(sf::Vector2f(x, y)) * 4.f; }
+};
+
+// Boss
+class Boss : public Enemy {
+public:
+    Boss() : Enemy("Big Bad Boss") {
+		Health = { {0, 15 + 2.5f * curLevel, 15 + 2.5f * curLevel} };
+        HealthRecovery = 0.5;
+		Mana = { {0, 20, 20} };
+        ManaRecovery = 20.5;
+		Armor = { {0, 25, 25} };
+        Velocity = {0, 0}; MaxVelocity = 700.f;
+        Acceleration = MaxVelocity * 17.5f;
+        CurWeapon = new BigBadBossWeapon();
+        CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
+
         hitbox.setRadius(size / 2.);
         setAnimation(Textures::Enemy1, &Shaders::Enemy1);
-        hitbox.setRadius(size * 0.37 / 1.45 / 2.);
+        hitbox.setRadius(size * 0.37 / 1.45);
 
         addItem(new Item(ItemID::regenDrug, 1));
     }

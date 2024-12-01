@@ -108,8 +108,6 @@ public:
 		TimeFromLastShot->restart();
 
 		ShootSound.setBuffer(SoundBuffers::Shoot2);
-		ShootSound.setPosition(shooter.getCenter().x, shooter.getCenter().y, 0.f);
-
 		float minDistance = ShootSound.getMinDistance(), Distance = distance(shooter.getCenter(), sf::Vector2f(sf::Listener::getPosition().x, sf::Listener::getPosition().y));
 		float factor = minDistance / (minDistance + ShootSound.getAttenuation() * (std::max(Distance, minDistance) - minDistance));
 		ShootSound.setVolume(50 * factor);
@@ -125,7 +123,6 @@ public:
 			Mana -= x;
 			ManaStorage += x;
 			if (ManaStorage.fromTop() == 0) HolsterAction();
-			return;
 		}
 	}
 
@@ -263,8 +260,6 @@ public:
         lock = true;
 
 		ShootSound.setBuffer(SoundBuffers::Shoot);
-		ShootSound.setPosition(shooter.getCenter().x, shooter.getCenter().y, 0.f);
-
 		float minDistance = ShootSound.getMinDistance(), Distance = distance(shooter.getCenter(), sf::Vector2f(sf::Listener::getPosition().x, sf::Listener::getPosition().y));
 		float factor = minDistance / (minDistance + ShootSound.getAttenuation() * (std::max(Distance, minDistance) - minDistance));
 		ShootSound.setVolume(50 * factor);
@@ -304,20 +299,36 @@ public:
 //     }
 // };
 
-// Chaotic
-// class Chaotic : public Weapon {
-// public:
-//     Chaotic() : Weapon("Chaotic", 300, 0.1, 1.f / 16, 3, 5, 5) {
-//         BulletVelocity = Upgradable(std::vector<int>(5, 180));
-//     }
-//     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
-//         if (!CanShoot()) return;
+// BigBadBossWeapon
+class BigBadBossWeapon : public Weapon {
+public:
+    BigBadBossWeapon() : Weapon("BigBadBossWeapon") {}
+    void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
+        if (!CanShoot()) return;
 
-//         sf::Vector2f d{0, BulletVelocity};
-//         d = RotateOn(float(rand()), d);
-//         sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
-//         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
-//         ManaStorage -= ManaCostOfBullet;
-//         TimeFromLastShot->restart();
-//     }
-// };
+		sf::Vector2f d = direction - shooter.getCenter();
+		float len = hypotf(d.x, d.y);
+		if (len != 0) {
+			d = RotateOn(M_PI_RAD * (rand() % (int)(Scatter)-Scatter / 2.f), d) * BulletVelocity / len;
+			sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+			Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+			newBullets.push_back(Bullets.back());
+		}
+
+		rand();
+        d = RotateOn(float(rand()), sf::Vector2f(0, BulletVelocity));
+        for (int i = 0; i < Multishot; i++, d = RotateOn(float(rand()), d)) {
+			sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
+			Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+			newBullets.push_back(Bullets.back());
+		}
+        ManaStorage -= ManaCostOfBullet;
+        TimeFromLastShot->restart();
+
+		ShootSound.setBuffer(SoundBuffers::Shoot);
+		float minDistance = ShootSound.getMinDistance(), Distance = distance(shooter.getCenter(), sf::Vector2f(sf::Listener::getPosition().x, sf::Listener::getPosition().y));
+		float factor = minDistance / (minDistance + ShootSound.getAttenuation() * (std::max(Distance, minDistance) - minDistance));
+		ShootSound.setVolume(50 * factor);
+		ShootSound.play();
+    }
+};

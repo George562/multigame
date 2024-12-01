@@ -1,0 +1,19 @@
+{
+  "BulletVelocity":           { "curLevel": 1, "maxLevel": 1, "stats": [ 960.0 ] },
+  "FireRate":                 { "curLevel": 1, "maxLevel": 1, "stats": [ 0.25 ] },
+  "ManaCostOfBullet":         { "curLevel": 1, "maxLevel": 1, "stats": [ 4 ] },
+  "ManaStorage": {
+      "bottom": 0.0,
+      "cur": 2400.0,
+      "looped": false,
+      "top": 2400.0
+  },
+  "MaxManaStorage":           { "curLevel": 1, "maxLevel": 1, "stats": [ 2400.0 ] },
+  "Multishot":                { "curLevel": 1, "maxLevel": 1, "stats": [ 4 ] },
+  "Name": "BigBadBossWeapon",
+  "ReloadSpeed":              { "curLevel": 1, "maxLevel": 1, "stats": [ 4.0 ] },
+  "Scatter":                  { "curLevel": 1, "maxLevel": 1, "stats": [ 1.0 ] },
+  "TimeToDispatch":           { "curLevel": 1, "maxLevel": 1, "stats": [ 0.0 ] },
+  "TimeToHolster":            { "curLevel": 1, "maxLevel": 1, "stats": [ 0.0 ] },
+  "holstered": false
+}
