@@ -1328,7 +1328,7 @@ void LevelGenerate(int n, int m) {
 
     for (int i = 0; i < Enemies.size(); i++) {
         do {
-            Enemies[i]->hitbox.setPosition(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
+            Enemies[i]->hitbox.setCenter(sf::Vector2f((std::rand() % m) + 0.5f, (std::rand() % n) + 0.5f) * (float)size);
             Enemies[i]->setTarget(Enemies[i]->hitbox.getCenter());
         } while (!LabyrinthLocation.EnableTiles[(int)Enemies[i]->hitbox.getPosition().y / size][(int)Enemies[i]->hitbox.getPosition().x / size] ||
                  distance(Enemies[i]->hitbox.getPosition(), player.hitbox.getCenter()) < size * 3);
@@ -1816,6 +1816,8 @@ void updateShaders() {
     Shaders::Fire.setUniform("uTime", uTime);
 
     Shaders::WaveMix.setUniform("uTime", uTime);
+
+    Shaders::Enemy1.setUniform("uTime", uTime);
 }
 //==============================================================================================
 

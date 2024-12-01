@@ -97,6 +97,7 @@ namespace Textures {
 //////////////////////////////////////////////////////////// Textures
     sf::Texture Distorted,
                 DistortedScientist,
+                Enemy1,
                 Player,
                 Portal,
                 Portal2,
@@ -169,6 +170,7 @@ namespace Textures {
 void loadTextures() {
     Textures::Distorted                .loadFromFile("sources/textures/Distorted.png");
     Textures::DistortedScientist       .loadFromFile("sources/textures/DistortedScientist.png");
+    Textures::Enemy1                   .create(size, size);
     Textures::Player                   .loadFromFile("sources/textures/Player.png");
     Textures::Portal                   .loadFromFile("sources/textures/Portal.png");
     Textures::Portal2                  .loadFromFile("sources/textures/Portal2.png");
@@ -246,7 +248,8 @@ namespace Shaders {
                Outline,
                Bullet,
                Fire,
-               WaveMix
+               WaveMix,
+               Enemy1
                ;
 }
 
@@ -264,6 +267,7 @@ void loadShaders() {
     Shaders::Bullet      .loadFromFile("sources/shaders/bullet/bullet.vert",         "sources/shaders/bullet/bullet.frag"         );
     Shaders::Fire        .loadFromFile("sources/shaders/fire/fire.vert",             "sources/shaders/fire/fire.frag"             );
     Shaders::WaveMix     .loadFromFile("sources/shaders/waveMix/waveMix.vert",       "sources/shaders/waveMix/waveMix.frag"       );
+    Shaders::Enemy1      .loadFromFile("sources/shaders/enemy1/enemy1.vert",         "sources/shaders/enemy1/enemy1.frag"         );
 }
 
 namespace Musics {

@@ -42,6 +42,7 @@ public:
     // Get and set size
     sf::Vector2f getSize() const { return size; }
     void setSize(float w, float h) { size.x = w; size.y = h; updateShape(); }
+    void setSize(sf::Vector2f size) { setSize(size.x, size.y); }
 
     // Set position and size
     void setRect(float x, float y, float w, float h) { size.x = w; size.y = h; setPosition(x, y); }
