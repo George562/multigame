@@ -1542,25 +1542,25 @@ void updateUpgradeShopStats() {
 
         manaStStat.setString("Mana storage: " + floatToString(player.CurWeapon->MaxManaStorage));
         relSpStat.setString("Reload Speed: " + floatToString(player.CurWeapon->ReloadSpeed.getStat()) + " mana/sec");
-        manaStStat.updateAnchor({ 0, 50 });
-        relSpStat.updateAnchor({ 0, 50 });
+        manaStStat.updateAnchor({ 0, sch / 34.f });
+        relSpStat.updateAnchor({ 0, sch / 34.f });
 
         tthStat.setString("Time To Holster: " + floatToString(player.CurWeapon->TimeToHolster.getStat().asSeconds()) + " sec");
         ttdStat.setString("Time To Dispatch: " + floatToString(player.CurWeapon->TimeToDispatch.getStat().asSeconds()) + " sec");
-        tthStat.updateAnchor({ 0, 50 });
-        ttdStat.updateAnchor({ 0, 50 });
+        tthStat.updateAnchor({ 0, sch / 34.f });
+        ttdStat.updateAnchor({ 0, sch / 34.f });
 
         dmgStat.setString("Damage: " + floatToString(player.CurWeapon->ManaCostOfBullet));
         msStat.setString("Bullet per shot: " + std::to_string(player.CurWeapon->Multishot));
         frStat.setString("Rate of fire: " + floatToString(1 / player.CurWeapon->FireRate.getStat().asSeconds()) + " shots/sec");
-        dmgStat.updateAnchor({ 0, 50 });
-        msStat.updateAnchor({ 0, 50 });
-        frStat.updateAnchor({ 0, 50 });
+        dmgStat.updateAnchor({ 0, sch / 34.f });
+        msStat.updateAnchor({ 0, sch / 34.f });
+        frStat.updateAnchor({ 0, sch / 34.f });
 
         velStat.setString("Bullet velocity: " + floatToString(player.CurWeapon->BulletVelocity));
         scatStat.setString("Scatter: " + floatToString(player.CurWeapon->Scatter) + " deg");
-        velStat.updateAnchor({ 0, 50 });
-        scatStat.updateAnchor({ 0, 50 });
+        velStat.updateAnchor({ 0, sch / 34.f });
+        scatStat.updateAnchor({ 0, sch / 34.f });
 
         if (player.CurWeapon == &pistol)
             weaponImg.setTexture(Textures::PH_Pistol, UI::texture);

@@ -8,8 +8,7 @@ float PI = acos(-1.);
 
 float rectangle(in vec2 uv, vec2 pos, vec2 size, float angle) {
     uv = rotate(uv - pos, angle);
-    pos = vec2(-size.x / 2.,  0.);
-    vec2 res = smoothstep(-0.008, 0., uv - pos) - smoothstep(0., -0.008, -uv + (pos + size));
+    vec2 res = smoothstep(0.008, 0., abs(uv - vec2(size.x,  size.y / 2.)) - size / 2.);
     return res.x * res.y;
 }
 
@@ -18,12 +17,7 @@ float rect(in vec2 uv, vec2 pos, vec2 size, float angle) {
     return 1. - smoothstep(pow(length(max(2. * abs(uv - vec2(0., size.y / 2.)) - size, 0.)), 1.65), 0., 0.0011);
 }
 
-float branch(in vec2 uv, vec2 pos, vec2 size, float angle) {
-    float result = 0.;
-    result += rect(uv, pos, size, angle);
-    result += rect(uv, pos, size, -angle);
-    return result;
-}
+#define branch(uv, p, s, a) rect(uv, p, s, a) + rect(uv, p, s, -a)
 
 float d[10];
 float tree(in vec2 uv, vec2 pos, vec2 size, float angle, int deep) {
@@ -76,7 +70,7 @@ void main() {
     result += tree(Muv, vec2(0.25, 0.26), vec2(0.05, 0.14), PI * time, 4);
     vec3 color = vec3(1., 0., 0.) * smoothstep(d, 0.36, (0.9 + 0.15 * sin(4. * atan(uv.x, uv.y) - PI / 2.)) * (0.25 + 0.08 * f(3.2 * fract(uTime) - 0.29)));
     color = color * step(d, 0.36);
-    color += smoothstep(-0.02, 0., d - 0.36) - smoothstep(0., -0.02, -d + 0.37);
+    color += smoothstep(0.02, 0., abs(d - 0.36));
     color += vec3(result);
     gl_FragColor = vec4(color, max(result, 1. - smoothstep(0.36, 0.37, d)));
 }

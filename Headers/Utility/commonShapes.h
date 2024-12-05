@@ -4,12 +4,6 @@
 #include "../../SFML-2.5.1/include/SFML/System.hpp"
 
 namespace CommonShapes {
-    std::vector<sf::Vector2f> starShape2div3{
-        sf::Vector2f(66.6, 133.3), sf::Vector2f(100, 100), sf::Vector2f(133.3, 100),
-            sf::Vector2f(116.6, 66.6), sf::Vector2f(133.3, 33.3), sf::Vector2f(100, 33.3),
-            sf::Vector2f(66.6, 0), sf::Vector2f(33.3, 33.3), sf::Vector2f(0, 33.3),
-            sf::Vector2f(16.6, 66.6), sf::Vector2f(0, 100), sf::Vector2f(33.3, 100)
-    };      // Temporary while collision shapes are not affected by Scale
     std::vector<sf::Vector2f> starShape{
         sf::Vector2f(100, 200),  sf::Vector2f(150, 150),   sf::Vector2f(200, 150),
         sf::Vector2f(175, 100),   sf::Vector2f(200, 50), sf::Vector2f(150, 50),
