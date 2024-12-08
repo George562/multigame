@@ -1,3 +1,4 @@
+#iChannel0 "file://../textures/noise.png"
 float PI = acos(-1.);
 float PI2 = acos(-1.) * 2.0;
 
@@ -62,19 +63,17 @@ float f(float x) {
 }
 
 void main() {
-    vec2 uv = (gl_FragCoord.xy / iResolution.xy - 0.5) * 1.45;
+    vec2 uv = (gl_FragCoord.xy / iResolution.xy - 0.5) * 1.75;
     float d = length(uv);
     float time = 0.15 + pow(sin(0.45 * iTime), 2.) / 5.;
     float result = 0.;
+    uv *= rot(0.3 * iTime);
     vec2 Muv = rotateAround(abs(uv), vec2(0.25, 0.25), PI / 4.);
-    result += tree(Muv, vec2(0.25, 0.26), vec2(0.05, 0.14), PI * time, 4);
-    // result -= rect(uv, vec2(-0.249), vec2(0.08, 0.7), PI / 4.);
-    // result -= rect(uv, vec2(-0.249, 0.249), vec2(0.08, 0.7), PI * 3. / 4.);
-    // result = result * step(result, 0.75) + (1. - step(result, 0.75));
+    result += tree(Muv, vec2(0.25, 0.28), vec2(0.05, 0.15), PI * time, 4);
     vec3 color = vec3(1., 0., 0.) * smoothstep(d, 0.36, (0.9 + 0.15 * sin(4. * atan(uv.x, uv.y) - PI / 2.)) * (0.25 + 0.08 * f(3.2 * fract(iTime) - 0.29)));
-    // result += (1. - smoothstep(d, 0.36, (0.9 + 0.15 * sin(4. * atan(uv.x, uv.y) - PI / 2.)) * (0.25 + 0.08 * f(3.2 * fract(iTime) - 0.29))));
     color = color * step(d, 0.36);
-    color += smoothstep(0.02, 0., abs(d - 0.36));
+    result += smoothstep(0.02, 0., abs(d - 0.34));
+    result += smoothstep(0.04, 0., abs(d - 0.38));
     color += vec3(result);
     gl_FragColor = vec4(color, max(1. - result, 1. - smoothstep(0.36, 0.37, d)));
 }

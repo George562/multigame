@@ -74,6 +74,43 @@ public:
     void shift(float x, float y) override { Velocity += normalize(sf::Vector2f(x, y)) * 4.f; }
 };
 
+// AngularBody
+class AngularBody : public Enemy {
+public:
+    float angles;
+    AngularBody(float angles) : Enemy("Angular body") {
+        this->angles = angles;
+		Health = { {0, 5 + 2.5f * curLevel, 5 + 2.5f * curLevel} };
+        HealthRecovery = 0.5;
+		Mana = { {0, 20, 20} };
+        ManaRecovery = 2.5;
+		Armor = { {0, 25, 25} };
+        Velocity = {0, 0}; MaxVelocity = 700.f;
+        Acceleration = MaxVelocity * 17.5f;
+        CurWeapon = new Pistol();
+        CurWeapon->ManaStorage.top = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaStorage.cur = 100.f * CurWeapon->ManaCostOfBullet;
+        CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
+
+        hitbox.setRadius(size / 8.f);
+        setAnimation(Textures::Enemy, &Shaders::Enemy);
+        hitbox.setRadius(size / 8.f * 0.8f);
+
+        addItem(new Item(ItemID::regenDrug, 1));
+    }
+
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        Shaders::Enemy.setUniform("direction", this->target - hitbox.getCenter());
+        Shaders::Enemy.setUniform("angles", angles);
+        if (animation != nullptr) {
+            animation->setPosition(hitbox.getCenter());
+            target.draw(*animation, states);
+        }
+        Name.setPosition(hitbox.getCenter().x - Name.Width / 2.f, hitbox.getPosition().y - Name.Height);
+        target.draw(Name, states);
+    }
+};
+
 // Boss
 class Boss : public Enemy {
 public:
@@ -91,19 +128,21 @@ public:
         CurWeapon->ManaCostOfBullet.stats[CurWeapon->ManaCostOfBullet.curLevel] += curLevel;
 
         hitbox.setRadius(size / 2.);
-        setAnimation(Textures::Enemy1, &Shaders::Enemy1);
-        hitbox.setRadius(size * 0.37 / 1.45);
+        setAnimation(Textures::Boss, &Shaders::Boss);
+        hitbox.setRadius(size * 0.37 / 1.75);
 
         addItem(new Item(ItemID::regenDrug, 1));
     }
 
-    void move(Location* location) override {
-        VelocityBuff = 1;
-        Creature::move(location);
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        Shaders::Boss.setUniform("direction", this->target - hitbox.getCenter());
+        if (animation != nullptr) {
+            animation->setPosition(hitbox.getCenter());
+            target.draw(*animation, states);
+        }
+        Name.setPosition(hitbox.getCenter().x - Name.Width / 2.f, hitbox.getPosition().y - Name.Height);
+        target.draw(Name, states);
     }
-
-    void shift(sf::Vector2f shift) override { Velocity += normalize(shift) * 4.f; }
-    void shift(float x, float y) override { Velocity += normalize(sf::Vector2f(x, y)) * 4.f; }
 };
 
 sf::Packet& operator<<(sf::Packet& packet, Enemy* e) {

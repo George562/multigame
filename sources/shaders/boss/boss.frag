@@ -1,4 +1,5 @@
 uniform float uTime;
+uniform vec2 direction;
 
 float PI = acos(-1.);
 
@@ -62,15 +63,17 @@ float f(float x) {
 }
 
 void main() {
-    vec2 uv = (gl_TexCoord[0].xy - 0.5) * 1.45;
+    vec2 uv = (gl_TexCoord[0].xy - 0.5) * 1.75;
+    uv *= rot(atan(direction.x, direction.y));
     float d = length(uv);
     float time = 0.15 + pow(sin(0.45 * uTime), 2.) / 5.;
     float result = 0.;
     vec2 Muv = rotateAround(abs(uv), vec2(0.25, 0.25), PI / 4.);
-    result += tree(Muv, vec2(0.25, 0.26), vec2(0.05, 0.14), PI * time, 4);
+    result += tree(Muv, vec2(0.25, 0.29), vec2(0.05, 0.15), PI * time, 4);
     vec3 color = vec3(1., 0., 0.) * smoothstep(d, 0.36, (0.9 + 0.15 * sin(4. * atan(uv.x, uv.y) - PI / 2.)) * (0.25 + 0.08 * f(3.2 * fract(uTime) - 0.29)));
     color = color * step(d, 0.36);
-    color += smoothstep(0.02, 0., abs(d - 0.36));
+    result += smoothstep(0.02, 0., abs(d - 0.34));
+    result += smoothstep(0.04, 0., abs(d - 0.38));
     color += vec3(result);
     gl_FragColor = vec4(color, max(result, 1. - smoothstep(0.36, 0.37, d)));
 }

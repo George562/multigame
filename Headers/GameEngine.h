@@ -1322,8 +1322,8 @@ void LevelGenerate(int n, int m) {
     Enemies.push_back(new Boss());
     int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
-        Enemies.push_back(new DistortedScientist());
-        Enemies.push_back(new Distorted());
+        Enemies.push_back(new AngularBody(3 + rand() % 4));
+        // Enemies.push_back(new Distorted());
     }
     for (Enemy*& enemy : Enemies) DrawableStuff.push_back(enemy);
 
@@ -1820,7 +1820,7 @@ void updateShaders() {
 
     Shaders::WaveMix.setUniform("uTime", uTime);
 
-    Shaders::Enemy1.setUniform("uTime", uTime);
+    Shaders::Boss.setUniform("uTime", uTime);
 }
 //==============================================================================================
 
