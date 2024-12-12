@@ -19,11 +19,12 @@ float rect(in vec2 uv, vec2 pos, vec2 size, float angle) {
 void main() {
     vec2 uv = (gl_TexCoord[0].xy - 0.5) * 0.3;
     uv *= rot(atan(direction.x, direction.y));
-    float result = Circle(uv, 0.1, 0.01)
+    float result = Circle(uv, 0.1, 0.01) * 2.
                  + Circle(uv, 0.12, 0.02)
                  + Circle(uv, 0.033, 0.01) * 2.
-                 + rect(vec2(abs(uv.x), uv.y), vec2(0.027), vec2(0.01, 0.055), PI / 4.)
-                 + rect(uv, vec2(0., -0.02), vec2(0.005, 0.04), 0.)
+                 + rect(vec2(abs(uv.x), uv.y), vec2(0.027), vec2(0.01, 0.05), PI / 4.) * 2.
+                 + rect(uv, vec2(0., -0.02), vec2(0.005, 0.04), 0.) * 2.
     ;
+    result = min(1., result) * 0.9;
     gl_FragColor = vec4(vec3(result), step(length(uv), 0.1) + step(0.1, length(uv)) * result);
 }
