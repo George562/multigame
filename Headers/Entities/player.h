@@ -48,7 +48,7 @@ Player::Player() : Creature("Player", faction::Player) {
 	Health = { {0.f, 20.f, 20.f} }; HealthRecovery = Health.top / 5;
 	Mana = { {0.f, 10.f, 10.f} }; ManaRecovery = Mana.top / 5;
     Armor = { {0.f, 0.f, 0.f} };
-    hitbox.setRadius(60.f);
+    hitbox.setRadius(80.f);
     Velocity = {0.f, 0.f}; MaxVelocity = 700.f;
     Acceleration = MaxVelocity * 20.f;
     Name.setOutlineColor(sf::Color::Green);

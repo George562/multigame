@@ -1805,6 +1805,8 @@ void updateShaders() {
     Shaders::Flashlight.setUniform("uMouse", uMouse);
     Shaders::Flashlight.setUniform("uPlayerPosition", uPlayerPosition);
 
+    Shaders::Player.setUniform("direction", uMouse - uPlayerPosition);
+
     Shaders::Portal.setUniform("uTime", uTime);
 
     Shaders::Portal2.setUniform("uTime", uTime);
