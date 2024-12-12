@@ -23,6 +23,7 @@ void main() {
                  + Circle(uv, 0.12, 0.02)
                  + Circle(uv, 0.033, 0.01) * 2.
                  + rect(vec2(abs(uv.x), uv.y), vec2(0.027), vec2(0.01, 0.055), PI / 4.)
+                 + rect(uv, vec2(0., -0.02), vec2(0.005, 0.04), 0.)
     ;
     gl_FragColor = vec4(vec3(result), step(length(uv), 0.1) + step(0.1, length(uv)) * result);
 }
