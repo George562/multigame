@@ -408,60 +408,44 @@ void FindAllWaysTo(Location* location, std::vector<sf::Vector2f> to, std::vector
 
 // {x = 1, y = -1} => collision at the y, up or down doesn't matter, because u know "dy" already
 sf::Vector2i WillCollisionWithWalls(vvr& Walls, CollisionShape& obj, sf::Vector2f Velocity) {
-    int y = int(obj.getCenter().y) / size, x = int(obj.getCenter().x) / size;
     sf::Vector2i res(1, 1);
+    obj.move(Velocity);
+    for (int i = 0; i < Walls.size(); i++) {
+        for (int j = 0; j < Walls[i].size(); j++) {
+            if (Walls[i][j].intersect(obj)) {
+                obj.move(Velocity);
+                if (Walls[i][j].intersect(obj)) {
+                    res = {-1, -1};
+                }
+                obj.move(-Velocity);
+                break;
+            }
+        }
+    }
+    obj.move(-Velocity);
+    if (res.y == -1) {
+        res = {1, 1};
+        obj.move(0, Velocity.y);
+        for (int i = 0; i < Walls.size(); i++) {
+            for (int j = 0; j < Walls[i].size(); j++) {
+                if (Walls[i][j].intersect(obj)) {
+                    res.y = -1;
+                    break;
+                }
+            }
+        }
+        obj.move(Velocity.x, -Velocity.y);
+        for (int i = 0; i < Walls.size(); i++) {
+            for (int j = 0; j < Walls[i].size(); j++) {
+                if (Walls[i][j].intersect(obj)) {
+                    res.x = -1;
+                    break;
+                }
+            }
+        }
+        obj.move(-Velocity.x, 0);
 
-    obj.move(0, Velocity.y);
-    for (int i = 0; i < Walls.size(); i++) {
-        for (int j = 0; j < Walls[i].size(); j++) {
-            if (Walls[i][j].intersect(obj)) {
-                res.y = -1;
-                break;
-            }
-        }
     }
-    // if (Velocity.y < 0) {
-    //     if ((y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(obj)) &&
-    //         (!Walls[y * 2][x].intersect(obj)) &&
-    //         (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x + 1].intersect(obj)) &&
-    //         (x + 1 >= Walls[0].size() || !Walls[y * 2][x + 1].intersect(obj)) &&
-    //         (x - 1 < 0 || !Walls[y * 2][x - 1].intersect(obj)))
-    //         res.y = 1;
-    // }
-    // if (Velocity.y > 0) {
-    //     if ((y * 2 + 3 >= Walls.size() || !Walls[y * 2 + 3][x].intersect(obj)) &&
-    //         (!Walls[y * 2 + 2][x].intersect(obj)) &&
-    //         (y * 2 + 3 >= Walls.size() || !Walls[y * 2 + 3][x + 1].intersect(obj)) &&
-    //         (x + 1 >= Walls[0].size() || !Walls[y * 2 + 2][x + 1].intersect(obj)) &&
-    //         (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(obj)))
-    //         res.y = 1;
-    // }
-    obj.move(Velocity.x, -Velocity.y);
-    for (int i = 0; i < Walls.size(); i++) {
-        for (int j = 0; j < Walls[i].size(); j++) {
-            if (Walls[i][j].intersect(obj)) {
-                res.x = -1;
-                break;
-            }
-        }
-    }
-    // if (Velocity.x < 0) {
-    //     if ((x - 1 < 0 || !Walls[y * 2][x - 1].intersect(obj)) &&
-    //         (!Walls[y * 2 + 1][x].intersect(obj)) &&
-    //         (x - 1 < 0 || !Walls[y * 2 + 2][x - 1].intersect(obj)) &&
-    //         (y * 2 + 3 >= Walls.size() || !Walls[y * 2 + 3][x].intersect(obj)) &&
-    //         (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x].intersect(obj)))
-    //         res.x = 1;
-    // }
-    // if (Velocity.x > 0) {
-    //     if ((x + 1 >= Walls[0].size() || !Walls[y * 2][x + 1].intersect(obj)) &&
-    //         (!Walls[y * 2 + 1][x + 1].intersect(obj)) &&
-    //         (x + 1 >= Walls[0].size() || !Walls[y * 2 + 2][x + 1].intersect(obj)) &&
-    //         (y * 2 + 3 >= Walls.size() || !Walls[y * 2 + 3][x + 1].intersect(obj)) &&
-    //         (y * 2 - 1 < 0 || !Walls[y * 2 - 1][x + 1].intersect(obj)))
-    //         res.x = 1;
-    // }
-    obj.move(-Velocity.x, 0);
     return res;  // if value of vector == -1 => there was collision
 }
 

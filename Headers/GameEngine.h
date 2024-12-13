@@ -1320,7 +1320,7 @@ void LevelGenerate(int n, int m) {
 
     clearVectorOfPointers(Enemies);
     Enemies.push_back(new Boss());
-    int amountOfEveryEnemiesOnLevel = curLevel > completedLevels ? 4 : 2;
+    int amountOfEveryEnemiesOnLevel = curLevel + (curLevel > completedLevels ? 4 : 2);
     for (int i = 0; i < amountOfEveryEnemiesOnLevel; i++) {
         Enemies.push_back(new AngularBody(3 + rand() % 4));
         // Enemies.push_back(new Distorted());
