@@ -23,12 +23,10 @@ public:
 	Scale<float> ManaStorage;
 	Upgradable<float> MaxManaStorage;      // Is used so that we don't have an entire vector of scales, and just change the max for the storage
 	Upgradable<float> ReloadSpeed;
-	sf::Clock* ReloadTimer = nullptr;
 
 	Upgradable<sf::Time> TimeToHolster;
 	Upgradable<sf::Time> TimeToDispatch;
-	sf::Clock* HolsterTimer = nullptr;     // Putting the weapon in the holster to reload takes time
-	sf::Clock* DispatchTimer = nullptr;    // Same thing with getting it out
+	sf::Clock* localClock = nullptr;
 	bool holstered;                        // All weapons are active by default. A holstered state for them is when they are being reloaded.
 
 	Upgradable<float> ManaCostOfBullet;    // Is equal to the damage of bullet
@@ -38,16 +36,14 @@ public:
 	Upgradable<float> BulletVelocity;
 	Upgradable<float> Scatter;             // at degre
 
-	sf::Clock* TimeFromLastShot = nullptr;
+	sf::Time LastShotTime;
 	bool lock;                             // Bullets are like a stream and "lock" is blocking the stream
 
 	sf::Sound ShootSound;
 
 	Weapon() {
-		ReloadTimer = new sf::Clock();
-		HolsterTimer = new sf::Clock();
-		TimeFromLastShot = new sf::Clock();
-		DispatchTimer = new sf::Clock();
+		localClock = new sf::Clock();
+		LastShotTime = sf::Time::Zero;
 		holstered = false;
 		lock = true;
 	}
@@ -73,10 +69,7 @@ public:
 		ShootSound.setMinDistance(size / 6.f);
 	}
 	virtual ~Weapon() {
-		if (TimeFromLastShot) { delete TimeFromLastShot; }
-		if (ReloadTimer) { delete ReloadTimer; }
-		if (HolsterTimer) { delete HolsterTimer; }
-		if (DispatchTimer) { delete DispatchTimer; }
+		if (localClock) { delete localClock; }
 	}
 
 	virtual void Update(sf::Event& event) {
@@ -89,23 +82,22 @@ public:
 
 	virtual bool CanShoot() {
 		if (ManaStorage.toBottom() < ManaCostOfBullet) { lock = true; return false; }
-		if (lock || TimeFromLastShot->getElapsedTime() <= FireRate) return false;
-		if (holstered || DispatchTimer->getElapsedTime() <= TimeToDispatch) return false;
+		if (lock || GameClock->getElapsedTime() - LastShotTime <= FireRate) return false;
+		if (holstered || localClock->getElapsedTime() <= TimeToDispatch) return false;
 		return true;
 	}
 
 	virtual void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
 		if (!CanShoot()) return;
 
-		sf::Vector2f d = direction - shooter.getCenter();
-		float len = hypotf(d.x, d.y);
+		float len = hypotf(direction.x, direction.y);
 		if (len == 0) return;
-		d = RotateOn(M_PI_RAD * (rand() % (int)(Scatter)-Scatter / 2.f), d) * BulletVelocity / len;
-		sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
-		Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+		direction = RotateOn(M_PI_RAD * (rand() % (int)(Scatter)-Scatter / 2.f), direction) * BulletVelocity / len;
+		sf::Vector2f SpawnPoint(shooter.getCenter() + direction * (shooter.getRadius() * 1.4f) / BulletVelocity);
+		Bullets.push_back(new Bullet(f, SpawnPoint, direction, ManaCostOfBullet));
 		newBullets.push_back(Bullets.back());
 		ManaStorage -= ManaCostOfBullet;
-		TimeFromLastShot->restart();
+		LastShotTime = GameClock->getElapsedTime();
 
 		ShootSound.setBuffer(SoundBuffers::Shoot2);
 		float minDistance = ShootSound.getMinDistance(), Distance = distance(shooter.getCenter(), sf::Vector2f(sf::Listener::getPosition().x, sf::Listener::getPosition().y));
@@ -116,8 +108,8 @@ public:
 
 	virtual void Reload(Scale<float>& Mana) { // Reloads ReloadSpeed/sec
 		if (ManaStorage.fromTop() == 0) return;
-		if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
-			float x = std::min(std::min(std::min(oneOverSixty, ReloadTimer->restart().asSeconds()) * ReloadSpeed,
+		if (holstered && localClock->getElapsedTime() > TimeToHolster) {
+			float x = std::min(std::min(std::min(oneOverSixty, TimeSinceLastFrame.asSeconds()) * ReloadSpeed,
 									    ManaStorage.fromTop()),
 							   Mana.toBottom());
 			Mana -= x;
@@ -127,13 +119,13 @@ public:
 	}
 
 	virtual void HolsterAction() {            // Moves weapon to holster or takes it out of it
-		if (holstered && HolsterTimer->getElapsedTime() > TimeToHolster) {
+		if (holstered && localClock->getElapsedTime() > TimeToHolster) {
 			holstered = false;
-			DispatchTimer->restart();
-		} else if (!holstered && DispatchTimer->getElapsedTime() >= TimeToDispatch) {
+			localClock->restart();
+		} else if (!holstered && localClock->getElapsedTime() >= TimeToDispatch) {
 			if (ManaStorage.fromTop() == 0) return;
 			holstered = true;
-			HolsterTimer->restart();
+			localClock->restart();
 		}
 	}
 };
@@ -209,10 +201,8 @@ std::istream& operator>>(std::istream& stream, Weapon& weapon) {
     stream >> weapon.BulletVelocity;
     stream >> weapon.Scatter;
 
-    weapon.ReloadTimer = new sf::Clock();
-    weapon.HolsterTimer = new sf::Clock();
-    weapon.TimeFromLastShot = new sf::Clock();
-    weapon.DispatchTimer = new sf::Clock();
+    weapon.localClock = new sf::Clock();
+    weapon.LastShotTime = sf::Time::Zero;
     weapon.holstered = false;
 	weapon.ManaStorage = { {0, weapon.MaxManaStorage, weapon.MaxManaStorage} };
     weapon.lock = true;
@@ -246,17 +236,16 @@ public:
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (!CanShoot()) return;
 
-        sf::Vector2f d = direction - shooter.getCenter();
-        float len = hypotf(d.x, d.y);
+        float len = hypotf(direction.x, direction.y);
         if (len == 0) return;
-        d = RotateOn(-M_PI_RAD * (Scatter / 2.f), d) * BulletVelocity / len;
-        for (int i = 0; i < Multishot; i++, d = RotateOn(M_PI_RAD * Scatter / (Multishot - 1), d)) {
-            sf::Vector2f SpawnPoint(shooter.getCenter() + d * (shooter.getRadius() * 1.4f) / BulletVelocity);
-            Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
+        direction = RotateOn(-M_PI_RAD * (Scatter / 2.f), direction) * BulletVelocity / len;
+        for (int i = 0; i < Multishot; i++, direction = RotateOn(M_PI_RAD * Scatter / (Multishot - 1), direction)) {
+            sf::Vector2f SpawnPoint(shooter.getCenter() + direction * (shooter.getRadius() * 1.4f) / BulletVelocity);
+            Bullets.push_back(new Bullet(f, SpawnPoint, direction, ManaCostOfBullet));
 			newBullets.push_back(Bullets.back());
         }
         ManaStorage -= ManaCostOfBullet;
-        TimeFromLastShot->restart();
+        LastShotTime = GameClock->getElapsedTime();
         lock = true;
 
 		ShootSound.setBuffer(SoundBuffers::Shoot);
@@ -295,7 +284,7 @@ public:
 //         Bullets.push_back(new Bullet(f, SpawnPoint, d, ManaCostOfBullet));
 //         ManaStorage -= ManaCostOfBullet;
 //         Multishot.stats[Multishot.curLevel]++;
-//         TimeFromLastShot->restart();
+//         LastShotTime = GameClock->getElapsedTime();
 //     }
 // };
 
@@ -323,7 +312,7 @@ public:
 			newBullets.push_back(Bullets.back());
 		}
         ManaStorage -= ManaCostOfBullet;
-        TimeFromLastShot->restart();
+        LastShotTime = GameClock->getElapsedTime();
 
 		ShootSound.setBuffer(SoundBuffers::Shoot);
 		float minDistance = ShootSound.getMinDistance(), Distance = distance(shooter.getCenter(), sf::Vector2f(sf::Listener::getPosition().x, sf::Listener::getPosition().y));

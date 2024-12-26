@@ -17,7 +17,6 @@ public:
     std::vector<float> parameters;
     bool active = false;
 
-    sf::Clock* localClock = nullptr;
     sf::Clock* customTickClock = nullptr;
     sf::Time howLongToExist;
     sf::Time customTick;
@@ -25,8 +24,7 @@ public:
     Effect(Effects::Type type, std::vector<float> parameters, sf::Time howLongToExist, sf::Time customTick=sf::Time::Zero) {
         this->type = type;
         this->parameters = parameters;
-        this->localClock = new sf::Clock();
-        this->howLongToExist = howLongToExist;
+        this->howLongToExist = GameTime + howLongToExist;
         if (customTick != sf::Time::Zero) {
             this->customTick = customTick;
             this->customTickClock = new sf::Clock();
@@ -34,9 +32,6 @@ public:
     }
 
     ~Effect() {
-        if (localClock) {
-            delete localClock;
-        }
         if (customTickClock) {
             delete customTickClock;
         }

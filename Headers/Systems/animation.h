@@ -48,7 +48,7 @@ public:
 ////////////////////////////////////////////////////////////
 
 Animation::Animation() {
-    this->localClock = new sf::Clock;
+    this->localClock = new sf::Clock();
     this->isPlaying = false;
     this->curTime = sf::Time::Zero;
     curLevel = 0;

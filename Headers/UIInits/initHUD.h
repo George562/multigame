@@ -13,7 +13,7 @@ namespace HUD {
     std::vector<sf::Drawable*> InterfaceStuff;
     std::vector<TempText*> TempTextsOnScreen, MessageText;
     std::vector<Frame*> effectIcons(Effects::EffectCount);
-    std::vector<TempText*> effectIconsTimers(Effects::EffectCount);
+    std::vector<PlacedText*> effectIconsTimers(Effects::EffectCount);
 
 //////////////////////////////////////////////////////////// FPS Stuff
     sf::Clock ClockFPS; int FPSCounter;
@@ -108,7 +108,7 @@ void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
         InfoLogoSprite.parentTo(&XButtonSprite, true, { 0, -10 });
 
         for (int i = 0; i < Effects::EffectCount; i++) {
-            effectIconsTimers[i] = new TempText(sf::Time::Zero);
+            effectIconsTimers[i] = new PlacedText();
             effectIcons[i] = new Frame("effect_" + i, UI::none, UI::none, (sf::Vector2f)Textures::Eff_HPRegen.getSize() / 2.f);
         }
         effectIcons[2]->setTexture(Textures::Eff_HPRegen, UI::element);

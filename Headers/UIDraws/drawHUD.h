@@ -24,14 +24,14 @@ void drawHUD(sf::RenderWindow& window, Player* player, std::vector<Weapon*>* Wea
             AmmoBars[i]->setValue((*Weapons)[i]->ManaStorage);
 
             if ((*Weapons)[i]->holstered) {
-                float holsterPercent = std::min((*Weapons)[i]->HolsterTimer->getElapsedTime() /
+                float holsterPercent = std::min((*Weapons)[i]->localClock->getElapsedTime() /
                                                 (*Weapons)[i]->TimeToHolster, 1.0f);
                 sf::Color wallColor(255 - 155 * holsterPercent, 255 - 155 * holsterPercent, 255, 160);
                 sf::Color foreColor(128 - 96 * holsterPercent, 128 - 96 * holsterPercent, 128, 160);
                 sf::Color backColor(32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 32 - 32 * holsterPercent, 160);
                 AmmoBars[i]->setColors(wallColor, foreColor, backColor);
             } else {
-                float dispatchPercent = std::min((*Weapons)[i]->DispatchTimer->getElapsedTime() /
+                float dispatchPercent = std::min((*Weapons)[i]->localClock->getElapsedTime() /
                                                 (*Weapons)[i]->TimeToDispatch, 1.0f);
                 sf::Color wallColor(100 + 155 * dispatchPercent, 100 + 155 * dispatchPercent, 255, 160);
                 sf::Color foreColor(32 + 96 * dispatchPercent, 32 + 96 * dispatchPercent, 128, 160);
@@ -58,7 +58,7 @@ void drawHUD(sf::RenderWindow& window, Player* player, std::vector<Weapon*>* Wea
         window.draw(TextFPS);
 
         for (size_t i = 0; i < TempTextsOnScreen.size(); i++) {
-            if (TempTextsOnScreen[i]->localClock->getElapsedTime() < TempTextsOnScreen[i]->howLongToExist) {
+            if (GameTime < TempTextsOnScreen[i]->howLongToExist) {
                 window.draw(*TempTextsOnScreen[i]);
             } else {
                 DeletePointerFromVector(TempTextsOnScreen, i--);
@@ -66,7 +66,7 @@ void drawHUD(sf::RenderWindow& window, Player* player, std::vector<Weapon*>* Wea
         }
 
         for (size_t i = 0; i < MessageText.size(); i++) {
-            if (MessageText[i]->localClock->getElapsedTime() < MessageText[i]->howLongToExist) {
+            if (GameTime < MessageText[i]->howLongToExist) {
                 Shaders::FloatingUp.setUniform("uTime", MessageText[i]->localClock->getElapsedTime().asSeconds());
                 window.draw(*MessageText[i], &Shaders::FloatingUp);
             } else {
@@ -90,7 +90,7 @@ void drawEffects(sf::RenderWindow& window, Player* player) {
         int count = 0;
         int xOffset = 175, yOffset = 175;
         std::vector<int> seenEffects(Effects::EffectCount, 0);
-        std::vector<sf::Time> effectTimersTimes(Effects::EffectCount, sf::Time::Zero);
+        std::vector<sf::Time> effectTimes(Effects::EffectCount, sf::Time::Zero);
         for (Effect* eff : player->effects) {
             if (eff->type != Effects::Heal && eff->type != Effects::Damage && eff->active) {
                 if (seenEffects[eff->type] == 0) {
@@ -104,20 +104,13 @@ void drawEffects(sf::RenderWindow& window, Player* player) {
                     count++;
                 }
                 seenEffects[eff->type] += 1;
-                effectTimersTimes[eff->type] = std::max(effectTimersTimes[eff->type], eff->howLongToExist);
+                effectTimes[eff->type] = std::max(effectTimes[eff->type], eff->howLongToExist - GameTime);
             }
         }
-        for (int i = 0; i < effectTimersTimes.size(); i++) {
+        for (int i = 0; i < effectTimes.size(); i++) {
             if (seenEffects[i] > 0) {
-                TempText* txt = effectIconsTimers[i];
-                sf::Time timeDif = txt->howLongToExist - txt->localClock->getElapsedTime();
-                if (txt->localClock->getElapsedTime() > txt->howLongToExist || effectTimersTimes[i] > timeDif) {
-                    txt->howLongToExist = effectTimersTimes[i];
-                    txt->localClock->restart();
-                }
-                txt->setString("x" + std::to_string(seenEffects[i]) + "\t\t\t\t" +
-                            floatToString(timeDif.asSeconds()));
-                window.draw(*txt);
+                effectIconsTimers[i]->setString("x" + std::to_string(seenEffects[i]) + "\t\t\t\t" + floatToString(effectTimes[i].asSeconds()));
+                window.draw(*effectIconsTimers[i]);
             }
         }
     }

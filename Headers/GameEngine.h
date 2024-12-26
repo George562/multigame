@@ -230,7 +230,8 @@ void init() {
     MiniMapZoom = std::pow(1.1, -10);
     MiniMapView.zoom(MiniMapZoom);
     GameClock = new sf::Clock;
-    coutClock = new sf::Clock;
+    GameTime = GameClock->getElapsedTime();
+    TimeSinceLastFrame = sf::Time::Zero;
 
     loadLocations();
     loadTextures();
@@ -609,7 +610,7 @@ void draw() {
         window.setView(GameView);
 
         for (size_t i = 0; i < TempTextsOnGround.size(); i++) {
-            if (TempTextsOnGround[i]->localClock->getElapsedTime() < TempTextsOnGround[i]->howLongToExist) {
+            if (GameTime < TempTextsOnGround[i]->howLongToExist) {
                 window.draw(*TempTextsOnGround[i]);
             } else {
                 DeletePointerFromVector(TempTextsOnGround, i--);
@@ -617,7 +618,7 @@ void draw() {
         }
 
         for (size_t i = 0; i < DamageText.size(); i++) {
-            if (DamageText[i]->localClock->getElapsedTime() < DamageText[i]->howLongToExist) {
+            if (GameTime < DamageText[i]->howLongToExist) {
                 Shaders::FloatingUp.setUniform("uTime", DamageText[i]->localClock->getElapsedTime().asSeconds());
                 window.draw(*DamageText[i], &Shaders::FloatingUp);
             } else {
@@ -1521,7 +1522,7 @@ void updateEnemies() {
                 for (int j = 1; j < centers.size(); j++)
                     if (distance(Enemies[i]->hitbox.getCenter(), centers[j]) < distance(Enemies[i]->hitbox.getCenter(), Enemies[i]->target))
                         Enemies[i]->setTarget(centers[j]);
-                Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, Enemies[i]->target, Enemies[i]->faction);
+                Enemies[i]->CurWeapon->Shoot(Enemies[i]->hitbox, Enemies[i]->target - Enemies[i]->hitbox.getCenter(), Enemies[i]->faction);
             }
             Enemies[i]->move(CurLocation);
             Enemies[i]->UpdateState();
@@ -1698,18 +1699,16 @@ void processEffects() {
 void updateEffects(Creature* creature) {
     std::vector<Effect*>& effectVec = creature->effects;
     for (int i = 0; i < effectVec.size(); i++) {
-        if (effectVec[i]->howLongToExist <= sf::Time::Zero) {
+        if (GameTime > effectVec[i]->howLongToExist) {
             clearEffect(*creature, effectVec[i]);
             DeletePointerFromVector(effectVec, i--);
         } else {
-            float t = std::min(effectVec[i]->localClock->restart().asSeconds(), effectVec[i]->howLongToExist.asSeconds());
-            effectVec[i]->howLongToExist -= sf::seconds(t);
             switch (effectVec[i]->type) {
                 case Effects::Damage:
-                    creature->getDamage(effectVec[i]->parameters[0] * t);
+                    creature->getDamage(effectVec[i]->parameters[0] * TimeSinceLastFrame.asSeconds());
                     break;
                 case Effects::Heal:
-                    creature->getDamage(-effectVec[i]->parameters[0] * t);
+                    creature->getDamage(-effectVec[i]->parameters[0] * TimeSinceLastFrame.asSeconds());
                     break;
                 case Effects::HPRegen:
                     if (!effectVec[i]->active) {
@@ -1802,10 +1801,10 @@ void updateShaders() {
     float uTime = GameClock->getElapsedTime().asSeconds();
     sf::Vector2f uPlayerPosition(player.hitbox.getCenter() - GameView.getCenter() + GameView.getSize() / 2.f);
 
-    Shaders::Flashlight.setUniform("uMouse", uMouse);
+    Shaders::Flashlight.setUniform("uMouse", player.lookDirection + uPlayerPosition);
     Shaders::Flashlight.setUniform("uPlayerPosition", uPlayerPosition);
 
-    Shaders::Player.setUniform("direction", uMouse - uPlayerPosition);
+    Shaders::Player.setUniform("direction", player.lookDirection);
 
     Shaders::Portal.setUniform("uTime", uTime);
 
@@ -1968,7 +1967,7 @@ void MainLoop() {
         if (!window.hasFocus()) {
             mutexOnDataChange.lock();
             if (player.CurWeapon != nullptr && player.isAlive()) {
-                player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
+                player.CurWeapon->Shoot(player.hitbox, player.lookDirection, player.faction);
             }
             for (Weapon*& weapon : Weapons)
                 if (weapon->holstered) weapon->Reload(player.Mana);
@@ -2025,7 +2024,7 @@ void MainLoop() {
 
             mutexOnDataChange.lock();
             if (player.CurWeapon != nullptr && player.isAlive()) {
-                player.CurWeapon->Shoot(player.hitbox, window.mapPixelToCoords(sf::Mouse::getPosition()), player.faction);
+                player.CurWeapon->Shoot(player.hitbox, player.lookDirection, player.faction);
             }
             for (Weapon*& weapon : Weapons)
                 if (weapon->holstered) weapon->Reload(player.Mana);
@@ -2076,6 +2075,9 @@ void MainLoop() {
         }
 
         EventHandler();
+
+        TimeSinceLastFrame = GameClock->getElapsedTime() - GameTime;
+        GameTime = GameClock->getElapsedTime();
     }
     saveGame();
 }

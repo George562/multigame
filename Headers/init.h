@@ -75,7 +75,6 @@ int completedLevels = 0;
 int curLevel = 1;
 
 
-sf::Clock* coutClock;
 sf::Time coutEvery = sf::milliseconds(1000);
 int drawCount = 0;
 
@@ -92,6 +91,7 @@ sf::View ShopStockView;
 sf::View ShopPlayerInvView;
 
 sf::Clock* GameClock;
+sf::Time GameTime, TimeSinceLastFrame;
 
 namespace Textures {
 //////////////////////////////////////////////////////////// Textures

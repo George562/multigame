@@ -27,12 +27,9 @@ public:
     float Acceleration;
     sf::Vector2f target; // target point to move towards
     bool makeADash = false;
+    mutable sf::Vector2f lookDirection = {1.f, 0.f};
 
     Weapon *CurWeapon = nullptr; // ref on exist weapon from Weapons
-
-    sf::Time LastStateCheck;
-    sf::Time LastMoveCheck;
-    sf::Clock* localClock = nullptr;
 
     mutable PlacedText Name;
     Animation *animation = nullptr;
@@ -54,24 +51,19 @@ public:
 
         faction = f;
 
-        LastStateCheck = sf::Time::Zero;
-        LastMoveCheck = sf::Time::Zero;
-        localClock = new sf::Clock();
         animation = nullptr;
         dropInventory = true;
 
         effectStacks.assign(Effects::EffectCount, 0);
     }
     ~Creature() {
-        if (localClock) {
-            delete localClock;
-        }
         if (animation) {
             delete animation;
         }
     }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const {
+        updateLook();
         if (animation != nullptr) {
             animation->setPosition(hitbox.getCenter());
             target.draw(*animation, states);
@@ -83,7 +75,7 @@ public:
     virtual void getDamage(float dmg) { Health -= dmg; }
 
     virtual void move(Location* location) {
-        float ElapsedTimeAsSecond = std::min((localClock->getElapsedTime() - LastMoveCheck).asSeconds(), oneOverSixty);
+        float ElapsedTimeAsSecond = std::min(TimeSinceLastFrame.asSeconds(), oneOverSixty);
         if (!makeADash) {
             sf::Vector2f Difference = target - hitbox.getCenter() - Velocity;
             if (length(Difference) >= Acceleration * ElapsedTimeAsSecond) {
@@ -103,16 +95,14 @@ public:
         if (tempv.y == -1) Velocity.y = 0;
 
         hitbox.move(Velocity * ElapsedTimeAsSecond);
-        LastMoveCheck = localClock->getElapsedTime();
     }
 
     virtual void shift(sf::Vector2f shift) {}
     virtual void shift(float x, float y) {}
 
     virtual void UpdateState() {
-        Mana += ManaRecovery * ManaRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        Health += HealthRecovery * HealthRecoveryActive * (localClock->getElapsedTime() - LastStateCheck).asSeconds();
-        LastStateCheck = localClock->getElapsedTime();
+        Mana += ManaRecovery * ManaRecoveryActive * TimeSinceLastFrame.asSeconds();
+        Health += HealthRecovery * HealthRecoveryActive * TimeSinceLastFrame.asSeconds();
     }
 
     void setAnimation(sf::Texture& texture, int FrameAmount, int maxLevel, sf::Time duration, sf::Shader *shader = nullptr) {
@@ -148,6 +138,8 @@ public:
     bool isAlive() {
         return Health.toBottom() > 0;
     }
+
+    virtual void updateLook() const {}
 };
 #pragma pack(pop)
 

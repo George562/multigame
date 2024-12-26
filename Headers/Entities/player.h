@@ -9,6 +9,7 @@ class Player : public Creature {
 public:
     Player();
     void move(Location*) override;
+	void updateLook() const override;
 };
 
 ////////////////////////////////////////////////////////////
@@ -70,6 +71,18 @@ void Player::move(Location* location) {
 
     setTarget(hitbox.getCenter() + direction * MaxVelocity * VelocityBuff);
     Creature::move(location);
+}
+
+void Player::updateLook() const {
+	sf::Vector2f dir = normalize(sf::Vector2f(sf::Mouse::getPosition()) - (hitbox.getCenter() - GameView.getCenter() + GameView.getSize() / 2.f));
+	float s = cross(dir, lookDirection), delta = 4.f * M_PI * TimeSinceLastFrame.asSeconds();
+	if (s >= sin(delta)) {
+    	lookDirection = RotateOn(delta, lookDirection);
+	} else if (s <= sin(-delta)) {
+		lookDirection = RotateOn(-delta, lookDirection);
+	} else if (distance(dir, lookDirection) > 1.5f) {
+		lookDirection = RotateOn(delta, lookDirection);
+	}
 }
 
 sf::Packet& operator<<(sf::Packet& packet, Player& a) {

@@ -18,12 +18,10 @@ public:
     int penetration;
     sf::Vector2f Velocity;
     faction::Type fromWho;
-    sf::Clock* localClock = nullptr;
     sf::Color color;
     CollisionCircle hitbox;
 
     Bullet() {
-        localClock = new sf::Clock();
         hitbox.setRadius(COMMON_BULLET_RADIUS);
     }
 
@@ -41,14 +39,10 @@ public:
         }
     }
 
-    ~Bullet() {
-        if (localClock) {
-            delete localClock;
-        }
-    }
+    ~Bullet() {}
 
     void move(Location* location) {
-        float elapsedTime = std::min(localClock->restart().asSeconds(), oneOverSixty);
+        float elapsedTime = std::min(TimeSinceLastFrame.asSeconds(), oneOverSixty);
         if (Velocity.x != 0 && Velocity.y != 0) {
             sf::Vector2i res = WillCollisionWithWalls(location->wallsRect, hitbox, Velocity * elapsedTime);
             if (res.x == -1 || res.y == -1) {

@@ -12,7 +12,7 @@ public:
 
 TempText::TempText(sf::Time howLongToExist) : PlacedText() {
     localClock = new sf::Clock();
-    this->howLongToExist = howLongToExist;
+    this->howLongToExist = GameTime + howLongToExist;
 }
 
 TempText::~TempText() {

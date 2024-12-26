@@ -20,7 +20,6 @@ public:
     int pos;
     size_t cursorPos;
     sf::RectangleShape rect, cursor;
-    sf::Clock* localClock = nullptr;
     bool inputted;
     std::map<std::string, void (*)(void)> commands;
 
@@ -68,20 +67,15 @@ Chat::Chat(int scw, int sch) : inputted(false), pos(0) {
 
     cursor.setFillColor(sf::Color::White);
     cursor.setSize({3, size.y});
-
-    localClock = new sf::Clock();
 }
 
 Chat::~Chat() {
-    if (localClock) {
-        delete localClock;
-    }
 }
 
 void Chat::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (inputted) {
         target.draw(rect, states);
-        if (localClock->getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2)) {
+        if (GameClock->getElapsedTime() % sf::seconds(1.f) > sf::seconds(1.f / 2)) {
             target.draw(cursor, states);
         }
     }
