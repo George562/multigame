@@ -74,7 +74,10 @@ void Player::move(Location* location) {
 }
 
 void Player::updateLook() const {
-	sf::Vector2f dir = normalize(sf::Vector2f(sf::Mouse::getPosition()) - (hitbox.getCenter() - GameView.getCenter() + GameView.getSize() / 2.f));
+	sf::Vector2f dir = sf::Vector2f(sf::Mouse::getPosition()) - (hitbox.getCenter() - GameView.getCenter() + GameView.getSize() / 2.f);
+	if (dir.x == 0.f && dir.y == 0.f) return;
+	dir = normalize(dir);
+
 	float s = cross(dir, lookDirection), delta = 4.f * M_PI * TimeSinceLastFrame.asSeconds();
 	if (s >= sin(delta)) {
     	lookDirection = RotateOn(delta, lookDirection);
@@ -82,6 +85,8 @@ void Player::updateLook() const {
 		lookDirection = RotateOn(-delta, lookDirection);
 	} else if (distance(dir, lookDirection) > 1.5f) {
 		lookDirection = RotateOn(delta, lookDirection);
+	} else {
+		lookDirection = dir;
 	}
 }
 

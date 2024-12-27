@@ -191,7 +191,7 @@ public:
         }
         return false;
     }
-    
+
     bool isButtonsActive(sf::Event& event) {
         for (PolygonButton* b : buttons) {
             if (isButtonActive(b, event)) {

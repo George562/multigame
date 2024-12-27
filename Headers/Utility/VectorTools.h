@@ -26,7 +26,7 @@ sf::Vector2f clamp(sf::Vector2f v, sf::Vector2f min, sf::Vector2f max) {
     return sf::Vector2f(std::clamp(v.x, min.x, max.x), std::clamp(v.y, min.y, max.y));
 }
 // vector length clamp
-sf::Vector2f clamp(sf::Vector2f v, float min, float max) { 
+sf::Vector2f clamp(sf::Vector2f v, float min, float max) {
     float len = length(v);
     return len < min ? (normalize(v) * min) : (len > max ? normalize(v) * max : v);
 }

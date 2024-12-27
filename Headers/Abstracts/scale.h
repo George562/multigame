@@ -32,7 +32,7 @@ public:
         this->bottom = scale.bottom;
         this->top = scale.top;
         this->cur = scale.cur;
-        
+
         return *this;
     }
 
@@ -41,7 +41,7 @@ public:
         this->top = top;
         this->cur = cur;
         normalize(*this);
-    }   
+    }
 };
 
 template <class T>

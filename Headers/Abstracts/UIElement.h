@@ -208,7 +208,7 @@ public:
 
     std::vector<UIElement*>& getChildren() { return children; }
 
-    UIElement* operator[](std::string name) { 
+    UIElement* operator[](std::string name) {
         if (nameMap.find(name) != nameMap.end())
             return children[nameMap[name]];
         else return nullptr;

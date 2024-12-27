@@ -85,7 +85,7 @@ void drawUpgradeInterface(sf::RenderWindow& window) {
     updateUpgradeInterfaceUI();
     for (sf::Drawable*& elem : upgradeInterface::UIElements) // not working
         window.draw(*elem);
-    
+
     drawChoosingComponent(window);
 
     window.draw(upgradeInterface::coinSprite);

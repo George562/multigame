@@ -178,7 +178,7 @@ std::ostream& operator<<(std::ostream& stream, Weapon& weapon) {
     stream << weapon.ManaCostOfBullet << ' ';
     stream << weapon.Multishot << ' ';
     stream << weapon.FireRate << ' ';
-    
+
     stream << weapon.BulletVelocity << ' ';
     stream << weapon.Scatter << ' ';
     return stream;
@@ -197,7 +197,7 @@ std::istream& operator>>(std::istream& stream, Weapon& weapon) {
     stream >> weapon.ManaCostOfBullet;
     stream >> weapon.Multishot;
     stream >> weapon.FireRate;
-    
+
     stream >> weapon.BulletVelocity;
     stream >> weapon.Scatter;
 
@@ -232,7 +232,7 @@ public:
 class Shotgun : public Weapon {
 public:
     Shotgun() : Weapon("Shotgun") {}
-    
+
     void Shoot(CollisionCircle& shooter, sf::Vector2f direction, faction::Type f) {
         if (!CanShoot()) return;
 

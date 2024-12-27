@@ -46,7 +46,7 @@ namespace HUD {
 void initHUD(Player* player, std::vector<Weapon*>* Weapons) {
     {
         using namespace HUD;
-        
+
         ListOfPlayers.setTexture(Textures::GradientFrameAlpha);
 
         EscapeButton.setTexture(Textures::EscapeButton, Textures::EscapeButtonPushed, UI::texture);
@@ -141,7 +141,7 @@ void loadDescriptions() {
             interactibleDescriptions[DescriptionID::artifact]      = j["artifact"]      .template get<std::string>();
             interactibleDescriptions[DescriptionID::fire]          = j["fire"]          .template get<std::string>();
         } catch(const std::exception& e) {
-            for (DescriptionID::Type i = DescriptionID::portal; i < DescriptionID::DescriptionCount; i++) { 
+            for (DescriptionID::Type i = DescriptionID::portal; i < DescriptionID::DescriptionCount; i++) {
                 interactibleDescriptions[i] = "Error loading description";
             }
         }

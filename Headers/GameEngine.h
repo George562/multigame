@@ -1068,7 +1068,7 @@ void inventoryHandler(sf::Event& event) {
 
         backButton.isActivated(event);
         frameButtonsHolder.isButtonsActive(event);
-        
+
         if ((mouseButtonPressed(event, sf::Mouse::Left) && upgradeInterface::switchGunLBtn.isActivated(event)) || keyPressed(event, sf::Keyboard::Left)) {
             upgradeInterface::switchGunLBtn.buttonFunction();
             setUpgradeFunctions();

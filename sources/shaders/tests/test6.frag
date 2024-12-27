@@ -31,6 +31,6 @@ void main() {
     col += rect(uv, vec2(0., 0.09), vec2(0.005, 0.51), atan(0.5, -0.05));
     col += rect(uv, vec2(0.492, 0.01), vec2(0.005, 0.03), 0.);
     col += rect(uv, vec2(0., 0.06), vec2(0.005, 0.51), atan(0.5, -0.05));
-    
+
     gl_FragColor = vec4(vec3(col),1.0);
 }

@@ -23,6 +23,6 @@ void main() {
 
     // col += smoothstep(-0.3 + time, -0.9 + time, metric2(uv)) * 1.25;
     // col -= smoothstep(-0.9 + time, -0.3, metric2(uv)) * 2.;
-    
+
     gl_FragColor = vec4(vec3(col), 1.0);
 }

@@ -35,7 +35,7 @@ vec2 twirl(vec2 UV, vec2 Center, float Strength, vec2 Offset) {
 }
 
 void main() {
-    vec2 uv = gl_TexCoord[0].xy - vec2(0.5, 0.5); 
+    vec2 uv = gl_TexCoord[0].xy - vec2(0.5, 0.5);
     float time = uTime * 0.5;
     vec2 Muv = uv * vec2(4., 4.);
     float strength = 1.95 * (1. + 0.15 * texture2D(noise_png, uv));
