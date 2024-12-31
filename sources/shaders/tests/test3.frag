@@ -1,4 +1,4 @@
-#iChannel0 "file://../textures/noise.png"
+#iChannel0 "file://../../textures/noise.png"
 float PI = acos(-1.);
 float PI2 = acos(-1.) * 2.0;
 

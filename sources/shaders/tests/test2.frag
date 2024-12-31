@@ -1,4 +1,4 @@
-#iChannel0 "file://../textures/noise.png"
+#iChannel0 "file://../../textures/noise.png"
 
 vec2 hash(vec2 p) {
     return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453);
@@ -25,22 +25,24 @@ float voronoi(vec2 x) {
     return F1;
 }
 
-vec2 twirl(vec2 UV, vec2 Center, float Strength, vec2 Offset) {
-    vec2 delta = UV - Center;
-    float angle = Strength * length(delta);
+vec2 twirl(vec2 UV, float Strength, float Offset) {
+    vec2 delta = UV;
+    float angle = Strength * length(delta) + Offset;
     vec2 uv = delta * mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    return uv + Center + Offset;
+    return uv ;
 }
 
 void main() {
-    vec2 uv = gl_FragCoord.xy / iResolution.xy - vec2(0.5);
-    vec2 Muv = uv * 6.;
+    vec2 uv = gl_FragCoord.xy / iResolution.xy - 0.5;
+    float d = length(uv);
+    vec2 Muv = uv * 4.;
     float Strength = 1.95 * (1. + 0.2 * texture2D(iChannel0, uv + 0.05 * iTime).r);
-    Muv = twirl(Muv, vec2(0., 0.), Strength, vec2(0.));
+    Muv = twirl(Muv, Strength, 0.5 * iTime);
 
-    vec4 color = vec4(1., 0., 1., 1.);
-    float param = voronoi(Muv);
-    param *= smoothstep(0.1, 0.3, length(uv));
-    param *= smoothstep(0.95, 0.75, 2. * length(uv));
-    gl_FragColor = color * param;
+    vec4 color = 2. * vec4(1., 0.4, 0., 1.) + vec4(0.15, 0.15, 0.15, 0.);
+    float param = voronoi(Muv + vec2(iTime * 0.1)) * 2.5;
+    color *= param * param * param * smoothstep(0.1, 0.3, length(uv));
+    color = mix(color, vec4(-1.), smoothstep(0.7, 0.95, 2. * d));
+    // color += smoothstep(0.05, 0., abs(2. * length(uv) - 0.9));
+    gl_FragColor = color;
 }

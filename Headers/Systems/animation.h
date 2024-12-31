@@ -40,6 +40,7 @@ public:
     void setPosition(sf::Vector2f pos) { setPosition(pos.x, pos.y); }
     sf::Vector2f getGlobalSize() const;
     sf::Vector2f getLocalSize() const;
+    void setSpriteColor(sf::Color color);
 };
 #pragma pack(pop)
 
@@ -145,6 +146,10 @@ sf::Vector2f Animation::getGlobalSize() const {
 sf::Vector2f Animation::getLocalSize() const {
     return sf::Vector2f(sprite.getTexture()->getSize().x / frameAmount,
                         sprite.getTexture()->getSize().y / maxLevel);
+}
+
+inline void Animation::setSpriteColor(sf::Color color) {
+    sprite.setColor(color);
 }
 
 void Animation::setAnimationLevel(int level) {

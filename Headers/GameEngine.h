@@ -255,10 +255,12 @@ void init() {
 
     for (Weapon*& w: Weapons) w->ShootSound.setRelativeToListener(true);
 
-    portal.setAnimation(Textures::Portal, 9, 1, sf::seconds(1), &Shaders::Portal);
+    portal.setAnimation(Textures::Portal, &Shaders::Portal2);
+    portal.animation->setSpriteColor(sf::Color(0, 0, 255, 255));
     portal.setSize(140.f, 270.f);
 
-    portal2.setAnimation(Textures::Portal2, &Shaders::Portal2);
+    portal2.setAnimation(Textures::Portal, &Shaders::Portal2);
+    portal2.animation->setSpriteColor(sf::Color(255, 128, 0, 255));
     portal2.setSize(140.f, 250.f);
 
     player.setAnimation(Textures::Player, &Shaders::Player);

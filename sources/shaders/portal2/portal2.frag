@@ -27,24 +27,27 @@ float voronoi(vec2 x) {
     return F1;
 }
 
-vec2 twirl(vec2 UV, vec2 Center, float Strength, vec2 Offset) {
-    vec2 delta = UV - Center;
-    float angle = Strength * length(delta);
+vec2 twirl(vec2 UV, float Strength, float Offset) {
+    vec2 delta = UV;
+    float angle = Strength * length(delta) + Offset;
     vec2 uv = delta * mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    return uv + Center + Offset;
+    return uv;
 }
 
 void main() {
-    vec2 uv = gl_TexCoord[0].xy - vec2(0.5, 0.5);
+    vec2 uv = gl_TexCoord[0].xy - 0.5;
+    float d = length(uv);
     float time = uTime * 0.5;
-    vec2 Muv = uv * vec2(4., 4.);
-    float strength = 1.95 * (1. + 0.15 * texture2D(noise_png, uv));
-    Muv = twirl(Muv, vec2(0., 0.), strength, vec2(-time));
+    vec2 Muv = uv * 4.;
+    float strength = 1.95 * (1. + 0.15 * texture2D(noise_png, fract(uv + 0.05 * time)).r);
+    Muv = twirl(Muv, strength, time);
 
-    vec4 color = vec4(1., 0., 1., 0.);
-    float param = voronoi(Muv);
-    param *= smoothstep(0.1, 0.3, length(uv));
+    vec4 color = 2. * gl_Color + vec4(0.15, 0.15, 0.15, 0.);
+    float param = voronoi(Muv + vec2(uTime * 0.1)) * 2.5;
+    param *= param * param * smoothstep(0.1, 0.3, d);
     color *= param;
-    color.a = smoothstep(0.95, 0.75, 2. * length(uv));
+    color = mix(color, vec4(-1.), smoothstep(0.7, 0.95, 2. * d));
+    color.a = 1. - smoothstep(0.7, 0.95, 2. * d) * (1. - max(color.r, max(color.r, color.b) ) );
+    // color += smoothstep(0.05, 0., abs(2. * d - 0.9));
     gl_FragColor = color;
 }

@@ -101,7 +101,6 @@ namespace Textures {
                 Boss,
                 Player,
                 Portal,
-                Portal2,
                 WallG,
                 WallV,
                 XButton,
@@ -174,8 +173,7 @@ void loadTextures() {
     Textures::Enemy                    .create(size / 4.f, size / 4.f);
     Textures::Boss                     .create(size, size);
     Textures::Player                   .loadFromFile("sources/textures/Player.png");
-    Textures::Portal                   .loadFromFile("sources/textures/Portal.png");
-    Textures::Portal2                  .loadFromFile("sources/textures/Portal2.png");
+    Textures::Portal                   .create(size, size);
     Textures::WallG                    .loadFromFile("sources/textures/wallG.png");
     Textures::WallV                    .loadFromFile("sources/textures/wallV.png");
     Textures::XButton                  .loadFromFile("sources/textures/XButton.png");
