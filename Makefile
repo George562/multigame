@@ -1,12 +1,12 @@
 CFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lsfml-audio -O3 -std=c++20
 
-all: multigame
+all: Generation
 
-multigame: multigame.cpp icon
-	g++ multigame.cpp my.res -o multigame $(CFLAGS) -I./SFML-2.5.1/include/ -L ./SFML-2.5.1/lib/
+Generation: Generation.cpp icon
+	g++ Generation.cpp my.res -o Generation $(CFLAGS) -I./SFML-2.5.1/include/ -L ./SFML-2.5.1/lib/
 
-hide: multigame.cpp icon
-	g++ multigame.cpp my.res -o multigame $(CFLAGS) -mwindows -I./SFML-2.5.1/include/ -L ./SFML-2.5.1/lib/
+hide: Generation.cpp icon
+	g++ Generation.cpp my.res -o Generation $(CFLAGS) -mwindows -I./SFML-2.5.1/include/ -L ./SFML-2.5.1/lib/
 
 editor: level_Editor
 

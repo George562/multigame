@@ -1,4 +1,4 @@
-# multigame
+# Generation
 
 ![Release](https://img.shields.io/badge/Version-v0.0.4-blueviolet)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-0052cf)
@@ -45,11 +45,11 @@ At the moment the game is not playable. We are at the development stage of the e
 - Upgrade shop (you can upgrade weapons)
 
 # Our sprites and arts
-- **[Textures](https://github.com/George562/multigame/blob/main/sources/textures)**
-- **[Portal](https://github.com/George562/multigame/blob/main/sources/textures/Portal.png)**
-- **[Player](https://github.com/George562/multigame/blob/main/sources/textures/Player.png)**
-- **[Farmer](https://github.com/George562/multigame/blob/main/sources/textures/Farmer.png)**
-- **[DistortedScientist](https://github.com/George562/multigame/blob/main/sources/textures/DistortedScientist.png)**
+- **[Textures](https://github.com/George562/Generation/blob/main/sources/textures)**
+- **[Portal](https://github.com/George562/Generation/blob/main/sources/textures/Portal.png)**
+- **[Player](https://github.com/George562/Generation/blob/main/sources/textures/Player.png)**
+- **[Farmer](https://github.com/George562/Generation/blob/main/sources/textures/Farmer.png)**
+- **[DistortedScientist](https://github.com/George562/Generation/blob/main/sources/textures/DistortedScientist.png)**
 
 <p align="center">
     <img src="./sources/textures/Portal.png" height="300">
@@ -59,7 +59,7 @@ At the moment the game is not playable. We are at the development stage of the e
 </p>
 
 # Our music
-- **[Main menu music](https://github.com/George562/multigame/blob/main/sources/music/RestAreaMusic.wav)**
+- **[Main menu music](https://github.com/George562/Generation/blob/main/sources/music/RestAreaMusic.wav)**
 
 # Attention
 
